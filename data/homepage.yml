@@ -1,21 +1,21 @@
 # Main Title
 main:
   header:
-    title : "Graysx Theme" # Title Text
-    description : "Aut Deleniti Solu Facilis Idlau imq Atque Ac Itaqu A Co Volup Nu Quaecu Nec Archite At." # Title Desc
+    title : "Domen Hribernik" # Title Text
+    description : "Explore my projects and let's work together to bring your ideas to life."
     button:
       text: "Learn More" # Button Text
       url: "#about" # Button URL
 
 # About
 about:
-  title: "About us"
-  desc: "Max Ducim Qua Labo Pa Adre Nam Ased Di Ullam Ess Num Minim Quorecu Re Iur Ipsam Autemo Autem Max Iurer Ut Enim Praese Ips Fugia Ne Dig Assumen Cul Ipsum Velit Magna Inl Odio Enimodi Nonve Sunti Tem Incidu Velqui Lauda Assume Volupt Nih Es Autem Officia Culpa Impedit Harum Blandi Si Quis Dol Facilis Verodo Tot Quib Quoden"
+  title: "About me"
+  desc: "Hello! I'm a 22-year-old Computer Science student at the Faculty of Electrical Engineering and Computer Science (FERI), University of Maribor, Slovenia. With a passion for technology and innovation, I specialize in programming, software development, and problem-solving. I'm eager to apply my skills and collaborate on exciting projects. If you're looking for a dedicated and innovative partner to bring your ideas to life, I'm ready to work with you to achieve your goals."
   button:
     enable: true
     text: "Button"
     url: "#"
-  image: "assets/img/ipad.png"
+  image: "assets/img/fog2.png"
 
 projects:
   card1:

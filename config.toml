@@ -8,17 +8,6 @@ title = 'Example Graysx Site'
 logo = "assets/img/logo.webp"
 favicon = "assets/favicon.png"
 
-# Info
-address = "123 Arch B1W, GNU/Linux"
-email = "hello@graysx.com"
-phone = "123456"
-
-# Socials
-
-twitter = "#"
-facebook = "#"
-github = "https://github.com/akatiggerx04/graysx-hugo"
-
 # Other
 
 # Startbootstrap Contact Form Token https://startbootstrap.com/solution/contact-forms

@@ -4,7 +4,14 @@ title = 'My New Hugo Site'
 theme = 'graysx-hugo'
 
 [params]
-    logo = "assets/img/logo.webp"
+  logo = "assets/img/logo.webp"
+  address = "1234 Street Name, City, Country"
+  email = "domen.hribernik4@gmail.com"
+  phone = "+386 70 700 817"
+  twitter = "#"
+  facebook = "#"
+  github = "https://github.com/domenhribernik"
+  name = "Domen Hribernik"
 
 [[menu.main]]
   name = "About"
