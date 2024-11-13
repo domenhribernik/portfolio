@@ -11053,9 +11053,8 @@ body {
   }
 }
 #mainNav #logo {
-  width: 3rem;
-  height: 3rem;
-  margin-right: 1rem;
+  font-family: "Brush Script MT", cursive;
+  font-size: 2rem;
 }
 
 .btn {
@@ -11145,6 +11144,10 @@ body {
     padding: 5rem;
   }
 }
+.projects-section video {
+  height: 100%;
+  background-color: #131313;
+}
 
 .signup-section {
   padding: 10rem 0;
@@ -11167,7 +11170,7 @@ body {
 
 .contact-section {
   padding-top: 5rem;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.5) 75%, #000 100%), url("../assets/img/bg-signup.jpg");
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.5) 75%, #000 100%), url("../assets/img/bg-contact.jpg");
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: scroll;

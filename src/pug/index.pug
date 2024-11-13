@@ -27,8 +27,7 @@ html(lang='en')
         // Navigation
         nav#mainNav.navbar.navbar-expand-lg.navbar-light.fixed-top
             .container.px-4.px-lg-5
-                a.navbar-brand(href='#page-top')
-                    img(src='assets/img/logo.png', alt='Start Bootstrap')#logo
+                a.navbar-brand#logo(href='#page-top') Domen Hribernik
                 button.navbar-toggler.navbar-toggler-right(type='button', data-bs-toggle='collapse', data-bs-target='#navbarResponsive', aria-controls='navbarResponsive', aria-expanded='false', aria-label='Toggle navigation')
                     | Menu
                     i.fas.fa-bars
@@ -58,6 +57,7 @@ html(lang='en')
                         h2.text-white.mb-4 About Me
                         p.text-white-50
                             | I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects. If you're looking for a dedicated and innovative partner to bring your ideas to life, let's work together to achieve your goals.
+                        a.btn.btn-primary(href='#projects') My Projects
                 img.img-fluid(src='assets/img/fog.png', alt='...')
 
         // Projects
@@ -66,7 +66,7 @@ html(lang='en')
                 // Featured Project Row
                 .row.gx-0.mb-4.mb-lg-5.align-items-center
                     .col-xl-8.col-lg-7
-                        img.img-fluid.mb-3.mb-lg-0(src='assets/img/project1.jpg', alt='...')
+                        img.img-fluid.mb-3.mb-lg-0(src='assets/img/project1.jpg', alt='...', style='border-radius: 10px;')
                     .col-xl-4.col-lg-5
                         .featured-text.text-center.text-lg-left
                             h4 Vita Mavrič Portfolio
@@ -76,27 +76,28 @@ html(lang='en')
                 // Project One Row
                 .row.gx-0.mb-5.mb-lg-0.justify-content-center
                     .col-lg-6
-                        img.img-fluid(src='assets/img/project2.jpg', alt='Snake Game')
+                        img.img-fluid(src='assets/img/project2.jpg', alt='Snake Game').border
                     .col-lg-6
                         .bg-black.text-center.h-100.project
                             .d-flex.h-100
                                 .project-text.w-100.my-auto.text-center.text-lg-left
                                     h4.text-white Snake Game
                                     p.mb-0.text-white-50
-                                        | A classic Snake game built in JavaScript, allowing players to test their reflexes in real-time. Try to reach the highest score without colliding with walls or yourself! 
+                                        | A classic Snake game developed in JavaScript, challenging players to navigate and grow the snake by consuming food while avoiding collisions with walls and the snake's own body. Aim for the highest score!
                                         a.text-white-50.ml-1(href='https://github.com/domenhribernik/Snake', target='_blank') GitHub
 
                 // Project Two Row
                 .row.gx-0.justify-content-center
                     .col-lg-6
-                        img.img-fluid(src='assets/img/demo-image-02.jpg', alt='...')
+                        video.img-fluid(src='assets/img/wordle.mp4', autoplay, loop, muted, playsinline)
                     .col-lg-6.order-lg-first
                         .bg-black.text-center.h-100.project
                             .d-flex.h-100
                                 .project-text.w-100.my-auto.text-center.text-lg-right
-                                    h4.text-white Mountains
+                                    h4.text-white Wordle Bot
                                     p.mb-0.text-white-50
-                                        | Another example of a project with its respective description. These sections work well responsively as well!
+                                        | A Python-based Wordle Bot that uses algorithmic strategies to solve Wordle puzzles efficiently. This project demonstrates the application of AI techniques to play and solve word games.
+                                        a.text-white-50.ml-1(href='https://github.com/domenhribernik/wordle-bot', target='_blank') GitHub
 
         // Contact
         section#contact.contact-section
