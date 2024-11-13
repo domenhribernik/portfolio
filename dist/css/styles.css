@@ -10981,7 +10981,7 @@ body {
 
 #mainNav {
   min-height: 3.5rem;
-  background-color: #fff;
+  background-color: #d3d6d4;
 }
 #mainNav .navbar-toggler {
   font-size: 80%;
@@ -10998,7 +10998,7 @@ body {
   padding: 0.9rem 0;
 }
 #mainNav .navbar-nav .nav-item:hover {
-  color: fade(#fff, 80%);
+  color: fade(#d3d6d4, 80%);
   outline: none;
   background-color: transparent;
 }
@@ -11016,21 +11016,21 @@ body {
   }
   #mainNav .navbar-brand {
     padding: 0.5rem 0;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(211, 214, 212, 0.5);
   }
   #mainNav .nav-link {
     transition: none;
     padding: 2rem 1.5rem;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(211, 214, 212, 0.5);
   }
   #mainNav .nav-link:hover {
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(211, 214, 212, 0.75);
   }
   #mainNav .nav-link:active {
-    color: #fff;
+    color: #d3d6d4;
   }
   #mainNav.navbar-shrink {
-    background-color: #fff;
+    background-color: #d3d6d4;
   }
   #mainNav.navbar-shrink .navbar-brand {
     color: #000;
