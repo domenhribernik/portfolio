@@ -11125,6 +11125,7 @@ body {
 
 .projects-section {
   padding: 10rem 0;
+  background-color: #f0f0f0;
 }
 .projects-section .featured-text {
   padding: 2rem;
@@ -11157,6 +11158,9 @@ body {
   background-attachment: scroll;
   background-size: cover;
 }
+.signup-section .signup-color {
+  background-color: #f0f0f0;
+}
 .signup-section .form-signup input {
   box-shadow: 0 0.1875rem 0.1875rem 0 rgba(0, 0, 0, 0.1) !important;
   padding: 1.25rem 2rem;
@@ -11179,6 +11183,7 @@ body {
 .contact-section .card {
   border: 0;
   border-bottom: 0.25rem solid #64a19d;
+  background-color: #f0f0f0;
 }
 .contact-section .card h4, .contact-section .card .h4 {
   font-size: 0.8rem;
