@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
+        <meta name="description" content="Portfolio website for Domen Hribernik, showcasing projects and contact information." />
+        <meta name="author" content="Domen Hribernik" />
         <title>Domen Hribernik</title>
         <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
         <!-- Font Awesome icons (free version)-->
@@ -14,21 +14,22 @@
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet" />
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="css/styles.css" rel="stylesheet" />
+        <link rel="preload" fetchpriority="high" as="image" href="assets/img/bg-masthead.jpg" type="image/webp" />
     </head>
     <body id="page-top">
         <!-- Navigation-->
-        <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav" role="navigation">
             <div class="container px-4 px-lg-5">
-                <a class="navbar-brand" id="logo" href="#page-top">Domen Hribernik</a>
+                <a class="navbar-brand" id="logo" href="#page-top" aria-label="Domen Hribernik">Domen Hribernik</a>
                 <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                     Menu
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarResponsive">
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#about" aria-label="About">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#projects" aria-label="Projects">Projects</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#contact" aria-label="Contact">Contact</a></li>
                     </ul>
                 </div>
             </div>
@@ -40,7 +41,7 @@
                     <div class="text-center">
                         <h1 class="mx-auto my-0">Domen Hribernik</h1>
                         <h2 class="text-white-50 mx-auto mt-2 mb-5">Developer &amp; Tech Enthusiast</h2>
-                        <a class="btn btn-primary" href="#about">About Me</a>
+                        <a class="btn btn-primary" href="#about" aria-label="About Me">About Me</a>
                     </div>
                 </div>
             </div>
@@ -52,7 +53,7 @@
                     <div class="col-lg-8">
                         <h2 class="text-white mb-4">About Me</h2>
                         <p class="text-white-50">I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects. If you're looking for a dedicated and innovative partner to bring your ideas to life, let's work together to achieve your goals.</p>
-                        <a class="btn btn-primary" href="#projects">My Projects</a>
+                        <a class="btn btn-primary" href="#projects" aria-label="My Projects">My Projects</a>
                     </div>
                 </div>
                 <img class="img-fluid" src="assets/img/fog.png" alt="..." />
@@ -69,7 +70,7 @@
                             <h4>Vita Mavrič Portfolio</h4>
                             <p class="text-black-50 mb-0">
                                 This project showcases a custom-built, responsive website for Vita Mavrič, built in vanilla JavaScript.
-                                <a href="https://vitamavric.com" target="_blank">Website</a>
+                                <a href="https://vitamavric.com" target="_blank" aria-label="Website">Website</a>
                             </p>
                         </div>
                     </div>
@@ -84,7 +85,7 @@
                                     <h4 class="text-white">Sudoku</h4>
                                     <p class="mb-0 text-white-50">
                                         A classic Sudoku game developed in JavaScript, offering a fun and challenging way to test your logic and problem-solving skills. The project showcases my ability to create interactive web applications with a focus on user experience and functionality.
-                                        <a class="text-white-50 ml-1" href="https://github.com/domenhribernik/Sudoku" target="_blank">GitHub</a>
+                                        <a class="text-white-50 ml-1" href="https://github.com/domenhribernik/Sudoku" target="_blank" aria-label="GitHub">GitHub</a>
                                     </p>
                                 </div>
                             </div>
@@ -101,7 +102,7 @@
                                     <h4 class="text-white">Wordle Bot</h4>
                                     <p class="mb-0 text-white-50">
                                         A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently. This project demonstrates the application of AI techniques to play and solve word games.
-                                        <a class="text-white-50 ml-1" href="https://github.com/domenhribernik/wordle-bot" target="_blank">GitHub</a>
+                                        <a class="text-white-50 ml-1" href="https://github.com/domenhribernik/wordle-bot" target="_blank" aria-label="GitHub">GitHub</a>
                                     </p>
                                 </div>
                             </div>
@@ -112,6 +113,16 @@
         </section>
         <!-- Contact-->
         <section class="contact-section" id="contact">
+            <div class="container-fluid py-5 quote">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <blockquote class="blockquote text-center">
+                            <p class="mb-0">"The only way to do great work is to love what you do."</p>
+                            <footer class="blockquote-footer">Steve Jobs</footer>
+                        </blockquote>
+                    </div>
+                </div>
+            </div>
             <div class="container px-4 px-lg-5">
                 <div class="row gx-4 gx-lg-5">
                     <div class="col-md-4 mb-3 mb-md-0">
@@ -130,18 +141,18 @@
                                 <i class="fas fa-envelope text-primary mb-2"></i>
                                 <h4 class="text-uppercase m-0">Email</h4>
                                 <hr class="my-4 mx-auto" />
-                                <div class="small text-black-50"><a href="mailto:contact@domenhribernik.com">contact@domenhribernik.com</a></div>
+                                <div class="small text-black-50"><a href="mailto:contact@domenhribernik.com" aria-label="contact@domenhribernik.com">contact@domenhribernik.com</a></div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4 mb-3 mb-md-0">
                         <div class="card py-4 h-100">
                             <div class="card-body text-center">
-                                <i class="fas fa-calendar-alt text-primary mb-2"></i>
-                                <h4 class="text-uppercase m-0">Availability</h4>
+                                <i class="fas fa-graduation-cap text-primary mb-2"></i>
+                                <h4 class="text-uppercase m-0">Education</h4>
                                 <hr class="my-4 mx-auto" />
-                                <div class="small text-black-50">Mon – Fri</div>
-                                <div class="small text-black-50">9:00 AM – 5:00 PM</div>
+                                <div class="small text-black-50">Computer Science Student</div>
+                                <div class="small text-black-50">University of Maribor</div>
                             </div>
                         </div>
                     </div>
@@ -154,18 +165,11 @@
             </div>
         </section>
         <!-- Footer-->
-        <footer class="footer bg-black small text-center text-white-50">
-            <div class="container px-4 px-lg-5">
-                Copyright &copy; Domen Hribernik
-                <script>
-                    document.write(new Date().getFullYear());
-                </script>
-            </div>
-        </footer>
+        <footer class="footer bg-black small text-center text-white-50"><div class="container px-4 px-lg-5">Copyright &copy; Domen Hribernik 2024</div></footer>
         <!-- Bootstrap core JS-->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <!-- Core theme JS-->
-        <script src="js/scripts.js"></script>
+        <script src="js/scripts.js" defer></script>
         <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
         <!-- * *                               SB Forms JS                               * *-->
         <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->

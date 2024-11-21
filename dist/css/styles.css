@@ -11124,7 +11124,7 @@ body {
 }
 
 .projects-section {
-  padding: 10rem 0;
+  padding: 7rem 0;
   background-color: #f0f0f0;
 }
 .projects-section .featured-text {
@@ -11180,6 +11180,25 @@ body {
   background-attachment: scroll;
   background-size: cover;
 }
+.contact-section .quote {
+  font-size: 2rem;
+  font-family: monospace;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 4px #000;
+  padding: 1rem;
+  margin: 2rem 0;
+}
+.contact-section .quote footer {
+  font-size: 1.8rem;
+  font-style: normal;
+  font-family: monospace;
+  font-weight: bold;
+  text-shadow: 1px 1px 4px #000;
+  color: #64a19d;
+  margin-top: 2px;
+  padding-bottom: 2rem;
+}
 .contact-section .card {
   border: 0;
   border-bottom: 0.25rem solid #64a19d;
@@ -11217,5 +11236,6 @@ body {
 }
 
 .footer {
+  margin-top: -1px;
   padding: 5rem 0;
 }

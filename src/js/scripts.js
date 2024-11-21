@@ -45,5 +45,26 @@ window.addEventListener('DOMContentLoaded', event => {
             }
         });
     });
+});
 
+window.document.addEventListener('DOMContentLoaded', async () => {
+    // Get Quote
+    try {
+        fetch("https://api.quotable.io/random")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.querySelector("blockquote p").textContent = `"${data.content}"`;
+                document.querySelector(".blockquote-footer").textContent = `${data.author}`;
+            })
+            .catch(error => {
+                console.error("Error fetching or displaying the quote:", error);
+            });
+    } catch (error) {
+        console.error("Error fetching or displaying the quote:", error);
+    }
 });

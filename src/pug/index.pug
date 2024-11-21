@@ -5,8 +5,8 @@ html(lang='en')
 
         meta(charset='utf-8')
         meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
-        meta(name='description', content='')
-        meta(name='author', content='')
+        meta(name='description', content='Portfolio website for Domen Hribernik, showcasing projects and contact information.')
+        meta(name='author', content='Domen Hribernik')
 
         title Domen Hribernik
 
@@ -21,24 +21,25 @@ html(lang='en')
 
         // Core theme CSS (includes Bootstrap)
         link(href='css/styles.css', rel='stylesheet')
+        link(rel="preload" fetchpriority="high" as="image" href="assets/img/bg-masthead.jpg" type="image/webp")
 
     body#page-top
 
         // Navigation
-        nav#mainNav.navbar.navbar-expand-lg.navbar-light.fixed-top
+        nav#mainNav.navbar.navbar-expand-lg.navbar-light.fixed-top(role='navigation')
             .container.px-4.px-lg-5
-                a.navbar-brand#logo(href='#page-top') Domen Hribernik
+                a.navbar-brand#logo(href='#page-top', aria-label='Domen Hribernik') Domen Hribernik 
                 button.navbar-toggler.navbar-toggler-right(type='button', data-bs-toggle='collapse', data-bs-target='#navbarResponsive', aria-controls='navbarResponsive', aria-expanded='false', aria-label='Toggle navigation')
                     | Menu
                     i.fas.fa-bars
                 #navbarResponsive.collapse.navbar-collapse
                     ul.navbar-nav.ms-auto
                         li.nav-item
-                            a.nav-link(href='#about') About
+                            a.nav-link(href='#about' aria-label='About' ) About
                         li.nav-item
-                            a.nav-link(href='#projects') Projects
+                            a.nav-link(href='#projects' aria-label='Projects') Projects
                         li.nav-item
-                            a.nav-link(href='#contact') Contact
+                            a.nav-link(href='#contact' aria-label='Contact') Contact
 
         // Masthead
         header.masthead
@@ -47,7 +48,7 @@ html(lang='en')
                     .text-center
                         h1.mx-auto.my-0 Domen Hribernik
                         h2.text-white-50.mx-auto.mt-2.mb-5 Developer &amp; Tech Enthusiast
-                        a.btn.btn-primary(href='#about') About Me
+                        a.btn.btn-primary(href='#about' aria-label='About Me') About Me
 
         // About
         section#about.about-section.text-center
@@ -57,7 +58,7 @@ html(lang='en')
                         h2.text-white.mb-4 About Me
                         p.text-white-50
                             | I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects. If you're looking for a dedicated and innovative partner to bring your ideas to life, let's work together to achieve your goals.
-                        a.btn.btn-primary(href='#projects') My Projects
+                        a.btn.btn-primary(href='#projects' aria-label='My Projects') My Projects
                 img.img-fluid(src='assets/img/fog.png', alt='...')
 
         // Projects
@@ -72,7 +73,7 @@ html(lang='en')
                             h4 Vita Mavrič Portfolio
                             p.text-black-50.mb-0
                                 | This project showcases a custom-built, responsive website for Vita Mavrič, built in vanilla JavaScript.
-                                a(href="https://vitamavric.com" target="_blank") Website
+                                a(href="https://vitamavric.com" target="_blank" aria-label="Website") Website 
                 // Project One Row
                 .row.gx-0.mb-5.mb-lg-0.justify-content-center
                     .col-lg-6
@@ -84,7 +85,7 @@ html(lang='en')
                                     h4.text-white Sudoku
                                     p.mb-0.text-white-50
                                         | A classic Sudoku game developed in JavaScript, offering a fun and challenging way to test your logic and problem-solving skills. The project showcases my ability to create interactive web applications with a focus on user experience and functionality.
-                                        a.text-white-50.ml-1(href='https://github.com/domenhribernik/Sudoku', target='_blank') GitHub
+                                        a.text-white-50.ml-1(href='https://github.com/domenhribernik/Sudoku', target='_blank' aria-label='GitHub') GitHub
 
                 // Project Two Row
                 .row.gx-0.justify-content-center
@@ -97,10 +98,16 @@ html(lang='en')
                                     h4.text-white Wordle Bot
                                     p.mb-0.text-white-50
                                         | A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently. This project demonstrates the application of AI techniques to play and solve word games.
-                                        a.text-white-50.ml-1(href='https://github.com/domenhribernik/wordle-bot', target='_blank') GitHub
+                                        a.text-white-50.ml-1(href='https://github.com/domenhribernik/wordle-bot', target='_blank' aria-label='GitHub') GitHub
 
         // Contact
         section#contact.contact-section
+            .container-fluid.py-5.quote
+                .row.justify-content-center
+                    .col-lg-8
+                        blockquote.blockquote.text-center
+                            p.mb-0 "The only way to do great work is to love what you do."
+                            footer.blockquote-footer Steve Jobs
             .container.px-4.px-lg-5
                 .row.gx-4.gx-lg-5
                     .col-md-4.mb-3.mb-md-0
@@ -117,15 +124,15 @@ html(lang='en')
                                 h4.text-uppercase.m-0 Email
                                 hr.my-4.mx-auto
                                 .small.text-black-50
-                                    a(href='mailto:contact@domenhribernik.com') contact@domenhribernik.com
+                                    a(href='mailto:contact@domenhribernik.com' aria-label='contact@domenhribernik.com') contact@domenhribernik.com 
                     .col-md-4.mb-3.mb-md-0
                         .card.py-4.h-100
                             .card-body.text-center
-                                i.fas.fa-calendar-alt.text-primary.mb-2
-                                h4.text-uppercase.m-0 Availability
+                                i.fas.fa-graduation-cap.text-primary.mb-2
+                                h4.text-uppercase.m-0 Education
                                 hr.my-4.mx-auto
-                                .small.text-black-50 Mon – Fri 
-                                .small.text-black-50 9:00 AM – 5:00 PM
+                                .small.text-black-50 Computer Science Student
+                                .small.text-black-50 University of Maribor
                 .social.d-flex.justify-content-center
                     a.mx-2(href='https://github.com/domenhribernik' target='_blank')
                         i.fab.fa-github
@@ -137,13 +144,13 @@ html(lang='en')
         // Footer
         footer.footer.bg-black.small.text-center.text-white-50
             .container.px-4.px-lg-5
-                | Copyright &copy; Domen Hribernik <script>document.write(new Date().getFullYear())</script>
+                | Copyright &copy; Domen Hribernik #{new Date().getFullYear()}
 
         // Bootstrap core JS
         script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js')
 
         // Core theme JS
-        script(src='js/scripts.js')
+        script(src='js/scripts.js' defer)
 
         // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
         // * *                               SB Forms JS                               * *
