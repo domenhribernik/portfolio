@@ -39,6 +39,11 @@
         }
     }
 
+    #logo {
+        font-family: $logo-font;
+        font-size: 2rem;
+    }
+
     @include media-breakpoint-up(lg) {
         padding-top: 0;
         padding-bottom: 0;
@@ -92,9 +97,5 @@
                 }
             }
         }
-    }
-    #logo {
-        font-family: $logo-font;
-        font-size: 2rem;
     }
 }

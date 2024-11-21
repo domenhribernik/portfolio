@@ -35,6 +35,17 @@
         }
     }
 
+    @include media-breakpoint-up(lg) {
+        .quote {
+            font-size: 1.4rem;
+            padding: -2rem 10px 0;
+
+            footer {
+                font-size: 1rem;
+            }
+        }
+    }
+
     .card {
         border: 0;
         border-bottom: 0.25rem solid $primary;
