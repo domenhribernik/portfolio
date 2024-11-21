@@ -11181,7 +11181,7 @@ body {
   background-size: cover;
 }
 .contact-section .quote {
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-family: monospace;
   font-weight: bold;
   color: #fff;
@@ -11189,8 +11189,14 @@ body {
   padding: 1rem;
   margin: 2rem 0;
 }
+@media (min-width: 768px) {
+  .contact-section .quote {
+    font-size: 2rem;
+    padding: -2rem 10px 0;
+  }
+}
 .contact-section .quote footer {
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   font-style: normal;
   font-family: monospace;
   font-weight: bold;
@@ -11199,13 +11205,9 @@ body {
   margin-top: 2px;
   padding-bottom: 2rem;
 }
-@media (min-width: 992px) {
-  .contact-section .quote {
-    font-size: 1.4rem;
-    padding: -2rem 10px 0;
-  }
+@media (min-width: 768px) {
   .contact-section .quote footer {
-    font-size: 1rem;
+    font-size: 1.8rem;
   }
 }
 .contact-section .card {

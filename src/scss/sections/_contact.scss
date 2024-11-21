@@ -15,7 +15,7 @@
     background-size: cover;
 
     .quote {
-        font-size: 2rem;
+        font-size: 1.2rem;
         font-family: monospace;
         font-weight: bold;
         color: $white;
@@ -23,8 +23,13 @@
         padding: 1rem;
         margin: 2rem 0;
 
+        @include media-breakpoint-up(md) {
+            font-size: 2rem;
+            padding: -2rem 10px 0;
+        }
+
         footer {
-            font-size: 1.8rem;
+            font-size: 1.2rem;
             font-style: normal;
             font-family: monospace;
             font-weight: bold;
@@ -32,16 +37,9 @@
             color: $primary;
             margin-top: 2px;
             padding-bottom: 2rem;
-        }
-    }
 
-    @include media-breakpoint-up(lg) {
-        .quote {
-            font-size: 1.4rem;
-            padding: -2rem 10px 0;
-
-            footer {
-                font-size: 1rem;
+            @include media-breakpoint-up(md) {
+                font-size: 1.8rem;
             }
         }
     }
