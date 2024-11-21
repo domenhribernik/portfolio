@@ -45,12 +45,27 @@ window.addEventListener('DOMContentLoaded', event => {
             }
         });
     });
+
+
 });
+
+let loadFromMemory = () => {
+    fetch('assets/quotes.json')
+        .then(response => response.json())
+        .then(data => {
+            const randomQuote = data[Math.floor(Math.random() * data.length)];
+            document.querySelector("blockquote p").textContent = `"${randomQuote.content}"`;
+            document.querySelector(".blockquote-footer").textContent = `${randomQuote.author || "Unknown"}`;
+        })
+        .catch(error => {
+            console.error('Error fetching or parsing quotes.json:', error);
+        });
+}
 
 window.document.addEventListener('DOMContentLoaded', async () => {
     // Get Quote
     try {
-        fetch("https://api.quotable.io/random")
+        fetch("https://api.quotable.io/quotes/random?tags=famous-quotes||wisdom||technology")
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -58,10 +73,11 @@ window.document.addEventListener('DOMContentLoaded', async () => {
                 return response.json();
             })
             .then(data => {
-                document.querySelector("blockquote p").textContent = `"${data.content}"`;
-                document.querySelector(".blockquote-footer").textContent = `${data.author}`;
+                document.querySelector("blockquote p").textContent = `"${data[0].content}"`;
+                document.querySelector(".blockquote-footer").textContent = `${data[0].author || "Unknown"}`;
             })
             .catch(error => {
+                loadFromMemory();
                 console.error("Error fetching or displaying the quote:", error);
             });
     } catch (error) {
