@@ -35,30 +35,52 @@ html(lang='en')
                 #navbarResponsive.collapse.navbar-collapse
                     ul.navbar-nav.ms-auto
                         li.nav-item
-                            a.nav-link(href='#about' aria-label='About' ) About
+                            a.nav-link(href='#about' aria-label='About' )
+                                span.lang-eng About
+                                span.lang-slo O Meni
                         li.nav-item
-                            a.nav-link(href='#projects' aria-label='Projects') Projects
+                            a.nav-link(href='#projects' aria-label='Projects') 
+                                span.lang-eng Projects
+                                span.lang-slo Projekti
                         li.nav-item
-                            a.nav-link(href='#contact' aria-label='Contact') Contact
-
+                            a.nav-link(href='#contact' aria-label='Contact') 
+                                span.lang-eng Contact
+                                span.lang-slo Kontakt
+                    .language-switch
+                        .switch-text
+                            span.eng-text.active ENG
+                            span.slo-text SLO
+                        input#langToggle(type='checkbox')
+                        span.slider
         // Masthead
         header.masthead
             .container.px-4.px-lg-5.d-flex.h-100.align-items-center.justify-content-center
                 .d-flex.justify-content-center
                     .text-center
                         h1.mx-auto.my-0 Domen Hribernik
-                        h2.text-white-50.mx-auto.mt-2.mb-5 Developer &amp; Tech Enthusiast
-                        a.btn.btn-primary(href='#about' aria-label='About Me') About Me
+                        h2.text-white-50.mx-auto.mt-2.mb-5
+                            span.lang-eng Developer &amp; Tech Enthusiast
+                            span.lang-slo Razvijalec &amp; Ljubitelj Tehnologije
+                        a.btn.btn-primary(href='#about' aria-label='About Me')
+                            span.lang-eng About Me
+                            span.lang-slo O Meni
 
         // About
         section#about.about-section.text-center
             .container.px-4.px-lg-5
                 .row.gx-4.gx-lg-5.justify-content-center
                     .col-lg-8
-                        h2.text-white.mb-4 About Me
+                        h2.text-white.mb-4
+                            span.lang-eng About Me
+                            span.lang-slo O meni
                         p.text-white-50
-                            | I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects. If you're looking for a dedicated and innovative partner to bring your ideas to life, let's work together to achieve your goals.
-                        a.btn.btn-primary(href='#projects' aria-label='My Projects') My Projects
+                            span.lang-eng
+                                | I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects. Let's work together to achieve your goals!
+                            span.lang-slo
+                                | Sem študent računalništva na Univerzi v Mariboru. Navdušujejo me tehnologija in inovacije, s poudarkom na programiranju, razvoju programske opreme in reševanju kompleksnih problemov. Vedno sem pripravljen uporabiti svoje znanje za sodelovanje pri navdihujočih projektih. Skupaj lahko dosežemo vaše cilje!
+                        a.btn.btn-primary(href='#projects' aria-label='My Projects')
+                            span.lang-eng My Projects
+                            span.lang-slo Moji Projekti
                 img.img-fluid(src='assets/img/fog.png', alt='...')
 
         // Projects
@@ -72,8 +94,10 @@ html(lang='en')
                         .featured-text.text-center.text-lg-left
                             h4 Vita Mavrič Portfolio
                             p.text-black-50.mb-0
-                                | This project showcases a custom-built, responsive website for Vita Mavrič, built in vanilla JavaScript.
-                                a(href="https://vitamavric.com" target="_blank" aria-label="Website") Website 
+                                span.lang-eng This project showcases a custom-built, responsive website for Vita Mavrič, built in HTML, CSS and vanilla JavaScript (Vanilla Stack).
+                                span.lang-slo Ta projekt predstavlja po meri custom-built, responsive spletno stran za Vito Mavrič, izdelano z uporabo HTML, CSS in JavaScript (Vanilla Stack).
+                                
+                                a(href="https://vitamavric.com" target="_blank" aria-label="Website") vitamavric.com
                 // Project One Row
                 .row.gx-0.mb-5.mb-lg-0.justify-content-center
                     .col-lg-6
@@ -84,7 +108,10 @@ html(lang='en')
                                 .project-text.w-100.my-auto.text-center.text-lg-left
                                     h4.text-white Sudoku
                                     p.mb-0.text-white-50
-                                        | A classic Sudoku game developed in JavaScript, offering a fun and challenging way to test your logic and problem-solving skills. The project showcases my ability to create interactive web applications with a focus on user experience and functionality.
+                                        span.lang-eng
+                                            | A classic Sudoku game developed in JavaScript, offering a fun and challenging way to test your logic and problem-solving skills.
+                                        span.lang-slo
+                                            | Klasična igra Sudoku, razvita v JavaScript, ki ponuja zabaven in zahteven način za preizkus logičnega razmišljanja in sposobnosti reševanja problemov.
                                         a.text-white-50.ml-1(href='https://github.com/domenhribernik/Sudoku', target='_blank' aria-label='GitHub') GitHub
 
                 // Project Two Row
@@ -97,7 +124,10 @@ html(lang='en')
                                 .project-text.w-100.my-auto.text-center.text-lg-right
                                     h4.text-white Wordle Bot
                                     p.mb-0.text-white-50
-                                        | A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently. This project demonstrates the application of AI techniques to play and solve word games.
+                                        span.lang-eng 
+                                            | A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently. This project demonstrates the application of AI techniques to play and solve word games.
+                                        span.lang-slo 
+                                            | Python bot za igro Wordle, ki uporablja algoritmične strategije za učinkovito reševanje problemov. Ta projekt prikazuje uporabo umetne inteligence za igranje in reševanje besednih iger.
                                         a.text-white-50.ml-1(href='https://github.com/domenhribernik/wordle-bot', target='_blank' aria-label='GitHub') GitHub
 
         // Contact
@@ -114,9 +144,13 @@ html(lang='en')
                         .card.py-4.h-100
                             .card-body.text-center
                                 i.fas.fa-map-marked-alt.text-primary.mb-2
-                                h4.text-uppercase.m-0 Location
+                                h4.text-uppercase.m-0 
+                                    span.lang-eng Location
+                                    span.lang-slo Lokacija
                                 hr.my-4.mx-auto
-                                .small.text-black-50 Celje, Slovenia
+                                .small.text-black-50 
+                                    span.lang-eng Celje, Slovenia
+                                    span.lang-slo Celje, Slovenija
                     .col-md-4.mb-3.mb-md-0
                         .card.py-4.h-100
                             .card-body.text-center
@@ -129,10 +163,16 @@ html(lang='en')
                         .card.py-4.h-100
                             .card-body.text-center
                                 i.fas.fa-graduation-cap.text-primary.mb-2
-                                h4.text-uppercase.m-0 Education
+                                h4.text-uppercase.m-0 
+                                    span.lang-eng Education
+                                    span.lang-slo Izobrazba
                                 hr.my-4.mx-auto
-                                .small.text-black-50 Computer Science Student
-                                .small.text-black-50 University of Maribor
+                                .small.text-black-50 
+                                    span.lang-eng Computer Science Student
+                                    span.lang-slo Študent računalništva
+                                .small.text-black-50
+                                    span.lang-eng University of Maribor
+                                    span.lang-slo Univerza v Mariboru
                 .social.d-flex.justify-content-center
                     a.mx-2(href='https://github.com/domenhribernik' target='_blank')
                         i.fab.fa-github

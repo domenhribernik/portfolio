@@ -51,6 +51,50 @@ window.addEventListener('DOMContentLoaded', event => {
         });
     });
 
+    // Language toggle
+    const langToggle = document.getElementById('langToggle');
+    const body = document.body;
+    const engText = document.querySelector('.eng-text');
+    const sloText = document.querySelector('.slo-text');
+    const engElements = document.querySelectorAll('.lang-eng');
+    const sloElements = document.querySelectorAll('.lang-slo');
+
+    // Load saved language from localStorage
+    const savedLang = localStorage.getItem('siteLanguage');
+    if (savedLang === 'slovenian') {
+        body.classList.add('slovenian');
+        langToggle.checked = true;
+        engText.classList.remove('active');
+        sloText.classList.add('active');
+        sloElements.forEach(el => el.style.display = 'inline-block');
+        engElements.forEach(el => el.style.display = 'none');
+    } else {
+        // Default to English if no saved language
+        engText.classList.add('active');
+        sloText.classList.remove('active');
+        sloElements.forEach(el => el.style.display = 'none');
+        engElements.forEach(el => el.style.display = 'inline-block');
+    }
+    
+    // Toggle language on click
+    langToggle.addEventListener('click', () => {
+        
+        body.classList.toggle('slovenian');
+        engText.classList.toggle('active');
+        sloText.classList.toggle('active');
+
+        if (body.classList[0] === 'slovenian') {
+            sloElements.forEach(el => el.style.display = 'inline-block');
+            engElements.forEach(el => el.style.display = 'none');
+        } else {
+            sloElements.forEach(el => el.style.display = 'none');
+            engElements.forEach(el => el.style.display = 'inline-block');
+        }
+
+        // Save the current language to localStorage
+        const currentLang = body.classList.contains('slovenian') ? 'slovenian' : 'english';
+        localStorage.setItem('siteLanguage', currentLang);
+    });
 
 });
 

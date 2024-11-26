@@ -23,6 +23,10 @@
         padding: 0.9rem 0;
     }
 
+    li {
+        padding-left: 5px;
+    }
+
     .navbar-nav {
         .nav-item {
             &:hover {
@@ -54,6 +58,9 @@
         .navbar-brand {
             padding: 0.5rem 0;
             color: fade-out($custom-gray, 0.5);
+        }
+        li {
+            padding: 0;
         }
 
         .nav-link {

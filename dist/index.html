@@ -27,10 +27,33 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarResponsive">
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link" href="#about" aria-label="About">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#projects" aria-label="Projects">Projects</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#contact" aria-label="Contact">Contact</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#about" aria-label="About">
+                                <span class="lang-eng">About</span>
+                                <span class="lang-slo">O Meni</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#projects" aria-label="Projects">
+                                <span class="lang-eng">Projects</span>
+                                <span class="lang-slo">Projekti</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#contact" aria-label="Contact">
+                                <span class="lang-eng">Contact</span>
+                                <span class="lang-slo">Kontakt</span>
+                            </a>
+                        </li>
                     </ul>
+                    <div class="language-switch">
+                        <div class="switch-text">
+                            <span class="eng-text active">ENG</span>
+                            <span class="slo-text">SLO</span>
+                        </div>
+                        <input id="langToggle" type="checkbox" />
+                        <span class="slider"></span>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -40,8 +63,14 @@
                 <div class="d-flex justify-content-center">
                     <div class="text-center">
                         <h1 class="mx-auto my-0">Domen Hribernik</h1>
-                        <h2 class="text-white-50 mx-auto mt-2 mb-5">Developer &amp; Tech Enthusiast</h2>
-                        <a class="btn btn-primary" href="#about" aria-label="About Me">About Me</a>
+                        <h2 class="text-white-50 mx-auto mt-2 mb-5">
+                            <span class="lang-eng">Developer &amp; Tech Enthusiast</span>
+                            <span class="lang-slo">Razvijalec &amp; Ljubitelj Tehnologije</span>
+                        </h2>
+                        <a class="btn btn-primary" href="#about" aria-label="About Me">
+                            <span class="lang-eng">About Me</span>
+                            <span class="lang-slo">O Meni</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -51,9 +80,18 @@
             <div class="container px-4 px-lg-5">
                 <div class="row gx-4 gx-lg-5 justify-content-center">
                     <div class="col-lg-8">
-                        <h2 class="text-white mb-4">About Me</h2>
-                        <p class="text-white-50">I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects. If you're looking for a dedicated and innovative partner to bring your ideas to life, let's work together to achieve your goals.</p>
-                        <a class="btn btn-primary" href="#projects" aria-label="My Projects">My Projects</a>
+                        <h2 class="text-white mb-4">
+                            <span class="lang-eng">About Me</span>
+                            <span class="lang-slo">O meni</span>
+                        </h2>
+                        <p class="text-white-50">
+                            <span class="lang-eng">I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects. Let's work together to achieve your goals!</span>
+                            <span class="lang-slo">Sem študent računalništva na Univerzi v Mariboru. Navdušujejo me tehnologija in inovacije, s poudarkom na programiranju, razvoju programske opreme in reševanju kompleksnih problemov. Vedno sem pripravljen uporabiti svoje znanje za sodelovanje pri navdihujočih projektih. Skupaj lahko dosežemo vaše cilje!</span>
+                        </p>
+                        <a class="btn btn-primary" href="#projects" aria-label="My Projects">
+                            <span class="lang-eng">My Projects</span>
+                            <span class="lang-slo">Moji Projekti</span>
+                        </a>
                     </div>
                 </div>
                 <img class="img-fluid" src="assets/img/fog.png" alt="..." />
@@ -69,8 +107,9 @@
                         <div class="featured-text text-center text-lg-left">
                             <h4>Vita Mavrič Portfolio</h4>
                             <p class="text-black-50 mb-0">
-                                This project showcases a custom-built, responsive website for Vita Mavrič, built in vanilla JavaScript.
-                                <a href="https://vitamavric.com" target="_blank" aria-label="Website">Website</a>
+                                <span class="lang-eng">This project showcases a custom-built, responsive website for Vita Mavrič, built in HTML, CSS and vanilla JavaScript (Vanilla Stack).</span>
+                                <span class="lang-slo">Ta projekt predstavlja po meri custom-built, responsive spletno stran za Vito Mavrič, izdelano z uporabo HTML, CSS in JavaScript (Vanilla Stack).</span>
+                                <a href="https://vitamavric.com" target="_blank" aria-label="Website">vitamavric.com</a>
                             </p>
                         </div>
                     </div>
@@ -84,7 +123,8 @@
                                 <div class="project-text w-100 my-auto text-center text-lg-left">
                                     <h4 class="text-white">Sudoku</h4>
                                     <p class="mb-0 text-white-50">
-                                        A classic Sudoku game developed in JavaScript, offering a fun and challenging way to test your logic and problem-solving skills. The project showcases my ability to create interactive web applications with a focus on user experience and functionality.
+                                        <span class="lang-eng">A classic Sudoku game developed in JavaScript, offering a fun and challenging way to test your logic and problem-solving skills.</span>
+                                        <span class="lang-slo">Klasična igra Sudoku, razvita v JavaScript, ki ponuja zabaven in zahteven način za preizkus logičnega razmišljanja in sposobnosti reševanja problemov.</span>
                                         <a class="text-white-50 ml-1" href="https://github.com/domenhribernik/Sudoku" target="_blank" aria-label="GitHub">GitHub</a>
                                     </p>
                                 </div>
@@ -101,7 +141,8 @@
                                 <div class="project-text w-100 my-auto text-center text-lg-right">
                                     <h4 class="text-white">Wordle Bot</h4>
                                     <p class="mb-0 text-white-50">
-                                        A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently. This project demonstrates the application of AI techniques to play and solve word games.
+                                        <span class="lang-eng">A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently. This project demonstrates the application of AI techniques to play and solve word games.</span>
+                                        <span class="lang-slo">Python bot za igro Wordle, ki uporablja algoritmične strategije za učinkovito reševanje problemov. Ta projekt prikazuje uporabo umetne inteligence za igranje in reševanje besednih iger.</span>
                                         <a class="text-white-50 ml-1" href="https://github.com/domenhribernik/wordle-bot" target="_blank" aria-label="GitHub">GitHub</a>
                                     </p>
                                 </div>
@@ -129,9 +170,15 @@
                         <div class="card py-4 h-100">
                             <div class="card-body text-center">
                                 <i class="fas fa-map-marked-alt text-primary mb-2"></i>
-                                <h4 class="text-uppercase m-0">Location</h4>
+                                <h4 class="text-uppercase m-0">
+                                    <span class="lang-eng">Location</span>
+                                    <span class="lang-slo">Lokacija</span>
+                                </h4>
                                 <hr class="my-4 mx-auto" />
-                                <div class="small text-black-50">Celje, Slovenia</div>
+                                <div class="small text-black-50">
+                                    <span class="lang-eng">Celje, Slovenia</span>
+                                    <span class="lang-slo">Celje, Slovenija</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -149,10 +196,19 @@
                         <div class="card py-4 h-100">
                             <div class="card-body text-center">
                                 <i class="fas fa-graduation-cap text-primary mb-2"></i>
-                                <h4 class="text-uppercase m-0">Education</h4>
+                                <h4 class="text-uppercase m-0">
+                                    <span class="lang-eng">Education</span>
+                                    <span class="lang-slo">Izobrazba</span>
+                                </h4>
                                 <hr class="my-4 mx-auto" />
-                                <div class="small text-black-50">Computer Science Student</div>
-                                <div class="small text-black-50">University of Maribor</div>
+                                <div class="small text-black-50">
+                                    <span class="lang-eng">Computer Science Student</span>
+                                    <span class="lang-slo">Študent računalništva</span>
+                                </div>
+                                <div class="small text-black-50">
+                                    <span class="lang-eng">University of Maribor</span>
+                                    <span class="lang-slo">Univerza v Mariboru</span>
+                                </div>
                             </div>
                         </div>
                     </div>
