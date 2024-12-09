@@ -11227,6 +11227,9 @@ body {
   height: 100%;
   background-color: #131313;
 }
+.projects-section .text-left {
+  text-align: left;
+}
 
 .signup-section {
   padding: 10rem 0;

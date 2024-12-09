@@ -101,18 +101,38 @@ html(lang='en')
                 // Project One Row
                 .row.gx-0.mb-5.mb-lg-0.justify-content-center
                     .col-lg-6
-                        img.img-fluid(src='assets/img/project2.jpg', alt='Snake Game').border
+                        video.img-fluid(src='assets/img/run.mp4', autoplay, loop, muted, playsinline)
                     .col-lg-6
                         .bg-black.text-center.h-100.project
                             .d-flex.h-100
                                 .project-text.w-100.my-auto.text-center.text-lg-left
-                                    h4.text-white Sudoku
-                                    p.mb-0.text-white-50
+                                    h4.text-white
+                                        span.lang-eng Virtual Runner (Thesis)
+                                        span.lang-slo Virtual Runner (Diploma)
+                                    div.mb-0.text-white-50
                                         span.lang-eng
-                                            | A classic Sudoku game developed in JavaScript, offering a fun and challenging way to test your logic and problem-solving skills.
+                                            p My thesis focuses on creating a digital twin of a runner. This project integrates multiple subprojects into a unified application to demonstrate the practical use of various technologies. The application consists of:
+                                            ul.text-left.text-white-50.mt-1
+                                                li Web Application (React, Node, MongoDB), 
+                                                li Desktop Application for Data Processing (Kotlin), 
+                                                li Mobile Application for Data Collection (Kotlin), 
+                                                li Custom Programming Language for Visualization in GeoJSON (Kotlin), 
+                                                li Blockchain Multithread Application with MPI (Python),
+                                                li AI Application for Pattern Recognition (Python), 
+                                                li Video Game (libGDX - Java), 
+                                                li Continuous Integration and Continuous Deployment.
                                         span.lang-slo
-                                            | Klasična igra Sudoku, razvita v JavaScript, ki ponuja zabaven in zahteven način za preizkus logičnega razmišljanja in sposobnosti reševanja problemov.
-                                        a.text-white-50.ml-1(href='https://github.com/domenhribernik/Sudoku', target='_blank' aria-label='GitHub') GitHub
+                                            p Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača. Projekt združuje več podprojektov v enotno aplikacijo, ki prikazuje praktično uporabo različnih tehnologij. Aplikacija vsebuje podprojekte:
+                                            ul.text-left.text-white-50.mt-1
+                                                li Spletna stran (React, Node.js, MongoDB), 
+                                                li Namizna Aplikacija za Obdelavo Podatkov (Kotlin), 
+                                                li Mobilna Aplikacija za Zajem Podatkov (Kotlin), 
+                                                li Lasten Programski Jezik za Vizualizacijo v GeoJSON (Kotlin), 
+                                                li Blockchain Multithread Aplikacija z MPI (Python),
+                                                li AI Aplikacija za Prepoznavo Vzorcev (Python), 
+                                                li Računalniška Igra (libGDX - Java), 
+                                                li Continuous Integration and Continuous Deployment.
+                                        a.text-white-50.ml-1(href='https://github.com/orgs/ni-imena/repositories', target='_blank' aria-label='GitHub') GitHub
 
                 // Project Two Row
                 .row.gx-0.justify-content-center
@@ -123,10 +143,10 @@ html(lang='en')
                             .d-flex.h-100
                                 .project-text.w-100.my-auto.text-center.text-lg-right
                                     h4.text-white Wordle Bot
-                                    p.mb-0.text-white-50
-                                        span.lang-eng 
+                                    p.mb-0.text-white-50.mt-2
+                                        span.lang-eng.mb-3
                                             | A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently. This project demonstrates the application of AI techniques to play and solve word games.
-                                        span.lang-slo 
+                                        span.lang-slo.mb-3
                                             | Python bot za igro Wordle, ki uporablja algoritmične strategije za učinkovito reševanje problemov. Ta projekt prikazuje uporabo umetne inteligence za igranje in reševanje besednih iger.
                                         a.text-white-50.ml-1(href='https://github.com/domenhribernik/wordle-bot', target='_blank' aria-label='GitHub') GitHub
 
