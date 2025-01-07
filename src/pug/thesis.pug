@@ -1,0 +1,86 @@
+doctype html
+html(lang='en')
+
+    head
+
+        meta(charset='utf-8')
+        meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
+        meta(name='description', content='Portfolio website for Domen Hribernik, showcasing projects and contact information.')
+        meta(name='author', content='Domen Hribernik')
+
+        title Domen Hribernik
+
+        link(rel='icon', type='image/x-icon', href='assets/favicon.ico')
+
+        // Font Awesome icons (free version)
+        script(src='https://use.fontawesome.com/releases/v6.3.0/js/all.js', crossorigin='anonymous')
+
+        // Google fonts
+        link(href='https://fonts.googleapis.com/css?family=Varela+Round', rel='stylesheet')
+        link(href='https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i', rel='stylesheet')
+
+        // Core theme CSS (includes Bootstrap)
+        link(href='css/styles.css', rel='stylesheet')
+        link(rel="preload" fetchpriority="high" as="image" href="assets/img/bg-masthead.jpg" type="image/webp")
+
+    body#page-top
+        nav#mainNav.navbar.navbar-expand-lg.navbar-light.fixed-top(role='navigation')
+            .container.px-4.px-lg-5
+                a.navbar-brand#logo(href='#page-top', aria-label='Domen Hribernik') Domen Hribernik 
+                button.navbar-toggler.navbar-toggler-right(type='button', data-bs-toggle='collapse', data-bs-target='#navbarResponsive', aria-controls='navbarResponsive', aria-expanded='false', aria-label='Toggle navigation')
+                    | Menu
+                    i.fas.fa-bars
+                #navbarResponsive.collapse.navbar-collapse
+                    ul.navbar-nav.ms-auto
+                        li.nav-item
+                            a.nav-link(href='#about' aria-label='About' )
+                                span.lang-eng About
+                                span.lang-slo O Meni
+                        li.nav-item
+                            a.nav-link(href='#projects' aria-label='Projects') 
+                                span.lang-eng Projects
+                                span.lang-slo Projekti
+                        li.nav-item
+                            a.nav-link(href='#contact' aria-label='Contact') 
+                                span.lang-eng Contact
+                                span.lang-slo Kontakt
+                    .language-switch
+                        .switch-text
+                            span.eng-text.active ENG
+                            span.slo-text SLO
+                        input#langToggle(type='checkbox')
+                        span.slider
+
+        section#projects.projects-section
+            .container.px-4.px-lg-5
+                .row.gx-0.mb-5.mb-lg-0.justify-content-center
+                    .col-lg-6
+                        video.img-fluid(src='assets/img/run.mp4', autoplay, loop, muted, playsinline)
+                    .col-lg-6
+                        .bg-black.text-center.h-100.project
+                            .d-flex.h-100
+                                .project-text.w-100.my-auto.text-center.text-lg-left
+                                    div.mb-0.text-white-50
+                                        span.lang-eng
+                                            p My thesis focuses on creating a digital twin of a runner. This project integrates multiple subprojects into a unified application to demonstrate the practical use of various technologies. The application consists of:
+                                            ul.text-left.text-white-50.mt-1
+                                                li Web Application (React, Node, MongoDB), 
+                                                li Desktop Application for Data Processing (Kotlin), 
+                                                li Mobile Application for Data Collection (Kotlin), 
+                                                li Custom Programming Language for Visualization in GeoJSON (Kotlin), 
+                                                li Blockchain Multithread Application with MPI (Python),
+                                                li AI Application for Pattern Recognition (Python), 
+                                                li Video Game (libGDX - Java), 
+                                                li Continuous Integration and Continuous Deployment.
+                                        span.lang-slo
+                                            p Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača. Projekt združuje več podprojektov v enotno aplikacijo, ki prikazuje praktično uporabo različnih tehnologij. Aplikacija vsebuje podprojekte:
+                                            ul.text-left.text-white-50.mt-1
+                                                li Spletna stran (React, Node.js, MongoDB), 
+                                                li Namizna Aplikacija za Obdelavo Podatkov (Kotlin), 
+                                                li Mobilna Aplikacija za Zajem Podatkov (Kotlin), 
+                                                li Lasten Programski Jezik za Vizualizacijo v GeoJSON (Kotlin), 
+                                                li Blockchain Multithread Aplikacija z MPI (Python),
+                                                li AI Aplikacija za Prepoznavo Vzorcev (Python), 
+                                                li Računalniška Igra (libGDX - Java), 
+                                                li Continuous Integration and Continuous Deployment.
+                                        a.text-white-50.ml-1(href='https://github.com/orgs/ni-imena/repositories', target='_blank' aria-label='GitHub') GitHub
