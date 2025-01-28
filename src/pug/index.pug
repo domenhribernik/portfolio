@@ -25,6 +25,10 @@ html(lang='en')
 
     body#page-top
 
+        // Preloader
+        div#loading-overlay
+            .loading-spinner
+            
         // Navigation
         nav#mainNav.navbar.navbar-expand-lg.navbar-light.fixed-top(role='navigation')
             .container.px-4.px-lg-5
@@ -101,7 +105,7 @@ html(lang='en')
                 // Project One Row
                 .row.gx-0.mb-5.mb-lg-0.justify-content-center
                     .col-lg-6
-                        video.img-fluid(src='assets/img/run.mp4', autoplay, loop, muted, playsinline)
+                        video.img-fluid(src='assets/video/run.mp4', autoplay, loop, muted, playsinline)
                     .col-lg-6
                         .bg-black.text-center.h-100.project
                             .d-flex.h-100
@@ -114,12 +118,12 @@ html(lang='en')
                                             p My thesis focuses on creating a digital twin of a runner. This project integrates multiple subprojects into a unified application to demonstrate the practical use of various technologies. The application consists of:
                                         span.lang-slo
                                             p Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača. Projekt združuje več podprojektov v enotno aplikacijo, ki prikazuje praktično uporabo različnih tehnologij. Aplikacija vsebuje podprojekte:
-                                        a.text-white-50.ml-1(href='thesis.html', target='_blank') Read More
+                                        a.text-white-50.ml-1(href='thesis.html') Read More
 
                 // Project Two Row
                 .row.gx-0.justify-content-center
                     .col-lg-6
-                        video.img-fluid(src='assets/img/wordle.mp4', autoplay, loop, muted, playsinline)
+                        video.img-fluid(src='assets/video/wordle.mp4', autoplay, loop, muted, playsinline)
                     .col-lg-6.order-lg-first
                         .bg-black.text-center.h-100.project
                             .d-flex.h-100
@@ -186,7 +190,7 @@ html(lang='en')
         // Footer
         footer.footer.bg-black.small.text-center.text-white-50
             .container.px-4.px-lg-5
-                | Copyright &copy; Domen Hribernik #{new Date().getFullYear()}
+                | Copyright &copy; Domen Hribernik <span id="currentYear"></span>
 
         // Bootstrap core JS
         script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js')

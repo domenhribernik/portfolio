@@ -7,8 +7,19 @@
 // Scripts
 // 
 
+
 window.addEventListener('DOMContentLoaded', event => {
 
+    window.addEventListener('load', () => {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.classList.add('fade-out');
+    
+        setTimeout(() => {
+            loadingOverlay.remove();
+        }, 2000);
+    });
+
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
     // Navbar shrink function
     var navbarShrink = function () {
         const navbarCollapsible = document.body.querySelector('#mainNav');
@@ -20,14 +31,15 @@ window.addEventListener('DOMContentLoaded', event => {
         } else {
             navbarCollapsible.classList.add('navbar-shrink')
         }
-
     };
 
-    // Shrink the navbar 
     navbarShrink();
-
-    // Shrink the navbar when page is scrolled
-    document.addEventListener('scroll', navbarShrink);
+    if (window.location.pathname === '/') {
+        document.addEventListener('scroll', navbarShrink);
+    }
+    else {
+        document.body.querySelector('#mainNav').classList.add('navbar-shrink')
+    }
 
     // Activate Bootstrap scrollspy on the main nav element
     const mainNav = document.body.querySelector('#mainNav');
@@ -75,10 +87,9 @@ window.addEventListener('DOMContentLoaded', event => {
         sloElements.forEach(el => el.style.display = 'none');
         engElements.forEach(el => el.style.display = 'inline-block');
     }
-    
+
     // Toggle language on click
     langToggle.addEventListener('click', () => {
-        
         body.classList.toggle('slovenian');
         engText.classList.toggle('active');
         sloText.classList.toggle('active');
