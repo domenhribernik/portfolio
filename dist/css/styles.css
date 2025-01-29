@@ -10981,7 +10981,7 @@ body {
 
 #mainNav {
   min-height: 3.5rem;
-  background-color: #d3d6d4;
+  background-color: #d8dfde;
 }
 #mainNav .navbar-toggler {
   font-size: 80%;
@@ -11001,7 +11001,7 @@ body {
   padding-left: 5px;
 }
 #mainNav .navbar-nav .nav-item:hover {
-  color: fade(#d3d6d4, 80%);
+  color: fade(#d8dfde, 80%);
   outline: none;
   background-color: transparent;
 }
@@ -11023,7 +11023,7 @@ body {
   }
   #mainNav .navbar-brand {
     padding: 0.5rem 0;
-    color: rgba(211, 214, 212, 0.5);
+    color: rgba(216, 223, 222, 0.5);
   }
   #mainNav li {
     padding: 0;
@@ -11031,16 +11031,16 @@ body {
   #mainNav .nav-link {
     transition: none;
     padding: 2rem 1.5rem;
-    color: rgba(211, 214, 212, 0.5);
+    color: rgba(216, 223, 222, 0.5);
   }
   #mainNav .nav-link:hover {
-    color: rgba(211, 214, 212, 0.75);
+    color: rgba(216, 223, 222, 0.75);
   }
   #mainNav .nav-link:active {
-    color: #d3d6d4;
+    color: #d8dfde;
   }
   #mainNav.navbar-shrink {
-    background-color: #d3d6d4;
+    background-color: #d8dfde;
   }
   #mainNav.navbar-shrink .navbar-brand {
     color: #000;
@@ -11082,7 +11082,7 @@ body {
   align-items: center;
   width: 90px;
   height: 30px;
-  background-color: #d3d6d4;
+  background-color: #d8dfde;
   margin: 8px 0 3px 0;
   border-radius: 10px;
   overflow: hidden;
@@ -11207,7 +11207,7 @@ body {
   height: auto;
   min-height: 35rem;
   padding: 15rem 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 75%, #000 100%), url("../assets/img/bg-masthead.jpg");
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 75%, #000 100%), url("../assets/img/bg-masthead.png");
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: scroll;
@@ -11270,6 +11270,15 @@ body {
     border-left: 0.5rem solid #64a19d;
   }
 }
+.projects-section .featured-text-thesis {
+  padding: 2rem;
+}
+@media (min-width: 992px) {
+  .projects-section .featured-text-thesis {
+    padding: 0 0 0 2rem;
+    margin-left: 0.5rem;
+  }
+}
 .projects-section .project-text {
   padding: 3rem;
   font-size: 90%;
@@ -11285,6 +11294,82 @@ body {
 }
 .projects-section .text-left {
   text-align: left;
+}
+.projects-section .grid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 20px;
+  padding: 2rem;
+  width: 60vw;
+  margin: 0 auto;
+}
+.projects-section .flip-card {
+  aspect-ratio: 1/1;
+  perspective: 1000px;
+  position: relative;
+  cursor: pointer;
+}
+.projects-section .flip-card-inner {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.2s;
+  transform-style: preserve-3d;
+  transform-origin: center;
+}
+.projects-section .flip-card:hover .flip-card-inner {
+  animation: flipDelay 2.2s forwards;
+}
+@keyframes flipDelay {
+  0% {
+    transform: rotateY(0deg);
+  }
+  10% {
+    transform: rotateY(180deg);
+  }
+  90% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+.projects-section .flip-card-front,
+.projects-section .flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  border-radius: 10px;
+}
+.projects-section .flip-card-front {
+  color: gray;
+  background-size: cover;
+  background-position: center;
+}
+.projects-section .flip-card-front h3, .projects-section .flip-card-front .h3 {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  color: #000;
+  font-weight: bold;
+  width: 65%;
+}
+.projects-section .flip-card-back {
+  background-color: 230;
+  background-color: #7464a1;
+  color: #fff;
+  transform: rotateY(180deg);
+}
+@media (max-width: 768px) {
+  .projects-section .grid {
+    grid-template-columns: 1fr;
+    width: 80vw;
+    gap: 10px;
+  }
 }
 
 .signup-section {

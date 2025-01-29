@@ -21,7 +21,6 @@ html(lang='en')
 
         // Core theme CSS (includes Bootstrap)
         link(href='css/styles.css', rel='stylesheet')
-        link(rel="preload" fetchpriority="high" as="image" href="assets/img/bg-masthead.jpg" type="image/webp")
 
     body
 
@@ -58,52 +57,67 @@ html(lang='en')
                         span.slider
         // Thesis
         section#projects.projects-section
+            h1.mx-auto.my-0.text-center.mb-4 Virtual Runner
             .container.px-4.px-lg-5
                 // Featured Project Row
                 .row.gx-0.mb-4.mb-lg-5.align-items-center
-                    .col-xl-8.col-lg-7
+                    .col-xl-7.col-lg-6(style='border: 1px solid;')
                         video.img-fluid(src='assets/video/run.mp4', autoplay, loop, muted, playsinline)
-                    .col-xl-4.col-lg-5
-                        .featured-text.text-center.text-lg-left
-                            h4
-                                span.lang-eng Virtual Runner (Thesis)
-                                span.lang-slo Virtual Runner (Diploma)
+                    .col-xl-5.col-lg-6
+                        .featured-text-thesis.text-center.text-lg-left
                             div.mb-0
                                 span.lang-eng
-                                    p My thesis focuses on creating a digital twin of a runner. This project integrates multiple subprojects into a unified application to demonstrate the practical use of various technologies. The application consists of:
+                                    p The project focuses on creating a digital twin of a runner. The thesis integrates multiple subprojects into a unified application to demonstrate the practical use of various technologies. The project consists of:
+                                    ul.text-left.mt-1
+                                        li Web Application (React, Node, MongoDB), 
+                                        li Desktop Application for Data Processing (Kotlin), 
+                                        li Mobile Application for Data Collection (Kotlin), 
+                                        li Custom Programming Language for Visualization in GeoJSON (Kotlin), 
+                                        li Blockchain Multithread Application with MPI (Python),
+                                        li AI Application for Pattern Recognition (Python), 
+                                        li Video Game (libGDX - Java), 
+                                        li Continuous Integration and Continuous Deployment.
                                 span.lang-slo
-                                    p Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača. Projekt združuje več podprojektov v enotno aplikacijo, ki prikazuje praktično uporabo različnih tehnologij. Aplikacija vsebuje podprojekte:
+                                    p Projekt se osredotoča na izdelavo digitalnega dvojčka tekača. Diplomska naloga združuje več podprojektov v enotno aplikacijo, ki prikazuje praktično uporabo različnih tehnologij. Projekt vsebuje podprojekte:
+                                    ul.text-left.mt-1
+                                        li Spletna stran (React, Node.js, MongoDB), 
+                                        li Namizna Aplikacija za Obdelavo Podatkov (Kotlin), 
+                                        li Mobilna Aplikacija za Zajem Podatkov (Kotlin), 
+                                        li Lasten Programski Jezik za Vizualizacijo v GeoJSON (Kotlin), 
+                                        li Blockchain Multithread Aplikacija z MPI (Python),
+                                        li AI Aplikacija za Prepoznavo Vzorcev (Python), 
+                                        li Računalniška Igra (libGDX - Java), 
+                                        li Continuous Integration and Continuous Deployment.
 
             .container.px-4.px-lg-5
                 .row.gx-0.mb-5.mb-lg-0.justify-content-center
                     .col-lg-12
                         .bg-black.text-center.h-100.project
                             .d-flex.h-100
-                                .project-text.w-100.my-auto.text-center.text-lg-left
-                                    div.mb-0.text-white-50
-                                        span.lang-eng
-                                            p My thesis focuses on creating a digital twin of a runner. This project integrates multiple subprojects into a unified application to demonstrate the practical use of various technologies. The application consists of:
-                                            ul.text-left.text-white-50.mt-1
-                                                li Web Application (React, Node, MongoDB), 
-                                                li Desktop Application for Data Processing (Kotlin), 
-                                                li Mobile Application for Data Collection (Kotlin), 
-                                                li Custom Programming Language for Visualization in GeoJSON (Kotlin), 
-                                                li Blockchain Multithread Application with MPI (Python),
-                                                li AI Application for Pattern Recognition (Python), 
-                                                li Video Game (libGDX - Java), 
-                                                li Continuous Integration and Continuous Deployment.
-                                        span.lang-slo
-                                            p Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača. Projekt združuje več podprojektov v enotno aplikacijo, ki prikazuje praktično uporabo različnih tehnologij. Aplikacija vsebuje podprojekte:
-                                            ul.text-left.text-white-50.mt-1
-                                                li Spletna stran (React, Node.js, MongoDB), 
-                                                li Namizna Aplikacija za Obdelavo Podatkov (Kotlin), 
-                                                li Mobilna Aplikacija za Zajem Podatkov (Kotlin), 
-                                                li Lasten Programski Jezik za Vizualizacijo v GeoJSON (Kotlin), 
-                                                li Blockchain Multithread Aplikacija z MPI (Python),
-                                                li AI Aplikacija za Prepoznavo Vzorcev (Python), 
-                                                li Računalniška Igra (libGDX - Java), 
-                                                li Continuous Integration and Continuous Deployment.
-                                        a.text-white-50.ml-1(href='https://github.com/orgs/ni-imena/repositories', target='_blank' aria-label='GitHub') GitHub
+                                mixin flipCard(image, customClass, title, description)
+                                    .flip-card(class=customClass)
+                                        .flip-card-inner
+                                            .flip-card-front(style=`background-image: url("../assets/img/${image}");`)
+                                                h3 #{title}
+                                            .flip-card-back
+                                                p #{description}
+                                div.grid
+                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-slo', 'Spletno Programiranje', 'Opis')
+                                    +flipCard('good.png', 'lang-slo', 'Sistemska Administracija', 'Opis')
+                                    +flipCard('good.png', 'lang-slo', 'Prevajanje Programskih Jezikov', 'Opis')
+                                    +flipCard('good.png', 'lang-slo', 'Principi Programskih Jezikov', 'Opis')
+                                    +flipCard('good.png', 'lang-slo', 'Uvod v Razpozvavanje Vzorcev in Računalniški Vid', 'Opis')
+                                    +flipCard('good.png', 'lang-slo', 'Paralelno in Porazdeljeno Računanje', 'Opis')
+                                    +flipCard('good.png', 'lang-slo', 'Platformno Odvisen Razvoj Aplikacij', 'Opis')
+                                    +flipCard('good.png', 'lang-slo', 'Razvoj Računalniških Iger', 'Opis')
         
         // Footer
         footer.footer.bg-black.small.text-center.text-white-50
