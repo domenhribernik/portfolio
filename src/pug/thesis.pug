@@ -56,7 +56,7 @@ html(lang='en')
                         input#langToggle(type='checkbox')
                         span.slider
         // Thesis
-        section#projects.projects-section
+        section#projects.projects-section.thesis-section
             h1.mx-auto.my-0.text-center.mb-4 Virtual Runner
             .container.px-4.px-lg-5
                 // Featured Project Row
@@ -92,8 +92,10 @@ html(lang='en')
             .container.px-4.px-lg-5
                 .row.gx-0.mb-5.mb-lg-0.justify-content-center
                     .col-lg-12
-                        .bg-black.text-center.h-100.project(style='border-radius: 10px;')
-                            .d-flex.h-100
+                        .bg-black.text-center.h-100.project(style='border-radius: 10px;') 
+                            .h-flex.h-100
+                                h2.text-center.lang-eng Accredited curriculum
+                                h2.text-center.lang-slo Akreditiran predmetnik
                                 mixin flipCard(image, customClass, title, description)
                                     .flip-card(class=customClass)
                                         .flip-card-inner
@@ -102,14 +104,14 @@ html(lang='en')
                                             .flip-card-back
                                                 p #{description}
                                 div.grid
-                                    +flipCard('good.png', 'lang-eng', '', '')
-                                    +flipCard('good.png', 'lang-eng', '', '')
-                                    +flipCard('good.png', 'lang-eng', '', '')
-                                    +flipCard('good.png', 'lang-eng', '', '')
-                                    +flipCard('good.png', 'lang-eng', '', '')
-                                    +flipCard('good.png', 'lang-eng', '', '')
-                                    +flipCard('good.png', 'lang-eng', '', '')
-                                    +flipCard('good.png', 'lang-eng', '', '')
+                                    +flipCard('good.png', 'lang-eng', 'Web Application Development', 'Description')
+                                    +flipCard('good.png', 'lang-eng', 'System Administration', 'Description')
+                                    +flipCard('good.png', 'lang-eng', 'Compiling Programming Languages', 'Description')
+                                    +flipCard('good.png', 'lang-eng', 'Principles of Programming Languages', 'Description')
+                                    +flipCard('good.png', 'lang-eng', 'Introduction to Computer Vision and Pattern Recognition', 'Description')
+                                    +flipCard('good.png', 'lang-eng', 'Parallel and Distrubited Computing', 'Description')
+                                    +flipCard('good.png', 'lang-eng', 'Platform-Based Application Development', 'Description')
+                                    +flipCard('good.png', 'lang-eng', 'Game Development', 'Description')
                                     +flipCard('good.png', 'lang-slo', 'Spletno Programiranje', 'Opis')
                                     +flipCard('good.png', 'lang-slo', 'Sistemska Administracija', 'Opis')
                                     +flipCard('good.png', 'lang-slo', 'Prevajanje Programskih Jezikov', 'Opis')

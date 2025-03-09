@@ -11295,69 +11295,6 @@ body {
 .projects-section .text-left {
   text-align: left;
 }
-.projects-section .grid {
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  gap: 20px;
-  padding: 2rem;
-  width: 60vw;
-  margin: 0 auto;
-}
-.projects-section .flip-card {
-  aspect-ratio: 1/1;
-  perspective: 1000px;
-  position: relative;
-  cursor: pointer;
-}
-.projects-section .flip-card-inner {
-  width: 100%;
-  height: 100%;
-  transition: transform 0.5s;
-  transform-style: preserve-3d;
-  transform-origin: center;
-}
-.projects-section .flip-card:hover .flip-card-inner,
-.projects-section .flip-card.flipped .flip-card-inner {
-  transform: rotateY(180deg);
-}
-.projects-section .flip-card-front,
-.projects-section .flip-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  box-sizing: border-box;
-  border-radius: 10px;
-}
-.projects-section .flip-card-front {
-  color: gray;
-  background-size: cover;
-  background-position: center;
-}
-.projects-section .flip-card-front h3, .projects-section .flip-card-front .h3 {
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
-  color: #000;
-  font-weight: bold;
-  width: 65%;
-}
-.projects-section .flip-card-back {
-  background-color: 106;
-  background-color: #7464a1;
-  color: #fff;
-  transform: rotateY(180deg);
-}
-@media (max-width: 768px) {
-  .projects-section .grid {
-    grid-template-columns: 1fr;
-    width: 80vw;
-    gap: 10px;
-  }
-}
 
 .signup-section {
   padding: 10rem 0;
@@ -11458,4 +11395,80 @@ body {
 .footer {
   margin-top: -1px;
   padding: 5rem 0;
+}
+
+h2, .h2 {
+  padding-top: 20px;
+  color: #fff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 20px;
+  padding: 2rem;
+  width: 60vw;
+  margin: 0 auto;
+}
+
+.flip-card {
+  aspect-ratio: 1/1;
+  perspective: 1000px;
+  position: relative;
+  cursor: pointer;
+}
+
+.flip-card-inner {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+  transform-origin: center;
+}
+
+.flip-card:hover .flip-card-inner,
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  border-radius: 10px;
+}
+
+.flip-card-front {
+  color: gray;
+  background-size: cover;
+  background-position: center;
+}
+.flip-card-front h3, .flip-card-front .h3 {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  color: #000;
+  font-weight: bold;
+  width: 65%;
+}
+
+.flip-card-back {
+  background-color: 83;
+  background-color: #7464a1;
+  color: #fff;
+  transform: rotateY(180deg);
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+    width: 80vw;
+    gap: 10px;
+  }
 }
