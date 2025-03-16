@@ -1,11 +1,37 @@
+$gradient-colors: (
+  linear-gradient(45deg, #ff00ff, #00ffff, #ff0000),
+  linear-gradient(45deg, #ff6600, #ffcc00, #ff0000),
+  linear-gradient(45deg, #00ff99, #00ccff, #0066ff),
+  linear-gradient(45deg, #ff33cc, #9933ff, #33ccff),
+  linear-gradient(45deg, #ff3366, #ff6600, #ffcc00),
+  linear-gradient(45deg, #00ffff, #33ff33, #0099ff),
+  linear-gradient(45deg, #ff0099, #ff3300, #ff6600),
+  linear-gradient(45deg, #9933ff, #33ccff, #00ffcc),
+  linear-gradient(45deg, #ff00ff, #00ffff, #ff0000),
+  linear-gradient(45deg, #ff6600, #ffcc00, #ff0000),
+  linear-gradient(45deg, #00ff99, #00ccff, #0066ff),
+  linear-gradient(45deg, #ff33cc, #9933ff, #33ccff),
+  linear-gradient(45deg, #ff3366, #ff6600, #ffcc00),
+  linear-gradient(45deg, #00ffff, #33ff33, #0099ff),
+  linear-gradient(45deg, #ff0099, #ff3300, #ff6600),
+  linear-gradient(45deg, #9933ff, #33ccff, #00ffcc)
+);
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 h2 {
-  padding-top: 20px;
+  padding-top: 25px;
+  font-size: 3.5rem;
   color: $white;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, auto);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   padding: 2rem;
   width: 60vw;
@@ -48,28 +74,36 @@ h2 {
 
 .flip-card-front {
   color: gray;
-  background-size: cover;
-  background-position: center;
-
+  background-size: 300% 300%; /* For smooth animation of the gradient */
+  animation: gradientShift 6s infinite ease-in-out;
+  background-image: linear-gradient(45deg, #ff00ff, #00ffff, #ff0000);  /* Animated gradient */
+  background-position: 0% 50%;  /* Initial gradient position */
+  background-repeat: no-repeat;
   h3 {
-      font-size: clamp(1.5rem, 3vw, 2.5rem);
-      color: $black;
-      font-weight: bold;
-      width: 65%;
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    color: $white;
+    font-weight: bold;
+    width: 65%;
   }
 }
 
 .flip-card-back {
-  background-color: random($limit: 255);
-  background-color: $secondary;
+  background-color: $secondary;  // Keeps back solid color
   color: #fff;
   transform: rotateY(180deg);
 }
 
 @media (max-width: 768px) {
   .grid {
-      grid-template-columns: 1fr;
-      width: 80vw;
-      gap: 10px;
+    grid-template-columns: 1fr;
+    width: 80vw;
+    gap: 10px;
+  }
+}
+
+// Apply a unique gradient for each flip-card front
+@for $i from 1 through length($gradient-colors) {
+  .flip-card:nth-child(#{$i}) .flip-card-front {
+    background: nth($gradient-colors, $i);
   }
 }

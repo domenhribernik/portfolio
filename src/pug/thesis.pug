@@ -96,30 +96,31 @@ html(lang='en')
                             .h-flex.h-100
                                 h2.text-center.lang-eng Accredited curriculum
                                 h2.text-center.lang-slo Akreditiran predmetnik
-                                mixin flipCard(image, customClass, title, description)
+                                mixin flipCard(customClass, title, description)
                                     .flip-card(class=customClass)
                                         .flip-card-inner
-                                            .flip-card-front(style=`background-image: url("../assets/img/${image}");`)
+                                            .flip-card-front
                                                 h3 #{title}
                                             .flip-card-back
                                                 p #{description}
                                 div.grid
-                                    +flipCard('good.png', 'lang-eng', 'Web Application Development', 'Description')
-                                    +flipCard('good.png', 'lang-eng', 'System Administration', 'Description')
-                                    +flipCard('good.png', 'lang-eng', 'Compiling Programming Languages', 'Description')
-                                    +flipCard('good.png', 'lang-eng', 'Principles of Programming Languages', 'Description')
-                                    +flipCard('good.png', 'lang-eng', 'Introduction to Computer Vision and Pattern Recognition', 'Description')
-                                    +flipCard('good.png', 'lang-eng', 'Parallel and Distrubited Computing', 'Description')
-                                    +flipCard('good.png', 'lang-eng', 'Platform-Based Application Development', 'Description')
-                                    +flipCard('good.png', 'lang-eng', 'Game Development', 'Description')
-                                    +flipCard('good.png', 'lang-slo', 'Spletno Programiranje', 'Opis')
-                                    +flipCard('good.png', 'lang-slo', 'Sistemska Administracija', 'Opis')
-                                    +flipCard('good.png', 'lang-slo', 'Prevajanje Programskih Jezikov', 'Opis')
-                                    +flipCard('good.png', 'lang-slo', 'Principi Programskih Jezikov', 'Opis')
-                                    +flipCard('good.png', 'lang-slo', 'Uvod v Razpozvavanje Vzorcev in Računalniški Vid', 'Opis')
-                                    +flipCard('good.png', 'lang-slo', 'Paralelno in Porazdeljeno Računanje', 'Opis')
-                                    +flipCard('good.png', 'lang-slo', 'Platformno Odvisen Razvoj Aplikacij', 'Opis')
-                                    +flipCard('good.png', 'lang-slo', 'Razvoj Računalniških Iger', 'Opis')
+                                    +flipCard('lang-eng', 'Web Application Development', 'Description')
+                                    +flipCard('lang-eng', 'System Administration', 'Description')
+                                    +flipCard('lang-eng', 'Compiling Programming Languages', 'Description')
+                                    +flipCard('lang-eng', 'Principles of Programming Languages', 'Description')
+                                    +flipCard('lang-eng', 'Introduction to Computer Vision and Pattern Recognition', 'Description')
+                                    +flipCard('lang-eng', 'Parallel and Distrubited Computing', 'Description')
+                                    +flipCard('lang-eng', 'Platform-Based Application Development', 'Description')
+                                    +flipCard('lang-eng', 'Game Development', 'Description')
+
+                                    +flipCard('lang-slo', 'Spletno Programiranje', 'Opis')
+                                    +flipCard('lang-slo', 'Sistemska Administracija', 'Opis')
+                                    +flipCard('lang-slo', 'Prevajanje Programskih Jezikov', 'Opis')
+                                    +flipCard('lang-slo', 'Principi Programskih Jezikov', 'Opis')
+                                    +flipCard('lang-slo', 'Uvod v Razpozvavanje Vzorcev in Računalniški Vid', 'Opis')
+                                    +flipCard('lang-slo', 'Paralelno in Porazdeljeno Računanje', 'Opis')
+                                    +flipCard('lang-slo', 'Platformno Odvisen Razvoj Aplikacij', 'Opis')
+                                    +flipCard('lang-slo', 'Razvoj Računalniških Iger', 'Opis')
         
         // Footer
         footer.footer.bg-black.small.text-center.text-white-50

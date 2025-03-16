@@ -92,9 +92,9 @@ html(lang='en')
             .container.px-4.px-lg-5
                 // Featured Project Row
                 .row.gx-0.mb-4.mb-lg-5.align-items-center
-                    .col-xl-8.col-lg-7
+                    .col-xl-7.col-lg-6
                         img.img-fluid.mb-3.mb-lg-0(src='assets/img/project1.jpg', alt='...', style='border-radius: 10px;')
-                    .col-xl-4.col-lg-5
+                    .col-xl-5.col-lg-6
                         .featured-text.text-center.text-lg-left
                             h4 Vita Mavrič Portfolio
                             p.text-black-50.mb-0
@@ -123,8 +123,24 @@ html(lang='en')
                 // Project Two Row
                 .row.gx-0.justify-content-center
                     .col-lg-6
-                        video.img-fluid(src='assets/video/wordle.mp4', autoplay, loop, muted, playsinline)
+                        img.img-fluid.mb-3.mb-lg-0(src='assets/img/project2.jpg', alt='...', style='border-radius: 10px;')
                     .col-lg-6.order-lg-first
+                        .bg-black.text-center.h-100.project
+                            .d-flex.h-100
+                                .project-text.w-100.my-auto.text-center.text-lg-right
+                                    h4.text-white Gašper Stražišar Portfolio
+                                    p.mb-0.text-white-50.mt-2
+                                        span.lang-eng.mb-3
+                                            | This project showcases a custom-built, responsive website for Gašper Stražišar, developed in WordPress.
+                                        span.lang-slo.mb-3
+                                            | Ta projekt predstavlja po meri izdelano, odzivno spletno stran za Gašperja Stražišarja, razvito v WordPressu.
+                                        a.text-white-50.ml-1(href='https:/gasperstrazisar.com', target='_blank' aria-label='Gasper Strazisar') gasperstrazisar.com
+
+                // Project Three Row
+                .row.gx-0.justify-content-center
+                    .col-lg-6.order-lg-first
+                        video.img-fluid(src='assets/video/wordle.mp4', autoplay, loop, muted, playsinline)
+                    .col-lg-6
                         .bg-black.text-center.h-100.project
                             .d-flex.h-100
                                 .project-text.w-100.my-auto.text-center.text-lg-right
