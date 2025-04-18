@@ -1,109 +1,122 @@
-$gradient-colors: (
-  linear-gradient(45deg, #ff00ff, #00ffff, #ff0000),
-  linear-gradient(45deg, #ff6600, #ffcc00, #ff0000),
-  linear-gradient(45deg, #00ff99, #00ccff, #0066ff),
-  linear-gradient(45deg, #ff33cc, #9933ff, #33ccff),
-  linear-gradient(45deg, #ff3366, #ff6600, #ffcc00),
-  linear-gradient(45deg, #00ffff, #33ff33, #0099ff),
-  linear-gradient(45deg, #ff0099, #ff3300, #ff6600),
-  linear-gradient(45deg, #9933ff, #33ccff, #00ffcc),
-  linear-gradient(45deg, #ff00ff, #00ffff, #ff0000),
-  linear-gradient(45deg, #ff6600, #ffcc00, #ff0000),
-  linear-gradient(45deg, #00ff99, #00ccff, #0066ff),
-  linear-gradient(45deg, #ff33cc, #9933ff, #33ccff),
-  linear-gradient(45deg, #ff3366, #ff6600, #ffcc00),
-  linear-gradient(45deg, #00ffff, #33ff33, #0099ff),
-  linear-gradient(45deg, #ff0099, #ff3300, #ff6600),
-  linear-gradient(45deg, #9933ff, #33ccff, #00ffcc)
-);
+// 
+// Projects
+// 
 
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+.thesis-section {
+  padding: 7rem 0;
+  background-color: $custom-lighter-gray;
 
-h2 {
-  padding-top: 25px;
-  font-size: 3.5rem;
-  color: $white;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  padding: 2rem;
-  width: 60vw;
-  margin: 0 auto;
-}
-
-.flip-card {
-  aspect-ratio: 1/1;
-  perspective: 1000px;
-  position: relative;
-  cursor: pointer;
-}
-
-.flip-card-inner {
-  width: 100%;
-  height: 100%;
-  transition: transform 0.5s;
-  transform-style: preserve-3d;
-  transform-origin: center;
-}
-
-.flip-card:hover .flip-card-inner,
-.flip-card.flipped .flip-card-inner {
-  transform: rotateY(180deg);
-}
-
-.flip-card-front,
-.flip-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  box-sizing: border-box;
-  border-radius: 10px;
-}
-
-.flip-card-front {
-  color: gray;
-  background-size: 300% 300%; /* For smooth animation of the gradient */
-  animation: gradientShift 6s infinite ease-in-out;
-  background-image: linear-gradient(45deg, #ff00ff, #00ffff, #ff0000);  /* Animated gradient */
-  background-position: 0% 50%;  /* Initial gradient position */
-  background-repeat: no-repeat;
-  h3 {
-    font-size: clamp(1.5rem, 3vw, 2.5rem);
+  h2 {
     color: $white;
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
     font-weight: bold;
-    width: 65%;
+    margin-top: 15px;
   }
-}
 
-.flip-card-back {
-  background-color: $secondary;  // Keeps back solid color
-  color: #fff;
-  transform: rotateY(180deg);
-}
+  .featured-text {
+      padding: 2rem;
 
-@media (max-width: 768px) {
+      @include media-breakpoint-up(lg) {
+          padding: 0 0 0 2rem;
+          border-left: 0.5rem solid $primary;
+      }
+  }
+
+  .featured-text-thesis {
+      padding: 2rem;
+
+      @include media-breakpoint-up(lg) {
+          padding: 0 0 0 2rem;
+          margin-left: 0.5rem;
+      }
+  }
+
+  .project-text {
+      padding: 3rem;
+      font-size: 90%;
+
+      @include media-breakpoint-up(lg) {
+          padding: 5rem;
+      }
+  }
+
+  video {
+      height: 100%;
+      background-color: #131313;
+  }
+
+  .text-left {
+      text-align: left;
+  }
+
   .grid {
-    grid-template-columns: 1fr;
-    width: 80vw;
-    gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      gap: 20px;
+      padding: 2rem;
+      width: 60vw;
+      margin: 0 auto;
   }
-}
 
-// Apply a unique gradient for each flip-card front
-@for $i from 1 through length($gradient-colors) {
-  .flip-card:nth-child(#{$i}) .flip-card-front {
-    background: nth($gradient-colors, $i);
+  .flip-card {
+      aspect-ratio: 1/1;
+      perspective: 1000px;
+      position: relative;
+      cursor: pointer;
   }
+
+  .flip-card-inner {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.5s;
+      transform-style: preserve-3d;
+      transform-origin: center;
+  }
+
+  .flip-card:hover .flip-card-inner,
+  .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+  }
+
+  .flip-card-front,
+  .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      box-sizing: border-box;
+      border-radius: 10px;
+  }
+
+  .flip-card-front {
+      background-size: cover;
+      background-position: center;
+
+      h3 {
+          font-size: clamp(1.5rem, 3vw, 2.5rem);
+          color: $white;
+          font-weight: bold;
+          width: 65%;
+      }
+  }
+
+  .flip-card-back {
+      background-color: random($limit: 255);
+      background-color: $secondary;
+      color: #fff;
+      transform: rotateY(180deg);
+  }
+
+  @media (max-width: 768px) {
+      .grid {
+          grid-template-columns: 1fr;
+          width: 80vw;
+          gap: 10px;
+      }
+  }
+
 }
