@@ -221,7 +221,16 @@ $gradient: linear-gradient(135deg, #6e48aa, #9d50bb);
 .player-controls {
   display: flex;
   align-items: center;
+  margin-top: 10px;
   gap: 1.5rem;
+  opacity: 1;
+  transition: opacity 0.3s ease, visibility 0s;
+  
+  &.loading {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0s 0.3s;
+  }
   
   .btn-play {
     width: 40px;
@@ -237,7 +246,7 @@ $gradient: linear-gradient(135deg, #6e48aa, #9d50bb);
     transition: all 0.3s ease;
     
     &:hover {
-      background-color: darken($primary-color, 10%);
+      background-color: darken($primary-color, 5%);
       transform: scale(1.05);
     }
     
@@ -270,7 +279,7 @@ $gradient: linear-gradient(135deg, #6e48aa, #9d50bb);
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background: $secondary-color;
+        background: $primary-color;
         cursor: pointer;
       }
     }
@@ -300,7 +309,7 @@ $gradient: linear-gradient(135deg, #6e48aa, #9d50bb);
         left: 0;
         top: 0;
         height: 100%;
-        background-color: $secondary-color;
+        background-color: $primary-color;
         width: 0%;
         transition: width 0.1s linear;
       }
@@ -449,5 +458,62 @@ $gradient: linear-gradient(135deg, #6e48aa, #9d50bb);
   
   i {
     font-size: 1.2rem;
+  }
+}
+
+.waveform-container {
+  position: relative;
+  width: 100%;
+  
+  .waveform {
+    width: 100%;
+  }
+  
+  .loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: #bb86fc;
+    z-index: 10;
+    
+    &.hidden {
+      display: none;
+    }
+  }
+}
+
+.track {
+  &.active {
+    .waveform {
+      position: relative;
+      
+      &:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.2);
+        z-index: 5;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+    }
+    
+    .loading-spinner:not(.hidden) ~ .waveform:after {
+      opacity: 1;
+    }
+  }
+}
+
+.track-player {
+  position: relative;
+  
+  &.hidden {
+    display: none;
   }
 }

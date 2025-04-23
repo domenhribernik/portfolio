@@ -1,9 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // Track player objects to manage audio
   const players = {};
   
-  // Define your track data - since we're using static files, we'll define the tracks here
-  // In a real environment, you'd replace this with a fetch to a JSON file
   let tracks = { electric: [], acoustic: [] };
 
   fetch('/assets/guitar/tracks.json')
@@ -14,28 +11,23 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(error => console.error('Error loading tracks:', error));
   
-  // Function to create track elements
   function createTrackElements() {
     const electricContainer = document.getElementById('electric-tracks');
     const acousticContainer = document.getElementById('acoustic-tracks');
     
-    // Generate electric tracks
     tracks.electric.forEach((track, index) => {
       const trackElement = createTrackElement(track, 'electric', index);
       electricContainer.appendChild(trackElement);
     });
     
-    // Generate acoustic tracks
     tracks.acoustic.forEach((track, index) => {
       const trackElement = createTrackElement(track, 'acoustic', index);
       acousticContainer.appendChild(trackElement);
     });
     
-    // Initialize event listeners
     initializeEventListeners();
   }
   
-  // Function to create a single track element
   function createTrackElement(track, category, index) {
     const trackId = `${category}-${index}`;
     const trackSrc = `/assets/guitar/${category}/${track.file}`;
@@ -75,9 +67,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const trackPlayer = document.createElement('div');
     trackPlayer.className = 'track-player hidden';
     
+    // Create waveform container which will hold both waveform and loading spinner
+    const waveformContainer = document.createElement('div');
+    waveformContainer.className = 'waveform-container';
+    
     const waveform = document.createElement('div');
     waveform.className = 'waveform';
     waveform.id = `waveform-${trackId}`;
+    
+    // Create loading spinner inside waveform container
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.className = 'loading-spinner hidden';
+    loadingSpinner.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
+    
+    // Add waveform and loading spinner to the container
+    waveformContainer.appendChild(waveform);
+    waveformContainer.appendChild(loadingSpinner);
     
     const playerControls = document.createElement('div');
     playerControls.className = 'player-controls';
@@ -99,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
     volumeSlider.type = 'range';
     volumeSlider.min = '0';
     volumeSlider.max = '100';
-    volumeSlider.value = '80';
+    volumeSlider.value = '100';
     
     volumeContainer.appendChild(volumeIcon);
     volumeContainer.appendChild(volumeSlider);
@@ -132,7 +137,8 @@ document.addEventListener('DOMContentLoaded', function() {
     playerControls.appendChild(volumeContainer);
     playerControls.appendChild(trackProgress);
     
-    trackPlayer.appendChild(waveform);
+    // Add container and controls to track player
+    trackPlayer.appendChild(waveformContainer);
     trackPlayer.appendChild(playerControls);
     
     trackDiv.appendChild(trackInfo);
@@ -141,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return trackDiv;
   }
   
-  // Function to initialize event listeners
   function initializeEventListeners() {
     const tracks = document.querySelectorAll('.track');
     
@@ -152,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const trackInfo = track.querySelector('.track-info');
       const trackPlayer = track.querySelector('.track-player');
       const waveformElement = trackPlayer.querySelector('.waveform');
+      const loadingSpinner = trackPlayer.querySelector('.loading-spinner');
       const playButton = trackPlayer.querySelector('.btn-play');
       const volumeSlider = trackPlayer.querySelector('.volume-slider');
       const currentTimeSpan = trackPlayer.querySelector('.current-time');
@@ -178,7 +184,8 @@ document.addEventListener('DOMContentLoaded', function() {
         element: track,
         wavesurfer: wavesurfer,
         isLoaded: false,
-        isPlaying: false
+        isPlaying: false,
+        isLoading: false
       };
       
       // Add click event to track info to toggle player
@@ -191,9 +198,16 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation(); // Prevent the click from bubbling to track-info
         const player = players[trackId];
         
+        // If still loading, ignore the click
+        if (player.isLoading) {
+          return;
+        }
+        
         if (player.isPlaying) {
           player.wavesurfer.pause();
           player.isPlaying = false;
+          wakeLock?.release();
+          wakeLock = null;
           playButton.querySelector('i').classList.replace('fa-pause', 'fa-play');
         } else {
           // Pause all other tracks first
@@ -207,6 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           player.wavesurfer.play();
           player.isPlaying = true;
+          requestWakeLock();
           playButton.querySelector('i').classList.replace('fa-play', 'fa-pause');
         }
       });
@@ -219,11 +234,29 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       // Handle wavesurfer events
+      wavesurfer.on('loading', function(percent) {
+        console.log(`Loading track ${trackId}: ${percent}%`);
+        loadingSpinner.classList.remove('hidden');
+        players[trackId].isLoading = true;
+        
+        // Hide the player controls during loading
+        const playerControls = trackPlayer.querySelector('.player-controls');
+        playerControls.classList.add('loading');
+      });
+      
+      // Then update the 'ready' event handler:
       wavesurfer.on('ready', function() {
+        console.log(`Track ${trackId} is ready`);
         const duration = wavesurfer.getDuration();
         totalTimeSpan.textContent = formatTime(duration);
         track.querySelector('.track-duration').textContent = formatTime(duration);
         players[trackId].isLoaded = true;
+        players[trackId].isLoading = false;
+        loadingSpinner.classList.add('hidden');
+        
+        // Show the controls now that loading is complete
+        const playerControls = trackPlayer.querySelector('.player-controls');
+        playerControls.classList.remove('loading');
       });
       
       wavesurfer.on('audioprocess', function() {
@@ -238,11 +271,32 @@ document.addEventListener('DOMContentLoaded', function() {
       wavesurfer.on('finish', function() {
         playButton.querySelector('i').classList.replace('fa-pause', 'fa-play');
         players[trackId].isPlaying = false;
+        wakeLock?.release();
+        wakeLock = null;
+      });
+      
+      // Error handling
+      wavesurfer.on('error', function(err) {
+        console.error(`WaveSurfer error for track ${trackId}:`, err);
+        loadingSpinner.classList.add('hidden');
+        players[trackId].isLoading = false;
+        players[trackId].isLoaded = false;
+        
+        // Show controls even on error
+        const playerControls = trackPlayer.querySelector('.player-controls');
+        playerControls.classList.remove('loading');
+        
+        alert('Error loading audio: ' + err);
       });
       
       // Click on progress bar to seek
       trackPlayer.querySelector('.progress-bar').addEventListener('click', function(e) {
         e.stopPropagation(); // Prevent the click from bubbling
+        
+        if (players[trackId].isLoading) {
+          return; // Don't allow seeking while loading
+        }
+        
         const rect = this.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const seekPercentage = x / rect.width;
@@ -259,6 +313,11 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const trackId = activeTrack.getAttribute('data-id');
       const player = players[trackId];
+      
+      // If track is loading, ignore keyboard controls
+      if (player.isLoading) {
+        return;
+      }
       
       // Space bar to play/pause
       if (e.code === 'Space') {
@@ -293,14 +352,28 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+      try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Wake Lock is active');
+
+          wakeLock.addEventListener('release', () => {
+              console.log('Wake Lock was released');
+          });
+      } catch (err) {
+          console.error(`${err.name}, ${err.message}`);
+      }
+  }
   
-  // Function to toggle player visibility and load audio
   function togglePlayer(trackId, src) {
     const player = players[trackId];
     const track = player.element;
     const trackPlayer = track.querySelector('.track-player');
+    const loadingSpinner = trackPlayer.querySelector('.loading-spinner');
     
-    // Check if this track is already open
     const isOpen = !trackPlayer.classList.contains('hidden');
     
     // Close all other tracks first
@@ -313,6 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
           p.wavesurfer.pause();
           p.isPlaying = false;
           t.querySelector('.btn-play i').classList.replace('fa-pause', 'fa-play');
+          wakeLock?.release();
+          wakeLock = null;
         }
         
         t.classList.remove('active');
@@ -320,30 +395,32 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Toggle this track
     if (isOpen) {
-      // Close this track
       track.classList.remove('active');
       trackPlayer.classList.add('hidden');
       
       if (player.isPlaying) {
         player.wavesurfer.pause();
         player.isPlaying = false;
+        wakeLock?.release();
+        wakeLock = null;
         track.querySelector('.btn-play i').classList.replace('fa-pause', 'fa-play');
       }
     } else {
-      // Open this track
       track.classList.add('active');
       trackPlayer.classList.remove('hidden');
       
-      // Load audio if not already loaded
       if (!player.isLoaded) {
+        // Show loading spinner before loading starts
+        loadingSpinner.classList.remove('hidden');
+        player.isLoading = true;
+        trackPlayer.querySelector('.player-controls').classList.add('loading');
+        console.log(`Loading track ${trackId} from ${src}`);
         player.wavesurfer.load(src);
       }
     }
   }
   
-  // Helper function to format time in MM:SS
   function formatTime(seconds) {
     seconds = Math.floor(seconds);
     const minutes = Math.floor(seconds / 60);
@@ -351,5 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
   
-  createTrackElements();
+  // Don't duplicate this call
+  // createTrackElements();
 });

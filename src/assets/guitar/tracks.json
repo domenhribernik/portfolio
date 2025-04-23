@@ -59,10 +59,6 @@
       "file": "Brown eyed girl - Van Morrison.mp3"
     },
     {
-      "name": "Fast Car - Tracy Chapman",
-      "file": "Fast Car - Tracy Chapman.mp3"
-    },
-    {
       "name": "Hey ya! - Outcast",
       "file": "Hey ya! - Outcast.mp3"
     },
@@ -79,32 +75,12 @@
       "file": "Island In The Sun - Weezer.mp3"
     },
     {
-      "name": "Kiss me - Sixpence None The Richer",
-      "file": "Kiss me - Sixpeace none the richer.mp3"
-    },
-    {
       "name": "Lahko sem srce - Tabu",
       "file": "Lahko sem srce - Tabu.mp3"
     },
     {
-      "name": "Poljubljena - Tabu",
-      "file": "Poljubljena - Tabu.mp3"
-    },
-    {
-      "name": "Riptide - Vance Joy",
-      "file": "Riptide - Vance Joy.mp3"
-    },
-    {
       "name": "Save tonight - Eagle Eye Cherry",
       "file": "Save tonight - Eagle Eye Cherry.mp3"
-    },
-    {
-      "name": "Slow Cheetah - RHCP",
-      "file": "Slow Cheetah - RHCP.mp3"
-    },
-    {
-      "name": "Voda - Dan D",
-      "file": "Voda - Dan D.mp3"
     },
     {
       "name": "Wild Thing - The Troggs",
@@ -115,8 +91,32 @@
       "file": "Wish You Were Here - Pink Floyd.mp3"
     },
     {
+      "name": "Riptide - Vance Joy",
+      "file": "Riptide - Vance Joy.mp3"
+    },
+    {
+      "name": "Fast Car - Tracy Chapman",
+      "file": "Fast Car - Tracy Chapman.mp3"
+    },
+    {
+      "name": "Poljubljena - Tabu",
+      "file": "Poljubljena - Tabu.mp3"
+    },
+    {
       "name": "Wonderwall - Oasis",
       "file": "Wonderwall - Oasis.mp3"
+    },
+    {
+      "name": "Kiss me - Sixpence None The Richer",
+      "file": "Kiss me - Sixpeace none the richer.mp3"
+    },
+    {
+      "name": "Voda - Dan D",
+      "file": "Voda - Dan D.mp3"
+    },
+    {
+      "name": "Slow Cheetah - RHCP",
+      "file": "Slow Cheetah - RHCP.mp3"
     }
   ]
 }
