@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domen Hribernik - Developer & Tech Enthusiast</title>
+    <meta name="description" content="Portfolio website for Domen Hribernik, showcasing projects and contact information.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#home" class="logo">Domen Hribernik</a>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#about" class="nav-link">
+                    <span class="lang-eng">About</span>
+                    <span class="lang-slo">O Meni</span>
+                </a></li>
+                <li><a href="#projects" class="nav-link">
+                    <span class="lang-eng">Projects</span>
+                    <span class="lang-slo">Projekti</span>
+                </a></li>
+                <li><a href="#contact" class="nav-link">
+                    <span class="lang-eng">Contact</span>
+                    <span class="lang-slo">Kontakt</span>
+                </a></li>
+                <li class="language-toggle">
+                    <button class="lang-btn active" data-lang="eng">ENG</button>
+                    <button class="lang-btn" data-lang="slo">SLO</button>
+                </li>
+            </ul>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Domen Hribernik</h1>
+            <h2>
+                <span class="lang-eng">Developer & Tech Enthusiast</span>
+                <span class="lang-slo">Razvijalec & Ljubitelj Tehnologije</span>
+            </h2>
+            <a href="#about" class="cta-button">
+                <span class="lang-eng">About Me</span>
+                <span class="lang-slo">O Meni</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about section" id="about">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="lang-eng">About Me</span>
+                <span class="lang-slo">O meni</span>
+            </h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p class="lang-eng">
+                        I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects.
+                    </p>
+                    <p class="lang-slo">
+                        Sem študent računalništva na Univerzi v Mariboru. Navdušujejo me tehnologija in inovacije, s poudarkom na programiranju, razvoju programske opreme in reševanju kompleksnih problemov. Vedno sem pripravljen uporabiti svoje znanje za sodelovanje pri navdihujočih projektih.
+                    </p>
+                    <p class="lang-eng">
+                        Let's work together to achieve your goals and create something amazing!
+                    </p>
+                    <p class="lang-slo">
+                        Skupaj lahko dosežemo vaše cilje in ustvarimo nekaj neverjetnega!
+                    </p>
+                </div>
+                <div class="about-image">
+                    <div style="width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+                        <i class="fas fa-code"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="projects section" id="projects">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="lang-eng">My Projects</span>
+                <span class="lang-slo">Moji Projekti</span>
+            </h2>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-image">
+                        <div style="width: 100%; height: 100%; background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Vita Mavrič Portfolio</h3>
+                        <p class="project-description">
+                            <span class="lang-eng">Custom-built, responsive website for Vita Mavrič, developed using HTML, CSS and vanilla JavaScript (Vanilla Stack).</span>
+                            <span class="lang-slo">Po meri izdelana, odzivna spletna stran za Vito Mavrič, razvita z uporabo HTML, CSS in JavaScript (Vanilla Stack).</span>
+                        </p>
+                        <div class="project-links">
+                            <a href="https://vitamavric.com" target="_blank" class="project-link">
+                                <i class="fas fa-external-link-alt"></i> Visit Site
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <div style="width: 100%; height: 100%; background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                            <i class="fas fa-running"></i>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">
+                            <span class="lang-eng">Virtual Runner (Thesis)</span>
+                            <span class="lang-slo">Virtual Runner (Diploma)</span>
+                        </h3>
+                        <p class="project-description">
+                            <span class="lang-eng">My thesis focuses on creating a digital twin of a runner, integrating multiple subprojects into a unified application to demonstrate practical use of various technologies.</span>
+                            <span class="lang-slo">Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača, ki združuje več podprojektov v enotno aplikacijo za prikaz praktične uporabe različnih tehnologij.</span>
+                        </p>
+                        <div class="project-links">
+                            <a href="#" class="project-link">
+                                <i class="fas fa-book"></i> Read More
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <div style="width: 100%; height: 100%; background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                            <i class="fab fa-wordpress"></i>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Gašper Stražišar Portfolio</h3>
+                        <p class="project-description">
+                            <span class="lang-eng">Custom-built, responsive website for Gašper Stražišar, developed in WordPress with custom themes and functionality.</span>
+                            <span class="lang-slo">Po meri izdelana, odzivna spletna stran za Gašperja Stražišarja, razvita v WordPressu s prilagojenimi temami in funkcionalnostmi.</span>
+                        </p>
+                        <div class="project-links">
+                            <a href="https://gasperstrazisar.com" target="_blank" class="project-link">
+                                <i class="fas fa-external-link-alt"></i> Visit Site
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">
+                        <div style="width: 100%; height: 100%; background: linear-gradient(45deg, #fa709a 0%, #fee140 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Wordle Bot</h3>
+                        <p class="project-description">
+                            <span class="lang-eng">A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently, demonstrating AI techniques for word games.</span>
+                            <span class="lang-slo">Python bot za igro Wordle, ki uporablja algoritmične strategije za učinkovito reševanje problemov in prikazuje uporabo umetne inteligence za besedne igre.</span>
+                        </p>
+                        <div class="project-links">
+                            <a href="https://github.com/domenhribernik/wordle-bot" target="_blank" class="project-link">
+                                <i class="fab fa-github"></i> GitHub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quote Section -->
+    <section class="quote-section">
+        <div class="container">
+            <blockquote class="quote">
+                "Work like you don't need the money. Love like you've never been hurt. Dance like nobody's watching."
+            </blockquote>
+            <cite class="quote-author">— Satchel Paige</cite>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact section" id="contact">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="lang-eng">Get In Touch</span>
+                <span class="lang-slo">Kontakt</span>
+            </h2>
+            <div class="contact-content">
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3 class="contact-title">
+                        <span class="lang-eng">Location</span>
+                        <span class="lang-slo">Lokacija</span>
+                    </h3>
+                    <div class="contact-info">
+                        <span class="lang-eng">Celje, Slovenia</span>
+                        <span class="lang-slo">Celje, Slovenija</span>
+                    </div>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3 class="contact-title">Email</h3>
+                    <div class="contact-info">
+                        <a href="mailto:contact@domenhribernik.com">contact@domenhribernik.com</a>
+                    </div>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3 class="contact-title">
+                        <span class="lang-eng">Education</span>
+                        <span class="lang-slo">Izobrazba</span>
+                    </h3>
+                    <div class="contact-info">
+                        <div>
+                            <span class="lang-eng">Computer Science Student</span>
+                            <span class="lang-slo">Študent računalništva</span>
+                        </div>
+                        <div>
+                            <span class="lang-eng">University of Maribor</span>
+                            <span class="lang-slo">Univerza v Mariboru</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="social-links">
+                <a href="https://github.com/domenhribernik" target="_blank" class="social-link">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://www.instagram.com/domen_hribernik/" target="_blank" class="social-link">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/domen-hribernik-4081a121b/" target="_blank" class="social-link">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+                <a href="#" target="_blank" class="social-link">
+                    <i class="fas fa-music"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; <span id="currentYear"></span> Domen Hribernik. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
