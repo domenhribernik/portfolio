@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Portfolio website for Domen Hribernik, take a look at my projects and contact information.">
     <title>Domen Hribernik - Developer & Tech Enthusiast</title>
-    <meta name="description" content="Portfolio website for Domen Hribernik, showcasing projects and contact information.">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
     </div>
@@ -21,17 +24,17 @@
             <a href="#home" class="logo">Domen Hribernik</a>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="#about" class="nav-link">
-                    <span class="lang-eng">About</span>
-                    <span class="lang-slo">O Meni</span>
-                </a></li>
+                        <span class="lang-eng">About</span>
+                        <span class="lang-slo">O Meni</span>
+                    </a></li>
                 <li><a href="#projects" class="nav-link">
-                    <span class="lang-eng">Projects</span>
-                    <span class="lang-slo">Projekti</span>
-                </a></li>
+                        <span class="lang-eng">Projects</span>
+                        <span class="lang-slo">Projekti</span>
+                    </a></li>
                 <li><a href="#contact" class="nav-link">
-                    <span class="lang-eng">Contact</span>
-                    <span class="lang-slo">Kontakt</span>
-                </a></li>
+                        <span class="lang-eng">Contact</span>
+                        <span class="lang-slo">Kontakt</span>
+                    </a></li>
                 <li class="language-toggle">
                     <button class="lang-btn active" data-lang="eng">ENG</button>
                     <button class="lang-btn" data-lang="slo">SLO</button>
@@ -68,10 +71,14 @@
             <div class="about-content">
                 <div class="about-text">
                     <p class="lang-eng">
-                        I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for technology and innovation, specializing in programming, software development, and problem-solving. I am always eager to apply my skills and collaborate on exciting projects.
+                        I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for
+                        technology and innovation, specializing in programming, software development, and
+                        problem-solving. I am always eager to apply my skills and collaborate on exciting projects.
                     </p>
                     <p class="lang-slo">
-                        Sem študent računalništva na Univerzi v Mariboru. Navdušujejo me tehnologija in inovacije, s poudarkom na programiranju, razvoju programske opreme in reševanju kompleksnih problemov. Vedno sem pripravljen uporabiti svoje znanje za sodelovanje pri navdihujočih projektih.
+                        Sem študent računalništva na Univerzi v Mariboru. Navdušujejo me tehnologija in inovacije, s
+                        poudarkom na programiranju, razvoju programske opreme in reševanju kompleksnih problemov. Vedno
+                        sem pripravljen uporabiti svoje znanje za sodelovanje pri navdihujočih projektih.
                     </p>
                     <p class="lang-eng">
                         Let's work together to achieve your goals and create something amazing!
@@ -81,7 +88,8 @@
                     </p>
                 </div>
                 <div class="about-image">
-                    <div style="width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+                    <div
+                        style="width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
                         <i class="fas fa-code"></i>
                     </div>
                 </div>
@@ -90,92 +98,319 @@
     </section>
 
     <!-- Projects Section -->
+
     <section class="projects section" id="projects">
         <div class="container">
             <h2 class="section-title">
                 <span class="lang-eng">My Projects</span>
                 <span class="lang-slo">Moji Projekti</span>
             </h2>
-            <div class="projects-grid">
-                <div class="project-card">
-                    <div class="project-image">
-                        <div style="width: 100%; height: 100%; background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
-                            <i class="fas fa-palette"></i>
+
+            <!-- Professional/Freelance Projects -->
+            <div class="project-category">
+                <h3 class="category-title">
+                    <span class="lang-eng">Professional & Freelance Work</span>
+                    <span class="lang-slo">Profesionalno & Freelance Delo</span>
+                </h3>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div
+                                style="width: 100%; height: 100%; background: linear-gradient(45deg, #ffcd1c 0%, #ffa41c 100%); display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem;">
+                                <i class="fab fa-wordpress"></i>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <h4 class="project-title">Catrtridge World Cyprus</h4>
+                            <p class="project-description">
+                                <span class="lang-eng">
+                                    6-month internship at Cartridge World Cyprus, working on the development and design
+                                    of their WordPress e-commerce site, including SEO and quality assurance.
+                                </span>
+                                <span class="lang-slo">
+                                    6-mesečna praksa pri podjetju Cartridge World Ciper, kjer sem delal na razvoju in
+                                    oblikovanju WordPress spletne trgovine ter skrbel za SEO in zagotavljanje kakovosti.
+                                </span>
+                            </p>
+                            <div class="project-footer">
+                                <div class="project-tech">
+                                    <span class="tech-tag">WordPress</span>
+                                    <span class="tech-tag">WooCommerce</span>
+                                    <span class="tech-tag">PHP</span>
+                                    <span class="tech-tag">Elementor</span>
+                                    <span class="tech-tag">SEO</span>
+                                </div>
+                                <div class="project-links">
+                                    <a href="https://cwcyprus.com" target="_blank" class="project-link">
+                                        <i class="fas fa-external-link-alt"></i> Visit Site
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="project-content">
-                        <h3 class="project-title">Vita Mavrič Portfolio</h3>
-                        <p class="project-description">
-                            <span class="lang-eng">Custom-built, responsive website for Vita Mavrič, developed using HTML, CSS and vanilla JavaScript (Vanilla Stack).</span>
-                            <span class="lang-slo">Po meri izdelana, odzivna spletna stran za Vito Mavrič, razvita z uporabo HTML, CSS in JavaScript (Vanilla Stack).</span>
-                        </p>
-                        <div class="project-links">
-                            <a href="https://vitamavric.com" target="_blank" class="project-link">
-                                <i class="fas fa-external-link-alt"></i> Visit Site
-                            </a>
+
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div
+                                style="width: 100%; height: 100%; background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem;">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <h4 class="project-title">Vita Mavrič</h4>
+                            <p class="project-description">
+                                <span class="lang-eng">Custom-built, responsive website for Vita Mavrič, developed using
+                                    HTML, CSS and vanilla JavaScript (Vanilla Stack).</span>
+                                <span class="lang-slo">Po meri izdelana, odzivna spletna stran za Vito Mavrič, razvita z
+                                    uporabo HTML, CSS in JavaScript (Vanilla Stack).</span>
+                            </p>
+                            <div class="project-footer">
+                                <div class="project-tech">
+                                    <span class="tech-tag">HTML</span>
+                                    <span class="tech-tag">CSS</span>
+                                    <span class="tech-tag">JavaScript</span>
+                                </div>
+                                <div class="project-links">
+                                    <a href="https://vitamavric.com" target="_blank" class="project-link">
+                                        <i class="fas fa-external-link-alt"></i> Visit Site
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div
+                                style="width: 100%; height: 100%; background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%); display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem;">
+                                <i class="fab fa-wordpress"></i>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <h4 class="project-title">Gašper Stražišar</h4>
+                            <p class="project-description">
+                                <span class="lang-eng">Custom-built, responsive website for Gašper Stražišar, developed
+                                    in WordPress with custom themes and functionality.</span>
+                                <span class="lang-slo">Po meri izdelana, odzivna spletna stran za Gašperja Stražišarja,
+                                    razvita v WordPressu s prilagojenimi temami in funkcionalnostmi.</span>
+                            </p>
+                            <div class="project-footer">
+                                <div class="project-tech">
+                                    <span class="tech-tag">WordPress</span>
+                                    <span class="tech-tag">SEO</span>
+                                    <span class="tech-tag">Custom Themes</span>
+                                </div>
+                                <div class="project-links">
+                                    <a href="https://gasperstrazisar.com" target="_blank" class="project-link">
+                                        <i class="fas fa-external-link-alt"></i> Visit Site
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="project-card">
-                    <div class="project-image">
-                        <div style="width: 100%; height: 100%; background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
-                            <i class="fas fa-running"></i>
+            <!-- Academic Projects -->
+            <div class="project-category">
+                <h3 class="category-title">
+                    <span class="lang-eng">Academic Work & Research</span>
+                    <span class="lang-slo">Akademsko Delo & Raziskave</span>
+                </h3>
+                <div class="projects-grid">
+                    <div class="project-card featured">
+                        <div class="project-image">
+                            <div
+                                style="width: 100%; height: 100%; background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem;">
+                                <i class="fas fa-running"></i>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <div class="project-badge">
+                                <span class="lang-eng">Thesis</span>
+                                <span class="lang-slo">Diploma</span>
+                            </div>
+                            <h4 class="project-title">
+                                <span class="lang-eng">Virtual Runner - Digital Twin</span>
+                                <span class="lang-slo">Virtual Runner - Digitalni Dvojček</span>
+                            </h4>
+                            <p class="project-description">
+                                <span class="lang-eng">My thesis focuses on creating a digital twin of a runner,
+                                    integrating multiple subprojects into a unified application to demonstrate practical
+                                    use of various technologies.</span>
+                                <span class="lang-slo">Moja diplomska naloga se osredotoča na izdelavo digitalnega
+                                    dvojčka tekača, ki združuje več podprojektov v enotno aplikacijo za prikaz praktične
+                                    uporabe različnih tehnologij.</span>
+                            </p>
+                            <div class="project-footer">
+                                <div class="project-tech">
+                                    <span class="tech-tag">Python</span>
+                                    <span class="tech-tag">Machine Learning</span>
+                                    <span class="tech-tag">IoT</span>
+                                    <span class="tech-tag">Data Analysis</span>
+                                </div>
+                                <div class="project-links">
+                                    <a href="thesis.html" target="_blank" class="project-link">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        <span class="lang-eng">Read More</span>
+                                        <span class="lang-slo">Preberi Več</span>
+                                    </a>
+                                    <a href="https://github.com/orgs/ni-imena/repositories" target="_blank" class="project-link">
+                                        <i class="fab fa-github"></i> Code
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="project-content">
-                        <h3 class="project-title">
-                            <span class="lang-eng">Virtual Runner (Thesis)</span>
-                            <span class="lang-slo">Virtual Runner (Diploma)</span>
-                        </h3>
-                        <p class="project-description">
-                            <span class="lang-eng">My thesis focuses on creating a digital twin of a runner, integrating multiple subprojects into a unified application to demonstrate practical use of various technologies.</span>
-                            <span class="lang-slo">Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača, ki združuje več podprojektov v enotno aplikacijo za prikaz praktične uporabe različnih tehnologij.</span>
-                        </p>
-                        <div class="project-links">
-                            <a href="#" class="project-link">
-                                <i class="fas fa-book"></i> Read More
-                            </a>
+
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div
+                                style="width: 100%; height: 100%; background: linear-gradient(45deg, #a8edea 0%, #fed6e3 100%); display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem;">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <div class="project-badge">
+                                <span class="lang-eng">Research Paper</span>
+                                <span class="lang-slo">Raziskovalni Članek</span>
+                            </div>
+                            <h4 class="project-title">
+                                <span class="lang-eng">Research Paper Title</span>
+                                <span class="lang-slo">Naslov Raziskovalnega Članka</span>
+                            </h4>
+                            <p class="project-description">
+                                <span class="lang-eng">Description of your research paper, methodology, findings, and
+                                    contributions to the field.</span>
+                                <span class="lang-slo">Opis vašega raziskovalnega članka, metodologije, ugotovitev in
+                                    prispevkov na področju.</span>
+                            </p>
+                            <div class="project-footer">
+                                <div class="project-tech">
+                                    <span class="tech-tag">Research</span>
+                                    <span class="tech-tag">Analysis</span>
+                                </div>
+                                <div class="project-links">
+                                    <a href="#" class="project-link">
+                                        <i class="fas fa-file-pdf"></i>
+                                        <span class="lang-eng">Read Paper</span>
+                                        <span class="lang-slo">Preberi Članek</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div
+                                style="width: 100%; height: 100%; background: linear-gradient(45deg, #ffecd2 0%, #fcb69f 100%); display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem;">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <div class="project-badge">
+                                <span class="lang-eng">Course Project</span>
+                                <span class="lang-slo">Projektna Naloga</span>
+                            </div>
+                            <h4 class="project-title">
+                                <span class="lang-eng">Course Assignment Title</span>
+                                <span class="lang-slo">Naslov Projektne Naloge</span>
+                            </h4>
+                            <p class="project-description">
+                                <span class="lang-eng">Description of a significant course project or assignment that
+                                    demonstrates your academic work.</span>
+                                <span class="lang-slo">Opis pomembne projektne naloge, ki prikazuje vaše akademsko
+                                    delo.</span>
+                            </p>
+                            <div class="project-footer">
+                                <div class="project-tech">
+                                    <span class="tech-tag">Technology 1</span>
+                                    <span class="tech-tag">Technology 2</span>
+                                </div>
+                                <div class="project-links">
+                                    <a href="#" class="project-link">
+                                        <i class="fab fa-github"></i> View Work
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="project-card">
-                    <div class="project-image">
-                        <div style="width: 100%; height: 100%; background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
-                            <i class="fab fa-wordpress"></i>
+            <!-- Personal/Passion Projects -->
+            <div class="project-category">
+                <h3 class="category-title">
+                    <span class="lang-eng">Personal & Passion Projects</span>
+                    <span class="lang-slo">Osebni & Strast Projekti</span>
+                </h3>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div
+                                style="width: 100%; height: 100%; background: linear-gradient(45deg, #fa709a 0%, #fee140 100%); display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem;">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <h4 class="project-title">Wordle Bot</h4>
+                            <p class="project-description">
+                                <span class="lang-eng">A Python bot for the game Wordle that uses algorithmic strategies
+                                    to solve puzzles efficiently, demonstrating AI techniques for word games.</span>
+                                <span class="lang-slo">Python bot za igro Wordle, ki uporablja algoritmične strategije
+                                    za učinkovito reševanje problemov in prikazuje uporabo umetne inteligence za besedne
+                                    igre.</span>
+                            </p>
+                            <div class="project-footer">
+                                <div class="project-tech">
+                                    <span class="tech-tag">Python</span>
+                                    <span class="tech-tag">Algorithms</span>
+                                    <span class="tech-tag">Game AI</span>
+                                </div>
+                                <div class="project-links">
+                                    <a href="https://github.com/domenhribernik/wordle-bot" target="_blank"
+                                        class="project-link">
+                                        <i class="fab fa-github"></i> GitHub
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="project-content">
-                        <h3 class="project-title">Gašper Stražišar Portfolio</h3>
-                        <p class="project-description">
-                            <span class="lang-eng">Custom-built, responsive website for Gašper Stražišar, developed in WordPress with custom themes and functionality.</span>
-                            <span class="lang-slo">Po meri izdelana, odzivna spletna stran za Gašperja Stražišarja, razvita v WordPressu s prilagojenimi temami in funkcionalnostmi.</span>
-                        </p>
-                        <div class="project-links">
-                            <a href="https://gasperstrazisar.com" target="_blank" class="project-link">
-                                <i class="fas fa-external-link-alt"></i> Visit Site
-                            </a>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="project-card">
-                    <div class="project-image">
-                        <div style="width: 100%; height: 100%; background: linear-gradient(45deg, #fa709a 0%, #fee140 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
-                            <i class="fas fa-robot"></i>
+                    <div class="project-card">
+                        <div class="project-image">
+                            <div
+                                style="width: 100%; height: 100%; background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: #333; font-size: 2rem;">
+                                <i class="fas fa-code"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="project-content">
-                        <h3 class="project-title">Wordle Bot</h3>
-                        <p class="project-description">
-                            <span class="lang-eng">A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently, demonstrating AI techniques for word games.</span>
-                            <span class="lang-slo">Python bot za igro Wordle, ki uporablja algoritmične strategije za učinkovito reševanje problemov in prikazuje uporabo umetne inteligence za besedne igre.</span>
-                        </p>
-                        <div class="project-links">
-                            <a href="https://github.com/domenhribernik/wordle-bot" target="_blank" class="project-link">
-                                <i class="fab fa-github"></i> GitHub
-                            </a>
+                        <div class="project-content">
+                            <h4 class="project-title">
+                                <span class="lang-eng">Personal Project Name</span>
+                                <span class="lang-slo">Ime Osebnega Projekta</span>
+                            </h4>
+                            <p class="project-description">
+                                <span class="lang-eng">Description of another personal project that showcases your
+                                    skills and interests outside of work and school.</span>
+                                <span class="lang-slo">Opis drugega osebnega projekta, ki prikazuje vaše veščine in
+                                    interese zunaj dela in šole.</span>
+                            </p>
+                            <div class="project-footer">
+                                <div class="project-tech">
+                                    <span class="tech-tag">Technology 1</span>
+                                    <span class="tech-tag">Technology 2</span>
+                                    <span class="tech-tag">Technology 3</span>
+                                </div>
+                                <div class="project-links">
+                                    <a href="#" class="project-link">
+                                        <i class="fab fa-github"></i> GitHub
+                                    </a>
+                                    <a href="#" class="project-link">
+                                        <i class="fas fa-external-link-alt"></i> Live Demo
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -256,7 +491,7 @@
                 <a href="https://www.linkedin.com/in/domen-hribernik-4081a121b/" target="_blank" class="social-link">
                     <i class="fab fa-linkedin"></i>
                 </a>
-                <a href="#" target="_blank" class="social-link">
+                <a href="music.html" target="_blank" class="social-link">
                     <i class="fas fa-music"></i>
                 </a>
             </div>
@@ -270,6 +505,7 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="js/script.js"></script>
 </body>
+
 </html>
