@@ -117,7 +117,10 @@ window.addEventListener('DOMContentLoaded', () => {
     //? Particle effect for hero background
     function createParticles() {
         const hero = document.querySelector('.hero');
+        if (!hero) return;
+        
         const particlesContainer = document.createElement('div');
+        particlesContainer.className = 'particles-container';
         particlesContainer.style.position = 'absolute';
         particlesContainer.style.top = '0';
         particlesContainer.style.left = '0';
@@ -125,68 +128,94 @@ window.addEventListener('DOMContentLoaded', () => {
         particlesContainer.style.height = '100%';
         particlesContainer.style.pointerEvents = 'none';
         particlesContainer.style.zIndex = '1';
+        particlesContainer.style.overflow = 'hidden';
 
         hero.appendChild(particlesContainer);
 
-        for (let i = 0; i < 50; i++) {
+        function createSingleParticle() {
             const particle = document.createElement('div');
+            const size = Math.random() * 3 + 1; // 1-4px
+            const opacity = Math.random() * 0.2 + 0.1; // 0.1-0.3 opacity
+            const animationDuration = Math.random() * 8 + 10; // 10-18s
+            
             particle.style.position = 'absolute';
-            particle.style.width = Math.random() * 4 + 1 + 'px';
-            particle.style.height = particle.style.width;
-            particle.style.background = 'rgba(255, 255, 255, 0.1)';
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.background = `rgba(255, 255, 255, ${opacity})`;
             particle.style.borderRadius = '50%';
             particle.style.left = Math.random() * 100 + '%';
-            particle.style.top = Math.random() * 100 + '%';
-            particle.style.animation = `float ${Math.random() * 10 + 10}s linear infinite`;
+            particle.style.top = '100vh';
+            particle.style.boxShadow = `0 0 ${size * 3}px rgba(255, 255, 255, ${opacity * 0.5})`;
+            particle.style.animation = `floatUp ${animationDuration}s linear forwards`;
 
             particlesContainer.appendChild(particle);
+
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, animationDuration * 1000);
         }
+
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => createSingleParticle(), Math.random() * 5000);
+        }
+
+        // Continuously create new particles
+        setInterval(() => {
+            createSingleParticle();
+        }, 300); // New particle every 300ms
     }
 
     const style = document.createElement('style');
     style.textContent = `
-                @keyframes float {
-                    0% {
-                        transform: translateY(100vh) rotate(0deg);
-                        opacity: 0;
-                    }
-                    10% {
-                        opacity: 1;
-                    }
-                    90% {
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translateY(-100vh) rotate(360deg);
-                        opacity: 0;
-                    }
-                }
-                
-                .project-card:hover .project-image {
-                    transform: scale(1.05);
-                    transition: transform 0.3s ease;
-                }
-                
-                .contact-card:hover .contact-icon {
-                    transform: scale(1.1) rotate(5deg);
-                    transition: transform 0.3s ease;
-                }
-                
-                .hero-content {
-                    animation: fadeInUp 1s ease 0.5s both;
-                }
-                
-                @keyframes fadeInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(30px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-            `;
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(-10vh) translateX(5px) rotate(36deg) scale(1);
+            }
+            50% {
+                transform: translateY(-50vh) translateX(-10px) rotate(180deg) scale(1.2);
+            }
+            90% {
+                opacity: 1;
+                transform: translateY(-90vh) translateX(8px) rotate(324deg) scale(1);
+            }
+            100% {
+                transform: translateY(-110vh) translateX(0) rotate(360deg) scale(0.8);
+                opacity: 0;
+            }
+        }
+        
+        .project-card:hover .project-image i {
+            transform: scale(1.2) rotate(5deg);
+            transition: transform 0.3s ease;
+        }
+        
+        .contact-card:hover .contact-icon {
+            transform: scale(1.1) rotate(5deg);
+            transition: transform 0.3s ease;
+        }
+        
+        .hero-content {
+            animation: fadeInUp 1s ease 0.5s both;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    `;
     document.head.appendChild(style);
 
     createParticles();

@@ -38,34 +38,42 @@
     <!-- About Section -->
     <section class="about section" id="about">
         <div class="container">
-            <h2 class="section-title">
+            <h2 class="about-title">
                 <span class="lang-eng">About Me</span>
                 <span class="lang-slo">O meni</span>
             </h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p class="lang-eng">
-                        I'm a Computer Science student at the University of Maribor, Slovenia. I have a deep passion for
-                        technology and innovation, specializing in programming, software development, and
-                        problem-solving. I am always eager to apply my skills and collaborate on exciting projects.
-                    </p>
-                    <p class="lang-slo">
-                        Sem študent računalništva na Univerzi v Mariboru. Navdušujejo me tehnologija in inovacije, s
-                        poudarkom na programiranju, razvoju programske opreme in reševanju kompleksnih problemov. Vedno
-                        sem pripravljen uporabiti svoje znanje za sodelovanje pri navdihujočih projektih.
-                    </p>
-                    <p class="lang-eng">
-                        Let's work together to achieve your goals and create something amazing!
-                    </p>
-                    <p class="lang-slo">
-                        Skupaj lahko dosežemo vaše cilje in ustvarimo nekaj neverjetnega!
-                    </p>
-                </div>
-                <div class="about-image">
-                    <div
-                        style="width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
-                        <i class="fas fa-code"></i>
+            <div class="about-grid">
+                <div class="about-avatar">
+                    <div class="avatar-placeholder">
+                        <img src="assets/img/avatar.jpg" alt="avatar image" class="avatar-image">
+                        <!-- <i class="fas fa-user-circle"></i> -->
                     </div>
+                </div>
+    
+                <div class="about-description">
+                    <p class="lang-eng">
+                        <span class="description-highlight">Software</span> developer. <br>
+                        Computer Science graduate.<br><br>
+
+                        Passionate about <span class="description-highlight">technology</span>, coding, and building things that <span class="description-highlight">matter</span>.<br>
+                        Focused on simplicity, <span class="description-highlight">performance</span>, and reliability.<br><br>
+
+                        Driven by <span class="description-highlight">curiosity</span>.<br>
+                        Always <span class="description-highlight">learning</span>.<br>
+                        Always <span class="description-highlight">building</span>.<br>
+                    </p>
+                    <p class="lang-slo">
+                        <span class="description-highlight">Razvijalec</span> programske opreme.<br>
+                        Diplomant računalništva in informatike.<br><br>
+
+                        Ljubitelj <span class="description-highlight">tehnologije</span>, programiranja in razvoja <span
+                            class="description-highlight">pomembnih</span> problemov.<br>
+                        rešitev, ki imajo <span class="description-highlight">zmogljivost</span> pomen.<br><br>
+
+                        Vodi me <span class="description-highlight">radovednost</span>.<br>
+                        Večni <span class="description-highlight">učenec</span>.<br>
+                        Večni <span class="description-highlight">ustvarjalec</span>.
+                    </p>
                 </div>
             </div>
         </div>
@@ -86,9 +94,12 @@
                     <span class="lang-slo">Profesionalno & Freelance Delo</span>
                 </h3>
                 <div class="projects-grid">
-                    <project-card class="project-card" project="CWCyprus" gradient="linear-gradient(45deg, #ffcd1c 0%, #ffa41c 100%)"></project-card>
-                    <project-card class="project-card" project="vitaMavric" gradient="linear-gradient(45deg, #f093fb 0%, #f5576c 100%)"></project-card>
-                    <project-card class="project-card" project="gasperStrazisar" gradient="linear-gradient(45deg, #4facfe 0%, #00f2fe 100%)"></project-card>
+                    <project-card class="project-card" project="CWCyprus"
+                        gradient="linear-gradient(45deg, #ffcd1c 0%, #ffa41c 100%)"></project-card>
+                    <project-card class="project-card" project="vitaMavric"
+                        gradient="linear-gradient(45deg, #f093fb 0%, #f5576c 100%)"></project-card>
+                    <project-card class="project-card" project="gasperStrazisar"
+                        gradient="linear-gradient(45deg, #4facfe 0%, #00f2fe 100%)"></project-card>
                 </div>
             </div>
 
@@ -99,9 +110,12 @@
                     <span class="lang-slo">Akademsko Delo & Raziskave</span>
                 </h3>
                 <div class="projects-grid">
-                    <project-card class="project-card" project="thesis" gradient="linear-gradient(45deg, #667eea 0%, #764ba2 100%)"></project-card>
-                    <project-card class="project-card" project="researchPaper" gradient="linear-gradient(45deg, #a8edea 0%, #fed6e3 100%)"></project-card>
-                    <project-card class="project-card" project="courseProject" gradient="linear-gradient(45deg, #ffecd2 0%, #fcb69f 100%)"></project-card>
+                    <project-card class="project-card" project="thesis"
+                        gradient="linear-gradient(45deg, #667eea 0%, #764ba2 100%)"></project-card>
+                    <project-card class="project-card" project="OCRAlgorithm"
+                        gradient="linear-gradient(45deg, #a8edea 0%, #fed6e3 100%)"></project-card>
+                    <project-card class="project-card" project="FruitAlgorithm"
+                        gradient="linear-gradient(45deg, #ffecd2 0%, #fcb69f 100%)"></project-card>
                 </div>
             </div>
 
@@ -112,8 +126,10 @@
                     <span class="lang-slo">Osebni & Strast Projekti</span>
                 </h3>
                 <div class="projects-grid">
-                    <project-card class="project-card" project="wordleBot" gradient="linear-gradient(45deg, #fa709a 0%, #fee140 100%)"></project-card>
-                    <project-card class="project-card" project="personalProject" gradient="linear-gradient(45deg, #667eea 0%, #764ba2 100%)"></project-card>
+                    <project-card class="project-card" project="wordleBot"
+                        gradient="linear-gradient(45deg, #fa709a 0%, #fee140 100%)"></project-card>
+                    <project-card class="project-card" project="personalProject"
+                        gradient="linear-gradient(45deg, #667eea 0%, #764ba2 100%)"></project-card>
                 </div>
             </div>
         </div>
@@ -191,9 +207,6 @@
                 </a>
                 <a href="https://www.linkedin.com/in/domen-hribernik-4081a121b/" target="_blank" class="social-link">
                     <i class="fab fa-linkedin"></i>
-                </a>
-                <a href="music.html" target="_blank" class="social-link">
-                    <i class="fas fa-music"></i>
                 </a>
             </div>
         </div>

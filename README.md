@@ -3,21 +3,13 @@ This is my personal portfolio website.
 
 ## Getting Started
 
-To get started with this project, follow these steps:
+To view the site, simply open the `index.html` file in your web browser. No installation or build steps are required.
 
-1. **Install dependencies**:
-    ```bash
-    npm install
-    ```
+- The main page is `index.html`.
+- The `components` folder contains reusable HTML snippets that can be included in different parts of the site.
+- All styling is handled with CSS, and interactivity is provided by JavaScript files.
 
-2. **Run the development server**:
-    ```bash
-    npm run start
-    ```
-    This will start the development server and you can view the website at `http://localhost:3000`.
+## License
 
-3. **Build the project**:
-    ```bash
-    npm run build
-    ```
-    This will create an optimized production build of the project in the `build` directory.
+This project is licensed under the [CC BY-NC-ND 4.0 License](https://creativecommons.org/licenses/by-nc-nd/4.0/).  
+You may not use it for commercial purposes, or create derivative works without permission.

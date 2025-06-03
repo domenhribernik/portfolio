@@ -6,8 +6,8 @@ export const projects = {
       slo: "Cartridge World Ciper"
     },
     description: {
-      eng: "6-month internship at Cartridge World Cyprus, working on the development and design of their WordPress e-commerce site, including SEO and quality assurance.",
-      slo: "6-mesečna praksa pri Cartridge World Ciper, kjer sem delal na razvoju in oblikovanju WordPress spletne trgovine ter skrbel za SEO in zagotavljanje kakovosti."
+      eng: "Internship at Cartridge World Cyprus, working on the development of their WordPress e-commerce site, including SEO and quality assurance.",
+      slo: "Praksa pri Cartridge World Ciper, kjer sem delal na razvoju WordPress spletne trgovine ter skrbel za SEO in zagotavljanje kakovosti."
     },
     tech: ["WordPress", "WooCommerce", "PHP", "Elementor", "SEO"],
     links: {
@@ -21,8 +21,8 @@ export const projects = {
       slo: "Vita Mavrič"
     },
     description: {
-      eng: "Custom-built, responsive website for Vita Mavrič, developed using HTML, CSS, and vanilla JavaScript (Vanilla Stack).",
-      slo: "Po meri izdelana, odzivna spletna stran za Vito Mavrič, razvita z uporabo HTML, CSS in JavaScript (Vanilla Stack)." 
+      eng: "Custom-built, responsive website for Vita Mavrič, developed using HTML, CSS, and vanilla JavaScript.",
+      slo: "Po meri izdelana, odzivna spletna stran za Vito Mavrič, razvita z uporabo HTML, CSS in JavaScript."
     },
     tech: ["HTML", "CSS", "JavaScript"],
     links: {
@@ -39,7 +39,7 @@ export const projects = {
       eng: "Custom-built, responsive website for Gašper Stražišar, developed in WordPress with custom themes and functionality.",
       slo: "Po meri izdelana, odzivna spletna stran za Gašperja Stražišarja, razvita v WordPressu s prilagojenimi temami in funkcionalnostmi."
     },
-    tech: ["WordPress", "SEO", "Custom Themes"],
+    tech: ["WordPress", "CSS", "SEO"],
     links: {
       visitSite: "https://gasperstrazisar.com",
     },
@@ -50,50 +50,55 @@ export const projects = {
   thesis: {
     badge: { eng: "Thesis", slo: "Diploma" },
     title: {
-      eng: "Virtual Runner - Digital Twin",
-      slo: "Virtual Runner - Digitalni Dvojček"
+      eng: "Virtual Runner",
+      slo: "Virtual Runner"
     },
     description: {
-      eng: "My thesis focuses on creating a digital twin of a runner, integrating multiple subprojects into a unified application to demonstrate practical use of various technologies.",
-      slo: "Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača, ki združuje več podprojektov v enotno aplikacijo za prikaz praktične uporabe različnih tehnologij."
+      eng: "My thesis focuses on creating a digital twin of a runner, integrating multiple subprojects into an application to demonstrate practical use of various technologies.",
+      slo: "Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača, ki združuje več podprojektov v aplikacijo za prikaz praktične uporabe različnih tehnologij."
     },
-    tech: ["Python", "Machine Learning", "IoT", "Data Analysis"],
+    tech: ["Blockchain", "Web", "Kotlin", "Android", "Data Analysis", "AI", "Game dev"],
     links: {
       readMore: "thesis.html",
       code: "https://github.com/orgs/ni-imena/repositories"
     },
     iconClass: "fas fa-running",
   },
-  researchPaper: {
-    badge: { eng: "Research Paper", slo: "Raziskovalni Članek" },
+  OCRAlgorithm: {
+    badge: {
+      eng: "Research Paper",
+      slo: "Raziskovalni Članek"
+    },
     title: {
-      eng: "Research Paper Title",
-      slo: "Naslov Raziskovalnega Članka"
+      eng: "OCR Algorithm for Assisting People with Physical Disabilities",
+      slo: "OCR Algoritem za Pomoč Gibalno Oviranim Osebam"
     },
     description: {
-      eng: "Description of your research paper, methodology, findings, and contributions to the field.",
-      slo: "Opis vašega raziskovalnega članka, metodologije, ugotovitev in prispevkov na področju."
+      eng: "Award-winning research and implementation of an OCR-based system designed to help physically disabled individuals access parking spaces more securely. The project includes license plate and ID card recognition, face verification, and a web application for user registration. Recognized with a national silver award for innovation.",
+      slo: "Raziskovalna naloga in implementacija sistema OCR za pomoč gibalno oviranim osebam pri varnejšem dostopu do parkirnih mest. Projekt vključuje prepoznavo registrskih tablic in invalidskih izkaznic, preverjanje obraza ter spletno aplikacijo za registracijo uporabnikov. Nagrajena s srebrnim priznanjem za inovacijo na državnem nivoju."
     },
-    tech: ["Research", "Analysis"],
+    tech: ["Python", "OCR", "Face Recognition", "Web Development", "Research"],
     links: {
-      readMore: "#"
+      readMore: "https://www.knjiznica-celje.si/raziskovalne/4202106000.pdf"
     },
     iconClass: "fas fa-file-alt",
   },
-  courseProject: {
-    badge: { eng: "Course Project", slo: "Projektna Naloga" },
+  FruitAlgorithm: {
+    badge: {
+      eng: "Course Project",
+      slo: "Projektna Naloga"
+    },
     title: {
-      eng: "Course Assignment Title",
-      slo: "Naslov Projektne Naloge"
+      eng: "Fruit Sequence Optimization with Dynamic Programming",
+      slo: "Optimizacija Zaporedja Sadja z Dinamičnim Programiranjem"
     },
     description: {
-      eng: "Description of a significant course project or assignment that demonstrates your academic work.",
-      slo: "Opis pomembne projektne naloge, ki prikazuje vaše akademsko delo."
+      eng: "A course project that solves a coding challenge involving strategic fruit placement to minimize picked apples at fixed intervals. Two algorithms are implemented and compared: a brute force solution for correctness and a dynamic programming solution for efficiency.",
+      slo: "Projektna naloga, ki rešuje programerski izziv optimizacije zaporedja sadja za čim manj pobranih jabolk v določenih intervalih. Implementirani in primerjani sta dve rešitvi: brute force za popolnost in dinamično programiranje za učinkovitost."
     },
-    tech: ["Technology 1", "Technology 2"],
+    tech: ["C++", "Dynamic Programming", "Algorithms"],
     links: {
-      readMore: "#",
-      code: "#"
+      code: "https://github.com/domenhribernik/fruit_algorithm"
     },
     iconClass: "fas fa-graduation-cap",
   },
@@ -108,7 +113,7 @@ export const projects = {
       eng: "A Python bot for the game Wordle that uses algorithmic strategies to solve puzzles efficiently, demonstrating AI techniques for word games.",
       slo: "Python bot za igro Wordle, ki uporablja algoritmične strategije za učinkovito reševanje problemov in prikazuje uporabo umetne inteligence za besedne igre."
     },
-    tech: ["Python", "Algorithms", "Game AI"],
+    tech: ["Python", "Algorithm", "OpenCV"],
     links: {
       code: "https://github.com/domenhribernik/wordle-bot"
     },
@@ -116,18 +121,17 @@ export const projects = {
   },
   personalProject: {
     title: {
-      eng: "Personal Project Name",
-      slo: "Ime Osebnega Projekta"
+      eng: "Guitar Backing Tracks",
+      slo: "Spramlave za Kitaro"
     },
     description: {
-      eng: "Description of another personal project that showcases your skills and interests outside of work and school.",
-      slo: "Opis drugega osebnega projekta, ki prikazuje vaše veščine in interese zunaj dela in šole."
+      eng: "A personal project built to manage scattered MP3 backing tracks across devices. This custom web player lets you play guitar backing tracks directly in the browser, with a clean and responsive interface tailored for quick practice sessions.",
+      slo: "Osebni projekt, zasnovan za enostavno upravljanje MP3 spremljav na različnih napravah. Ta spletni predvajalnik omogoča predvajanje spremljav za kitaro direktno v brskalniku, z enostavnim in odzivnim vmesnikom, prilagojenim za učinkovitost."
     },
-    tech: ["Technology 1", "Technology 2", "Technology 3"],
+    tech: ["HTML", "CSS", "JavaScript"],
     links: {
-      code: "#",
-      demo: "#"
+      visitSite: "music.html"
     },
-    iconClass: "fas fa-code",
+    iconClass: "fas fa-music",
   }
 };
