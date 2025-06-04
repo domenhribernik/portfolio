@@ -392,15 +392,39 @@ body {
     border-radius: var(--border-radius);
     display: flex;
     flex-direction: column;
+    transition: all 0.3s ease;
+    position: relative;
     overflow: hidden;
     transition: var(--transition);
     border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 1;
 }
 
+.project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+    z-index: 1;
+}
+
 .project-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--highlight-hover);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 25px rgba(255, 215, 0, 0.15),
+                0 0 0 2px rgba(255, 215, 0, 0.8);
+}
+
+.project-card:hover::before {
+    left: 100%;
+    transition: left 0.5s ease;
+}
+
+.project-card:not(:hover)::before {
+    transition: none;
 }
 
 .project-image {
@@ -542,6 +566,7 @@ body {
 /* Contact Section */
 .contact {
     background: #f8fafc;
+    min-height: 90vh;
 }
 
 .contact-content {
@@ -721,11 +746,15 @@ body.lang-slovenian .lang-slo {
     }
 
     .section {
-        padding: 4rem 0;
+        padding: 6rem 0;
     }
 
     .about-title {
         font-size: 3rem;
+    }
+
+    .about-avatar, .about-title {
+        margin-bottom: 2rem;
     }
 
     .avatar-placeholder {

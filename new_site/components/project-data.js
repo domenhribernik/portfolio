@@ -57,7 +57,7 @@ export const projects = {
       eng: "My thesis focuses on creating a digital twin of a runner, integrating multiple subprojects into an application to demonstrate practical use of various technologies.",
       slo: "Moja diplomska naloga se osredotoča na izdelavo digitalnega dvojčka tekača, ki združuje več podprojektov v aplikacijo za prikaz praktične uporabe različnih tehnologij."
     },
-    tech: ["Blockchain", "Web", "Kotlin", "Android", "Data Analysis", "AI", "Game dev"],
+    tech: ["Blockchain", "Web", "Android", "Data Analysis", "AI", "Game dev", "Parallel computing"],
     links: {
       readMore: "thesis.html",
       code: "https://github.com/orgs/ni-imena/repositories"
@@ -67,17 +67,17 @@ export const projects = {
   OCRAlgorithm: {
     badge: {
       eng: "Research Paper",
-      slo: "Raziskovalni Članek"
+      slo: "Raziskovalna Naloga"
     },
     title: {
-      eng: "OCR Algorithm for Assisting People with Physical Disabilities",
+      eng: "OCR Algorithm for Assisting People with Disabilities",
       slo: "OCR Algoritem za Pomoč Gibalno Oviranim Osebam"
     },
     description: {
-      eng: "Award-winning research and implementation of an OCR-based system designed to help physically disabled individuals access parking spaces more securely. The project includes license plate and ID card recognition, face verification, and a web application for user registration. Recognized with a national silver award for innovation.",
-      slo: "Raziskovalna naloga in implementacija sistema OCR za pomoč gibalno oviranim osebam pri varnejšem dostopu do parkirnih mest. Projekt vključuje prepoznavo registrskih tablic in invalidskih izkaznic, preverjanje obraza ter spletno aplikacijo za registracijo uporabnikov. Nagrajena s srebrnim priznanjem za inovacijo na državnem nivoju."
+      eng: "Research paper and implementation of an OCR-based system designed to help physically disabled individuals access parking spaces. The project includes license plate and ID card recognition, face verification, and a web application for user registration. Recognized with a national silver award for innovation.",
+      slo: "Raziskovalna naloga in implementacija sistema OCR za pomoč gibalno oviranim osebam dostop do parkirnih mest. Projekt vključuje prepoznavo registrskih tablic in invalidskih izkaznic, preverjanje obraza ter spletno aplikacijo za registracijo uporabnikov. Nagrajena s srebrnim priznanjem za inovacijo na državnem nivoju."
     },
-    tech: ["Python", "OCR", "Face Recognition", "Web Development", "Research"],
+    tech: ["Python", "OCR", "Face Recognition", "Web Development"],
     links: {
       readMore: "https://www.knjiznica-celje.si/raziskovalne/4202106000.pdf"
     },
