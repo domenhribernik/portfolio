@@ -119,7 +119,7 @@ export const projects = {
     },
     iconClass: "fas fa-robot",
   },
-  personalProject: {
+  guitarBackingTracks: {
     title: {
       eng: "Guitar Backing Tracks",
       slo: "Spramlave za Kitaro"
@@ -133,5 +133,20 @@ export const projects = {
       visitSite: "music.html"
     },
     iconClass: "fas fa-music",
+  },
+  spyGame: {
+    title: {
+      eng: "Spy Game",
+      slo: "Spy Igra"
+    },
+    description: {
+      eng: "A simple web-based game where players take turns guessing the location of a spy on a grid. The game is designed for two players and includes basic AI functionality for single-player mode.",
+      slo: "Preprosta spletna igra, kjer igralci izmenično ugibajo lokacijo vohuna na mreži. Igra je zasnovana za dva igralca in vključuje osnovno funkcionalnost umetne inteligence za enojno igro."
+    },
+    tech: ["HTML", "CSS", "JavaScript"],
+    links: {
+      visitSite: "spy.html"
+    },
+    iconClass: "fas fa-user-secret",
   }
 };

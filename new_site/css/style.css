@@ -358,6 +358,67 @@ body {
     font-weight: 500;
 }
 
+/* Skills Section */
+.technologies {
+    margin-top: 5rem;
+    text-align: center;
+}
+
+.technologies-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 3rem;
+}
+
+.tech-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.tech-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border-radius: 30px;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    min-width: 100px;
+}
+
+.tech-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--highlight-hover);
+}
+
+.tech-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 50px;
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.tech-item:hover .tech-icon {
+    transform: scale(1.1);
+}
+
+.tech-name {
+    margin-top: 5px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: center;
+}
+
 /* Projects Section */
 .projects {
     background: var(--bg-dark);
@@ -415,7 +476,7 @@ body {
 .project-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 12px 25px rgba(255, 215, 0, 0.15),
-                0 0 0 2px rgba(255, 215, 0, 0.8);
+        0 0 0 2px rgba(255, 215, 0, 0.8);
 }
 
 .project-card:hover::before {
@@ -753,7 +814,8 @@ body.lang-slovenian .lang-slo {
         font-size: 3rem;
     }
 
-    .about-avatar, .about-title {
+    .about-avatar,
+    .about-title {
         margin-bottom: 2rem;
     }
 
@@ -766,5 +828,24 @@ body.lang-slovenian .lang-slo {
     .about-description {
         font-size: 1.2rem;
         padding: 0 1rem;
+    }
+
+    .tech-grid {
+        gap: 1rem;
+    }
+
+    .tech-item {
+        padding: 1rem;
+        min-width: 80px;
+    }
+
+    .tech-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 40px;
+    }
+
+    .technologies-title {
+        font-size: 2rem;
     }
 }

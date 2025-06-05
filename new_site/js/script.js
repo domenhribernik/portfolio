@@ -13,9 +13,27 @@ window.addEventListener('DOMContentLoaded', () => {
     //? Language toggle
     const langButtons = document.querySelectorAll('.lang-btn');
 
+    const savedLang = localStorage.getItem('siteLanguage');
+    const browserLang = navigator.language || navigator.userLanguage;    
+
+    if (savedLang && savedLang !== 'undefined') {
+        langButtons.forEach(btn => btn.dataset.lang === savedLang ? btn.classList.add('active') : btn.classList.remove('active'));
+        if (savedLang === 'slo') {
+            document.body.classList.add('lang-slovenian');
+        } else {
+            document.body.classList.remove('lang-slovenian');
+        }
+    }
+    else if (browserLang.startsWith('sl')) {
+        langButtons.forEach(btn => btn.dataset.lang === 'slo' ? btn.classList.add('active') : btn.classList.remove('active'));
+        document.body.classList.add('lang-slovenian');
+    }
+
+
     langButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            const lang = btn.dataset.lang;
+            let lang = btn.dataset.lang;
+
 
             langButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -33,6 +51,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }));
 
             console.log(`Language changed to: ${lang}`);
+            localStorage.setItem('siteLanguage', lang);
         });
     });
 
@@ -51,7 +70,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Navbar background on scroll
+    //? Navbar background on scroll
     window.addEventListener('scroll', () => {
         const navbar = document.querySelector('.navbar');
         if (window.scrollY > 100) {
@@ -118,7 +137,7 @@ window.addEventListener('DOMContentLoaded', () => {
     function createParticles() {
         const hero = document.querySelector('.hero');
         if (!hero) return;
-        
+
         const particlesContainer = document.createElement('div');
         particlesContainer.className = 'particles-container';
         particlesContainer.style.position = 'absolute';
@@ -137,7 +156,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const size = Math.random() * 3 + 1; // 1-4px
             const opacity = Math.random() * 0.2 + 0.1; // 0.1-0.3 opacity
             const animationDuration = Math.random() * 8 + 10; // 10-18s
-            
+
             particle.style.position = 'absolute';
             particle.style.width = size + 'px';
             particle.style.height = size + 'px';
@@ -339,4 +358,15 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    //? Tawk.to integration
+    var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+    (function () {
+        var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+        s1.async = true;
+        s1.src = 'https://embed.tawk.to/681860d15d55ef191a9daf60/1iqfjkd3r';
+        s1.charset = 'UTF-8';
+        s1.setAttribute('crossorigin', '*');
+        s0.parentNode.insertBefore(s1, s0);
+    })();
 }); 
