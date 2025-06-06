@@ -331,11 +331,6 @@ body {
   margin-bottom: 1rem;
 }
 
-.credits i {
-  color: #cf6679;
-  margin: 0 0.2rem;
-}
-
 .back-link {
   display: inline-flex;
   align-items: center;

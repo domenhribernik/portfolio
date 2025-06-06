@@ -59,7 +59,7 @@ export const projects = {
     },
     tech: ["Blockchain", "Web", "Android", "Data Analysis", "AI", "Game dev", "Parallel computing"],
     links: {
-      readMore: "thesis.html",
+      readMore: "html/thesis.html",
       code: "https://github.com/orgs/ni-imena/repositories"
     },
     iconClass: "fas fa-running",
@@ -130,7 +130,7 @@ export const projects = {
     },
     tech: ["HTML", "CSS", "JavaScript"],
     links: {
-      visitSite: "music.html"
+      visitSite: "html/music.html"
     },
     iconClass: "fas fa-music",
   },
@@ -145,7 +145,7 @@ export const projects = {
     },
     tech: ["HTML", "CSS", "JavaScript"],
     links: {
-      visitSite: "spy.html"
+      visitSite: "html/spy.html"
     },
     iconClass: "fas fa-user-secret",
   }

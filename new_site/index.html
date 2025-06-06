@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/home.css">
 </head>
 
 <body>
@@ -42,7 +43,7 @@
         <div class="container">
             <h2 class="about-title">
                 <span class="lang-eng">About Me</span>
-                <span class="lang-slo">O meni</span>
+                <span class="lang-slo">O Meni</span>
             </h2>
             <div class="about-grid">
                 <div class="about-avatar">
@@ -53,154 +54,169 @@
                 </div>
 
                 <div class="about-description">
-                    <h3 class="lang-eng">Hi, I'm Domen Hribernik,</h3>
-                    <p class="lang-eng">
-                        a software developer based in Slovenia. I've built professional applications for clients and
-                        contributed to open-source projects. I'm driven by curiosity and passionate about creating
-                        digital solutions that solve real problems.
-                    </p>
-                    <h3 class="lang-slo">Zdravo sem Domen Hribernik,</h3><br>
-                    <p class="lang-slo">
-                        razvijalec programske opreme iz Slovenije. Ustvarjam profesionalne aplikacije in prispevam k
-                        odprtokodnim projektom. Vodi me radovednost ter strast do ustvarjanja aplikacij, ki rešujejo
-                        realne probleme.
-                    </p>
+                    <div class="lang-eng">
+                        <h3 class="lang-eng">Hi, I'm Domen Hribernik,</h3>
+                        <p class="lang-eng">
+                            a software developer based in Slovenia. I built professional applications for clients and
+                            contribute to open-source projects. I'm driven by curiosity and passionate about creating
+                            software that solve real problems.
+                        </p>
+                    </div>
+                    <div class="lang-slo">
+                        <h3>Sem Domen Hribernik,</h3>
+                        <p>
+                            razvijalec programske opreme iz Slovenije. Ustvarjam profesionalne aplikacije in prispevam k
+                            odprtokodnim projektom. Vodi me radovednost ter strast do ustvarjanja aplikacij, ki rešujejo
+                            realne probleme.
+                        </p>
+                    </div>
                 </div>
             </div>
+            <div class="progress-button">
+                <a href="#technologies" class="cta-button">
+                    <span class="lang-eng"><i class="fas fa-arrow-down"></i></span>
+                    <span class="lang-slo"><i class="fas fa-arrow-down"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="technologies">
+        <div class="container">
             <div class="technologies">
-                <h3 class="technologies-title">
+                <h2 class="section-title">
                     <span class="lang-eng">Technologies</span>
                     <span class="lang-slo">Tehnologije</span>
-                </h3>
+                </h2>
                 <div class="tech-grid">
-                    <!-- Frontend -->
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="HTML">
                         <div class="tech-icon">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" />
+                            <img
+                                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" />
                         </div>
-                        <span class="tech-name">HTML</span>
                     </div>
-
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="CSS">
                         <div class="tech-icon">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" />
+                            <img
+                                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" />
                         </div>
-                        <span class="tech-name">CSS</span>
                     </div>
-
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="SASS">
                         <div class="tech-icon">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-plain.svg" />
+                            <img
+                                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sass/sass-original.svg" />
                         </div>
-                        <span class="tech-name">JavaScript</span>
                     </div>
-
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="JavaScript">
                         <div class="tech-icon">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" />
+                            <img
+                                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-plain.svg" />
                         </div>
-                        <span class="tech-name">React</span>
                     </div>
-
-                    <!-- Backend -->
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="PHP">
                         <div class="tech-icon">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" />
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" />
                         </div>
-                        <span class="tech-name">Node.js</span>
                     </div>
-
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="React">
                         <div class="tech-icon">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg" />
+                            <img
+                                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" />
                         </div>
-                        <span class="tech-name">MongoDB</span>
                     </div>
-
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="Node">
+                        <div class="tech-icon">
+                            <img
+                                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" />
+                        </div>
+                    </div>
+                    <div class="tech-item" data-tech="MongoDB">
+                        <div class="tech-icon">
+                            <img
+                                src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg" />
+                        </div>
+                    </div>
+                    <div class="tech-item" data-tech="SQL">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/azuresqldatabase/azuresqldatabase-original.svg" />
                         </div>
-                        <span class="tech-name">SQL</span>
                     </div>
-
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="Python">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" />
                         </div>
-                        <span class="tech-name">Python</span>
                     </div>
-
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="Django">
                         <div class="tech-icon">
                             <i class="devicon-django-plain"></i>
                         </div>
-                        <span class="tech-name">Django</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech=".NET">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/dot-net/dot-net-original.svg" />
                         </div>
-                        <span class="tech-name">.NET</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="C#">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/csharp/csharp-original.svg" />
                         </div>
-                        <span class="tech-name">C#</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="C++">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg" />
                         </div>
-                        <span class="tech-name">C++</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="Kotlin">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/kotlin/kotlin-original.svg" />
                         </div>
-                        <span class="tech-name">Kotlin</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="Android">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/android/android-plain.svg" />
                         </div>
-                        <span class="tech-name">Android</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="WordPress">
                         <div class="tech-icon">
                             <i class="devicon-wordpress-plain"></i>
                         </div>
-                        <span class="tech-name">WordPress</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="Git">
                         <div class="tech-icon">
                             <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg" />
                         </div>
-                        <span class="tech-name">Git</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="Docker">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg" />
                         </div>
-                        <span class="tech-name">Docker</span>
                     </div>
-                    <div class="tech-item">
+                    <div class="tech-item" data-tech="Linux">
                         <div class="tech-icon">
                             <img
                                 src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg" />
                         </div>
-                        <span class="tech-name">Linux</span>
+                    </div>
+                    <div class="tech-item" data-tech="Vim">
+                        <div class="tech-icon">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vim/vim-original.svg" />
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div class="progress-button">
+                <a href="#projects" class="cta-button">
+                    <span class="lang-eng"><i class="fas fa-arrow-down"></i></span>
+                    <span class="lang-slo"><i class="fas fa-arrow-down"></i></span>
+                </a>
             </div>
         </div>
     </section>
@@ -269,7 +285,7 @@
             <blockquote class="quote">
                 "Work like you don't need the money. Love like you've never been hurt. Dance like nobody's watching."
             </blockquote>
-            <cite class="quote-author">— Satchel Paige</cite>
+            <cite class="quote-author">Satchel Paige</cite>
         </div>
     </section>
 
@@ -319,8 +335,8 @@
                             <span class="lang-slo">dipl. inž. Računalništva in Informacijskih Tehnologij</span>
                         </div>
                         <div>
-                            <span class="lang-eng">University of Maribor</span>
-                            <span class="lang-slo">Univerza v Mariboru</span>
+                            <span class="lang-eng"><a href="https://feri.um.si/en/" target="_blank">University of Maribor</a></span>
+                            <span class="lang-slo"><a href="https://feri.um.si" target="_blank">Univerza v Mariboru</a></span>
                         </div>
                     </div>
                 </div>
@@ -343,7 +359,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; <span id="currentYear"></span> Domen Hribernik. All rights reserved.</p>
+            <p>Copyright &copy; Domen Hribernik <span id="currentYear"></span></p>
         </div>
     </footer>
 

@@ -93,7 +93,6 @@ function startGame() {
     document.getElementById('gameScreen').style.display = 'block';
 
     // Set up game info
-    document.getElementById('gameLocation').textContent = gameState.currentLocation;
     document.getElementById('gamePlayerCount').textContent = gameState.playerCount;
 
     // Start timer (1 minute per player)

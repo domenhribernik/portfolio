@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/spy.css">
-    <title>SPY - The Ultimate Game</title>
+    <link rel="stylesheet" href="../css/spy.css">
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <title>Spy Game</title>
 </head>
 <body>
     <div class="container">
@@ -32,7 +33,7 @@
         <!-- Role Cards -->
         <div class="role-cards" id="roleCards">
             <h2 class="section-title">Player Roles</h2>
-            <p style="margin-bottom: 2rem; color: #a855f7;">Click each card to reveal your role (keep it secret!)</p>
+            <p style="margin-bottom: 2rem; color: #5a67d8">Click each card to reveal your role (keep it secret!)</p>
             <div id="playerCardsContainer"></div>
             <button class="btn btn-success hidden" id="startGameBtn" onclick="startGame()">Start Game</button>
         </div>
@@ -41,7 +42,6 @@
         <div class="game-screen" id="gameScreen">
             <h2 class="section-title">Game in Progress</h2>
             <div class="game-info">
-                <p><strong>Location:</strong> <span id="gameLocation"></span></p>
                 <p><strong>Players:</strong> <span id="gamePlayerCount"></span></p>
                 <p style="margin-top: 1rem; color: #fbbf24;">Find the spy among you!</p>
             </div>
@@ -63,6 +63,6 @@
             <button class="btn" onclick="restartGame()">Play Again</button>
         </div>
     </div>
-    <script src="js/spy.js"></script>
+    <script src="../js/spy.js"></script>
 </body>
 </html>
