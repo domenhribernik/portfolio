@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <link rel="stylesheet" href="../css/spy.css">
+    <title>Spy Game</title>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Title Screen -->
+        <div class="title-screen" id="titleScreen">
+            <h1 class="main-title">SPY</h1>
+            <p class="subtitle">The Ultimate Deception Game</p>
+            <button class="btn" onclick="showPlayerSelection()">Start Game</button>
+        </div>
+
+        <!-- Player Selection -->
+        <div class="player-selection" id="playerSelection">
+            <h2 class="section-title">Select Number of Players</h2>
+            <div class="player-buttons">
+                <button class="player-btn" onclick="selectPlayers(3)">3</button>
+                <button class="player-btn" onclick="selectPlayers(4)">4</button>
+                <button class="player-btn" onclick="selectPlayers(5)">5</button>
+                <button class="player-btn" onclick="selectPlayers(6)">6</button>
+                <button class="player-btn" onclick="selectPlayers(7)">7</button>
+                <button class="player-btn" onclick="selectPlayers(8)">8</button>
+            </div>
+            <button class="btn" id="confirmPlayers" style="display: none;" onclick="setupRoles()">Confirm</button>
+        </div>
+
+        <!-- Role Cards -->
+        <div class="role-cards" id="roleCards">
+            <h2 class="section-title">Player Roles</h2>
+            <p style="margin-bottom: 2rem; color: #5a67d8">Click each card to reveal your role (keep it secret!)</p>
+            <div id="playerCardsContainer"></div>
+            <button class="btn btn-success hidden" id="startGameBtn" onclick="startGame()">Start Game</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <h2 class="section-title">Game in Progress</h2>
+            <div class="game-info">
+                <p><strong>Players:</strong> <span id="gamePlayerCount"></span></p>
+                <p style="margin-top: 1rem; color: #fbbf24;">Find the spy among you!</p>
+            </div>
+            <div class="timer-display" id="timerDisplay">05:00</div>
+            <div class="timer-bar">
+                <div class="timer-progress" id="timerProgress"></div>
+            </div>
+            <button class="btn btn-danger" onclick="endGame()">End Game Early</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="title-screen hidden" id="gameOverScreen">
+            <h1 class="main-title">Time's Up!</h1>
+            <p class="subtitle">Did you find the spy?</p>
+            <div class="game-info">
+                <p><strong>The spy was among you!</strong></p>
+                <p style="margin-top: 1rem;">Discuss and vote for who you think the spy was.</p>
+            </div>
+            <button class="btn" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+    <script src="../js/spy.js"></script>
+    <script type="text/javascript">
+        var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+        (function () {
+            var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+            s1.async = true;
+            s1.src = 'https://embed.tawk.to/681860d15d55ef191a9daf60/1iqfjkd3r';
+            s1.charset = 'UTF-8';
+            s0.parentNode.insertBefore(s1, s0);
+        })();
+    </script>
+</body>
+
+</html>

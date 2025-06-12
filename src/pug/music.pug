@@ -1,0 +1,58 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Guitar Backing Tracks
+    link(rel='icon', type='image/x-icon', href='assets/favicon.ico')
+    link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css")
+    link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap")
+    link(rel="stylesheet" href="css/styles.css")
+    style.
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background-color: #121212;
+        color: #ffffff;
+        font-family: 'Poppins', sans-serif;
+        line-height: 1.6;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+  body
+    .guitar-app
+      .guitar-header
+        h1.guitar-title 
+          i.fas.fa-music
+          span Guitar Backing Tracks
+        p.guitar-subtitle My personal collection of guitar tracks to jam with
+      
+      .guitar-content
+        .guitar-categories
+          .category
+            .category-header
+              i.fas.fa-guitar
+              h2.category-title Acoustic
+            .category-tracks#acoustic-tracks
+          .category
+            .category-header
+              i.fas.fa-bolt
+              h2.category-title Electric
+            .category-tracks#electric-tracks
+                  
+        .guitar-footer
+          p.credits Made with 
+            i.fas.fa-heart
+            |  for the love of music
+          a.back-link(href="/") 
+            i.fas.fa-arrow-left
+            |  Back to Portfolio
+
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.6.3/wavesurfer.min.js")
+    script(src="js/music.js")

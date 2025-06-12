@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guitar Backing Tracks</title>
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&amp;display=swap" />
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/music.css" />
+</head>
+
+<body>
+    <main-navbar site="../index.html"></main-navbar>
+    <div class="music-app">
+        <div class="music-header">
+            <h1 class="music-title">
+                <span><i class="fas fa-music"></i> Guitar Backing Tracks</span>
+            </h1>
+            <p class="music-subtitle">My personal collection of guitar tracks to jam with</p>
+        </div>
+        <div class="music-content">
+            <div class="music-categories">
+                <div class="category">
+                    <div class="category-header">
+                        <i class="fas fa-guitar"></i>
+                        <h2 class="category-title">Acoustic</h2>
+                    </div>
+                    <div class="category-tracks" id="acoustic-tracks"></div>
+                </div>
+                <div class="category">
+                    <div class="category-header">
+                        <i class="fas fa-bolt"></i>
+                        <h2 class="category-title">Electric</h2>
+                    </div>
+                    <div class="category-tracks" id="electric-tracks"></div>
+                </div>
+            </div>
+            <div class="music-footer">
+                <p class="credits">
+                    Made with
+                    <i class="fas fa-heart"></i>
+                    for the love of music
+                </p>
+                <a class="back-link" href="/">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Portfolio
+                </a>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.6.3/wavesurfer.min.js"></script>
+    <script type="module" src="../components/main-navbar.js"></script>
+    <script src="../js/music.js"></script>
+    <script type="text/javascript">
+        var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+        (function () {
+            var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+            s1.async = true;
+            s1.src = 'https://embed.tawk.to/681860d15d55ef191a9daf60/1iqfjkd3r';
+            s1.charset = 'UTF-8';
+            s0.parentNode.insertBefore(s1, s0);
+        })();
+    </script>
+</body>
+
+</html>

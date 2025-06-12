@@ -1,0 +1,44 @@
+// 
+// Projects
+// 
+
+.projects-section {
+    padding: 7rem 0;
+    background-color: $custom-lighter-gray;
+
+    .featured-text {
+        padding: 2rem;
+
+        @include media-breakpoint-up(lg) {
+            padding: 0 0 0 2rem;
+            border-left: 0.5rem solid $primary;
+        }
+    }
+
+    .featured-text-thesis {
+        padding: 2rem;
+
+        @include media-breakpoint-up(lg) {
+            padding: 0 0 0 2rem;
+            margin-left: 0.5rem;
+        }
+    }
+
+    .project-text {
+        padding: 3rem;
+        font-size: 90%;
+
+        @include media-breakpoint-up(lg) {
+            padding: 5rem;
+        }
+    }
+
+    video {
+        height: 100%;
+        background-color: #131313;
+    }
+
+    .text-left {
+        text-align: left;
+    }
+}

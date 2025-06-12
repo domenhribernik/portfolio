@@ -1,0 +1,292 @@
+:root {
+    --primary-color: #667eea;
+    --primary-hover: #5a67d8;
+    --secondary-color: #ffcd1c;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-light: rgba(255, 255, 255, 0.9);
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --text-muted-about: #a0aec0;
+    --bg-dark: #0f172a;
+    --bg-dark-about: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    --bg-light: #f8fafc;
+    --bg-card: #1e293b;
+    --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --border-radius: 16px;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.25);
+    --shadow-hover-alt: 0 10px 30px rgba(100, 100, 100, 0.2);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --game-bg: rgba(30, 41, 59, 0.9);
+    --game-border: rgba(102, 126, 234, 0.2);
+    --game-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: var(--bg-dark-about);
+    color: var(--text-light);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.title-screen {
+    text-align: center;
+    animation: fadeInUp 1s ease-out;
+}
+
+.main-title {
+    font-size: 4rem;
+    font-weight: bold;
+    background: var(--bg-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+    margin-bottom: 2rem;
+    letter-spacing: 0.2em;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 3rem;
+    opacity: 0.8;
+}
+
+.player-selection {
+    display: none;
+    text-align: center;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.section-title {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+}
+
+.player-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    max-width: 400px;
+}
+
+.player-btn {
+    background: var(--bg-gradient);
+    border: none;
+    color: white;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.player-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover-alt);
+}
+
+.player-btn.selected {
+    background: linear-gradient(135deg, var(--secondary-color), #f59e0b);
+    box-shadow: 0 8px 25px rgba(255, 205, 28, 0.5);
+}
+
+.role-cards {
+    display: none;
+    text-align: center;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.player-card {
+    background: var(--game-bg);
+    border: 2px solid var(--game-border);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin: 1rem auto;
+    max-width: 400px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--game-shadow);
+}
+
+.player-card:hover {
+    transform: scale(1.02);
+    border-color: var(--primary-color);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.2);
+}
+
+.player-card.revealed {
+    background: linear-gradient(135deg, var(--bg-card), #334155);
+    border-color: var(--secondary-color);
+}
+
+.player-name {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.role-content {
+    display: none;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.role-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.spy-role {
+    color: #ef4444;
+}
+
+.location-role {
+    color: #10b981;
+}
+
+.location-name {
+    font-size: 1.1rem;
+    color: var(--secondary-color);
+    background: rgba(255, 205, 28, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+.game-screen {
+    display: none;
+    text-align: center;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.timer-display {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin: 2rem 0;
+    font-weight: bold;
+    text-shadow: 0 0 20px rgba(255, 205, 28, 0.5);
+}
+
+.timer-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.timer-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, var(--secondary-color));
+    transition: width 1s linear;
+}
+
+.btn {
+    background: var(--bg-gradient);
+    border: none;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    margin: 0.5rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover-alt);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--secondary-color), #f59e0b);
+    box-shadow: 0 4px 15px rgba(255, 205, 28, 0.3);
+}
+
+.btn-secondary:hover {
+    box-shadow: 0 8px 25px rgba(255, 205, 28, 0.4);
+}
+
+.game-info {
+    background: var(--game-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border: 1px solid var(--game-border);
+    box-shadow: var(--game-shadow);
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Additional accent elements */
+.accent-text {
+    color: var(--secondary-color);
+}
+
+.primary-text {
+    color: var(--primary-color);
+}
+
+.muted-text {
+    color: var(--text-muted);
+}
