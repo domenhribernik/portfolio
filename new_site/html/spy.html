@@ -21,15 +21,13 @@
         <!-- Player Selection -->
         <div class="player-selection" id="playerSelection">
             <h2 class="section-title">Select Number of Players</h2>
-            <div class="player-buttons">
-                <button class="player-btn" onclick="selectPlayers(3)">3</button>
-                <button class="player-btn" onclick="selectPlayers(4)">4</button>
-                <button class="player-btn" onclick="selectPlayers(5)">5</button>
-                <button class="player-btn" onclick="selectPlayers(6)">6</button>
-                <button class="player-btn" onclick="selectPlayers(7)">7</button>
-                <button class="player-btn" onclick="selectPlayers(8)">8</button>
+            <div class="player-counter">
+                <button class="counter-btn" id="decreaseBtn" onclick="changePlayerCount(-1)">−</button>
+                <div class="player-count-display" id="playerCountDisplay">3</div>
+                <button class="counter-btn" id="increaseBtn" onclick="changePlayerCount(1)">+</button>
             </div>
-            <button class="btn" id="confirmPlayers" style="display: none;" onclick="setupRoles()">Confirm</button>
+            <p style="margin: 1rem 0; opacity: 0.8;">Minimum: 3 players | Maximum: 20 players</p>
+            <button class="btn" onclick="setupRoles()">Start Setup</button>
         </div>
 
         <!-- Role Cards -->

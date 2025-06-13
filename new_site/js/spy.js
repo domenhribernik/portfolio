@@ -1,8 +1,9 @@
 let gameState = {
-    playerCount: 0,
+    playerCount: 3,
     currentLocation: '',
     spyIndex: -1,
     revealedCards: 0,
+    viewedCards: 0,
     gameTimer: null,
     timeRemaining: 0
 };
@@ -18,17 +19,23 @@ const locations = [
 function showPlayerSelection() {
     document.getElementById('titleScreen').style.display = 'none';
     document.getElementById('playerSelection').style.display = 'block';
+    updatePlayerCountDisplay();
 }
 
-function selectPlayers(count) {
-    gameState.playerCount = count;
+function changePlayerCount(change) {
+    const newCount = gameState.playerCount + change;
+    if (newCount >= 3 && newCount <= 20) {
+        gameState.playerCount = newCount;
+        updatePlayerCountDisplay();
+    }
+}
+
+function updatePlayerCountDisplay() {
+    document.getElementById('playerCountDisplay').textContent = gameState.playerCount;
 
     // Update button states
-    const buttons = document.querySelectorAll('.player-btn');
-    buttons.forEach(btn => btn.classList.remove('selected'));
-    event.target.classList.add('selected');
-
-    document.getElementById('confirmPlayers').style.display = 'block';
+    document.getElementById('decreaseBtn').disabled = gameState.playerCount <= 3;
+    document.getElementById('increaseBtn').disabled = gameState.playerCount >= 20;
 }
 
 function setupRoles() {
@@ -40,6 +47,7 @@ function setupRoles() {
     gameState.currentLocation = locations[Math.floor(Math.random() * locations.length)];
     gameState.spyIndex = Math.floor(Math.random() * gameState.playerCount);
     gameState.revealedCards = 0;
+    gameState.viewedCards = 0;
 
     // Create player cards
     const container = document.getElementById('playerCardsContainer');
@@ -49,20 +57,25 @@ function setupRoles() {
         const card = document.createElement('div');
         card.className = 'player-card';
         card.innerHTML = `
-            <div class="player-name">Player ${i + 1}</div>
-            <div class="role-content" id="role-${i}">
-                ${i === gameState.spyIndex ?
-                    `<div class="role-title spy-role">🕵️ YOU ARE THE SPY!</div>
-                        <p>You don't know the location. Ask questions to figure it out without revealing yourself!</p>` :
-                    `<div class="role-title location-role">🏛️ CITIZEN</div>
-                        <div class="location-name">${gameState.currentLocation}</div>
-                        <p>You know the location. Find the spy who doesn't!</p>`
-                }
-            </div>
-            <p id="reveal-text-${i}">Tap to reveal your role</p>
-        `;
+                    <div class="player-name">Player ${i + 1}</div>
+                    <div class="role-content" id="role-${i}">
+                        ${i === gameState.spyIndex ?
+                `<div class="role-title spy-role">🕵️ YOU ARE THE SPY!</div>
+                                <p>You don't know the location. Ask questions to figure it out without revealing yourself!</p>` :
+                `<div class="role-title location-role">🏛️ CITIZEN</div>
+                                <div class="location-name">${gameState.currentLocation}</div>
+                                <p>You know the location. Find the spy who doesn't!</p>`
+            }
+                    </div>
+                    <p id="reveal-text-${i}">👀 Tap to reveal your role</p>
+                    <button class="close-btn" onclick="closeRole(${i})">×</button>
+                `;
 
-        card.onclick = () => revealRole(i);
+        card.onclick = (e) => {
+            if (!e.target.classList.contains('close-btn')) {
+                revealRole(i);
+            }
+        };
         container.appendChild(card);
     }
 }
@@ -72,15 +85,17 @@ function revealRole(playerIndex) {
     const roleContent = document.getElementById(`role-${playerIndex}`);
     const revealText = document.getElementById(`reveal-text-${playerIndex}`);
 
-    if (!card.classList.contains('revealed')) {
-        roleContent.style.display = 'block';
+    if (!card.classList.contains('revealed') && !card.classList.contains('viewed')) {
+        roleContent.classList.add('visible');
         revealText.style.display = 'none';
         card.classList.add('revealed');
         card.onclick = null;
 
         gameState.revealedCards++;
+        gameState.viewedCards++;
 
-        if (gameState.revealedCards === gameState.playerCount) {
+        // Check if all players have viewed their roles (not necessarily currently open)
+        if (gameState.viewedCards === gameState.playerCount) {
             setTimeout(() => {
                 document.getElementById('startGameBtn').classList.remove('hidden');
             }, 500);
@@ -88,11 +103,26 @@ function revealRole(playerIndex) {
     }
 }
 
+function closeRole(playerIndex) {
+    const card = document.querySelector(`#playerCardsContainer .player-card:nth-child(${playerIndex + 1})`);
+    const roleContent = document.getElementById(`role-${playerIndex}`);
+    const revealText = document.getElementById(`reveal-text-${playerIndex}`);
+
+    if (card.classList.contains('revealed')) {
+        roleContent.classList.remove('visible');
+        revealText.style.display = 'block';
+        revealText.textContent = '🔒 Role already viewed';
+        revealText.style.opacity = '0.6';
+        card.classList.remove('revealed');
+        card.classList.add('viewed');
+        // Remove click functionality - card can't be opened again
+        card.onclick = null;
+    }
+}
+
 function startGame() {
     document.getElementById('roleCards').style.display = 'none';
     document.getElementById('gameScreen').style.display = 'block';
-
-    // Set up game info
     document.getElementById('gamePlayerCount').textContent = gameState.playerCount;
 
     // Start timer (1 minute per player)
@@ -141,12 +171,12 @@ function endGame() {
 }
 
 function restartGame() {
-    // Reset game state
     gameState = {
-        playerCount: 0,
+        playerCount: 3,
         currentLocation: '',
         spyIndex: -1,
         revealedCards: 0,
+        viewedCards: 0,
         gameTimer: null,
         timeRemaining: 0
     };
@@ -163,9 +193,4 @@ function restartGame() {
     // Clear player cards
     document.getElementById('playerCardsContainer').innerHTML = '';
     document.getElementById('startGameBtn').classList.add('hidden');
-
-    // Reset player selection
-    const buttons = document.querySelectorAll('.player-btn');
-    buttons.forEach(btn => btn.classList.remove('selected'));
-    document.getElementById('confirmPlayers').style.display = 'none';
 }
