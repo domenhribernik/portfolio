@@ -20,6 +20,37 @@ body {
     padding: 2rem;
 }
 
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    background: #0f172a;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    padding: 2rem 0;
+
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #03dac6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.back-link:hover {
+  color: #1ae5d1;
+  transform: translateX(-5px);
+}
+
+.back-link i {
+  font-size: 0.9rem;
+}
+
 .title-screen,
 .player-selection,
 .role-cards,

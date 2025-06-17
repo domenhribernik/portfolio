@@ -146,7 +146,7 @@ export const projects = {
     },
     tech: ["HTML", "CSS", "JavaScript"],
     links: {
-      visitSite: "spy.html"
+      visitSite: "spy.html",
     },
     iconClass: "fas fa-user-secret",
   }
