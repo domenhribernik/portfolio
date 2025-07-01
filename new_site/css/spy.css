@@ -9,8 +9,9 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
     color: white;
 }
 
@@ -18,11 +19,13 @@ body {
     max-width: 800px;
     width: 100%;
     padding: 2rem;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .footer {
-    position: absolute;
-    bottom: 0;
     width: 100%;
     text-align: center;
     background: #0f172a;
@@ -33,22 +36,22 @@ body {
 }
 
 .back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #03dac6;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #03dac6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .back-link:hover {
-  color: #1ae5d1;
-  transform: translateX(-5px);
+    color: #1ae5d1;
+    transform: translateX(-5px);
 }
 
 .back-link i {
-  font-size: 0.9rem;
+    font-size: 0.9rem;
 }
 
 .title-screen,
@@ -130,7 +133,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
+    gap: 1rem;
     margin: 2rem 0;
 }
 
@@ -275,7 +278,7 @@ body {
     font-size: 3rem;
     font-weight: bold;
     margin: 2rem 0;
-    color: #06b6d4;
+    color: #fbbf24;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -306,7 +309,7 @@ body {
 
 .timer-progress {
     height: 100%;
-    background: linear-gradient(45deg, #06b6d4, #0891b2);
+    background: #fbbf24;
     width: 0%;
     transition: width 1s ease;
 }

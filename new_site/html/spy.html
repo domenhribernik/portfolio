@@ -21,20 +21,20 @@
 
         <!-- Player Selection -->
         <div class="player-selection" id="playerSelection">
-            <h2 class="section-title">Select Number of Players</h2>
+            <h2 class="section-title">Number of Players</h2>
             <div class="player-counter">
                 <button class="counter-btn" id="decreaseBtn" onclick="changePlayerCount(-1)">−</button>
                 <div class="player-count-display" id="playerCountDisplay">3</div>
                 <button class="counter-btn" id="increaseBtn" onclick="changePlayerCount(1)">+</button>
             </div>
-            <p style="margin: 1rem 0; opacity: 0.8;">Minimum: 3 players | Maximum: 20 players</p>
+            <p style="margin: 1rem 0; opacity: 0.8;">3+ players</p>
             <button class="btn" onclick="setupRoles()">Start Setup</button>
         </div>
 
         <!-- Role Cards -->
         <div class="role-cards" id="roleCards">
             <h2 class="section-title">Player Roles</h2>
-            <p style="margin-bottom: 2rem; color: #5a67d8">Click each card to reveal your role (keep it secret!)</p>
+            <p style="margin-bottom: 2rem;">Click each card to reveal your role (keep it secret!)</p>
             <div id="playerCardsContainer"></div>
             <button class="btn btn-success hidden" id="startGameBtn" onclick="startGame()">Start Game</button>
         </div>
@@ -56,10 +56,10 @@
         <!-- Game Over Screen -->
         <div class="title-screen hidden" id="gameOverScreen">
             <h1 class="main-title">Time's Up!</h1>
-            <p class="subtitle">Did you find the spy?</p>
+            <h2>Did you find the spy?</h2>
             <div class="game-info">
-                <p><strong>The spy was among you!</strong></p>
-                <p style="margin-top: 1rem;">Discuss and vote for who you think the spy was.</p>
+                <p>Discuss and vote for who you think the spy was.</p>
+                <p style="margin-top: 1rem;">If voted out, the spy has 1 try to guess the location. If guessed correctly he wins anyways.</p>
             </div>
             <button class="btn" onclick="restartGame()">Play Again</button>
         </div>

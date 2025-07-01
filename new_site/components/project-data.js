@@ -127,7 +127,7 @@ export const projects = {
     },
     description: {
       eng: "A personal project built to manage scattered MP3 backing tracks across devices. This custom web player lets you play guitar backing tracks directly in the browser, with a clean and responsive interface tailored for quick practice sessions.",
-      slo: "Osebni projekt, zasnovan za enostavno upravljanje MP3 spremljav na različnih napravah. Ta spletni predvajalnik omogoča predvajanje spremljav za kitaro direktno v brskalniku, z enostavnim in odzivnim vmesnikom, prilagojenim za učinkovitost."
+      slo: "Osebni projekt, zasnovan za enostavno upravljanje MP3 spremljav na različnih napravah. Ta spletni predvajalnik omogoča predvajanje spremljave za kitaro direktno v brskalniku z enostavnim in odzivnim vmesnikom, prilagojenim za učinkovitost."
     },
     tech: ["HTML", "CSS", "JavaScript"],
     links: {

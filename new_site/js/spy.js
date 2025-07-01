@@ -22,6 +22,13 @@ function showPlayerSelection() {
     updatePlayerCountDisplay();
 }
 
+function scrollToTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
 function changePlayerCount(change) {
     const newCount = gameState.playerCount + change;
     if (newCount >= 3 && newCount <= 20) {
