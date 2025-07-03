@@ -55,8 +55,20 @@
   ],
   "acoustic": [
     {
+      "name": "A Horse With No Name - America",
+      "file": "A Horse With No Name - America.mp3"
+    },
+    {
       "name": "Brown eyed girl - Van Morrison",
       "file": "Brown eyed girl - Van Morrison.mp3"
+    },
+    {
+      "name": "Don't Look Back In Anger - Oasis",
+      "file": "Don't Look Back In Anger - Oasis.mp3"
+    },
+    {
+      "name": "Heaven - Bryan Adams",
+      "file": "Heaven - Bryan Adams.mp3"
     },
     {
       "name": "Hey ya! - Outcast",
@@ -79,16 +91,32 @@
       "file": "Lahko sem srce - Tabu.mp3"
     },
     {
+      "name": "Layla Unplugged - Eric Clapton",
+      "file": "Layla Unplugged - Eric Clapton.mp3"
+    },
+    {
+      "name": "People Are Toys To You - Joanna Sternberg",
+      "file": "People Are Toys To You - Joanna Sternberg.mp3"
+    },
+    {
       "name": "Save tonight - Eagle Eye Cherry",
       "file": "Save tonight - Eagle Eye Cherry.mp3"
     },
     {
-      "name": "Wild Thing - The Troggs",
-      "file": "Wild Thing - The Troggs.mp3"
+      "name": "Sun to Me - Zach Bryan",
+      "file": "Sun to Me - Zach Bryan.mp3"
+    },
+    {
+      "name": "To Be With You - Mr. Big",
+      "file": "To Be With You - Mr. Big.mp3"
     },
     {
       "name": "Wish You Were Here - Pink Floyd",
       "file": "Wish You Were Here - Pink Floyd.mp3"
+    },
+    {
+      "name": "YOSEMITE - Travis Scott",
+      "file": "YOSEMITE - Travis Scott.mp3"
     },
     {
       "name": "Riptide - Vance Joy",
@@ -107,12 +135,20 @@
       "file": "Wonderwall - Oasis.mp3"
     },
     {
+      "name": "Don't Dream It's Over - Crowded House",
+      "file": "Don't Dream It's Over - Crowded House.mp3"
+    },
+    {
       "name": "Kiss me - Sixpence None The Richer",
       "file": "Kiss me - Sixpeace none the richer.mp3"
     },
     {
       "name": "Voda - Dan D",
       "file": "Voda - Dan D.mp3"
+    },
+    {
+      "name": "Somebody That I Used to Know - Gotye",
+      "file": "Somebody That I Used to Know - Gotye.mp3"
     },
     {
       "name": "Slow Cheetah - RHCP",
