@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarok Score Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/tarok.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="setup-screen" id="setupScreen">
+            <h1>Tarok Score Tracker</h1>
+
+            <div class="player-setup">
+                <h2>Number of Players</h2>
+                <div class="player-count">
+                    <button class="count-btn" data-count="3">3 Players</button>
+                    <button class="count-btn active" data-count="4">4 Players</button>
+                </div>
+
+                <div class="player-inputs" id="playerInputs">
+                    <input type="text" class="player-input" placeholder="Player 1 Name" maxlength="15">
+                    <input type="text" class="player-input" placeholder="Player 2 Name" maxlength="15">
+                    <input type="text" class="player-input" placeholder="Player 3 Name" maxlength="15">
+                    <input type="text" class="player-input" placeholder="Player 4 Name" maxlength="15">
+                </div>
+
+                <button class="start-game-btn" onclick="startGame()">Start Game</button>
+            </div>
+        </div>
+
+        <div class="game-screen" id="gameScreen">
+            <div class="game-header">
+                <h1>Tarok Game</h1>
+                <div class="round-counter">Round <span id="roundNumber">1</span></div>
+            </div>
+
+            <div id="winnerAnnouncement" class="winner-announcement" style="display: none;">
+                <h2>🎉 Game Over! 🎉</h2>
+                <p id="winnerText"></p>
+            </div>
+
+            <table class="scores-table" id="scoresTable">
+                <thead>
+                    <tr id="tableHeader">
+                        <th>Round</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr class="total-row">
+                        <td><strong>Total</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="round-input" id="roundInput">
+                <div style="width: 100%; text-align: center; margin-bottom: 1rem;">
+                    <strong>Enter scores for Round <span id="currentRound">1</span>:</strong>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <button class="add-round-btn" onclick="addRound()">Add Round</button>
+                <button class="new-game-btn" onclick="newGame()">New Game</button>
+            </div>
+        </div>
+    </div>
+    <script src="../js/tarok.js"></script>
+</body>
+</html>
