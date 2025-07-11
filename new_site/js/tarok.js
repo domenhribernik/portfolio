@@ -83,7 +83,7 @@ function setupGameScreen() {
 
     players.forEach((player, index) => {
         const input = document.createElement('input');
-        input.type = 'number';
+        input.type = 'text';
         input.className = 'score-input';
         input.placeholder = player;
         input.id = `score-${index}`;
@@ -140,21 +140,11 @@ function addRound() {
     if (gameEnded) return;
 
     const roundScores = [];
-    let allValid = true;
 
     for (let i = 0; i < playerCount; i++) {
         const input = document.getElementById(`score-${i}`);
         const value = parseInt(input.value) || 0;
         roundScores.push(value);
-
-        if (input.value.trim() === '') {
-            allValid = false;
-        }
-    }
-
-    if (!allValid) {
-        alert('Please enter scores for all players (use 0 for no points)');
-        return;
     }
 
     // Add scores to each player
@@ -171,30 +161,30 @@ function addRound() {
 
     updateScoresTable();
 
-    // Check for winner (game typically ends at 500 points)
-    checkForWinner();
+    // // Check for winner (game typically ends at 500 points)
+    // checkForWinner();
 }
 
-function checkForWinner() {
-    const totals = scores.map(playerScores =>
-        playerScores.reduce((sum, score) => sum + score, 0)
-    );
+// function checkForWinner() {
+//     const totals = scores.map(playerScores =>
+//         playerScores.reduce((sum, score) => sum + score, 0)
+//     );
 
-    const maxScore = Math.max(...totals);
+//     const maxScore = Math.max(...totals);
 
-    if (maxScore >= 500) {
-        gameEnded = true;
-        const winnerIndex = totals.indexOf(maxScore);
-        const winner = players[winnerIndex];
+//     if (maxScore >= 500) {
+//         gameEnded = true;
+//         const winnerIndex = totals.indexOf(maxScore);
+//         const winner = players[winnerIndex];
 
-        document.getElementById('winnerText').textContent =
-            `${winner} wins with ${maxScore} points!`;
-        document.getElementById('winnerAnnouncement').style.display = 'block';
+//         document.getElementById('winnerText').textContent =
+//             `${winner} wins with ${maxScore} points!`;
+//         document.getElementById('winnerAnnouncement').style.display = 'block';
 
-        // Hide round input
-        document.getElementById('roundInput').style.display = 'none';
-    }
-}
+//         // Hide round input
+//         document.getElementById('roundInput').style.display = 'none';
+//     }
+// }
 
 function newGame() {
     document.getElementById('setupScreen').style.display = 'block';
