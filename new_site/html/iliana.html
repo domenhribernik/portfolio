@@ -101,7 +101,6 @@
             border: none;
             border-radius: 8px;
             font-size: 1.1rem;
-            font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
         }
@@ -179,7 +178,7 @@
 
         .section-title {
             font-family: 'Dancing Script', cursive;
-            font-size: 2rem;
+            font-size: 2.3rem;
             font-weight: 600;
             color: var(--text-black);
             margin-bottom: 20px;
@@ -203,7 +202,8 @@
             display: block;
             font-size: 2.5rem;
             font-weight: 600;
-            color: var(--text-black);
+            color: var(--primary-pink-hover);
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
             margin-bottom: 5px;
         }
 
@@ -217,25 +217,71 @@
         /* Quote of the Day */
         .quote-content {
             text-align: center;
-            padding: 30px;
-            background: var(--bg-white);
-            border: 1px solid #f0f0f0;
+            padding: 50px 40px;
+            background: #fefefe;
             border-radius: var(--border-radius);
-            margin: 20px 0;
+            margin: 30px 0;
+            border: 1px solid #e8e8e8;
+            position: relative;
+        }
+
+        .quote-content::before {
+            content: '❝';
+            font-size: 4rem;
+            color: #d4d4d4;
+            position: absolute;
+            top: 15px;
+            left: 30px;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+
+        .quote-content::after {
+            content: '❞';
+            font-size: 4rem;
+            color: #d4d4d4;
+            position: absolute;
+            bottom: 15px;
+            right: 30px;
+            font-family: Georgia, serif;
+            line-height: 1;
         }
 
         .quote-text {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-style: italic;
-            color: var(--text-gray);
-            margin-bottom: 15px;
-            line-height: 1.8;
+            color: #2c2c2c;
+            margin-bottom: 25px;
+            line-height: 1.7;
+            font-family: Georgia, serif;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .quote-author {
-            font-size: 1rem;
-            color: var(--text-light);
+            font-size: 0.9rem;
+            color: #666666;
             font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .quote-author::before {
+            content: '—';
+            margin-right: 8px;
+            color: #999999;
+        }
+
+        @media (max-width: 678px) {
+            .quote-text {
+                margin
+            }
+            .quote-author {
+                margin-bottom: 30px;
+            }
         }
 
         /* Photo Gallery */
@@ -313,7 +359,7 @@
         /* Modal Styles */
         .modal {
             display: none;
-            position: fixed;
+            position: absolute;
             z-index: 1000;
             left: 0;
             top: 0;
@@ -367,21 +413,6 @@
             font-family: 'Courier New', monospace;
             font-style: italic;
             line-height: 1.4;
-        }
-
-        .close {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            color: var(--text-light);
-            font-size: 35px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .close:hover {
-            color: var(--text-black);
         }
 
         @keyframes fadeIn {
@@ -646,7 +677,7 @@
     <div class="login-screen" id="loginScreen">
         <div class="login-card">
             <h1 class="login-title">Our Little World</h1>
-            <p class="login-subtitle">Enter your secret key to continue</p>
+            <p class="login-subtitle">A special place just for us</p>
             <input type="password" class="password-input" id="passwordInput" placeholder="Your special password">
             <button class="login-btn click-effect" onclick="login()">Enter Our World</button>
             <div class="error-message" id="errorMessage">Hmm, that doesn't look right. Try again! 💕</div>
@@ -695,7 +726,7 @@
             </section>
 
             <!-- Drawing Board -->
-            <section class="section">
+            <!-- <section class="section">
                 <h2 class="section-title">Draw Me Something</h2>
                 <div class="drawing-board">
                     <div class="canvas-container">
@@ -720,7 +751,7 @@
                             Drawing</button>
                     </div>
                 </div>
-            </section>
+            </section> -->
 
             <section class="section">
                 <h2 class="section-title">Our Memories</h2>
@@ -732,7 +763,6 @@
             <!-- Modal for enlarged image -->
             <div id="imageModal" class="modal">
                 <div class="modal-content">
-                    <span class="close" onclick="closeModal()">&times;</span>
                     <img id="modalImage" class="modal-image" src="" alt="">
                     <div class="modal-info">
                         <div id="modalDate" class="modal-date"></div>
@@ -760,32 +790,10 @@
     </div>
 
     <script>
-
-        document.addEventListener('DOMContentLoaded', function () {
-            
-        });
-        // Firebase Configuration (You'll need to replace these with your actual config)
-        const firebaseConfig = {
-            apiKey: "your-api-key",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "your-app-id"
-        };
-
-        // Initialize Firebase (uncomment when you have your config)
-        // import { initializeApp } from 'firebase/app';
-        // import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
-        // import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-        // const app = initializeApp(firebaseConfig);
-        // const storage = getStorage(app);
-        // const db = getFirestore(app);
-
         const config = {
             passwords: {
                 'cHJldHR5cGxlYXNl': 'Iliana',
-                'YQ==': 'Domen'
+                'c3RheXByZXNlbnQ=': 'Domen'
             },
             targetDate: new Date('2025-09-01T21:30:00').getTime(),
         };
@@ -800,18 +808,22 @@
         let currentUser = null;
         let userData = JSON.parse(localStorage.getItem('ourLittleWorld') || '{}');
 
-        // Quotes data (obfuscated)
         const quotes = [
-            { text: "Distance means nothing when you mean everything to me", author: "Anonymous" },
-            { text: "I carry your heart with me (I carry it in my heart)", author: "E.E. Cummings" },
-            { text: "Being deeply loved by someone gives you strength", author: "Lao Tzu" },
-            { text: "You are my today and all of my tomorrows", author: "Leo Christopher" },
-            { text: "Every love story is beautiful, but ours is my favorite", author: "Anonymous" },
-            { text: "Home is wherever I'm with you", author: "Edward Sharpe" },
-            { text: "I love you not only for what you are, but for what I am when I am with you", author: "Elizabeth Barrett Browning" }
+            { text: "The best thing to hold onto in life is each other.", author: "Audrey Hepburn" },
+            { text: "Love recognizes no barriers.", author: "Maya Angelou" },
+            { text: "To love is to burn, to be on fire.", author: "Sense and Sensibility (screenplay)" },
+            { text: "I love you right up to the moon—and back.", author: "Sam McBratney" },
+            { text: "You are my sun, my moon, and all my stars.", author: "E.E. Cummings" },
+            { text: "If I know what love is, it is because of you.", author: "Hermann Hesse" },
+            { text: "Love is friendship on fire.", author: "Susan Sontag" },
+            { text: "You know you're in love when you can't fall asleep because reality is finally better than your dreams.", author: "Dr. Seuss" },
+            { text: "I've fallen in love. I'm an ordinary woman. I didn’t think such violent things could happen to ordinary people.", author: "Brief Encounter" },
+            { text: "I wanted it to be you, I wanted it to be you so badly.", author: "You've Got Mail" },
+            { text: "If you're a bird, I'm a bird.", author: "The Notebook" },
+            { text: "Love means never having to say you're sorry.", author: "Love Story" }
         ];
 
-        // Photo gallery data
+
         const photos = [
             {
                 src: '../assets/iliana/meeting.jpg',
@@ -875,11 +887,8 @@
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('mainApp').classList.add('show');
 
-                // Update welcome message
                 document.getElementById('welcomeMessage').textContent =
                     `Welcome back, ${currentUser}! ❤️`;
-
-                // Initialize app
                 initializeApp();
             } else {
                 document.getElementById('errorMessage').style.display = 'block';
@@ -987,12 +996,15 @@
             const modalImage = document.getElementById('modalImage');
             const modalDate = document.getElementById('modalDate');
             const modalCaption = document.getElementById('modalCaption');
+            const scrollY = window.scrollY || window.pageYOffset;
 
             modalImage.src = photo.src;
             modalImage.alt = photo.caption;
             modalDate.textContent = photo.date;
             modalCaption.textContent = photo.caption;
 
+            modal.style.top = `${scrollY}px`;
+            modal.style.height = `${window.innerHeight}px`;
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
@@ -1018,15 +1030,12 @@
             }
         });
 
-        // Load the gallery when the page loads
         document.addEventListener('DOMContentLoaded', loadPhotoGallery);
 
         // Drawing Board Functions
         function initializeDrawingBoard() {
             canvas = document.getElementById('drawingCanvas');
             ctx = canvas.getContext('2d');
-
-            // Set up canvas
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.strokeStyle = '#FFC2CC';
@@ -1122,69 +1131,7 @@
             link.click();
         }
 
-        function confirmExport() {
-            const drawingName = document.getElementById('drawingName').value.trim();
-            if (!drawingName) {
-                alert('Please give your drawing a name! 💕');
-                return;
-            }
-
-            createPolaroid(drawingName);
-            closeModal();
-        }
-
-        function createPolaroid(name) {
-            // Create a new canvas for the polaroid
-            const polaroidCanvas = document.createElement('canvas');
-            const polaroidCtx = polaroidCanvas.getContext('2d');
-
-            // Set polaroid dimensions
-            polaroidCanvas.width = 400;
-            polaroidCanvas.height = 500;
-
-            // Fill background with white
-            polaroidCtx.fillStyle = 'white';
-            polaroidCtx.fillRect(0, 0, polaroidCanvas.width, polaroidCanvas.height);
-
-            // Draw the original drawing (scaled to fit)
-            const drawingAspectRatio = canvas.width / canvas.height;
-            const polaroidImageWidth = 350;
-            const polaroidImageHeight = polaroidImageWidth / drawingAspectRatio;
-
-            polaroidCtx.drawImage(canvas, 25, 25, polaroidImageWidth, polaroidImageHeight);
-
-            // Add text at the bottom
-            const textY = polaroidImageHeight + 60;
-
-            // Drawing name
-            polaroidCtx.fillStyle = '#333';
-            polaroidCtx.font = '24px Dancing Script, cursive';
-            polaroidCtx.textAlign = 'center';
-            polaroidCtx.fillText(name, polaroidCanvas.width / 2, textY);
-
-            // Date
-            polaroidCtx.font = '18px Dancing Script, cursive';
-            polaroidCtx.fillStyle = '#666';
-            const now = new Date();
-            const dateString = now.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            polaroidCtx.fillText(dateString, polaroidCanvas.width / 2, textY + 35);
-
-            // Author
-            polaroidCtx.fillText(`by ${currentUser}`, polaroidCanvas.width / 2, textY + 65);
-
-            // Download the polaroid
-            const link = document.createElement('a');
-            link.download = `${name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_polaroid.png`;
-            link.href = polaroidCanvas.toDataURL();
-            link.click();
-        }
-
         async function uploadDrawing() {
-            // Check if canvas has any drawing
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const pixels = imageData.data;
             let hasDrawing = false;
@@ -1253,72 +1200,7 @@
             // loadFromFirebase();
         }
 
-        // TODO: Firebase functions (implement these when you set up Firebase)
-        /*
-        async function uploadToFirebase(drawingData) {
-            try {
-                // Convert canvas to blob
-                const blob = await new Promise(resolve => canvas.toBlob(resolve));
 
-                // Upload to Firebase Storage
-                const storageRef = ref(storage, `drawings/${Date.now()}_${currentUser}.png`);
-                const uploadResult = await uploadBytes(storageRef, blob);
-                const downloadURL = await getDownloadURL(uploadResult.ref);
-
-                // Save metadata to Firestore
-                await addDoc(collection(db, 'drawings'), {
-                    name: drawingData.name,
-                    author: drawingData.author,
-                    timestamp: new Date(),
-                    imageUrl: downloadURL
-                });
-
-                console.log('Drawing uploaded successfully!');
-            } catch (error) {
-                console.error('Error uploading drawing:', error);
-            }
-        }
-
-        async function loadFromFirebase() {
-            try {
-                const q = query(
-                    collection(db, 'drawings'),
-                    where('author', '!=', currentUser),
-                    orderBy('timestamp', 'desc'),
-                    limit(1)
-                );
-
-                const querySnapshot = await getDocs(q);
-
-                if (!querySnapshot.empty) {
-                    const latestDrawing = querySnapshot.docs[0].data();
-
-                    document.getElementById('partnerDrawingImage').src = latestDrawing.imageUrl;
-                    document.getElementById('partnerDrawingText').textContent = latestDrawing.name;
-                    document.getElementById('partnerDrawingDate').textContent =
-                        latestDrawing.timestamp.toDate().toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        });
-
-                    document.getElementById('partnerDrawingSection').style.display = 'block';
-                } else {
-                    document.getElementById('partnerDrawingSection').style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error loading drawings:', error);
-            }
-        }
-        */
-
-        // Close modal when clicking outside
-        window.onclick = function (event) {
-            const modal = document.getElementById('exportModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
 
         // Click effects
         document.querySelectorAll('.click-effect').forEach(element => {
