@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Little World ❤️</title>
+    <title>Our Little World</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap"
         rel="stylesheet">
@@ -665,7 +665,6 @@
         .upload-btn:hover {
             background: var(--primary-pink);
         }
-
     </style>
 </head>
 
@@ -718,7 +717,7 @@
                 <h2 class="section-title">Message for Today</h2>
                 <div class="quote-content">
                     <div class="quote-text" id="quoteText">Loading your special message...</div>
-                    <div class="quote-author" id="quoteAuthor">— With love</div>
+                    <div class="quote-author" id="quoteAuthor">With love</div>
                 </div>
             </section>
 
@@ -792,7 +791,7 @@
                 'cHJldHR5cGxlYXNl': 'Iliana',
                 'c3RheXByZXNlbnQ=': 'Domen'
             },
-            targetDate: new Date('2025-09-01T21:30:00').getTime(),
+            targetDate: new Date('2025-08-30T19:00:00').getTime(),
         };
 
         // Drawing variables
@@ -804,22 +803,6 @@
         // Data storage
         let currentUser = null;
         let userData = JSON.parse(localStorage.getItem('ourLittleWorld') || '{}');
-
-        const quotes = [
-            { text: "The best thing to hold onto in life is each other.", author: "Audrey Hepburn" },
-            { text: "Love recognizes no barriers.", author: "Maya Angelou" },
-            { text: "To love is to burn, to be on fire.", author: "Sense and Sensibility (screenplay)" },
-            { text: "I love you right up to the moon—and back.", author: "Sam McBratney" },
-            { text: "You are my sun, my moon, and all my stars.", author: "E.E. Cummings" },
-            { text: "If I know what love is, it is because of you.", author: "Hermann Hesse" },
-            { text: "Love is friendship on fire.", author: "Susan Sontag" },
-            { text: "You know you're in love when you can't fall asleep because reality is finally better than your dreams.", author: "Dr. Seuss" },
-            { text: "I've fallen in love. I'm an ordinary woman. I didn’t think such violent things could happen to ordinary people.", author: "Brief Encounter" },
-            { text: "I wanted it to be you, I wanted it to be you so badly.", author: "You've Got Mail" },
-            { text: "If you're a bird, I'm a bird.", author: "The Notebook" },
-            { text: "Love means never having to say you're sorry.", author: "Love Story" }
-        ];
-
 
         const photos = [
             {
@@ -872,6 +855,11 @@
                 date: 'Jun 21, 2025',
                 caption: 'Trip to Cologne and Düsseldorf :)'
             },
+            {
+                src: '../assets/iliana/onemonth.jpg',
+                date: 'Jul 18, 2025',
+                caption: 'One month anniversary <3'
+            }
         ];
 
         // Login function
@@ -908,8 +896,8 @@
             updateCountdown();
             loadQuoteOfTheDay();
             loadPhotoGallery();
-            initializeDrawingBoard();
-            loadPartnerDrawing();
+            // initializeDrawingBoard();
+            // loadPartnerDrawing();
             setInterval(updateCountdown, 1000);
 
             // Easter egg trigger
@@ -952,14 +940,33 @@
         // Quote of the day
         function loadQuoteOfTheDay() {
             const today = new Date().toDateString();
-            const quoteIndex = Math.abs(today.split('').reduce((a, b) => {
-                a = ((a << 5) - a) + b.charCodeAt(0);
-                return a & a;
-            }, 0)) % quotes.length;
 
-            const quote = quotes[quoteIndex];
-            document.getElementById('quoteText').textContent = `"${quote.text}"`;
-            document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
+            function displayQuote(quotesArray) {
+                const quoteIndex = Math.abs(today.split('').reduce((a, b) => {
+                    a = ((a << 5) - a) + b.charCodeAt(0);
+                    return a & a;
+                }, 0)) % quotesArray.length;
+
+                const quote = quotesArray[quoteIndex];
+                document.getElementById('quoteText').textContent = `"${quote.text}"`;
+                document.getElementById('quoteAuthor').textContent = `${quote.author}`;
+            }
+
+            fetch('../assets/quotes.json')
+                .then(response => response.json())
+                .then(data => {
+                    const quotes = data.map(quote => ({
+                        text: quote.content,
+                        author: quote.author
+                    }));
+
+                    displayQuote(quotes);
+                })
+                .catch(error => {
+                    console.warn('Could not load quotes from JSON file:', error);
+                    // Fallback to hardcoded quotes if fetch fails
+                    displayQuote(quotes);
+                });
         }
 
         // Photo gallery
