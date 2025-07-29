@@ -1,370 +1,765 @@
 [
     {
-        "_id": "gn9Z3AvohhS7",
-        "content": "The only way to have a friend is to be one.",
-        "author": "Ralph Waldo Emerson",
+        "_id": "cOuSBYiscf",
+        "author": "Albert Einstein",
+        "content": "I never think of the future - it comes soon enough.",
+        "tags": [
+            "Future"
+        ],
+        "authorSlug": "albert-einstein",
+        "length": 51,
+        "dateAdded": "2023-04-06",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "fC5Jr2NsYm",
+        "author": "Albert Einstein",
+        "content": "Gravitation cannot be held responsible for people falling in love. How on earth can you explain in terms of chemistry and physics so important a biological phenomenon as first love? Put your hand on a stove for a minute and it seems like an hour. Sit with that special girl for an hour and it seems like a minute. That's relativity.",
+        "tags": [
+            "Love",
+            "Science"
+        ],
+        "authorSlug": "albert-einstein",
+        "length": 332,
+        "dateAdded": "2023-04-06",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "5S-INJNFCI",
+        "author": "Aesop",
+        "content": "It is with our passions, as it is with fire and water, they are good servants but bad masters.",
+        "tags": [
+            "Wisdom",
+            "Love"
+        ],
+        "authorSlug": "aesop",
+        "length": 94,
+        "dateAdded": "2023-04-03",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "sLWD2qRCK4",
+        "author": "The Buddha",
+        "content": "Just as a mother would protect her only child with her life, even so let one cultivate a boundless love towards all beings.",
+        "tags": [
+            "Wisdom",
+            "Love"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 123,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "hcCn5sAnUO",
+        "author": "The Buddha",
+        "content": "Conquer anger with non-anger. Conquer badness with goodness. Conquer meanness with generosity. Conquer dishonesty with truth.",
+        "tags": [
+            "Wisdom",
+            "Virtue",
+            "Love"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 125,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "6_rYXTe8c4S",
+        "author": "The Buddha",
+        "content": "May all beings have happy minds.",
+        "tags": [
+            "Wisdom",
+            "Happiness"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 32,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "9sgo4-hjyyq",
+        "author": "The Buddha",
+        "content": "Radiate boundless love towards the entire world — above, below, and across — unhindered, without ill will, without enmity.",
+        "tags": [
+            "Wisdom",
+            "Love"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 122,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "gI4gnBANili",
+        "author": "The Buddha",
+        "content": "We will develop and cultivate the liberation of mind by lovingkindness, make it our vehicle, make it our basis, stabilize it, exercise ourselves in it, and fully perfect it.",
+        "tags": [
+            "Wisdom",
+            "Love"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 173,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "YLwAq4ekdr",
+        "author": "The Buddha",
+        "content": "If with a pure mind a person speaks or acts, happiness follows them like a never-departing shadow.",
+        "tags": [
+            "Wisdom",
+            "Happiness"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 98,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "UGjIXpUCPv",
+        "author": "The Buddha",
+        "content": "A noble one produces an abundance of merit by having a compassionate mind towards all living beings.",
+        "tags": [
+            "Wisdom",
+            "Love"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 100,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "e0H2BdwC-Of",
+        "author": "The Buddha",
+        "content": "Whatever is not yours: let go of it. Your letting go of it will be for your long-term happiness & benefit.",
+        "tags": [
+            "Wisdom",
+            "Happiness"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 106,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "smbfaOldHD",
+        "author": "The Buddha",
+        "content": "A disciplined mind brings happiness.",
+        "tags": [
+            "Wisdom",
+            "Happiness"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 36,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "fEr2kx4_Nvt",
+        "author": "The Buddha",
+        "content": "Hatred is never appeased by hatred in this world. By non-hatred alone is hatred appeased. This is a law eternal.",
+        "tags": [
+            "Wisdom",
+            "Love"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 112,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "kFmm2Cv0V-",
+        "author": "The Buddha",
+        "content": "It is in the nature of things that joy arises in a person free from remorse.",
+        "tags": [
+            "Wisdom",
+            "Happiness"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 76,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "0umC2Yk5UX",
+        "author": "The Buddha",
+        "content": "One should train in deeds of merit—generosity, a balanced life, developing a loving mind—that yield long-lasting happiness.",
+        "tags": [
+            "Wisdom",
+            "Happiness"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 123,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "WnJz7QKVKzI",
+        "author": "The Buddha",
+        "content": "The root of suffering is attachment.",
+        "tags": [
+            "Wisdom",
+            "Happiness"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 36,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "evSH-AgPIXv",
+        "author": "The Buddha",
+        "content": "Both formerly and now, it is only suffering that I describe, and the cessation of suffering.",
+        "tags": [
+            "Wisdom",
+            "Happiness"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 92,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "QLFvxnERU8M",
+        "author": "The Buddha",
+        "content": "Radiate boundless love towards the entire world…",
+        "tags": [
+            "Wisdom",
+            "Love"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 48,
+        "dateAdded": "2023-03-30",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "_FwZIOj_Tev",
+        "author": "Alan Watts",
+        "content": "Unless one is able to live fully in the present, the future is a hoax.",
+        "tags": [
+            "Life",
+            "Future"
+        ],
+        "authorSlug": "alan-watts",
+        "length": 70,
+        "dateAdded": "2022-03-12",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "6kd9Qs7YQc",
+        "author": "Abraham Lincoln",
+        "content": "Most folks are as happy as they make up their minds to be.",
+        "tags": [
+            "Happiness"
+        ],
+        "authorSlug": "abraham-lincoln",
+        "length": 58,
+        "dateAdded": "2022-03-12",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "l1KvjJfsFv",
+        "author": "Alan Watts",
+        "content": "No work or love will flourish out of guilt, fear, or hollowness of heart, just as no valid plans for the future can be made by those who have no capacity for living now.",
+        "tags": [
+            "Future",
+            "Life"
+        ],
+        "authorSlug": "alan-watts",
+        "length": 169,
+        "dateAdded": "2022-03-12",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "_FwZIOj_Tev",
+        "author": "Alan Watts",
+        "content": "Unless one is able to live fully in the present, the future is a hoax.",
+        "tags": [
+            "Life",
+            "Future"
+        ],
+        "authorSlug": "alan-watts",
+        "length": 70,
+        "dateAdded": "2022-03-12",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "3uAvqPj3dZ",
+        "author": "Alan Watts",
+        "content": "Never pretend to a love which you do not actually feel, for love is not ours to command.",
+        "tags": [
+            "Love"
+        ],
+        "authorSlug": "alan-watts",
+        "length": 88,
+        "dateAdded": "2022-03-12",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "_XB2MKPzW7dA",
+        "content": "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.",
+        "author": "Albert Schweitzer",
         "tags": [
             "Famous Quotes",
-            "Friendship"
-        ],
-        "authorSlug": "ralph-waldo-emerson",
-        "length": 43,
-        "dateAdded": "2021-01-11",
-        "dateModified": "2023-04-14"
-    },
-    {
-        "_id": "Rwi_mTUgp02y",
-        "content": "All the world is a stage, And all the men and women merely players. They have their exits and entrances; Each man in his time plays many parts.",
-        "author": "William Shakespeare",
-        "tags": [
-            "Famous Quotes"
-        ],
-        "authorSlug": "william-shakespeare",
-        "length": 143,
-        "dateAdded": "2020-12-19",
-        "dateModified": "2023-04-14"
-    },
-    {
-        "_id": "lDffUvkJEnv0",
-        "content": "What we think determines what happens to us, so if we want to change our lives, we need to stretch our minds.",
-        "author": "Wayne Dyer",
-        "tags": [
-            "Famous Quotes"
-        ],
-        "authorSlug": "wayne-dyer",
-        "length": 109,
-        "dateAdded": "2019-03-15",
-        "dateModified": "2023-04-14"
-    },
-    {
-        "_id": "h12ulAfEEIi1",
-        "content": "Focusing your life solely on making a buck shows a poverty of ambition. It asks too little of yourself. And it will leave you unfulfilled.",
-        "author": "Barack Obama",
-        "tags": [
             "Success",
-            "Famous Quotes"
+            "Happiness"
         ],
-        "authorSlug": "barack-obama",
-        "length": 138,
-        "dateAdded": "2019-01-08",
+        "authorSlug": "albert-schweitzer",
+        "length": 125,
+        "dateAdded": "2021-05-12",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "IvoOxxfBcYN",
-        "content": "Luck is what happens when preparation meets opportunity.",
-        "author": "Seneca the Younger",
+        "_id": "heFGlWwPZjvX",
+        "content": "Promises are the uniquely human way of ordering the future, making it predictable and reliable to the extent that this is humanly possible.",
+        "author": "Hannah Arendt",
         "tags": [
-            "Famous Quotes"
+            "Future"
         ],
-        "authorSlug": "seneca-the-younger",
-        "length": 56,
+        "authorSlug": "hannah-arendt",
+        "length": 139,
         "dateAdded": "2021-01-30",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "SQxIxT9EoucK",
-        "content": "Kindness is the golden chain by which society is bound together.",
-        "author": "Johann Wolfgang von Goethe",
-        "tags": [
-            "Famous Quotes"
-        ],
-        "authorSlug": "johann-wolfgang-von-goethe",
-        "length": 64,
-        "dateAdded": "2020-10-14",
-        "dateModified": "2023-04-14"
-    },
-    {
-        "_id": "ZXusunQQWJwQ",
-        "content": "It's not what happens to you, but how you react to it that matters.",
-        "author": "Epictetus",
+        "_id": "zOivJtHmwWgt",
+        "content": "The best thing about the future is that it only comes one day at a time.",
+        "author": "Abraham Lincoln",
         "tags": [
             "Famous Quotes",
-            "Wisdom"
+            "Life",
+            "Future"
         ],
-        "authorSlug": "epictetus",
-        "length": 67,
-        "dateAdded": "2020-03-07",
+        "authorSlug": "abraham-lincoln",
+        "length": 72,
+        "dateAdded": "2021-01-19",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "bhseVu9PSh1I",
-        "content": "Accept the things to which fate binds you and love the people with whom fate brings you together but do so with all your heart.",
-        "author": "Marcus Aurelius",
+        "_id": "x6LCvKtrXx",
+        "content": "All love that has not friendship for its base, is like a mansion built upon the sand.",
+        "author": "Ella Wheeler Wilcox",
         "tags": [
-            "Famous Quotes"
+            "Friendship",
+            "Love"
         ],
-        "authorSlug": "marcus-aurelius",
-        "length": 127,
-        "dateAdded": "2020-02-07",
+        "authorSlug": "ella-wheeler-wilcox",
+        "length": 85,
+        "dateAdded": "2021-01-19",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "Ps20py3bE1JW",
-        "content": "Excellence is to do a common thing in an uncommon way.",
-        "author": "Booker T. Washington",
+        "_id": "mRyh-i79x-",
+        "content": "Love is the only force capable of transforming an enemy into a friend.",
+        "author": "Martin Luther King Jr.",
         "tags": [
-            "Famous Quotes"
+            "Friendship",
+            "Love"
         ],
-        "authorSlug": "booker-t-washington",
-        "length": 54,
-        "dateAdded": "2019-11-16",
-        "dateModified": "2023-04-14"
-    },
-    {
-        "_id": "XHblJb9aZ68R",
-        "content": "A person who never made a mistake never tried anything new.",
-        "author": "Albert Einstein",
-        "tags": [
-            "Famous Quotes",
-            "Inspirational"
-        ],
-        "authorSlug": "albert-einstein",
-        "length": 59,
-        "dateAdded": "2020-12-10",
-        "dateModified": "2023-04-14"
-    },
-    {
-        "_id": "ZIUHncH2frxc",
-        "content": "The winner ain't the one with the fastest car it's the one who refuses to lose.",
-        "author": "Dale Earnhardt",
-        "tags": [
-            "Famous Quotes"
-        ],
-        "authorSlug": "dale-earnhardt",
-        "length": 79,
+        "authorSlug": "martin-luther-king-jr",
+        "length": 70,
         "dateAdded": "2021-01-10",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "ZKfOV0UwuugV",
-        "content": "And as we let our own light shine, we unconsciously give other people permission to do the same.",
-        "author": "Nelson Mandela",
+        "_id": "V8reXkHpukCS",
+        "content": "Success is getting what you want. Happiness is wanting what you get.",
+        "author": "Dale Carnegie",
         "tags": [
-            "Famous Quotes"
+            "Happiness"
         ],
-        "authorSlug": "nelson-mandela",
-        "length": 96,
+        "authorSlug": "dale-carnegie",
+        "length": 68,
+        "dateAdded": "2021-01-10",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "u0V3eW7NMp5T",
+        "content": "Change is the law of life. And those who look only to the past or present are certain to miss the future.",
+        "author": "John F. Kennedy",
+        "tags": [
+            "Change",
+            "Future"
+        ],
+        "authorSlug": "john-f-kennedy",
+        "length": 105,
+        "dateAdded": "2020-12-17",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "haornavUp0la",
+        "content": "Life a culmination of the past, an awareness of the present, an indication of the future beyond knowledge, the quality that gives a touch of divinity to matter.",
+        "author": "Charles Lindbergh",
+        "tags": [
+            "Future",
+            "Wisdom"
+        ],
+        "authorSlug": "charles-lindbergh",
+        "length": 160,
+        "dateAdded": "2020-12-10",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "XmkVP-9blK",
+        "content": "Friendship often ends in love, but love in friendship - never.",
+        "author": "Albert Camus",
+        "tags": [
+            "Friendship",
+            "Love"
+        ],
+        "authorSlug": "albert-camus",
+        "length": 62,
         "dateAdded": "2020-12-08",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "1lBSN5xAshKP",
-        "content": "To be great is to be misunderstood.",
-        "author": "Ralph Waldo Emerson",
+        "_id": "GGBS9dCAij1v",
+        "content": "The person born with a talent they are meant to use will find their greatest happiness in using it.",
+        "author": "Johann Wolfgang von Goethe",
         "tags": [
-            "Famous Quotes"
+            "Famous Quotes",
+            "Happiness"
         ],
-        "authorSlug": "ralph-waldo-emerson",
-        "length": 35,
+        "authorSlug": "johann-wolfgang-von-goethe",
+        "length": 99,
         "dateAdded": "2020-10-14",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "a9C880IWYfsD",
-        "content": "Your mind will answer most questions if you learn to relax and wait for the answer.",
-        "author": "William Burroughs",
+        "_id": "fZA1DYvIimJ_",
+        "content": "Most people are about as happy as they make up their minds to be",
+        "author": "Abraham Lincoln",
         "tags": [
-            "Famous Quotes"
+            "Famous Quotes",
+            "Life",
+            "Wisdom",
+            "Happiness"
         ],
-        "authorSlug": "william-burroughs",
-        "length": 83,
-        "dateAdded": "2019-08-03",
+        "authorSlug": "abraham-lincoln",
+        "length": 64,
+        "dateAdded": "2020-09-29",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "4t5kIaLA6m8H",
-        "content": "If it is not right do not do it; if it is not true do not say it.",
-        "author": "Marcus Aurelius",
+        "_id": "x5LxhgYTUWF1",
+        "content": "The future is completely open, and we are writing it moment to moment.",
+        "author": "Pema Chödrön",
         "tags": [
-            "Famous Quotes"
+            "Future"
         ],
-        "authorSlug": "marcus-aurelius",
-        "length": 65,
-        "dateAdded": "2019-09-13",
+        "authorSlug": "pema-chodron",
+        "length": 70,
+        "dateAdded": "2020-08-27",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "fgNERo-i9sHI",
-        "content": "If you want things to be different, perhaps the answer is to become different yourself.",
-        "author": "Norman Vincent Peale",
+        "_id": "aC9pFlPuapi",
+        "content": "If we are not given the chance to forget, we are also not given the chance to recover our memories, to alter them with time, perspective, and wisdom. Forgetting, we can be ourselves beyond what the past has told us we are; we can evolve. That is the possibility we want from the future.",
+        "author": "Caterina Fake",
         "tags": [
-            "Famous Quotes"
+            "Wisdom",
+            "Future"
         ],
-        "authorSlug": "norman-vincent-peale",
+        "authorSlug": "caterina-fake",
+        "length": 286,
+        "dateAdded": "2020-08-27",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "rypL5kmdIg8",
+        "content": "A really great talent finds its happiness in execution.",
+        "author": "Johann Wolfgang von Goethe",
+        "tags": [
+            "Famous Quotes",
+            "Happiness"
+        ],
+        "authorSlug": "johann-wolfgang-von-goethe",
+        "length": 55,
+        "dateAdded": "2020-07-10",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "1IyeJ8SjYlLe",
+        "content": "No valid plans for the future can be made by those who have no capacity for living now.",
+        "author": "Alan Watts",
+        "tags": [
+            "Famous Quotes",
+            "Life",
+            "Future"
+        ],
+        "authorSlug": "alan-watts",
         "length": 87,
-        "dateAdded": "2019-08-16",
+        "dateAdded": "2020-04-15",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "y2PmdIlS5U6_",
-        "content": "What do we live for, if it is not to make life less difficult for each other?",
-        "author": "George Eliot",
+        "_id": "dHwWmstTfXUC",
+        "content": "The happiness of a man in this life does not consist in the absence but in the mastery of his passions.",
+        "author": "Alfred Tennyson",
         "tags": [
-            "Famous Quotes"
+            "Famous Quotes",
+            "Happiness"
         ],
-        "authorSlug": "george-eliot",
-        "length": 77,
-        "dateAdded": "2019-12-23",
+        "authorSlug": "alfred-tennyson",
+        "length": 103,
+        "dateAdded": "2020-04-14",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "v7SkiwdfxA",
-        "content": "Friendship... is not something you learn in school. But if you haven't learned the meaning of friendship, you really haven't learned anything.",
-        "author": "Muhammad Ali",
+        "_id": "eJC3Bf-J2fe",
+        "content": "The future belongs to those who believe in the beauty of their dreams.",
+        "author": "Eleanor Roosevelt",
         "tags": [
-            "Friendship"
+            "Future",
+            "Wisdom"
         ],
-        "authorSlug": "muhammad-ali",
-        "length": 142,
+        "authorSlug": "eleanor-roosevelt",
+        "length": 70,
         "dateAdded": "2020-03-27",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "Dfvmx8a6ceiB",
-        "content": "Everything that happens as it should, and if you observe carefully, you will find this to be so.",
+        "_id": "hhDqMdHw5w",
+        "content": "If there is such a thing as a good marriage, it is because it resembles friendship rather than love.",
+        "author": "Michel de Montaigne",
+        "tags": [
+            "Friendship",
+            "Love"
+        ],
+        "authorSlug": "michel-de-montaigne",
+        "length": 100,
+        "dateAdded": "2020-02-22",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "NZjOnL1Piu",
+        "content": "Love is rarer than genius itself. And friendship is rarer than love.",
+        "author": "Charles Péguy",
+        "tags": [
+            "Friendship",
+            "Love"
+        ],
+        "authorSlug": "charles-peguy",
+        "length": 68,
+        "dateAdded": "2020-01-15",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "l70UOlvj111q",
+        "content": "By living deeply in the present moment we can understand the past better and we can prepare for a better future.",
+        "author": "Thích Nhất Hạnh",
+        "tags": [
+            "Life",
+            "Future"
+        ],
+        "authorSlug": "thich-nhat-hanh",
+        "length": 112,
+        "dateAdded": "2020-01-12",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "F8x4_uMBx-eO",
+        "content": "Let the future tell the truth and evaluate each one according to his work and accomplishments. The present is theirs; the future, for which I have really worked, is mine.",
+        "author": "Nikola Tesla",
+        "tags": [
+            "Future",
+            "Famous Quotes"
+        ],
+        "authorSlug": "nikola-tesla",
+        "length": 170,
+        "dateAdded": "2019-11-26",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "NGkPndhijwUh",
+        "content": "Look back over the past, with its changing empires that rose and fell, and you can foresee the future, too.",
         "author": "Marcus Aurelius",
         "tags": [
-            "Famous Quotes"
+            "Future"
         ],
         "authorSlug": "marcus-aurelius",
-        "length": 96,
-        "dateAdded": "2020-03-15",
+        "length": 107,
+        "dateAdded": "2019-11-26",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "eWtR9nXnZ",
-        "content": "Do the difficult things while they are easy and do the great things while they are small. A journey of a thousand miles must begin with a single step.",
-        "author": "Laozi",
+        "_id": "BTR1osiyS1M5",
+        "content": "The best way to predict your future is to create it.",
+        "author": "Peter Drucker",
         "tags": [
+            "Future",
             "Inspirational"
         ],
-        "authorSlug": "laozi",
-        "length": 150,
-        "dateAdded": "2020-09-09",
+        "authorSlug": "peter-drucker",
+        "length": 52,
+        "dateAdded": "2019-10-18",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "xiz-AuLNow5",
-        "content": "When you doubt your power, you give power to your doubt.",
-        "author": "Honoré de Balzac",
+        "_id": "gbXrbDRZfzQz",
+        "content": "There is only one way to happiness and that is to cease worrying about things which are beyond the power of our will.",
+        "author": "Epictetus",
         "tags": [
+            "Happiness"
+        ],
+        "authorSlug": "epictetus",
+        "length": 117,
+        "dateAdded": "2019-10-03",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "w3Rpf-oD-QF",
+        "content": "I never think of the future. It comes soon enough.",
+        "author": "Albert Einstein",
+        "tags": [
+            "Future",
             "Famous Quotes"
         ],
-        "authorSlug": "honore-de-balzac",
-        "length": 56,
-        "dateAdded": "2020-09-29",
+        "authorSlug": "albert-einstein",
+        "length": 50,
+        "dateAdded": "2019-10-03",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "lxVMQLtBP7",
-        "content": "First we thought the PC was a calculator. Then we found out how to turn numbers into letters with ASCII — and we thought it was a typewriter. Then we discovered graphics, and we thought it was a television. With the World Wide Web, we've realized it's a brochure.",
-        "author": "Douglas Adams",
+        "_id": "i0OeQLbyvdGy",
+        "content": "A dream is your creative vision for your life in the future. You must break out of your current comfort zone and become comfortable with the unfamiliar and the unknown.",
+        "author": "Denis Waitley",
         "tags": [
-            "Technology"
+            "Future"
         ],
-        "authorSlug": "douglas-adams",
-        "length": 263,
-        "dateAdded": "2021-01-11",
+        "authorSlug": "denis-waitley",
+        "length": 168,
+        "dateAdded": "2019-09-19",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "MftnYcoJsQc3",
-        "content": "I gave my life to become the person I am right now. Was it worth it?",
+        "_id": "jdg8XXMIeFqv",
+        "content": "You are always free to change your mind and choose a different future, or a different past.",
         "author": "Richard Bach",
         "tags": [
-            "Famous Quotes"
+            "Future"
         ],
         "authorSlug": "richard-bach",
-        "length": 68,
-        "dateAdded": "2020-09-29",
+        "length": 91,
+        "dateAdded": "2019-08-08",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "XNLGqepInX",
-        "author": "Amy Poehler",
-        "content": "There's power in looking silly and not caring that you do.",
+        "_id": "z6qESmmSnsFH",
+        "content": "What is past is left behind. The future is yet unreached. Whatever quality is present, clearly see it right there.",
+        "author": "The Buddha",
+        "tags": [
+            "Wisdom",
+            "Future"
+        ],
+        "authorSlug": "the-buddha",
+        "length": 114,
+        "dateAdded": "2019-08-08",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "X3Sw_D3xm_I0",
+        "content": "Don't turn away from possible futures before you're certain you don't have anything to learn from them.",
+        "author": "Richard Bach",
         "tags": [
             "Famous Quotes",
-            "Inspirational"
+            "Future"
         ],
-        "authorSlug": "amy-poehler",
-        "length": 58,
-        "dateAdded": "2021-06-18",
+        "authorSlug": "richard-bach",
+        "length": 103,
+        "dateAdded": "2019-07-03",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "ZsD4Hq1Z5",
-        "content": "Look up at the stars and not down at your feet. Try to make sense of what you see, and wonder about what makes the universe exist. Be curious.",
-        "author": "Stephen Hawking",
-        "tags": [
-            "Inspirational"
-        ],
-        "authorSlug": "stephen-hawking",
-        "length": 142,
-        "dateAdded": "2019-03-15",
-        "dateModified": "2023-04-14"
-    },
-    {
-        "_id": "dYKQx6tn7k-y",
-        "content": "Work like you don't need the money. Love like you've never been hurt. Dance like nobody's watching.",
-        "author": "Satchel Paige",
+        "_id": "fhyB06UQ9hjL",
+        "content": "If you live to be a hundred, I want to live to be a hundred minus one day, so I never have to live without you.",
+        "author": "A. A. Milne",
         "tags": [
             "Famous Quotes",
-            "Wisdom"
+            "Love"
         ],
-        "authorSlug": "satchel-paige",
-        "length": 99,
-        "dateAdded": "2020-03-07",
+        "authorSlug": "a-a-milne",
+        "length": 111,
+        "dateAdded": "2019-06-27",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "vpKhzzrropUL",
-        "content": "All great achievements require time.",
-        "author": "Maya Angelou",
-        "tags": [
-            "Famous Quotes"
-        ],
-        "authorSlug": "maya-angelou",
-        "length": 36,
-        "dateAdded": "2020-05-21",
-        "dateModified": "2023-04-14"
-    },
-    {
-        "_id": "ElHdPHLQGGGK",
-        "content": "It does not matter how slowly you go as long as you do not stop.",
-        "author": "Confucius",
+        "_id": "SDIuXTOSqNz-",
+        "content": "You will never be happy if you continue to search for what happiness consists of. You will never live if you are looking for the meaning of life.",
+        "author": "Albert Camus",
         "tags": [
             "Famous Quotes",
-            "Inspirational"
+            "Life",
+            "Happiness"
         ],
-        "authorSlug": "confucius",
-        "length": 64,
+        "authorSlug": "albert-camus",
+        "length": 145,
+        "dateAdded": "2019-03-24",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "J-47k8g-i",
+        "content": "Love is a friendship set to music.",
+        "author": "Joseph Campbell",
+        "tags": [
+            "Friendship",
+            "Love"
+        ],
+        "authorSlug": "joseph-campbell",
+        "length": 34,
         "dateAdded": "2019-03-17",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "sKRDFZR86R5",
-        "content": "I never see what has been done; I only see what remains to be done.",
-        "author": "Marie Curie",
+        "_id": "5UaK7cijxqOE",
+        "content": "Can miles truly separate you from friends... If you want to be with someone you love, aren't you already there?",
+        "author": "Richard Bach",
         "tags": [
-            "Success",
-            "Wisdom"
+            "Love",
+            "Friendship"
         ],
-        "authorSlug": "marie-curie",
-        "length": 67,
-        "dateAdded": "2019-02-11",
+        "authorSlug": "richard-bach",
+        "length": 111,
+        "dateAdded": "2019-02-13",
         "dateModified": "2023-04-14"
     },
     {
-        "_id": "W6T9TWwOwW0",
-        "content": "When in doubt, don't.",
-        "author": "Benjamin Franklin",
+        "_id": "DRrFFyFqWhQD",
+        "content": "If you love someone, set them free. If they come back, they're yours; if they don't, they never were.",
+        "author": "Richard Bach",
         "tags": [
+            "Love"
+        ],
+        "authorSlug": "richard-bach",
+        "length": 101,
+        "dateAdded": "2019-01-08",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "0zVGLJ51n4H-",
+        "content": "These days people seek knowledge, not wisdom. Knowledge is of the past; wisdom is of the future.",
+        "author": "Vernon Cooper",
+        "tags": [
+            "Future",
             "Wisdom"
         ],
-        "authorSlug": "benjamin-franklin",
-        "length": 21,
-        "dateAdded": "2019-08-08",
+        "authorSlug": "vernon-cooper",
+        "length": 96,
+        "dateAdded": "2019-01-08",
+        "dateModified": "2023-04-14"
+    },
+    {
+        "_id": "ISX_zfx8abzc",
+        "content": "There is no duty we so underrate as the duty of being happy. By being happy we sow anonymous benefits upon the world.",
+        "author": "Robert Louis Stevenson",
+        "tags": [
+            "Life",
+            "Happiness"
+        ],
+        "authorSlug": "robert-louis-stevenson",
+        "length": 117,
+        "dateAdded": "2019-01-08",
         "dateModified": "2023-04-14"
     }
 ]
