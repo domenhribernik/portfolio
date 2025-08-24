@@ -298,7 +298,8 @@
             box-shadow: var(--card-shadow);
         }
 
-        .hb th, td {
+        .hb th,
+        td {
             padding: 12px;
             text-align: center;
             border-bottom: 1px solid var(--primary-pink);
@@ -341,7 +342,7 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             user-select: none;
-            z-index: 10;
+            z-index: 5;
         }
 
         .divorce-button.moving {
@@ -363,7 +364,7 @@
             display: none;
             max-width: 90%;
             border: 3px solid #ff4757;
-            z-index: 10;
+            z-index: 5;
         }
 
         .message h2 {
@@ -570,6 +571,7 @@
                 opacity: 1;
             }
         }
+
         /* Footer */
         .footer {
             text-align: center;
@@ -796,26 +798,6 @@
                 </div>
             </section>
 
-            <!-- Divorce Button Section -->
-            <div class="section menu-container">
-                <div class="menu-header" onclick="toggleDropdown()">
-                    <span>Since you're always talking about divorce, here's your chance!</span>
-                    <span class="arrow" id="arrow">▼</span>
-                </div>
-                <div class="dropdown-content" id="dropdownContent">
-                    <br>
-                    <br>
-                    <button class="divorce-button" id="divorceBtn">
-                        DIVORCE
-                    </button>
-
-                    <div class="message" id="message">
-                        <h2>NO! 😭</h2>
-                        <p>I won't let you divorce me!</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Drawing Board -->
             <!-- <section class="section">
                 <h2 class="section-title">Draw Me Something</h2>
@@ -850,58 +832,58 @@
                 <table id="benchmarkTable">
                     <thead>
                         <tr>
-                        <th>Human Benchmark</th>
-                        <th>Dom</th>
-                        <th>Iliana</th>
+                            <th>Human Benchmark</th>
+                            <th>Dom</th>
+                            <th>Iliana</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                        <td>Aim Trainer</td>
-                        <td><span class="checkmark">✓</span></td>
-                        <td><span class="xmark">✗</span></td>
+                            <td>Aim Trainer</td>
+                            <td><span class="checkmark">✓</span></td>
+                            <td><span class="xmark">✗</span></td>
                         </tr>
                         <tr>
-                        <td>Chimp Test</td>
-                        <td><span class="checkmark">✗</span></td>
-                        <td><span class="xmark">✓</span></td>
+                            <td>Chimp Test</td>
+                            <td><span class="checkmark">✗</span></td>
+                            <td><span class="xmark">✓</span></td>
                         </tr>
                         <tr>
-                        <td>Number Memory</td>
-                        <td><span class="xmark">✓</span></td>
-                        <td><span class="checkmark">✗</span></td>
+                            <td>Number Memory</td>
+                            <td><span class="xmark">✓</span></td>
+                            <td><span class="checkmark">✗</span></td>
                         </tr>
                         <tr>
-                        <td>Reaction Time</td>
-                        <td><span class="checkmark">✗</span></td>
-                        <td><span class="xmark">✓</span></td>
+                            <td>Reaction Time</td>
+                            <td><span class="checkmark">✗</span></td>
+                            <td><span class="xmark">✓</span></td>
                         </tr>
                         <tr>
-                        <td>Sequence Memory</td>
-                        <td><span class="checkmark">✓</span></td>
-                        <td><span class="xmark">✗</span></td>
+                            <td>Sequence Memory</td>
+                            <td><span class="checkmark">✓</span></td>
+                            <td><span class="xmark">✗</span></td>
                         </tr>
                         <tr>
-                        <td>Typing</td>
-                        <td><span class="checkmark">✓</span></td>
-                        <td><span class="xmark">✗</span></td>
+                            <td>Typing</td>
+                            <td><span class="checkmark">✓</span></td>
+                            <td><span class="xmark">✗</span></td>
                         </tr>
                         <tr>
-                        <td>Verbal Memory</td>
-                        <td><span class="xmark">✗</span></td>
-                        <td><span class="checkmark">✓</span></td>
+                            <td>Verbal Memory</td>
+                            <td><span class="xmark">✗</span></td>
+                            <td><span class="checkmark">✓</span></td>
                         </tr>
                         <tr>
-                        <td>Visual Memory</td>
-                        <td><span class="xmark">✓</span></td>
-                        <td><span class="checkmark">✓</span></td>
+                            <td>Visual Memory</td>
+                            <td><span class="xmark">✓</span></td>
+                            <td><span class="checkmark">✓</span></td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr>
-                        <td>Total Wins</td>
-                        <td>5</td>
-                        <td>4</td>
+                            <td>Total Wins</td>
+                            <td>5</td>
+                            <td>4</td>
                         </tr>
                     </tfoot>
                 </table>
