@@ -44,6 +44,10 @@
             padding: 20px;
         }
 
+        .center {
+            text-align: center;
+        }
+
         /* Login Screen */
         .login-screen {
             display: flex;
@@ -282,6 +286,105 @@
             }
         }
 
+        /* Human Benchmark */
+        .hb table {
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            background: var(--card-bg);
+            border-collapse: collapse;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .hb th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--primary-pink);
+        }
+
+        .hb th {
+            background: var(--primary-pink);
+        }
+
+        .hb button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary-pink);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .hb button:hover {
+            background: var(--primary-pink-hover);
+        }
+
+        .hb tfoot td {
+            font-weight: bold;
+            background: var(--primary-pink);
+        }
+
+        /* Divorce button */
+        .divorce-button {
+            position: absolute;
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(45deg, #ff4757, #ff3742);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .divorce-button.moving {
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform: scale(0.9) rotate(180deg);
+        }
+
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 20px;
+            color: #333;
+            display: none;
+            max-width: 90%;
+            border: 3px solid #ff4757;
+            z-index: 10;
+        }
+
+        .message h2 {
+            color: #ff4757;
+            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .message p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .divorce-button {
+                padding: 15px 30px;
+                font-size: 20px;
+            }
+        }
+
         /* Photo Gallery */
         .photo-gallery {
             display: grid;
@@ -358,7 +461,7 @@
         .modal {
             display: none;
             position: absolute;
-            z-index: 1000;
+            z-index: 5;
             left: 0;
             top: 0;
             width: 100%;
@@ -467,35 +570,6 @@
                 opacity: 1;
             }
         }
-
-        /* Hidden Features */
-        .hidden-feature {
-            background: var(--primary-pink);
-            color: var(--text-black);
-            text-align: center;
-            padding: 40px;
-            border-radius: var(--border-radius);
-            margin: 30px 0;
-            display: none;
-        }
-
-        .hidden-feature.show {
-            display: block;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         /* Footer */
         .footer {
             text-align: center;
@@ -750,6 +824,82 @@
                 </div>
             </section> -->
 
+            <!-- Human Benchmark section -->
+            <section class="section hb">
+                <h2 class="section-title">The winner is Dom 🏆</h2><br>
+                <table id="benchmarkTable">
+                    <thead>
+                        <tr>
+                        <th>Human Benchmark</th>
+                        <th>Dom</th>
+                        <th>Iliana</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                        <td>Aim Trainer</td>
+                        <td><span class="checkmark">✓</span></td>
+                        <td><span class="xmark">✗</span></td>
+                        </tr>
+                        <tr>
+                        <td>Chimp Test</td>
+                        <td><span class="checkmark">✗</span></td>
+                        <td><span class="xmark">✓</span></td>
+                        </tr>
+                        <tr>
+                        <td>Number Memory</td>
+                        <td><span class="xmark">✓</span></td>
+                        <td><span class="checkmark">✗</span></td>
+                        </tr>
+                        <tr>
+                        <td>Reaction Time</td>
+                        <td><span class="checkmark">✗</span></td>
+                        <td><span class="xmark">✓</span></td>
+                        </tr>
+                        <tr>
+                        <td>Sequence Memory</td>
+                        <td><span class="checkmark">✓</span></td>
+                        <td><span class="xmark">✗</span></td>
+                        </tr>
+                        <tr>
+                        <td>Typing</td>
+                        <td><span class="checkmark">✓</span></td>
+                        <td><span class="xmark">✗</span></td>
+                        </tr>
+                        <tr>
+                        <td>Verbal Memory</td>
+                        <td><span class="xmark">✗</span></td>
+                        <td><span class="checkmark">✓</span></td>
+                        </tr>
+                        <tr>
+                        <td>Visual Memory</td>
+                        <td><span class="xmark">✓</span></td>
+                        <td><span class="checkmark">✓</span></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                        <td>Total Wins</td>
+                        <td>5</td>
+                        <td>4</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </section>
+
+            <!-- Divorce Button -->
+            <section class="section">
+                <button class="divorce-button" id="divorceBtn">
+                    DIVORCE
+                </button>
+
+                <div class="message" id="message">
+                    <h2>NO! 😭</h2>
+                    <p>I won't let you divorce me!</p>
+                </div>
+            </section>
+
+            <!-- Photo Gallery -->
             <section class="section">
                 <h2 class="section-title">Our Memories</h2>
                 <div class="photo-gallery" id="photoGallery">
@@ -766,16 +916,6 @@
                         <div id="modalCaption" class="modal-caption"></div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Hidden Easter Egg -->
-            <div class="hidden-feature" id="easterEgg">
-                <h2 style="font-family: 'Dancing Script', cursive; font-size: 2.5rem; margin-bottom: 20px;">🎉 You found
-                    it! 🎉</h2>
-                <p style="font-size: 1.2rem; margin-bottom: 15px;">You discovered our secret! Here's something special
-                    just for you:</p>
-                <p style="font-size: 1.1rem; font-style: italic;">"Every day I fall in love with you all over again.
-                    You're my yesterday, my today, and my tomorrow. ❤️"</p>
             </div>
 
             <!-- Footer -->
@@ -816,11 +956,11 @@
                 date: 'May 11, 2025',
                 caption: 'First date and our first kiss <3'
             },
-            {
+            /*{
                 src: '../assets/iliana/firsttime.jpg',
                 date: 'May 13, 2025',
                 caption: 'Damn look at my back :O'
-            },
+            }, */
             {
                 src: '../assets/iliana/stargazing.jpg',
                 date: 'May 15, 2025',
@@ -900,18 +1040,6 @@
             // initializeDrawingBoard();
             // loadPartnerDrawing();
             setInterval(updateCountdown, 1000);
-
-            // Easter egg trigger
-            let clickCount = 0;
-            document.addEventListener('click', function (e) {
-                if (e.target.classList.contains('section-title')) {
-                    clickCount++;
-                    if (clickCount === 3) {
-                        document.getElementById('easterEgg').classList.add('show');
-                        clickCount = 0;
-                    }
-                }
-            });
         }
 
         // Countdown functionality
@@ -969,6 +1097,142 @@
                     displayQuote(quotes);
                 });
         }
+
+        //Divorce button
+        let isMoving = false;
+        let hasBeenClicked = false;
+        const button = document.getElementById('divorceBtn');
+        const message = document.getElementById('message');
+
+        function getRandomPosition(baseMaxDistance = 400, minDistance = 150) {
+            const pageWidth = document.documentElement.scrollWidth;
+            const pageHeight = document.documentElement.scrollHeight;
+            const buttonWidth = button.offsetWidth;
+            const buttonHeight = button.offsetHeight;
+
+            const currentRect = button.getBoundingClientRect();
+            const currentX = currentRect.left + window.scrollX + currentRect.width / 2;
+            const currentY = currentRect.top + window.scrollY + currentRect.height / 2;
+
+            // Clamp maxDistance so it never exceeds available space
+            const maxXSpace = pageWidth - buttonWidth - 60; // account for margins
+            const maxYSpace = pageHeight - buttonHeight - 60;
+            const effectiveMaxDistance = Math.min(
+                baseMaxDistance,
+                maxXSpace,
+                maxYSpace
+            );
+
+            let x, y, distance, attempts = 0;
+
+            do {
+                const margin = 60;
+                const maxX = pageWidth - buttonWidth - margin;
+                const maxY = pageHeight - buttonHeight - margin;
+
+                x = Math.random() * maxX + margin;
+                y = Math.random() * maxY + margin;
+
+                const newCenterX = x + buttonWidth / 2;
+                const newCenterY = y + buttonHeight / 2;
+
+                distance = Math.hypot(newCenterX - currentX, newCenterY - currentY);
+
+                // Clamp if too far
+                if (distance > effectiveMaxDistance) {
+                    const angle = Math.atan2(newCenterY - currentY, newCenterX - currentX);
+                    x = currentX + Math.cos(angle) * effectiveMaxDistance - buttonWidth / 2;
+                    y = currentY + Math.sin(angle) * effectiveMaxDistance - buttonHeight / 2;
+                    distance = effectiveMaxDistance;
+                }
+
+                attempts++;
+            } while (distance < minDistance && attempts < 20);
+
+            return { x, y, distance };
+        }
+
+        function moveButton() {
+            if (isMoving || hasBeenClicked) return;
+
+            isMoving = true;
+            button.classList.add('moving');
+
+            const newPos = getRandomPosition();
+
+            // Transition time scales with distance
+            const duration = Math.min(800, Math.max(300, newPos.distance)); // between 0.3s – 0.8s
+            button.style.transition = `all ${duration}ms cubic-bezier(0.68,-0.55,0.265,1.55)`;
+
+            button.style.left = newPos.x + 'px';
+            button.style.top = newPos.y + 'px';
+
+            setTimeout(() => {
+                button.classList.remove('moving');
+                isMoving = false;
+            }, duration);
+        }
+
+        function handleSuccessfulClick() {
+            hasBeenClicked = true;
+
+            message.style.display = 'block';
+
+            button.style.transition = 'all 0.5s ease-out';
+            button.style.opacity = '0';
+            button.style.transform = 'scale(0.5) rotate(720deg)';
+
+            setTimeout(() => {
+                button.style.display = 'none';
+            }, 500);
+        }
+
+        button.addEventListener('mouseenter', (e) => {
+            if (hasBeenClicked) return;
+            e.preventDefault();
+            moveButton();
+        });
+
+        button.addEventListener('touchstart', (e) => {
+            if (hasBeenClicked) return;
+            e.preventDefault();
+            moveButton();
+        });
+
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!hasBeenClicked && !isMoving) {
+                handleSuccessfulClick();
+            } else if (!hasBeenClicked) {
+                moveButton();
+            }
+        });
+
+        button.addEventListener('mousedown', (e) => {
+            if (hasBeenClicked) return;
+            e.preventDefault();
+            moveButton();
+        });
+
+        // Initialize button position to center
+        button.style.left = '50%';
+        button.style.top = '50%';
+        button.style.transform = 'translate(-50%, -50%)';
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (!isMoving) {
+                const rect = button.getBoundingClientRect();
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+
+                if (rect.right > windowWidth || rect.bottom > windowHeight || rect.left < 0 || rect.top < 0) {
+                    const newPos = getRandomPosition();
+                    button.style.left = newPos.x + 'px';
+                    button.style.top = newPos.y + 'px';
+                }
+            }
+        });
 
         // Photo gallery
         function loadPhotoGallery() {
@@ -1204,8 +1468,6 @@
             // TODO: Replace with actual Firebase query
             // loadFromFirebase();
         }
-
-
 
         // Click effects
         document.querySelectorAll('.click-effect').forEach(element => {
