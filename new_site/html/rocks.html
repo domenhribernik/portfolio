@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Physics Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: grab;
+        }
+        
+        body.dragging {
+            cursor: grabbing;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #scene-container {
+            width: 90vw;
+            height: 80vh;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        #instructions {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 16px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="scene-container"></div>
+    </div>
+    
+    <div id="instructions">
+        <strong>🪨 Rock Physics Simulation</strong><br>
+        • Click and drag rocks to move them<br>
+        • Throw rocks by dragging fast and releasing<br>
+        • Watch realistic collisions and physics<br>
+        • Listen for collision sounds!
+    </div>
+    
+    <div id="controls">
+        <button onclick="addRock()">Add Rock</button>
+        <button onclick="clearRocks()">Clear All</button>
+        <button onclick="resetCamera()">Reset View</button>
+    </div>
+
+    <script>
+        // Scene setup
+        let scene, camera, renderer, container;
+        let rocks = [];
+        let isDragging = false;
+        let draggedRock = null;
+        let mousePos = new THREE.Vector2();
+        let previousMousePos = new THREE.Vector2();
+        let velocity = new THREE.Vector2();
+        let raycaster = new THREE.Raycaster();
+        
+        // Physics constants
+        const gravity = -0.005;
+        const bounce = 0.6;
+        const friction = 0.98;
+        const airResistance = 0.999;
+        
+        // Audio context for collision sounds
+        let audioContext;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playCollisionSound(intensity = 1) {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Rock collision sound parameters
+            oscillator.frequency.setValueAtTime(100 + Math.random() * 200, audioContext.currentTime);
+            oscillator.type = 'triangle';
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, audioContext.currentTime);
+            
+            const volume = Math.min(intensity * 0.3, 0.5);
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+        
+        function init() {
+            container = document.getElementById('scene-container');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x2c3e50);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 8, 12);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            const pointLight = new THREE.PointLight(0xffffff, 0.5, 50);
+            pointLight.position.set(0, 10, 0);
+            scene.add(pointLight);
+            
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(30, 30);
+            const groundMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x7f8c8d,
+                transparent: true,
+                opacity: 0.8
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -5;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Walls (invisible boundaries)
+            createBoundaries();
+            
+            // Create initial rocks
+            for (let i = 0; i < 5; i++) {
+                addRock();
+            }
+            
+            // Event listeners
+            setupEventListeners();
+            
+            animate();
+        }
+        
+        function createRockGeometry() {
+            // Create irregular rock shape with more detail
+            const geometry = new THREE.SphereGeometry(0.8 + Math.random() * 0.4, 12, 8);
+            const vertices = geometry.attributes.position.array;
+            
+            // Deform the sphere to make it rock-like
+            for (let i = 0; i < vertices.length; i += 3) {
+                const noise = (Math.random() - 0.5) * 0.4;
+                vertices[i] *= (1 + noise);
+                vertices[i + 1] *= (1 + noise);
+                vertices[i + 2] *= (1 + noise);
+            }
+            
+            geometry.attributes.position.needsUpdate = true;
+            geometry.computeVertexNormals();
+            geometry.computeBoundingSphere();
+            
+            return geometry;
+        }
+        
+        function createRockMaterial() {
+            const colors = [0x8B4513, 0x654321, 0x5D4037, 0x795548, 0x6D4C41];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            return new THREE.MeshPhongMaterial({
+                color: color,
+                shininess: 10,
+                specular: 0x222222
+            });
+        }
+        
+        function addRock() {
+            const geometry = createRockGeometry();
+            const material = createRockMaterial();
+            const rock = new THREE.Mesh(geometry, material);
+            
+            // Random position - keep rocks more centered and visible
+            rock.position.set(
+                (Math.random() - 0.5) * 8,
+                Math.random() * 3 + 1,
+                (Math.random() - 0.5) * 8
+            );
+            
+            // Physics properties
+            rock.velocity = new THREE.Vector3(0, 0, 0);
+            rock.angularVelocity = new THREE.Vector3(0, 0, 0);
+            rock.mass = geometry.boundingSphere.radius;
+            rock.castShadow = true;
+            rock.receiveShadow = true;
+            
+            scene.add(rock);
+            rocks.push(rock);
+            
+            console.log('Added rock at position:', rock.position);
+        }
+        
+        function createBoundaries() {
+            // Invisible walls to contain the rocks
+            const wallMaterial = new THREE.MeshBasicMaterial({ visible: false });
+            
+            // Left and right walls
+            const sideGeometry = new THREE.PlaneGeometry(20, 20);
+            const leftWall = new THREE.Mesh(sideGeometry, wallMaterial);
+            leftWall.position.set(-15, 0, 0);
+            leftWall.rotation.y = Math.PI / 2;
+            scene.add(leftWall);
+            
+            const rightWall = new THREE.Mesh(sideGeometry, wallMaterial);
+            rightWall.position.set(15, 0, 0);
+            rightWall.rotation.y = -Math.PI / 2;
+            scene.add(rightWall);
+            
+            // Front and back walls
+            const frontWall = new THREE.Mesh(sideGeometry, wallMaterial);
+            frontWall.position.set(0, 0, -15);
+            scene.add(frontWall);
+            
+            const backWall = new THREE.Mesh(sideGeometry, wallMaterial);
+            backWall.position.set(0, 0, 15);
+            backWall.rotation.y = Math.PI;
+            scene.add(backWall);
+        }
+        
+        function setupEventListeners() {
+            const canvas = renderer.domElement;
+            
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mouseup', onMouseUp);
+            canvas.addEventListener('mousemove', onMouseHover);
+            
+            window.addEventListener('resize', onWindowResize);
+            
+            // Initialize audio on first user interaction
+            document.addEventListener('click', initAudio, { once: true });
+        }
+        
+        function onMouseHover(event) {
+            if (isDragging) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            const mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            const mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+            const intersects = raycaster.intersectObjects(rocks);
+            
+            // Reset all rock scales
+            rocks.forEach(rock => {
+                rock.scale.setScalar(1);
+            });
+            
+            // Highlight hovered rock
+            if (intersects.length > 0) {
+                intersects[0].object.scale.setScalar(1.1);
+                document.body.style.cursor = 'grab';
+            } else {
+                document.body.style.cursor = 'default';
+            }
+        }
+        
+        function onMouseDown(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mousePos.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mousePos.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mousePos, camera);
+            const intersects = raycaster.intersectObjects(rocks);
+            
+            console.log('Mouse down at:', mousePos);
+            console.log('Rocks available:', rocks.length);
+            console.log('Intersects found:', intersects.length);
+            
+            if (intersects.length > 0) {
+                isDragging = true;
+                draggedRock = intersects[0].object;
+                draggedRock.velocity.set(0, 0, 0);
+                document.body.classList.add('dragging');
+                
+                previousMousePos.copy(mousePos);
+                console.log('Started dragging rock');
+            }
+        }
+        
+        function onMouseMove(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            previousMousePos.copy(mousePos);
+            mousePos.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mousePos.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            if (isDragging && draggedRock) {
+                // Calculate velocity for throwing
+                velocity.x = (mousePos.x - previousMousePos.x) * 20;
+                velocity.y = (mousePos.y - previousMousePos.y) * 20;
+                
+                // Move the rock
+                raycaster.setFromCamera(mousePos, camera);
+                const distance = camera.position.distanceTo(draggedRock.position);
+                const worldPos = raycaster.ray.origin.clone().add(
+                    raycaster.ray.direction.clone().multiplyScalar(distance)
+                );
+                
+                draggedRock.position.copy(worldPos);
+            }
+        }
+        
+        function onMouseUp() {
+            if (isDragging && draggedRock) {
+                // Apply throwing velocity
+                draggedRock.velocity.x = velocity.x * 0.5;
+                draggedRock.velocity.y = velocity.y * 0.5;
+                draggedRock.velocity.z = (Math.random() - 0.5) * 2;
+                
+                // Add random angular velocity
+                draggedRock.angularVelocity.set(
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random() - 0.5) * 0.2
+                );
+            }
+            
+            isDragging = false;
+            draggedRock = null;
+            document.body.classList.remove('dragging');
+        }
+        
+        function updatePhysics() {
+            rocks.forEach((rock, i) => {
+                if (rock === draggedRock) return;
+                
+                // Apply gravity
+                rock.velocity.y += gravity;
+                
+                // Apply air resistance
+                rock.velocity.multiplyScalar(airResistance);
+                rock.angularVelocity.multiplyScalar(friction);
+                
+                // Update position
+                rock.position.add(rock.velocity);
+                
+                // Update rotation
+                rock.rotation.x += rock.angularVelocity.x;
+                rock.rotation.y += rock.angularVelocity.y;
+                rock.rotation.z += rock.angularVelocity.z;
+                
+                // Ground collision
+                const groundY = -5 + rock.geometry.boundingSphere.radius;
+                if (rock.position.y <= groundY) {
+                    rock.position.y = groundY;
+                    if (Math.abs(rock.velocity.y) > 0.02) {
+                        playCollisionSound(Math.abs(rock.velocity.y));
+                    }
+                    rock.velocity.y = -rock.velocity.y * bounce;
+                    rock.velocity.x *= friction;
+                    rock.velocity.z *= friction;
+                }
+                
+                // Wall collisions
+                const wallBounds = 14;
+                if (Math.abs(rock.position.x) > wallBounds) {
+                    rock.position.x = Math.sign(rock.position.x) * wallBounds;
+                    rock.velocity.x = -rock.velocity.x * bounce;
+                    if (Math.abs(rock.velocity.x) > 0.02) {
+                        playCollisionSound(Math.abs(rock.velocity.x));
+                    }
+                }
+                
+                if (Math.abs(rock.position.z) > wallBounds) {
+                    rock.position.z = Math.sign(rock.position.z) * wallBounds;
+                    rock.velocity.z = -rock.velocity.z * bounce;
+                    if (Math.abs(rock.velocity.z) > 0.02) {
+                        playCollisionSound(Math.abs(rock.velocity.z));
+                    }
+                }
+                
+                // Rock-to-rock collisions
+                for (let j = i + 1; j < rocks.length; j++) {
+                    const otherRock = rocks[j];
+                    if (otherRock === draggedRock) continue;
+                    
+                    const distance = rock.position.distanceTo(otherRock.position);
+                    const minDistance = rock.geometry.boundingSphere.radius + otherRock.geometry.boundingSphere.radius;
+                    
+                    if (distance < minDistance) {
+                        // Collision detected
+                        const collisionNormal = rock.position.clone().sub(otherRock.position).normalize();
+                        const relativeVelocity = rock.velocity.clone().sub(otherRock.velocity);
+                        const velocityAlongNormal = relativeVelocity.dot(collisionNormal);
+                        
+                        if (velocityAlongNormal > 0) continue; // Objects moving apart
+                        
+                        // Calculate collision response
+                        const restitution = bounce;
+                        const impulse = -(1 + restitution) * velocityAlongNormal / (1/rock.mass + 1/otherRock.mass);
+                        
+                        const impulseVector = collisionNormal.clone().multiplyScalar(impulse);
+                        
+                        rock.velocity.add(impulseVector.clone().multiplyScalar(1/rock.mass));
+                        otherRock.velocity.sub(impulseVector.clone().multiplyScalar(1/otherRock.mass));
+                        
+                        // Separate objects
+                        const overlap = minDistance - distance;
+                        const separation = collisionNormal.clone().multiplyScalar(overlap * 0.5);
+                        rock.position.add(separation);
+                        otherRock.position.sub(separation);
+                        
+                        // Play collision sound
+                        const collisionIntensity = Math.abs(velocityAlongNormal);
+                        if (collisionIntensity > 0.05) {
+                            playCollisionSound(collisionIntensity);
+                        }
+                        
+                        // Add some angular velocity from collision
+                        const angularImpulse = (Math.random() - 0.5) * 0.1;
+                        rock.angularVelocity.add(new THREE.Vector3(angularImpulse, angularImpulse, angularImpulse));
+                        otherRock.angularVelocity.add(new THREE.Vector3(-angularImpulse, -angularImpulse, -angularImpulse));
+                    }
+                }
+            });
+        }
+        
+        function clearRocks() {
+            rocks.forEach(rock => {
+                scene.remove(rock);
+                rock.geometry.dispose();
+                rock.material.dispose();
+            });
+            rocks = [];
+            draggedRock = null;
+            isDragging = false;
+        }
+        
+        function resetCamera() {
+            camera.position.set(0, 5, 15);
+            camera.lookAt(0, 0, 0);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            updatePhysics();
+            
+            // Gentle camera movement
+            const time = Date.now() * 0.0005;
+            camera.position.x += Math.sin(time * 0.5) * 0.01;
+            camera.position.y += Math.cos(time * 0.3) * 0.005;
+            camera.lookAt(0, 0, 0);
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize the scene
+        init();
+    </script>
+</body>
+</html> 
