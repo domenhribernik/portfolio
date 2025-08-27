@@ -1,0 +1,197 @@
+:root {
+  --ink: #2C2A6D;
+  --bg: #ffffff;
+  --title: #ffffff;
+  --btn-bg: #ffffff;
+  --btn-fg: #2C2A6D;
+  --correct: #1db954;
+  --incorrect: #ff4d4f;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--title);
+  background: var(--ink);
+}
+
+#app {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+#progress {
+  height: 8px;
+  background: rgba(255,255,255,0.15);
+}
+
+#progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+  transition: width 300ms ease;
+}
+
+main#screen-root {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.screen {
+  width: min(720px, 92vw);
+  background: transparent;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: fadeIn 360ms ease forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.title {
+  margin: 8px 0 12px;
+  font-size: clamp(28px, 5vw, 40px);
+  color: #fff;
+}
+
+.subtitle { opacity: 0.9; margin-bottom: 20px; }
+
+.btn {
+  appearance: none;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 200ms ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.btn:hover { transform: translateY(-1px) scale(1.02); }
+.btn:active { transform: translateY(0) scale(0.99); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.primary { background: #fff; color: var(--ink); }
+
+.answers {
+  display: grid;
+  grid-template-columns: 1fr; /* mobile-first column */
+  gap: 10px;
+  margin: 16px 0 14px;
+}
+
+@media (min-width: 560px) {
+  .answers { grid-template-columns: 1fr; }
+}
+
+.answer-btn {
+  background: #fff;
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  border: 2px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 160ms ease, border-color 160ms ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.answer-btn:hover { transform: translateY(-1px) scale(1.01); }
+.answer-btn.correct { background: var(--correct); color: white; }
+.answer-btn.incorrect { background: var(--incorrect); color: white; }
+.answer-btn.locked { opacity: 0.9; cursor: default; }
+
+.controls { margin-top: 10px; }
+
+/* Confetti canvas is injected at runtime at body level */
+
+/* Letter grid */
+.letter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 16px 0 10px;
+}
+
+.letter-cell {
+  background: #fff;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 14px 0;
+  font-weight: 700;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: transform 120ms ease, background 160ms ease;
+}
+
+.letter-cell:hover { transform: translateY(-1px) scale(1.02); }
+.letter-cell.correct { background: var(--correct); color: #fff; }
+.letter-cell.incorrect { background: var(--incorrect); color: #fff; }
+.letter-cell.locked { opacity: 0.9; cursor: default; }
+
+/* Number input and numpad */
+.number-input {
+  display: grid;
+  justify-items: center;
+  margin: 8px 0 10px;
+}
+
+.num-display {
+  width: min(360px, 90vw);
+  font-size: 28px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  text-align: center;
+  color: var(--ink);
+}
+
+.num-display.correct { color: inherit; background: #fff; }
+.num-display.incorrect { color: inherit; background: #fff; }
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(72px, 1fr));
+  gap: 12px;
+  justify-items: stretch;
+  width: min(360px, 90vw);
+  margin: 8px auto 12px;
+}
+
+.key {
+  background: #fff;
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 16px 0;
+  font-weight: 700;
+  font-size: 20px;
+  text-align: center;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 8px 20px rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+#n-title.title { font-size: clamp(28px, 7vw, 44px); }
+.num-feedback { margin: 6px 0 0; font-size: 16px; opacity: 0.95; }
+.num-feedback.correct { color: var(--correct); }
+.num-feedback.incorrect { color: var(--incorrect); }
+
+.key:active { transform: scale(0.98); }
+
+/* Accessibility helpers */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  border: 0;
+}
+
