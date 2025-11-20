@@ -892,7 +892,7 @@
             </section>
 
             <!-- Divorce Button -->
-            <section class="section">
+            <!-- <section class="section">
                 <button class="divorce-button" id="divorceBtn">
                     DIVORCE
                 </button>
@@ -901,7 +901,7 @@
                     <h2>NO! 😭</h2>
                     <p>I won't let you divorce me!</p>
                 </div>
-            </section>
+            </section> -->
 
             <!-- Photo Gallery -->
             <section class="section">
@@ -936,7 +936,7 @@
                 'cHJldHR5cGxlYXNl': 'Iliana',
                 'c3RheXByZXNlbnQ=': 'Domen'
             },
-            targetDate: new Date('2025-10-29T18:30:00').getTime(),
+            targetDate: new Date('2025-12-24T10:00:00').getTime(),
         };
 
         // Drawing variables
@@ -1006,69 +1006,129 @@
                 caption: 'One month anniversary <3'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/iliana-and-sup.jpg',
+                date: 'Aug 31, 2025',
                 caption: 'You, sup and sunset :)'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/tavli.jpg',
+                date: 'Sep 1, 2025',
                 caption: 'That time I beat you in tavli :P'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/seafood-dinner.jpg',
+                date: 'Sep 2, 2025',
                 caption: 'Seafood dinner date!'
             },
             {
-                src: '',
-                date: '',
-                caption: 'Most romantic beach date ever <3'
-            },
-            {
-                src: '',
-                date: '',
+                src: '../assets/iliana/xanthe-gyro.jpg',
+                date: 'Sep 3, 2025',
                 caption: 'Best gyros in Greece!'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/beach-dinner.jpg',
+                date: 'Sep 5, 2025',
+                caption: 'Most romantic beach date ever <3'
+            },
+            {
+                src: '../assets/iliana/komotini-selfie.jpg',
+                date: 'Sep 5, 2025',
                 caption: 'Komotini was the best :D'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/saloniki-selfie.jpg',
+                date: 'Sep 6, 2025',
                 caption: 'Our trip to Thessaloniki :)'
             },
             {
-                src: '',
-                date: '',
-                caption: 'We had the best appartment :O'
+                src: '../assets/iliana/saloniki-appartment.jpg',
+                date: 'Sep 6, 2025',
+                caption: 'We had such a cool appartment :O'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/castle-cat.jpg',
+                date: 'Sep 7, 2025',
                 caption: 'You met a new friend :D'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/cuddles-at-home.jpg',
+                date: 'Oct 26, 2025',
                 caption: 'Watching the office in your room <3'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/moviepark-part2.jpg',
+                date: 'Oct 28, 2025',
                 caption: 'Movie park but scary ;)'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/daisy-movie-park.jpg',
+                date: 'Oct 28, 2025',
                 caption: 'Remember when we addopted Daisy? :P'
             },
             {
-                src: '',
-                date: '',
+                src: '../assets/iliana/best-burgers-in-germany.jpg',
+                date: 'Oct 30, 2025',
                 caption: 'Best burgers in town!'
+            },
+            {
+                src: '../assets/iliana/skocijan-cave-view-2025.jpg',
+                date: 'Oct 30, 2025',
+                caption: 'Trip to Škocijan Caves :O'
+            },
+            {
+                src: '../assets/iliana/triest-trip-pizza-2025.jpg',
+                date: 'Oct 30, 2025',
+                caption: 'And for dinner pizza in Italy :)'
+            },
+            {
+                src: '../assets/iliana/nature-hike-2025.jpg',
+                date: 'Oct 31, 2025',
+                caption: 'Reconnecting with nature <3'
+            },
+            {
+                src: '../assets/iliana/bled-trip-slo-2025.jpg',
+                date: 'Nov 1, 2025',
+                caption: 'Bled trip :)'
+            },
+            {
+                src: '../assets/iliana/slap-savica-2025.jpg',
+                date: 'Nov 1, 2025',
+                caption: 'Slap Savica waterfall :D'
+            },
+            {
+                src: '../assets/iliana/horse-racing-lopata-2025.jpg',
+                date: 'Nov 2, 2025',
+                caption: 'We went to a horse race!'
+            },
+            {
+                src: '../assets/iliana/tomatoes-from-the-garden-2025.jpg',
+                date: 'Nov 4, 2025',
+                caption: 'Fresh tomatoes from the garden :)'
+            },
+            {
+                src: '../assets/iliana/hungry-twiggy-2025.jpg',
+                date: 'Nov 6, 2025',
+                caption: 'I know you have food >:)'
+            },
+            {
+                src: '../assets/iliana/luna-pet-ljubljana-2025.jpg',
+                date: 'Nov 8, 2025',
+                caption: 'Meeting Luna in Ljubljana!'
+            },
+            {
+                src: '../assets/iliana/hose-of-ilusions-ljubljana-2025.jpg',
+                date: 'Nov 8, 2025',
+                caption: 'House of illusions was so fun :p'
+            },
+            {
+                src: '../assets/iliana/home-made-pizza-2025.jpg',
+                date: 'Nov 9, 2025',
+                caption: 'Home made pizza for lunch :)'
+            },
+            {
+                src: '../assets/iliana/spa-olimije-2025.jpg',
+                date: 'Nov 10, 2025',
+                caption: 'Chilling at a Spa :D'
             }
         ];
 
@@ -1167,141 +1227,141 @@
                 });
         }
 
-        //Divorce button
-        let isMoving = false;
-        let hasBeenClicked = false;
-        const button = document.getElementById('divorceBtn');
-        const message = document.getElementById('message');
+        //Divorce button - TODO breaks the photo gallery zoom!
+        // let isMoving = false;
+        // let hasBeenClicked = false;
+        // const button = document.getElementById('divorceBtn');
+        // const message = document.getElementById('message');
 
-        function getRandomPosition(baseMaxDistance = 400, minDistance = 150) {
-            const pageWidth = document.documentElement.scrollWidth;
-            const pageHeight = document.documentElement.scrollHeight;
-            const buttonWidth = button.offsetWidth;
-            const buttonHeight = button.offsetHeight;
+        // function getRandomPosition(baseMaxDistance = 400, minDistance = 150) {
+        //     const pageWidth = document.documentElement.scrollWidth;
+        //     const pageHeight = document.documentElement.scrollHeight;
+        //     const buttonWidth = button.offsetWidth;
+        //     const buttonHeight = button.offsetHeight;
 
-            const currentRect = button.getBoundingClientRect();
-            const currentX = currentRect.left + window.scrollX + currentRect.width / 2;
-            const currentY = currentRect.top + window.scrollY + currentRect.height / 2;
+        //     const currentRect = button.getBoundingClientRect();
+        //     const currentX = currentRect.left + window.scrollX + currentRect.width / 2;
+        //     const currentY = currentRect.top + window.scrollY + currentRect.height / 2;
 
-            // Clamp maxDistance so it never exceeds available space
-            const maxXSpace = pageWidth - buttonWidth - 60; // account for margins
-            const maxYSpace = pageHeight - buttonHeight - 60;
-            const effectiveMaxDistance = Math.min(
-                baseMaxDistance,
-                maxXSpace,
-                maxYSpace
-            );
+        //     // Clamp maxDistance so it never exceeds available space
+        //     const maxXSpace = pageWidth - buttonWidth - 60; // account for margins
+        //     const maxYSpace = pageHeight - buttonHeight - 60;
+        //     const effectiveMaxDistance = Math.min(
+        //         baseMaxDistance,
+        //         maxXSpace,
+        //         maxYSpace
+        //     );
 
-            let x, y, distance, attempts = 0;
+        //     let x, y, distance, attempts = 0;
 
-            do {
-                const margin = 60;
-                const maxX = pageWidth - buttonWidth - margin;
-                const maxY = pageHeight - buttonHeight - margin;
+        //     do {
+        //         const margin = 60;
+        //         const maxX = pageWidth - buttonWidth - margin;
+        //         const maxY = pageHeight - buttonHeight - margin;
 
-                x = Math.random() * maxX + margin;
-                y = Math.random() * maxY + margin;
+        //         x = Math.random() * maxX + margin;
+        //         y = Math.random() * maxY + margin;
 
-                const newCenterX = x + buttonWidth / 2;
-                const newCenterY = y + buttonHeight / 2;
+        //         const newCenterX = x + buttonWidth / 2;
+        //         const newCenterY = y + buttonHeight / 2;
 
-                distance = Math.hypot(newCenterX - currentX, newCenterY - currentY);
+        //         distance = Math.hypot(newCenterX - currentX, newCenterY - currentY);
 
-                // Clamp if too far
-                if (distance > effectiveMaxDistance) {
-                    const angle = Math.atan2(newCenterY - currentY, newCenterX - currentX);
-                    x = currentX + Math.cos(angle) * effectiveMaxDistance - buttonWidth / 2;
-                    y = currentY + Math.sin(angle) * effectiveMaxDistance - buttonHeight / 2;
-                    distance = effectiveMaxDistance;
-                }
+        //         // Clamp if too far
+        //         if (distance > effectiveMaxDistance) {
+        //             const angle = Math.atan2(newCenterY - currentY, newCenterX - currentX);
+        //             x = currentX + Math.cos(angle) * effectiveMaxDistance - buttonWidth / 2;
+        //             y = currentY + Math.sin(angle) * effectiveMaxDistance - buttonHeight / 2;
+        //             distance = effectiveMaxDistance;
+        //         }
 
-                attempts++;
-            } while (distance < minDistance && attempts < 20);
+        //         attempts++;
+        //     } while (distance < minDistance && attempts < 20);
 
-            return { x, y, distance };
-        }
+        //     return { x, y, distance };
+        // }
 
-        function moveButton() {
-            if (isMoving || hasBeenClicked) return;
+        // function moveButton() {
+        //     if (isMoving || hasBeenClicked) return;
 
-            isMoving = true;
-            button.classList.add('moving');
+        //     isMoving = true;
+        //     button.classList.add('moving');
 
-            const newPos = getRandomPosition();
+        //     const newPos = getRandomPosition();
 
-            // Transition time scales with distance
-            const duration = Math.min(800, Math.max(300, newPos.distance)); // between 0.3s – 0.8s
-            button.style.transition = `all ${duration}ms cubic-bezier(0.68,-0.55,0.265,1.55)`;
+        //     // Transition time scales with distance
+        //     const duration = Math.min(800, Math.max(300, newPos.distance)); // between 0.3s – 0.8s
+        //     button.style.transition = `all ${duration}ms cubic-bezier(0.68,-0.55,0.265,1.55)`;
 
-            button.style.left = newPos.x + 'px';
-            button.style.top = newPos.y + 'px';
+        //     button.style.left = newPos.x + 'px';
+        //     button.style.top = newPos.y + 'px';
 
-            setTimeout(() => {
-                button.classList.remove('moving');
-                isMoving = false;
-            }, duration);
-        }
+        //     setTimeout(() => {
+        //         button.classList.remove('moving');
+        //         isMoving = false;
+        //     }, duration);
+        // }
 
-        function handleSuccessfulClick() {
-            hasBeenClicked = true;
+        // function handleSuccessfulClick() {
+        //     hasBeenClicked = true;
 
-            message.style.display = 'block';
+        //     message.style.display = 'block';
 
-            button.style.transition = 'all 0.5s ease-out';
-            button.style.opacity = '0';
-            button.style.transform = 'scale(0.5) rotate(720deg)';
+        //     button.style.transition = 'all 0.5s ease-out';
+        //     button.style.opacity = '0';
+        //     button.style.transform = 'scale(0.5) rotate(720deg)';
 
-            setTimeout(() => {
-                button.style.display = 'none';
-            }, 500);
-        }
+        //     setTimeout(() => {
+        //         button.style.display = 'none';
+        //     }, 500);
+        // }
 
-        button.addEventListener('mouseenter', (e) => {
-            if (hasBeenClicked) return;
-            e.preventDefault();
-            moveButton();
-        });
+        // button.addEventListener('mouseenter', (e) => {
+        //     if (hasBeenClicked) return;
+        //     e.preventDefault();
+        //     moveButton();
+        // });
 
-        button.addEventListener('touchstart', (e) => {
-            if (hasBeenClicked) return;
-            e.preventDefault();
-            moveButton();
-        });
+        // button.addEventListener('touchstart', (e) => {
+        //     if (hasBeenClicked) return;
+        //     e.preventDefault();
+        //     moveButton();
+        // });
 
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (!hasBeenClicked && !isMoving) {
-                handleSuccessfulClick();
-            } else if (!hasBeenClicked) {
-                moveButton();
-            }
-        });
+        // button.addEventListener('click', (e) => {
+        //     e.preventDefault();
+        //     if (!hasBeenClicked && !isMoving) {
+        //         handleSuccessfulClick();
+        //     } else if (!hasBeenClicked) {
+        //         moveButton();
+        //     }
+        // });
 
-        button.addEventListener('mousedown', (e) => {
-            if (hasBeenClicked) return;
-            e.preventDefault();
-            moveButton();
-        });
+        // button.addEventListener('mousedown', (e) => {
+        //     if (hasBeenClicked) return;
+        //     e.preventDefault();
+        //     moveButton();
+        // });
 
-        // Initialize button position to center
-        button.style.left = '50%';
-        button.style.top = '50%';
-        button.style.transform = 'translate(-50%, -50%)';
+        // // Initialize button position to center
+        // button.style.left = '50%';
+        // button.style.top = '50%';
+        // button.style.transform = 'translate(-50%, -50%)';
 
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (!isMoving) {
-                const rect = button.getBoundingClientRect();
-                const windowWidth = window.innerWidth;
-                const windowHeight = window.innerHeight;
+        // // Handle window resize
+        // window.addEventListener('resize', () => {
+        //     if (!isMoving) {
+        //         const rect = button.getBoundingClientRect();
+        //         const windowWidth = window.innerWidth;
+        //         const windowHeight = window.innerHeight;
 
-                if (rect.right > windowWidth || rect.bottom > windowHeight || rect.left < 0 || rect.top < 0) {
-                    const newPos = getRandomPosition();
-                    button.style.left = newPos.x + 'px';
-                    button.style.top = newPos.y + 'px';
-                }
-            }
-        });
+        //         if (rect.right > windowWidth || rect.bottom > windowHeight || rect.left < 0 || rect.top < 0) {
+        //             const newPos = getRandomPosition();
+        //             button.style.left = newPos.x + 'px';
+        //             button.style.top = newPos.y + 'px';
+        //         }
+        //     }
+        // });
 
         // Photo gallery
         function loadPhotoGallery() {
