@@ -1,90 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Birthday Quiz</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div id="app">
-      <div id="progress" aria-hidden="true">
-        <div id="progress-bar"></div>
-      </div>
 
-      <!-- Active screen gets mounted here -->
-      <main id="screen-root" role="main"></main>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Birthday Quiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
 
-      <!-- Templates act as isolated screen components -->
-      
-      <template id="tmpl-intro">
-        <section class="screen" data-screen="intro" aria-labelledby="intro-title">
-          <h1 id="intro-title" class="title">🎉 Birthday Quiz 🎉</h1>
-          <p class="subtitle">Test your birthday knowledge!</p>
-          <button class="btn primary" data-action="start">Start Quiz</button>
-        </section>
-      </template>
-
-      <template id="tmpl-info">
-        <section class="screen" data-screen="info" aria-live="polite">
-          <h2 class="title"></h2>
-          <p class="content"></p>
-          <button class="btn primary" data-action="next">Next</button>
-        </section>
-      </template>
-
-      <template id="tmpl-question">
-        <section class="screen" data-screen="question" aria-labelledby="q-title">
-          <h2 id="q-title" class="title"></h2>
-          <p class="question"></p>
-          <div class="answers" role="group" aria-label="Answers"></div>
-          <div class="controls">
-            <button class="btn" data-action="next" disabled>Next</button>
-          </div>
-        </section>
-      </template>
-
-      <!-- Letter grid question -->
-      <template id="tmpl-letter">
-        <section class="screen" data-screen="letter" aria-labelledby="l-title">
-          <h2 id="l-title" class="title"></h2>
-          <p class="question"></p>
-          <div class="letter-grid" role="grid" aria-label="Letters"></div>
-          <div class="controls">
-            <button class="btn" data-action="next" disabled>Next</button>
-          </div>
-        </section>
-      </template>
-
-      <!-- Number keypad question -->
-      <template id="tmpl-number">
-        <section class="screen" data-screen="number" aria-labelledby="n-title">
-          <h2 id="n-title" class="title"></h2>
-          <p class="question"></p>
-          <div class="number-input">
-            <input class="num-display" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Enter number" readonly />
-          </div>
-          <div class="numpad" role="group" aria-label="Numpad"></div>
-          <p class="num-feedback" aria-live="polite"></p>
-          <div class="controls">
-            <button class="btn" data-action="next" disabled>Next</button>
-          </div>
-        </section>
-      </template>
-
-      <template id="tmpl-result">
-        <section class="screen" data-screen="result" aria-labelledby="result-title">
-          <h2 id="result-title" class="title">Your Results</h2>
-          <p class="score"></p>
-          <button class="btn primary" data-action="restart">Play Again</button>
-        </section>
-      </template>
+<body>
+  <div id="app">
+    <div id="progress" aria-hidden="true">
+      <div id="progress-bar"></div>
     </div>
 
-    <script src="app.js"></script>
-  </body>
-  </html>
+    <!-- Active screen gets mounted here -->
+    <main id="screen-root" role="main"></main>
 
+    <!-- Templates act as isolated screen components -->
+
+    <template id="tmpl-intro">
+      <section class="screen" data-screen="intro" aria-labelledby="intro-title">
+        <h1 id="intro-title" class="title">Happy birthday Steve</h1>
+        <p class="subtitle">Here's a quiz you can actually win</p>
+        <button class="btn primary" data-action="start">Start Quiz</button>
+      </section>
+    </template>
+
+    <template id="tmpl-info">
+      <section class="screen" data-screen="info" aria-live="polite">
+        <h2 class="title"></h2>
+        <p class="content"></p>
+        <button class="btn primary" data-action="next">Next</button>
+      </section>
+    </template>
+
+    <template id="tmpl-question">
+      <section class="screen" data-screen="question" aria-labelledby="q-title">
+        <h2 id="q-title" class="title"></h2>
+        <p class="question"></p>
+        <div class="answers" role="group" aria-label="Answers"></div>
+        <div class="controls">
+          <button class="btn" data-action="next" disabled>Next</button>
+        </div>
+      </section>
+    </template>
+
+    <!-- Letter grid question -->
+    <template id="tmpl-letter">
+      <section class="screen" data-screen="letter" aria-labelledby="l-title">
+        <h2 id="l-title" class="title"></h2>
+        <p class="question"></p>
+        <div class="letter-grid" role="grid" aria-label="Letters"></div>
+        <div class="controls">
+          <button class="btn" data-action="next" disabled>Next</button>
+        </div>
+      </section>
+    </template>
+
+    <!-- Number keypad question -->
+    <template id="tmpl-number">
+      <section class="screen" data-screen="number" aria-labelledby="n-title">
+        <h2 id="n-title" class="title"></h2>
+        <p class="question"></p>
+        <div class="number-input">
+          <input class="num-display" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Enter number"
+            readonly />
+        </div>
+        <div class="numpad" role="group" aria-label="Numpad"></div>
+        <p class="num-feedback" aria-live="polite"></p>
+        <div class="controls">
+          <button class="btn" data-action="next" disabled>Next</button>
+        </div>
+      </section>
+    </template>
+
+    <template id="tmpl-result">
+      <section class="screen" data-screen="result" aria-labelledby="result-title">
+        <h2 id="result-title" class="title">Your Results</h2>
+        <p class="score"></p>
+        <button class="btn primary" data-action="restart">Play Again</button>
+      </section>
+    </template>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
