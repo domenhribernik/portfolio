@@ -3,62 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APOD Viewer</title>
     <link rel="stylesheet" href="apod-styles.css">
+    <title>Document</title>
 </head>
 <body>
-    <main class="apod-container">
-        <header class="apod-header">
-            <h1>Astronomy Picture of the Day</h1>
-            <p class="subtitle">Brought to you by NASA</p>
-        </header>
+    <section class="apod-widget">
+        <div class="apod-spinner" id="apod-spinner"></div>
 
-        <div id="apod-loading" class="loading-state active">
-            <div class="spinner"></div>
-            <p>Loading today's cosmic view...</p>
-        </div>
+        <div class="apod-body" id="apod-body" hidden>
+            <h1 class="apod-main-title">Astronomical Picture of the Day</h1>
 
-        <div id="apod-error" class="error-state hidden">
-            <h2>🌟 Oops!</h2>
-            <p class="error-message">Unable to load the image</p>
-            <button id="retry-btn" class="retry-button">Try Again</button>
-        </div>
+            <div class="apod-grid">
+            <figure class="apod-media">
+                <img id="apod-img" class="apod-img" alt="">
+                <iframe id="apod-vid" class="apod-vid" frameborder="0" allowfullscreen hidden></iframe>
+            </figure>
 
-        <article id="apod-content" class="apod-content hidden" aria-live="polite">
-            <h2 id="apod-title" class="apod-title"></h2>
-            <p id="apod-date" class="apod-date"></p>
-            
-            <div class="media-wrapper">
-                <img 
-                    id="apod-image" 
-                    class="apod-image hidden" 
-                    alt="" 
-                    loading="lazy"
-                >
-                <iframe 
-                    id="apod-video" 
-                    class="apod-video hidden" 
-                    frameborder="0" 
-                    allowfullscreen
-                ></iframe>
+            <div class="apod-text">
+                <h2 class="apod-title" id="apod-title"></h2>
+                <p class="apod-date" id="apod-date"></p>
+                <p class="apod-explain" id="apod-explain"></p>
+
+                <footer class="apod-foot">
+                <a id="apod-link" href="https://apod.nasa.gov" target="_blank" rel="noopener">View on NASA →</a>
+                <span class="apod-copy" id="apod-copy"></span>
+                </footer>
             </div>
-
-            <p id="apod-explanation" class="apod-explanation"></p>
-            
-            <footer class="apod-footer">
-                <a 
-                    id="apod-link" 
-                    href="https://apod.nasa.gov" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                >
-                    View on NASA APOD →
-                </a>
-                <p id="apod-copyright" class="copyright hidden"></p>
-            </footer>
-        </article>
-    </main>
-
-    <script src="apod-script.js"></script>
+            </div>
+        </div>
+    </section>
+    <script src="apod-widget.js"></script>
 </body>
 </html>
