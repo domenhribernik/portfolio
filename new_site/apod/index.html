@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APOD Viewer</title>
+    <link rel="stylesheet" href="apod-styles.css">
+</head>
+<body>
+    <main class="apod-container">
+        <header class="apod-header">
+            <h1>Astronomy Picture of the Day</h1>
+            <p class="subtitle">Brought to you by NASA</p>
+        </header>
+
+        <div id="apod-loading" class="loading-state active">
+            <div class="spinner"></div>
+            <p>Loading today's cosmic view...</p>
+        </div>
+
+        <div id="apod-error" class="error-state hidden">
+            <h2>🌟 Oops!</h2>
+            <p class="error-message">Unable to load the image</p>
+            <button id="retry-btn" class="retry-button">Try Again</button>
+        </div>
+
+        <article id="apod-content" class="apod-content hidden" aria-live="polite">
+            <h2 id="apod-title" class="apod-title"></h2>
+            <p id="apod-date" class="apod-date"></p>
+            
+            <div class="media-wrapper">
+                <img 
+                    id="apod-image" 
+                    class="apod-image hidden" 
+                    alt="" 
+                    loading="lazy"
+                >
+                <iframe 
+                    id="apod-video" 
+                    class="apod-video hidden" 
+                    frameborder="0" 
+                    allowfullscreen
+                ></iframe>
+            </div>
+
+            <p id="apod-explanation" class="apod-explanation"></p>
+            
+            <footer class="apod-footer">
+                <a 
+                    id="apod-link" 
+                    href="https://apod.nasa.gov" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                >
+                    View on NASA APOD →
+                </a>
+                <p id="apod-copyright" class="copyright hidden"></p>
+            </footer>
+        </article>
+    </main>
+
+    <script src="apod-script.js"></script>
+</body>
+</html>
