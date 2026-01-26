@@ -14,6 +14,7 @@
     <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/apod-styles.css">
 </head>
 
 <body>
@@ -282,13 +283,34 @@
         </div>
     </section>
 
-    <!-- Quote Section -->
-    <section class="quote-section">
+    <!-- Apod section -->
+    <section class="apod-section section">
         <div class="container">
-            <blockquote class="quote">
-                "Work like you don't need the money. Love like you've never been hurt. Dance like nobody's watching."
-            </blockquote>
-            <cite class="quote-author">Satchel Paige</cite>
+            <div class="apod-spinner" id="apod-spinner"></div>
+
+            <div class="apod-body" id="apod-body" hidden>
+                <h2 class="section-title apod-main-title">Astronomical Picture of the Day</h2>
+
+                <div class="apod-content">
+                    <figure class="apod-media">
+                        <img id="apod-img" class="apod-img" alt="">
+                    </figure>
+
+                    <div class="apod-text">
+                        <h3 class="apod-title" id="apod-title"></h3>
+                        <div class="apod-meta">
+                            <p class="apod-date" id="apod-date"></p>
+                        </div>
+                        <p class="apod-explain" id="apod-explain"></p>
+                        <p class="apod-copyright" id="apod-copy"></p>
+                        <div class="apod-footer">
+                            <a id="apod-link" href="https://apod.nasa.gov" target="_blank" rel="noopener" class="apod-link">
+                                View on NASA <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -368,6 +390,7 @@
         </div>
     </footer>
 
+    <script src="js/apod-widget.js"></script>
     <script type="module" src="components/main-navbar.js"></script>
     <script type="module" src="components/project-data.js"></script>
     <script type="module" src="components/project-card.js"></script>
