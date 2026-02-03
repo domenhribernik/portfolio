@@ -1,19 +1,20 @@
+/* ===== BASE STYLES ===== */
 .game-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;
+    min-height: 100vh;
 }
 
+/* ===== SETUP SCREEN ===== */
 .setup-screen {
     text-align: center;
     color: var(--text-light);
+    padding-top: 2rem;
 }
 
 .setup-screen h1 {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     margin-bottom: 2rem;
     background: var(--bg-gradient);
     -webkit-background-clip: text;
@@ -21,148 +22,429 @@
     background-clip: text;
 }
 
-.player-setup {
-    margin-bottom: 2rem;
+.player-setup h2 {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 .player-count {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     justify-content: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .count-btn {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: var(--border-radius);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    border: 2px solid transparent;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
+    flex: 1;
+    max-width: 140px;
 }
 
 .count-btn:hover {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .count-btn.active {
-    background: var(--secondary-color);
-    color: var(--text-primary);
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
 }
 
 .player-inputs {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
 }
 
 .player-input {
     padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--border-radius);
-    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text-light);
     font-size: 1rem;
     transition: var(--transition);
+    width: 100%;
 }
 
 .player-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.player-input::placeholder {
+    color: var(--text-muted);
 }
 
 .start-game-btn {
     background: var(--bg-gradient);
     color: white;
     border: none;
-    padding: 1rem 3rem;
-    border-radius: var(--border-radius);
+    padding: 1rem 2rem;
+    border-radius: 12px;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1rem;
     cursor: pointer;
     transition: var(--transition);
+    width: 100%;
+    margin-top: 0.5rem;
 }
 
 .start-game-btn:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
+.start-game-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== GAME SCREEN ===== */
 .game-screen {
     display: none;
     color: var(--text-light);
+    padding-bottom: 2rem;
 }
 
+/* Header */
 .game-header {
-    text-align: center;
-    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
 }
 
 .game-header h1 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-light);
 }
 
 .round-counter {
     background: var(--primary-color);
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
-    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: 600;
+}
+
+/* Scores Table */
+.scores-table-container {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .scores-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 2rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--border-radius);
-    overflow: hidden;
+    font-size: 0.9rem;
+    min-width: 300px;
 }
 
 .scores-table th,
 .scores-table td {
-    padding: 1rem;
+    padding: 0.6rem 0.4rem;
     text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .scores-table th {
-    background: var(--primary-color);
+    background: rgba(102, 126, 234, 0.3);
     color: white;
     font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* Header cell with player name and radelci */
+.header-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.header-player-name {
+    font-weight: 600;
+}
+
+.header-radelci {
+    display: flex;
+    gap: 0.15rem;
+    font-size: 0.75rem;
+}
+
+.header-radelci .radelc-star {
+    color: #ffd700;
+}
+
+.header-radelci .radelc-star.empty {
+    color: rgba(255, 255, 255, 0.25);
 }
 
 .scores-table td {
     color: var(--text-light);
 }
 
+.scores-table tr:last-child td {
+    border-bottom: none;
+}
+
 .total-row {
-    background: rgba(102, 126, 234, 0.2);
+    background: rgba(102, 126, 234, 0.15);
     font-weight: 600;
 }
 
-.round-input {
+.total-row td {
+    color: var(--secondary-color);
+}
+
+.radelc-indicator {
+    color: #ffd700;
+    font-size: 0.7rem;
+    margin-left: 0.2rem;
+}
+
+/* Round Input Section */
+.round-input-section {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.round-title {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-light);
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 0.75rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-light);
+    font-size: 0.95rem;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2rem;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-select option {
+    background: var(--bg-card);
+    color: var(--text-light);
+}
+
+/* Two Column Layout for Game Type and Player */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+/* Scoring Help */
+.scoring-help {
+    margin-top: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.scoring-help-toggle {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
-    margin-bottom: 2rem;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.scoring-help-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.scoring-help-arrow {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.scoring-help-arrow.open {
+    transform: rotate(180deg);
+}
+
+.scoring-help-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.scoring-help-content.open {
+    max-height: 500px;
+}
+
+.scoring-section {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scoring-section:last-child {
+    border-bottom: none;
+}
+
+.scoring-section h4 {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.scoring-table {
+    width: 100%;
+    font-size: 0.85rem;
+    border-collapse: collapse;
+}
+
+.scoring-table tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.scoring-table tr:last-child {
+    border-bottom: none;
+}
+
+.scoring-table td {
+    padding: 0.4rem 0;
+    color: var(--text-light);
+}
+
+.scoring-table td:last-child {
+    text-align: right;
+    color: var(--text-muted);
+}
+
+/* Outcome Buttons */
+.outcome-wrapper {
+    margin-bottom: 0.75rem;
+}
+
+.outcome-wrapper label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.outcome-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.outcome-btn {
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-light);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.outcome-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.outcome-btn.active[data-outcome="win"] {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: white;
+}
+
+.outcome-btn.active[data-outcome="loss"] {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+/* Score Inputs */
+.scores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.score-input-wrapper {
+    text-align: center;
+}
+
+.score-input-wrapper label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
 }
 
 .score-input {
-    flex: 1;
-    min-width: 120px;
-    padding: 0.8rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--border-radius);
-    background: rgba(255, 255, 255, 0.1);
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text-light);
     text-align: center;
     font-size: 1rem;
@@ -172,90 +454,131 @@
 .score-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+
+
+/* Game Controls */
+.game-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.75rem;
 }
 
 .add-round-btn {
     background: var(--secondary-color);
     color: var(--text-primary);
     border: none;
-    padding: 1rem 2rem;
-    border-radius: var(--border-radius);
+    padding: 1rem;
+    border-radius: 12px;
     font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
     transition: var(--transition);
-    margin-right: 1rem;
 }
 
 .add-round-btn:hover {
-    background: #e6b800;
     transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 205, 28, 0.3);
+}
+
+.add-round-btn:active {
+    transform: translateY(0);
 }
 
 .new-game-btn {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: var(--border-radius);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1rem;
+    border-radius: 12px;
     font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
     transition: var(--transition);
 }
 
 .new-game-btn:hover {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.15);
 }
 
-.game-controls {
-    text-align: center;
-}
-
+/* Winner Announcement */
 .winner-announcement {
     background: var(--bg-gradient);
     color: white;
-    padding: 2rem;
-    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    border-radius: 16px;
     text-align: center;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-hover);
-}
-
-.winner-announcement h2 {
-    font-size: 2rem;
     margin-bottom: 1rem;
 }
 
-@media (max-width: 768px) {
+.winner-announcement h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Section Divider */
+.section-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 1rem 0;
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+@media (max-width: 480px) {
     .game-container {
-        margin: 1rem;
-        padding: 1rem;
+        padding: 0.75rem;
+    }
+
+    .setup-screen {
+        padding-top: 1rem;
+    }
+
+    .setup-screen h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
     }
 
     .player-count {
-        flex-direction: column;
-        align-items: center;
+        flex-direction: row;
     }
 
     .count-btn {
-        width: 200px;
-    }
-
-    .round-input {
-        flex-direction: column;
-    }
-
-    .score-input {
-        min-width: auto;
-    }
-
-    .scores-table {
+        padding: 0.6rem 1rem;
         font-size: 0.9rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .scores-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .game-controls {
+        grid-template-columns: 1fr;
     }
 
     .scores-table th,
     .scores-table td {
-        padding: 0.5rem;
+        padding: 0.5rem 0.3rem;
+        font-size: 0.85rem;
     }
+
+    .header-radelci {
+        font-size: 0.65rem;
+    }
+}
+
+/* Hide number input spinners */
+.score-input::-webkit-outer-spin-button,
+.score-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.score-input[type=number] {
+    -moz-appearance: textfield;
 }

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarok Score Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tarok Točkovanje</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../base-style.css">
@@ -11,60 +11,142 @@
 </head>
 <body>
     <div class="game-container">
+        <!-- Setup Screen -->
         <div class="setup-screen" id="setupScreen">
-            <h1>Tarok Score Tracker</h1>
+            <h1>🃏 Tarok Točkovanje</h1>
 
             <div class="player-setup">
-                <h2>Number of Players</h2>
+                <h2>Število igralcev</h2>
                 <div class="player-count">
-                    <button class="count-btn" data-count="3">3 Players</button>
-                    <button class="count-btn active" data-count="4">4 Players</button>
+                    <button class="count-btn" data-count="3">3 Igralci</button>
+                    <button class="count-btn active" data-count="4">4 Igralci</button>
                 </div>
 
                 <div class="player-inputs" id="playerInputs">
-                    <input type="text" class="player-input" placeholder="Player 1 Name" maxlength="15">
-                    <input type="text" class="player-input" placeholder="Player 2 Name" maxlength="15">
-                    <input type="text" class="player-input" placeholder="Player 3 Name" maxlength="15">
-                    <input type="text" class="player-input" placeholder="Player 4 Name" maxlength="15">
+                    <input type="text" class="player-input" placeholder="Igralec 1" maxlength="15">
+                    <input type="text" class="player-input" placeholder="Igralec 2" maxlength="15">
+                    <input type="text" class="player-input" placeholder="Igralec 3" maxlength="15">
+                    <input type="text" class="player-input" placeholder="Igralec 4" maxlength="15">
                 </div>
 
-                <button class="start-game-btn" onclick="startGame()">Start Game</button>
+                <button class="start-game-btn" onclick="startGame()">Začni igro</button>
             </div>
         </div>
 
+        <!-- Game Screen -->
         <div class="game-screen" id="gameScreen">
+            <!-- Header -->
             <div class="game-header">
-                <h1>Tarok Game</h1>
-                <div class="round-counter">Round <span id="roundNumber">1</span></div>
+                <h1>🃏 Tarok</h1>
+                <div class="round-counter">Runda <span id="roundNumber">1</span></div>
             </div>
 
+            <!-- Winner Announcement -->
             <div id="winnerAnnouncement" class="winner-announcement" style="display: none;">
-                <h2>🎉 Game Over! 🎉</h2>
+                <h2>🎉 Konec igre!</h2>
                 <p id="winnerText"></p>
             </div>
 
-            <table class="scores-table" id="scoresTable">
-                <thead>
-                    <tr id="tableHeader">
-                        <th>Round</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr class="total-row">
-                        <td><strong>Total</strong></td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- Scores Table with Radelci in Header -->
+            <div class="scores-table-container">
+                <table class="scores-table" id="scoresTable">
+                    <thead>
+                        <tr id="tableHeader">
+                            <th>#</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
 
-            <div class="round-input" id="roundInput">
-                <div style="width: 100%; text-align: center; margin-bottom: 1rem;">
-                    <strong>Enter scores for Round <span id="currentRound">1</span>:</strong>
+            <!-- Round Input Section -->
+            <div class="round-input-section" id="roundInputSection">
+                <div class="round-title">Runda <span id="currentRound">1</span></div>
+                
+                <!-- Game Type Selection -->
+                <div class="form-group">
+                    <label for="gameType">Tip igre</label>
+                    <select id="gameType" class="form-select" onchange="onGameTypeChange()">
+                        <option value="tri" selected>Tri</option>
+                        <option value="dva">Dva</option>
+                        <option value="ena">Ena</option>
+                        <option value="solo">Solo</option>
+                        <option value="solo_tri">Solo tri</option>
+                        <option value="solo_dva">Solo dva</option>
+                        <option value="solo_ena">Solo ena</option>
+                        <option value="berac">Berač ⭐</option>
+                        <option value="solo_brez">Solo brez ⭐</option>
+                        <option value="barvni_valat">Barvni valat ⭐</option>
+                        <option value="valat">Valat ⭐</option>
+                        <option value="klop">Klop ⭐</option>
+                    </select>
+                </div>
+
+                <!-- Player Selection -->
+                <div class="form-group" id="playerSelectGroup">
+                    <label for="playingPlayer">Igralec</label>
+                    <select id="playingPlayer" class="form-select"></select>
+                </div>
+
+                <!-- Outcome Selection -->
+                <div class="outcome-wrapper">
+                    <label>Izhod</label>
+                    <div class="outcome-buttons">
+                        <button type="button" class="outcome-btn active" data-outcome="win" onclick="selectOutcome('win')">✓ Dobljen</button>
+                        <button type="button" class="outcome-btn" data-outcome="loss" onclick="selectOutcome('loss')">✗ Izgubljen</button>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- Score Inputs -->
+                <div class="scores-grid" id="scoresGrid">
+                    <!-- Score inputs generated by JS -->
+                </div>
+
+                <!-- Collapsible Scoring Help -->
+                <div class="scoring-help">
+                    <button type="button" class="scoring-help-toggle" onclick="toggleScoringHelp()">
+                        <span>Pomoč pri točkovanju</span>
+                        <span class="scoring-help-arrow" id="scoringHelpArrow">▼</span>
+                    </button>
+                    <div class="scoring-help-content" id="scoringHelpContent">
+                        <div class="scoring-section">
+                            <h4>Osnovne igre</h4>
+                            <table class="scoring-table">
+                                <tr><td>trojka</td><td>10 + razlika</td></tr>
+                                <tr><td>dvojka</td><td>30 + razlika</td></tr>
+                                <tr><td>enka</td><td>50 + razlika</td></tr>
+                                <tr><td>berač (brez talona)</td><td>70</td></tr>
+                                <tr><td>solo brez talona</td><td>80 + razlika</td></tr>
+                                <tr><td>tri – nap. barvni valat</td><td>125</td></tr>
+                                <tr><td>dva – nap. barvni valat</td><td>150</td></tr>
+                                <tr><td>ena – nap. barvni valat</td><td>175</td></tr>
+                                <tr><td>brez – nap. barvni valat</td><td>250</td></tr>
+                                <tr><td>tri – napovedani valat</td><td>250</td></tr>
+                                <tr><td>dva – napovedani valat</td><td>300</td></tr>
+                                <tr><td>ena – napovedani valat</td><td>350</td></tr>
+                                <tr><td>brez talona – nap. valat</td><td>500</td></tr>
+                            </table>
+                        </div>
+                        <div class="scoring-section">
+                            <h4>Ostale realizacije in napovedi</h4>
+                            <table class="scoring-table">
+                                <tr><td>kralji</td><td>10 (napovedani 20)</td></tr>
+                                <tr><td>trula</td><td>10 (napovedana 20)</td></tr>
+                                <tr><td>pagat ultimo</td><td>25 (napovedani 50)</td></tr>
+                                <tr><td>valat (tihi)</td><td>50 (napovedani: glej pod igre)</td></tr>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            <!-- Game Controls -->
             <div class="game-controls">
-                <button class="add-round-btn" onclick="addRound()">Add Round</button>
-                <button class="new-game-btn" onclick="newGame()">New Game</button>
+                <button class="add-round-btn" onclick="addRound()">Dodaj rundo</button>
+                <button class="new-game-btn" onclick="newGame()">Nova</button>
             </div>
         </div>
     </div>
