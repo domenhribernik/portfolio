@@ -320,10 +320,14 @@ window.addEventListener('DOMContentLoaded', () => {
         img.src = url;
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
+    //? Show More functionality for project categories
+    const initShowMore = () => {
         const categories = document.querySelectorAll('.project-category');
 
         categories.forEach(category => {
+            // Skip if already initialized
+            if (category.dataset.showMoreInitialized) return;
+            
             const projects = category.querySelectorAll('.project-card');
             if (projects.length > 3) {
                 projects.forEach((project, index) => {
@@ -362,8 +366,15 @@ window.addEventListener('DOMContentLoaded', () => {
                 });
 
                 category.querySelector('.projects-grid').after(toggleBtn);
+                category.dataset.showMoreInitialized = 'true';
             }
         });
+    };
+
+    // Wait for custom elements to be defined before initializing
+    customElements.whenDefined('project-card').then(() => {
+        // Small delay to ensure all cards are rendered
+        setTimeout(initShowMore, 100);
     });
 
     //? Thesis video zoom effect

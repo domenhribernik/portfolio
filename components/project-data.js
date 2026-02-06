@@ -30,7 +30,22 @@ export const projects = {
     },
     iconClass: "fas fa-masks-theater",
   },
-  gasperStrazisar: {
+  ajsaPetSpa: {
+    title: {
+      eng: "Ajsa Pet Spa",
+      slo: "Ajša Pet Spa"
+    },
+    description: {
+      eng: "WordPress site for a pet salon, built with Elementor and custom-coded components. Features a dynamic price list and gallery.",
+      slo: "WordPress stran za salon hišnih ljubljenčkov, izdelana z Elementorjem in komponentami po meri. Vsebuje dinamičen cenik in galerijo."
+    },
+    tech: ["WordPress", "Elementor", "PHP"],
+    links: {
+      visitSite: "https://ajsapetspa.com",
+    },
+    iconClass: "fas fa-paw",
+  },
+    gasperStrazisar: {
     title: {
       eng: "Gašper Stražišar",
       slo: "Gašper Stražišar"
