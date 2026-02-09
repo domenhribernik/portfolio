@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>On This Day - Wikipedia</title>
+    <link rel="stylesheet" href="../base-style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="otd-main">
+        <div class="container">
+            <header class="otd-header">
+                <h1 class="otd-title">On This Day</h1>
+                <p class="otd-date" id="current-date"></p>
+                <p class="otd-subtitle">Historical events, births, and deaths from Wikipedia</p>
+            </header>
+
+            <div class="otd-grid">
+                <!-- Events Section -->
+                <section class="otd-section otd-events">
+                    <div class="section-header">
+                        <span class="section-icon">📜</span>
+                        <h2>Historical Events</h2>
+                    </div>
+                    <div class="items-container" id="events-container">
+                        <!-- Events will be loaded here -->
+                    </div>
+                </section>
+
+                <!-- Births Section -->
+                <section class="otd-section otd-births">
+                    <div class="section-header">
+                        <span class="section-icon">👶</span>
+                        <h2>Births</h2>
+                    </div>
+                    <div class="items-container" id="births-container">
+                        <!-- Births will be loaded here -->
+                    </div>
+                </section>
+
+                <!-- Deaths Section -->
+                <section class="otd-section otd-deaths">
+                    <div class="section-header">
+                        <span class="section-icon">🕯️</span>
+                        <h2>Deaths</h2>
+                    </div>
+                    <div class="items-container" id="deaths-container">
+                        <!-- Deaths will be loaded here -->
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Data provided by <a href="https://www.wikipedia.org/" target="_blank" class="wiki-link">Wikipedia</a></p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
