@@ -93,15 +93,12 @@
 }
 
 /* Skills Section */
-.technologies {
-    text-align: center;
+#technologies {
+    background: var(--bg-dark-about);
 }
 
-.technologies-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--text-light);
-    margin-bottom: 3rem;
+.technologies {
+    text-align: center;
 }
 
 .tech-grid {

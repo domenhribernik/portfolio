@@ -10,64 +10,6 @@ window.addEventListener('DOMContentLoaded', () => {
         navMenu.classList.toggle('active');
     });
 
-    //? Language toggle
-    const langButtons = document.querySelectorAll('.lang-btn');
-
-    const savedLang = localStorage.getItem('siteLanguage');
-    const browserLang = navigator.language || navigator.userLanguage;
-    let subtitles = "";
-    let heroSubtitle;
-
-    if (savedLang && savedLang !== 'undefined') {
-        langButtons.forEach(btn => btn.dataset.lang === savedLang ? btn.classList.add('active') : btn.classList.remove('active'));
-        if (savedLang === 'slo') {
-            document.body.classList.add('lang-slovenian');
-            document.body.classList.remove('lang-english');
-            heroSubtitle = document.querySelector('.hero h2 .lang-slo');
-            subtitles = heroSubtitle ? heroSubtitle.innerText : "";
-        } else {
-            document.body.classList.add('lang-english');
-            document.body.classList.remove('lang-slovenian');
-            heroSubtitle = document.querySelector('.hero h2 .lang-eng');
-            subtitles = heroSubtitle ? heroSubtitle.innerText : "";
-        }
-    }
-    else if (browserLang.startsWith('sl')) {
-        langButtons.forEach(btn => btn.dataset.lang === 'slo' ? btn.classList.add('active') : btn.classList.remove('active'));
-        document.body.classList.add('lang-slovenian');
-    }
-
-
-    langButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            let lang = btn.dataset.lang;
-
-
-            langButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-
-            if (lang === 'slo') {
-                document.body.classList.add('lang-slovenian');
-                heroSubtitle = document.querySelector('.hero h2 .lang-slo');
-                subtitles = heroSubtitle ? heroSubtitle.innerText : "";
-            } else {
-                document.body.classList.remove('lang-slovenian');
-                heroSubtitle = document.querySelector('.hero h2 .lang-eng');
-                subtitles = heroSubtitle ? heroSubtitle.innerText : "";
-            }
-
-            document.documentElement.lang = lang;
-
-            window.dispatchEvent(new CustomEvent('languageChange', {
-                detail: { lang: lang }
-            }));
-
-            console.log(`Language changed to: ${lang}`);
-            localStorage.setItem('siteLanguage', lang);
-        });
-    });
-
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
@@ -309,16 +251,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(rippleStyle);
 
     addRippleEffect();
-
-    //? Preload images and optimize performance
-    const imageUrls = [
-        // Add any image URLs you want to preload
-    ];
-
-    imageUrls.forEach(url => {
-        const img = new Image();
-        img.src = url;
-    });
 
     //? Show More functionality for project categories
     const initShowMore = () => {
