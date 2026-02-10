@@ -153,6 +153,11 @@ body {
     cursor: pointer;
 }
 
+.globe-icon,
+[class*="gglobe"] {
+  filter: brightness(0) invert(1) drop-shadow(0 0 2px #667eea) !important;
+}
+
 /* Hero Section */
 .hero {
     min-height: 100vh;
