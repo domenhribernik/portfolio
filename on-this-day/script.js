@@ -1,78 +1,366 @@
 (() => {
-    // DOM Elements
     const loadingOverlay = document.getElementById('loading-overlay');
     const currentDateEl = document.getElementById('current-date');
-    const featuredTrack = document.getElementById('featured-track');
-    const featuredDots = document.getElementById('featured-dots');
 
-    // Set current date
     const today = new Date();
-    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    currentDateEl.textContent = today.toLocaleDateString('en-US', dateOptions);
+    currentDateEl.textContent = today.toLocaleDateString('en-US', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
 
-    // Helper: Strip HTML tags from text
     const stripHtml = (html) => {
         const tmp = document.createElement('div');
         tmp.innerHTML = html;
         return tmp.textContent || tmp.innerText || '';
     };
 
-    // Helper: Get first image from pages array
     const getFirstImage = (pages) => {
         if (!pages || !Array.isArray(pages) || pages.length === 0) return null;
         const pageWithImage = pages.find(p => p.thumbnail?.source);
         return pageWithImage?.thumbnail?.source || null;
     };
 
-    // Helper: Get extract_html from first page
     const getExtractHtml = (pages) => {
         if (!pages || !Array.isArray(pages) || pages.length === 0) return null;
         return pages[0]?.extract_html || null;
     };
 
-    // Helper: Get first page URL
     const getFirstPageUrl = (pages) => {
         if (!pages || !Array.isArray(pages) || pages.length === 0) return null;
         const page = pages[0];
         return page?.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${page?.title}`;
     };
 
-    // Extract title from text
-    const extractTitle = (text) => {
-        if (!text) return { title: '', description: '' };
-        
-        const patterns = [
-            /^([^,]+),\s*(.+)$/,
-            /^([^:]+):\s*(.+)$/,
-            /^(.+?\([^)]+\))\s*,?\s*(.+)$/,
-        ];
-        
-        for (const pattern of patterns) {
-            const match = text.match(pattern);
-            if (match) {
-                return { title: match[1].trim(), description: match[2].trim() };
-            }
-        }
-        
-        const firstSentence = text.split(/[.!?]\s+/)[0];
-        if (firstSentence && firstSentence.length < text.length) {
-            return { title: firstSentence, description: text.substring(firstSentence.length + 1).trim() };
-        }
-        
-        return { title: text, description: '' };
-    };
-
-    // Get slides per view based on viewport
     const getSlidesPerView = () => {
         if (window.innerWidth >= 992) return 3;
         if (window.innerWidth >= 768) return 2;
         return 1;
     };
 
-    // Check if mobile
     const isMobile = () => window.innerWidth < 768;
 
-    // Create gallery slide element
+    // ========================================
+    // CLEAN INFINITE CAROUSEL
+    // ========================================
+
+    const gallery = {
+        track: null,
+        slides: [],
+        realCount: 0,
+        cloneCount: 0,
+        currentIndex: 0,     // Visual index (includes clones)
+        slideWidth: 0,
+        gap: 16,
+        isAnimating: false,
+        isDragging: false,
+        startX: 0,
+        currentX: 0
+    };
+
+    const getRealIndex = () => {
+        const { currentIndex, cloneCount, realCount } = gallery;
+        let idx = currentIndex - cloneCount;
+        while (idx < 0) idx += realCount;
+        while (idx >= realCount) idx -= realCount;
+        return idx;
+    };
+
+    const updateDots = () => {
+        const dots = document.getElementById('featured-dots');
+        if (!dots) return;
+        const realIdx = getRealIndex();
+        dots.querySelectorAll('.gallery-dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === realIdx);
+        });
+    };
+
+    const updateActiveSlide = () => {
+        if (!gallery.track) return;
+        const realIdx = getRealIndex();
+        const allSlides = gallery.track.querySelectorAll('.gallery-slide');
+        allSlides.forEach((slide, i) => {
+            // Calculate the real index for this slide
+            let slideRealIdx;
+            if (slide.classList.contains('clone')) {
+                // For clones, find the original index
+                const originalIndex = slide.dataset.originalIndex;
+                slideRealIdx = originalIndex !== undefined ? parseInt(originalIndex) : -1;
+            } else {
+                // For real slides, use their dataset.index
+                slideRealIdx = parseInt(slide.dataset.index);
+            }
+            slide.classList.toggle('active', slideRealIdx === realIdx);
+        });
+    };
+
+    const getOffset = (index) => {
+        const track = gallery.track;
+        if (!track) return 0;
+
+        if (isMobile()) {
+            const viewportWidth = track.parentElement.offsetWidth;
+            const peekWidth = Math.min(40, viewportWidth * 0.1);
+            const gap = 12;
+            const slideW = viewportWidth - (peekWidth * 2) - gap;
+            const centerOffset = (viewportWidth - slideW) / 2;
+            return centerOffset - (index * (slideW + gap));
+        } else {
+            const viewportWidth = track.parentElement.offsetWidth;
+            const slidesPerView = getSlidesPerView();
+            const gapPixels = 16;
+            const totalGap = gapPixels * (slidesPerView - 1);
+            const slideW = (viewportWidth - totalGap) / slidesPerView;
+            gallery.slideWidth = slideW + gapPixels;
+            return -(index * gallery.slideWidth);
+        }
+    };
+
+    const setTransform = (index, animate = true) => {
+        const track = gallery.track;
+        if (!track) return;
+
+        track.style.transition = animate ? 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)' : 'none';
+        track.style.transform = `translateX(${getOffset(index)}px)`;
+        
+        // Update active slide immediately for responsive feel
+        if (animate) {
+            updateActiveSlide();
+        }
+    };
+
+    const handleTransitionEnd = () => {
+        const { currentIndex, cloneCount, realCount } = gallery;
+        let jumped = false;
+
+        // If we're in the right clones, jump to beginning
+        if (currentIndex >= cloneCount + realCount) {
+            gallery.currentIndex = cloneCount;
+            jumped = true;
+        }
+        // If we're in the left clones, jump to end
+        else if (currentIndex < cloneCount) {
+            gallery.currentIndex = cloneCount + realCount - 1;
+            jumped = true;
+        }
+
+        if (jumped) {
+            // Force reflow
+            gallery.track.offsetHeight;
+            setTransform(gallery.currentIndex, false);
+        }
+
+        gallery.isAnimating = false;
+        updateDots();
+        updateActiveSlide();
+    };
+
+    const next = () => {
+        if (gallery.isAnimating) return;
+        gallery.isAnimating = true;
+        gallery.currentIndex++;
+        setTransform(gallery.currentIndex, true);
+    };
+
+    const prev = () => {
+        if (gallery.isAnimating) return;
+        gallery.isAnimating = true;
+        gallery.currentIndex--;
+        setTransform(gallery.currentIndex, true);
+    };
+
+    const goTo = (realIndex) => {
+        if (gallery.isAnimating) return;
+        gallery.isAnimating = true;
+        gallery.currentIndex = realIndex + gallery.cloneCount;
+        setTransform(gallery.currentIndex, true);
+    };
+
+    const initGallery = () => {
+        const track = document.getElementById('featured-track');
+        const prevBtn = document.getElementById('gallery-prev');
+        const nextBtn = document.getElementById('gallery-next');
+        
+        if (!track) return;
+        gallery.track = track;
+
+        // Get real slides (remove any existing clones first)
+        const allSlides = Array.from(track.querySelectorAll('.gallery-slide'));
+        const realSlides = allSlides.filter(s => !s.classList.contains('clone'));
+        gallery.realCount = realSlides.length;
+
+        if (gallery.realCount <= 1) return;
+
+        const slidesPerView = getSlidesPerView();
+        gallery.cloneCount = Math.min(slidesPerView, gallery.realCount - 1);
+
+        // Clear track
+        track.innerHTML = '';
+
+        // Add left clones (last N slides)
+        for (let i = gallery.realCount - gallery.cloneCount; i < gallery.realCount; i++) {
+            const clone = realSlides[i].cloneNode(true);
+            clone.classList.add('clone');
+            clone.dataset.originalIndex = i;
+            track.appendChild(clone);
+        }
+
+        // Add real slides
+        realSlides.forEach((slide, i) => {
+            slide.dataset.index = i;
+            track.appendChild(slide);
+        });
+
+        // Add right clones (first N slides)
+        for (let i = 0; i < gallery.cloneCount; i++) {
+            const clone = realSlides[i].cloneNode(true);
+            clone.classList.add('clone');
+            clone.dataset.originalIndex = i;
+            track.appendChild(clone);
+        }
+
+        // Set initial position to first real slide
+        gallery.currentIndex = gallery.cloneCount;
+        setTransform(gallery.currentIndex, false);
+
+        // Create dots
+        const dotsContainer = document.getElementById('featured-dots');
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < gallery.realCount; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'gallery-dot' + (i === 0 ? ' active' : '');
+            dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+            dot.addEventListener('click', () => goTo(i));
+            dotsContainer.appendChild(dot);
+        }
+
+        updateDots();
+        updateActiveSlide();
+
+        // Transition end listener
+        track.addEventListener('transitionend', handleTransitionEnd);
+
+        // Button listeners
+        if (prevBtn) prevBtn.addEventListener('click', prev);
+        if (nextBtn) nextBtn.addEventListener('click', next);
+
+        // Touch/Drag support
+        setupDrag();
+
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prev();
+            if (e.key === 'ArrowRight') next();
+        });
+    };
+
+    const setupDrag = () => {
+        const track = gallery.track;
+        if (!track) return;
+
+        // Detect iOS/Safari for special handling
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        const onStart = (clientX) => {
+            if (gallery.isAnimating) return;
+            gallery.isDragging = true;
+            gallery.startX = clientX;
+            gallery.currentX = clientX;
+            gallery.startTime = Date.now();
+            track.style.transition = 'none';
+            track.style.cursor = 'grabbing';
+        };
+
+        const onMove = (clientX) => {
+            if (!gallery.isDragging) return;
+            gallery.currentX = clientX;
+            const diff = clientX - gallery.startX;
+            const currentOffset = getOffset(gallery.currentIndex);
+            track.style.transform = `translateX(${currentOffset + diff}px)`;
+        };
+
+        const onEnd = () => {
+            if (!gallery.isDragging) return;
+            gallery.isDragging = false;
+            track.style.cursor = '';
+
+            const diff = gallery.currentX - gallery.startX;
+            const elapsed = Date.now() - gallery.startTime;
+            const threshold = 50;
+            
+            // Velocity-based swipe detection for better mobile feel
+            const velocity = Math.abs(diff) / (elapsed || 1);
+            const isFlick = velocity > 0.5 && Math.abs(diff) > 30;
+
+            if (diff > threshold || (isFlick && diff > 0)) {
+                prev();
+            } else if (diff < -threshold || (isFlick && diff < 0)) {
+                next();
+            } else {
+                setTransform(gallery.currentIndex, true);
+            }
+        };
+
+        // Touch events with better iOS handling
+        track.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            gallery.startY = touch.clientY;
+            onStart(touch.clientX);
+        }, { passive: true });
+        
+        track.addEventListener('touchmove', (e) => {
+            // On iOS, we need to check if user is scrolling horizontally
+            if (gallery.isDragging) {
+                const touch = e.touches[0];
+                const diffX = Math.abs(touch.clientX - gallery.startX);
+                const diffY = Math.abs(touch.clientY - (gallery.startY || touch.clientY));
+                
+                // If horizontal movement is greater, prevent default to enable swipe
+                if (diffX > diffY && diffX > 10) {
+                    // Don't preventDefault with passive:true, just handle the swipe
+                    onMove(touch.clientX);
+                }
+            }
+        }, { passive: true });
+        
+        track.addEventListener('touchend', (e) => {
+            // Store the last touch position before ending
+            if (e.changedTouches.length > 0) {
+                gallery.currentX = e.changedTouches[0].clientX;
+            }
+            onEnd();
+        });
+        
+        track.addEventListener('touchcancel', onEnd);
+
+        // Mouse events (desktop)
+        track.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            onStart(e.clientX);
+        });
+        
+        const onMouseMove = (e) => onMove(e.clientX);
+        const onMouseUp = () => {
+            onEnd();
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        track.addEventListener('mousedown', () => {
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+        
+        // Prevent default drag behavior on images (iOS Safari fix)
+        track.querySelectorAll('img').forEach(img => {
+            img.addEventListener('dragstart', (e) => e.preventDefault());
+            img.style.webkitUserDrag = 'none';
+        });
+    };
+
+    // ========================================
+    // UI COMPONENTS
+    // ========================================
+
     const createGallerySlide = (item, index, total) => {
         const article = document.createElement('article');
         article.className = 'gallery-slide';
@@ -88,14 +376,9 @@
             <div class="gallery-image">
                 <img src="${imageUrl}" alt="${text.substring(0, 50)}" loading="lazy">
             </div>
-        ` : `<div class="gallery-image gallery-image-placeholder">
-            <span>📜</span>
-        </div>`;
+        ` : `<div class="gallery-image gallery-image-placeholder"><span>📜</span></div>`;
 
-        const extractHtml2 = extractHtml ? `
-            <div class="gallery-extract">${extractHtml}</div>
-        ` : '';
-
+        const extractHtml2 = extractHtml ? `<div class="gallery-extract">${extractHtml}</div>` : '';
         const linkHtml = pageUrl ? `
             <a href="${pageUrl}" target="_blank" rel="noopener" class="gallery-link">
                 Read more
@@ -119,30 +402,32 @@
         return article;
     };
 
-    // Create category item element with bold title
     const createCategoryItem = (item, type) => {
         const div = document.createElement('div');
         div.className = 'category-item';
 
-        const year = item.year || '';
+        const patterns = [
+            /^([^,]+),\s*(.+)$/, /^([^:]+):\s*(.+)$/, /^(.+?\([^)]+\))\s*,?\s*(.+)$/,
+        ];
+        
+        let title = '', description = '';
         const text = stripHtml(item.text || '');
-        const { title, description } = extractTitle(text);
+        for (const pattern of patterns) {
+            const match = text.match(pattern);
+            if (match) { title = match[1].trim(); description = match[2].trim(); break; }
+        }
+        if (!title) { title = text; }
+
+        const year = item.year || '';
         const imageUrl = getFirstImage(item.pages);
         const pageUrl = getFirstPageUrl(item.pages);
 
-        const imageHtml = imageUrl ? `
-            <img src="${imageUrl}" alt="" class="category-item-image" loading="lazy">
-        ` : '';
-
+        const imageHtml = imageUrl ? `<img src="${imageUrl}" alt="" class="category-item-image" loading="lazy">` : '';
         const linkStart = pageUrl ? `<a href="${pageUrl}" target="_blank" rel="noopener" class="category-item-link">` : '';
         const linkEnd = pageUrl ? '</a>' : '';
-
-        let textHtml = '';
-        if (title && description) {
-            textHtml = `<p class="category-item-text"><strong class="category-item-title">${title}</strong> ${description}</p>`;
-        } else {
-            textHtml = `<p class="category-item-text"><strong class="category-item-title">${text}</strong></p>`;
-        }
+        const textHtml = description 
+            ? `<p class="category-item-text"><strong class="category-item-title">${title}</strong> ${description}</p>`
+            : `<p class="category-item-text"><strong class="category-item-title">${title}</strong></p>`;
 
         div.innerHTML = `
             ${linkStart}
@@ -157,7 +442,6 @@
         return div;
     };
 
-    // Create loading placeholder for gallery
     const createGalleryPlaceholder = () => {
         const div = document.createElement('div');
         div.className = 'gallery-slide loading';
@@ -172,7 +456,6 @@
         return div;
     };
 
-    // Create loading placeholder for category
     const createCategoryPlaceholder = () => {
         const div = document.createElement('div');
         div.className = 'category-item loading';
@@ -186,377 +469,18 @@
         return div;
     };
 
-    // Show error message
     const showError = (container) => {
-        container.innerHTML = `
-            <div class="error-state">
-                <span class="error-icon">⚠️</span>
-                <p>Unable to load data. Please try again later.</p>
-            </div>
-        `;
+        container.innerHTML = `<div class="error-state"><span class="error-icon">⚠️</span><p>Unable to load data.</p></div>`;
     };
 
-    // Show empty message
     const showEmpty = (container) => {
-        container.innerHTML = `
-            <div class="empty-state">
-                <p>No entries available.</p>
-            </div>
-        `;
+        container.innerHTML = `<div class="empty-state"><p>No entries available.</p></div>`;
     };
 
-    // Gallery state
-    let galleryState = {
-        currentIndex: 0,
-        slidesPerView: 3,
-        totalSlides: 0,
-        realSlides: 0,
-        isDragging: false,
-        startX: 0,
-        currentX: 0,
-        isTransitioning: false
-    };
+    // ========================================
+    // DATA LOADING
+    // ========================================
 
-    // Get the actual slide index (accounting for clones)
-    const getRealIndex = (visualIndex) => {
-        const numClones = galleryState.slidesPerView;
-        if (visualIndex < numClones) {
-            return galleryState.realSlides - numClones + visualIndex;
-        } else if (visualIndex >= numClones + galleryState.realSlides) {
-            return visualIndex - (numClones + galleryState.realSlides);
-        }
-        return visualIndex - numClones;
-    };
-
-    // Update active class on slides
-    const updateActiveSlide = () => {
-        const track = document.getElementById('featured-track');
-        if (!track) return;
-        
-        const slides = track.querySelectorAll('.gallery-slide');
-        slides.forEach((slide, index) => {
-            slide.classList.toggle('active', index === galleryState.currentIndex);
-        });
-    };
-
-    // Initialize gallery with infinite scroll
-    const initGallery = () => {
-        const track = document.getElementById('featured-track');
-        const dots = document.getElementById('featured-dots');
-        const prevBtn = document.getElementById('gallery-prev');
-        const nextBtn = document.getElementById('gallery-next');
-        
-        if (!track) return;
-
-        const realSlides = track.querySelectorAll('.gallery-slide:not(.loading)');
-        galleryState.realSlides = realSlides.length;
-        galleryState.slidesPerView = getSlidesPerView();
-        
-        // Check if we have enough slides for infinite scroll
-        if (galleryState.realSlides <= galleryState.slidesPerView) {
-            // Simple mode without infinite scroll
-            galleryState.currentIndex = 0;
-            createDots(dots, galleryState.realSlides);
-            updateGallerySimple();
-            setupEventListeners(prevBtn, nextBtn, track, false);
-            return;
-        }
-
-        // Create clones for infinite scroll
-        const slidesArray = Array.from(realSlides);
-        const numClones = galleryState.slidesPerView;
-        
-        // Clone last N slides and prepend
-        for (let i = slidesArray.length - numClones; i < slidesArray.length; i++) {
-            const clone = slidesArray[i].cloneNode(true);
-            clone.classList.add('clone');
-            clone.dataset.clone = 'true';
-            track.insertBefore(clone, slidesArray[0]);
-        }
-        
-        // Clone first N slides and append
-        for (let i = 0; i < numClones; i++) {
-            const clone = slidesArray[i].cloneNode(true);
-            clone.classList.add('clone');
-            clone.dataset.clone = 'true';
-            track.appendChild(clone);
-        }
-
-        galleryState.currentIndex = numClones;
-        galleryState.totalSlides = galleryState.realSlides + (numClones * 2);
-        
-        createDots(dots, galleryState.realSlides);
-        updateActiveSlide();
-        updateGallery(true);
-        setupEventListeners(prevBtn, nextBtn, track, true);
-    };
-
-    // Create dots
-    const createDots = (dots, count) => {
-        dots.innerHTML = '';
-        for (let i = 0; i < count; i++) {
-            const dot = document.createElement('button');
-            dot.className = 'gallery-dot' + (i === 0 ? ' active' : '');
-            dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-            dot.addEventListener('click', () => {
-                const numClones = galleryState.slidesPerView;
-                galleryState.currentIndex = i + numClones;
-                updateActiveSlide();
-                updateGallery();
-            });
-            dots.appendChild(dot);
-        }
-    };
-
-    // Setup all event listeners
-    const setupEventListeners = (prevBtn, nextBtn, track, isInfinite) => {
-        if (prevBtn) prevBtn.addEventListener('click', () => {
-            if (galleryState.isTransitioning) return;
-            if (isInfinite) {
-                prevSlideInfinite();
-            } else {
-                prevSlideSimple();
-            }
-        });
-
-        if (nextBtn) nextBtn.addEventListener('click', () => {
-            if (galleryState.isTransitioning) return;
-            if (isInfinite) {
-                nextSlideInfinite();
-            } else {
-                nextSlideSimple();
-            }
-        });
-
-        // Touch events
-        track.addEventListener('touchstart', (e) => {
-            galleryState.startX = e.touches[0].clientX;
-            galleryState.isDragging = true;
-            track.style.transition = 'none';
-        }, { passive: true });
-
-        track.addEventListener('touchmove', (e) => {
-            if (!galleryState.isDragging) return;
-            galleryState.currentX = e.touches[0].clientX;
-            const diff = galleryState.currentX - galleryState.startX;
-            
-            if (isMobile()) {
-                const viewportWidth = track.parentElement.offsetWidth;
-                const slideWidth = viewportWidth - 80 - 12;
-                const centerOffset = (viewportWidth - slideWidth) / 2;
-                const baseOffset = centerOffset - (galleryState.currentIndex * (slideWidth + 12));
-                track.style.transform = `translateX(${baseOffset + diff}px)`;
-            } else {
-                const slideWidth = track.offsetWidth / galleryState.slidesPerView;
-                const gapPixels = 16;
-                const baseOffset = -(galleryState.currentIndex * (slideWidth + gapPixels));
-                track.style.transform = `translateX(${baseOffset + diff}px)`;
-            }
-        }, { passive: true });
-
-        track.addEventListener('touchend', () => {
-            handleDragEnd(isInfinite);
-        });
-
-        // Mouse events
-        track.addEventListener('mousedown', (e) => {
-            galleryState.startX = e.clientX;
-            galleryState.isDragging = true;
-            track.style.transition = 'none';
-            track.style.cursor = 'grabbing';
-        });
-
-        track.addEventListener('mousemove', (e) => {
-            if (!galleryState.isDragging) return;
-            e.preventDefault();
-            galleryState.currentX = e.clientX;
-            const diff = galleryState.currentX - galleryState.startX;
-            
-            if (isMobile()) {
-                const viewportWidth = track.parentElement.offsetWidth;
-                const slideWidth = viewportWidth - 80 - 12;
-                const centerOffset = (viewportWidth - slideWidth) / 2;
-                const baseOffset = centerOffset - (galleryState.currentIndex * (slideWidth + 12));
-                track.style.transform = `translateX(${baseOffset + diff}px)`;
-            } else {
-                const slideWidth = track.offsetWidth / galleryState.slidesPerView;
-                const gapPixels = 16;
-                const baseOffset = -(galleryState.currentIndex * (slideWidth + gapPixels));
-                track.style.transform = `translateX(${baseOffset + diff}px)`;
-            }
-        });
-
-        track.addEventListener('mouseup', () => {
-            handleDragEnd(isInfinite);
-        });
-
-        track.addEventListener('mouseleave', () => {
-            if (galleryState.isDragging) {
-                handleDragEnd(isInfinite);
-            }
-        });
-
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') {
-                if (isInfinite) prevSlideInfinite();
-                else prevSlideSimple();
-            }
-            if (e.key === 'ArrowRight') {
-                if (isInfinite) nextSlideInfinite();
-                else nextSlideSimple();
-            }
-        });
-
-        // Listen for transition end for infinite loop
-        if (isInfinite) {
-            track.addEventListener('transitionend', () => {
-                const numClones = galleryState.slidesPerView;
-                
-                if (galleryState.currentIndex >= numClones + galleryState.realSlides) {
-                    // Use double rAF for truly seamless jump
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            galleryState.currentIndex = numClones;
-                            updateGallery(true);
-                            galleryState.isTransitioning = false;
-                        });
-                    });
-                } else if (galleryState.currentIndex < numClones) {
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            galleryState.currentIndex = numClones + galleryState.realSlides - 1;
-                            updateGallery(true);
-                            galleryState.isTransitioning = false;
-                        });
-                    });
-                } else {
-                    galleryState.isTransitioning = false;
-                }
-            });
-        }
-    };
-
-    // Handle drag end
-    const handleDragEnd = (isInfinite) => {
-        if (!galleryState.isDragging) return;
-        galleryState.isDragging = false;
-        
-        const track = document.getElementById('featured-track');
-        track.style.transition = '';
-        track.style.cursor = '';
-        
-        const diff = galleryState.currentX - galleryState.startX;
-        const threshold = isMobile() ? 50 : (track.offsetWidth / galleryState.slidesPerView) * 0.2;
-        
-        if (diff > threshold) {
-            if (isInfinite) prevSlideInfinite();
-            else prevSlideSimple();
-        } else if (diff < -threshold) {
-            if (isInfinite) nextSlideInfinite();
-            else nextSlideSimple();
-        } else {
-            updateGallery();
-        }
-    };
-
-    // Simple navigation (non-infinite)
-    const prevSlideSimple = () => {
-        galleryState.currentIndex = Math.max(0, galleryState.currentIndex - 1);
-        updateActiveSlide();
-        updateGallerySimple();
-    };
-
-    const nextSlideSimple = () => {
-        const maxIndex = Math.max(0, galleryState.realSlides - galleryState.slidesPerView);
-        galleryState.currentIndex = Math.min(maxIndex, galleryState.currentIndex + 1);
-        updateActiveSlide();
-        updateGallerySimple();
-    };
-
-    const updateGallerySimple = () => {
-        const track = document.getElementById('featured-track');
-        const dots = document.getElementById('featured-dots');
-        
-        if (!track) return;
-
-        if (isMobile()) {
-            const viewportWidth = track.parentElement.offsetWidth;
-            const slideWidth = viewportWidth - 80 - 12;
-            const centerOffset = (viewportWidth - slideWidth) / 2;
-            const offset = centerOffset - (galleryState.currentIndex * (slideWidth + 12));
-            track.style.transform = `translateX(${offset}px)`;
-        } else {
-            const slideWidthPercent = 100 / galleryState.slidesPerView;
-            const gapPercent = (16 / track.offsetWidth) * 100;
-            const offset = galleryState.currentIndex * (slideWidthPercent + gapPercent);
-            track.style.transform = `translateX(-${offset}%)`;
-        }
-
-        dots.querySelectorAll('.gallery-dot').forEach((dot, index) => {
-            dot.classList.toggle('active', index === galleryState.currentIndex);
-        });
-    };
-
-    // Infinite navigation
-    const prevSlideInfinite = () => {
-        galleryState.isTransitioning = true;
-        galleryState.currentIndex--;
-        updateActiveSlide();
-        updateGallery();
-    };
-
-    const nextSlideInfinite = () => {
-        galleryState.isTransitioning = true;
-        galleryState.currentIndex++;
-        updateActiveSlide();
-        updateGallery();
-    };
-
-    // Update gallery position and UI
-    const updateGallery = (noAnimation = false) => {
-        const track = document.getElementById('featured-track');
-        const dots = document.getElementById('featured-dots');
-        
-        if (!track) return;
-
-        if (noAnimation) {
-            track.style.transition = 'none';
-        } else {
-            track.style.transition = '';
-        }
-
-        if (isMobile()) {
-            // Mobile: center the active slide with peek
-            const viewportWidth = track.parentElement.offsetWidth;
-            const peekWidth = Math.min(40, viewportWidth * 0.1);
-            const gap = 12;
-            const slideWidth = viewportWidth - (peekWidth * 2) - gap;
-            const centerOffset = (viewportWidth - slideWidth) / 2;
-            const offset = centerOffset - (galleryState.currentIndex * (slideWidth + gap));
-            track.style.transform = `translateX(${offset}px)`;
-        } else {
-            // Desktop: percentage-based
-            const slideWidthPercent = 100 / galleryState.slidesPerView;
-            const gapPercent = (16 / track.offsetWidth) * 100;
-            const offset = galleryState.currentIndex * (slideWidthPercent + gapPercent);
-            track.style.transform = `translateX(-${offset}%)`;
-        }
-
-        // Update dots based on real index
-        const realIndex = getRealIndex(galleryState.currentIndex);
-        dots.querySelectorAll('.gallery-dot').forEach((dot, index) => {
-            dot.classList.toggle('active', index === realIndex);
-        });
-
-        if (noAnimation) {
-            requestAnimationFrame(() => {
-                track.style.transition = '';
-            });
-        }
-    };
-
-    // Populate featured gallery
     const populateFeatured = (data) => {
         const track = document.getElementById('featured-track');
         const section = document.getElementById('featured-section');
@@ -576,11 +500,9 @@
         initGallery();
     };
 
-    // Populate category section
     const populateCategory = (containerId, data, type) => {
         const container = document.getElementById(containerId);
         if (!container) return;
-
         container.innerHTML = '';
 
         if (!data || data.length === 0) {
@@ -588,59 +510,61 @@
             return;
         }
 
-        const itemsToShow = data.slice(0, 15);
-        itemsToShow.forEach(item => {
+        data.slice(0, 15).forEach(item => {
             container.appendChild(createCategoryItem(item, type));
         });
     };
 
-    // Fetch data from API
     const fetchData = async () => {
+        const track = document.getElementById('featured-track');
         const eventsContainer = document.getElementById('events-container');
         const birthsContainer = document.getElementById('births-container');
         const deathsContainer = document.getElementById('deaths-container');
-        const track = document.getElementById('featured-track');
 
         if (track) {
             track.innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                track.appendChild(createGalleryPlaceholder());
-            }
+            for (let i = 0; i < 3; i++) track.appendChild(createGalleryPlaceholder());
         }
 
         [eventsContainer, birthsContainer, deathsContainer].forEach(container => {
             if (container) {
                 container.innerHTML = '';
-                for (let i = 0; i < 5; i++) {
-                    container.appendChild(createCategoryPlaceholder());
-                }
+                for (let i = 0; i < 5; i++) container.appendChild(createCategoryPlaceholder());
             }
         });
 
         try {
             const response = await fetch('../php/otd-proxy.php');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
+            
             loadingOverlay?.classList.add('hidden');
             populateFeatured(data.selected?.selected);
             populateCategory('events-container', data.events?.events, 'events');
             populateCategory('births-container', data.births?.births, 'births');
             populateCategory('deaths-container', data.deaths?.deaths, 'deaths');
-
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error:', error);
             loadingOverlay?.classList.add('hidden');
             if (track) showError(track);
-            [eventsContainer, birthsContainer, deathsContainer].forEach(container => {
-                if (container) showError(container);
-            });
+            [eventsContainer, birthsContainer, deathsContainer].forEach(c => { if (c) showError(c); });
         }
     };
 
-    // Initialize
+    // Handle resize (with iOS Safari fix for toolbar height changes)
+    let resizeTimeout;
+    let lastWindowWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+        // On iOS, ignore resize events that only change height (toolbar show/hide)
+        const currentWidth = window.innerWidth;
+        if (currentWidth === lastWindowWidth) return;
+        lastWindowWidth = currentWidth;
+        
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            initGallery();
+        }, 200);
+    });
+
     fetchData();
 })();
