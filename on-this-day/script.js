@@ -30,331 +30,42 @@
         return page?.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${page?.title}`;
     };
 
-    const getSlidesPerView = () => {
-        if (window.innerWidth >= 992) return 3;
-        if (window.innerWidth >= 768) return 2;
-        return 1;
-    };
-
-    const isMobile = () => window.innerWidth < 768;
-
     // ========================================
-    // CLEAN INFINITE CAROUSEL
+    // GALLERY INSTANCE
     // ========================================
 
-    const gallery = {
-        track: null,
-        slides: [],
-        realCount: 0,
-        cloneCount: 0,
-        currentIndex: 0,     // Visual index (includes clones)
-        slideWidth: 0,
-        gap: 16,
-        isAnimating: false,
-        isDragging: false,
-        startX: 0,
-        currentX: 0
-    };
+    let featuredGallery = null;
 
-    const getRealIndex = () => {
-        const { currentIndex, cloneCount, realCount } = gallery;
-        let idx = currentIndex - cloneCount;
-        while (idx < 0) idx += realCount;
-        while (idx >= realCount) idx -= realCount;
-        return idx;
-    };
-
-    const updateDots = () => {
-        const dots = document.getElementById('featured-dots');
-        if (!dots) return;
-        const realIdx = getRealIndex();
-        dots.querySelectorAll('.gallery-dot').forEach((dot, i) => {
-            dot.classList.toggle('active', i === realIdx);
-        });
-    };
-
-    const updateActiveSlide = () => {
-        if (!gallery.track) return;
-        const realIdx = getRealIndex();
-        const allSlides = gallery.track.querySelectorAll('.gallery-slide');
-        allSlides.forEach((slide, i) => {
-            // Calculate the real index for this slide
-            let slideRealIdx;
-            if (slide.classList.contains('clone')) {
-                // For clones, find the original index
-                const originalIndex = slide.dataset.originalIndex;
-                slideRealIdx = originalIndex !== undefined ? parseInt(originalIndex) : -1;
-            } else {
-                // For real slides, use their dataset.index
-                slideRealIdx = parseInt(slide.dataset.index);
-            }
-            slide.classList.toggle('active', slideRealIdx === realIdx);
-        });
-    };
-
-    const getOffset = (index) => {
-        const track = gallery.track;
-        if (!track) return 0;
-
-        if (isMobile()) {
-            const viewportWidth = track.parentElement.offsetWidth;
-            const peekWidth = Math.min(40, viewportWidth * 0.1);
-            const gap = 12;
-            const slideW = viewportWidth - (peekWidth * 2) - gap;
-            const centerOffset = (viewportWidth - slideW) / 2;
-            return centerOffset - (index * (slideW + gap));
-        } else {
-            const viewportWidth = track.parentElement.offsetWidth;
-            const slidesPerView = getSlidesPerView();
-            const gapPixels = 16;
-            const totalGap = gapPixels * (slidesPerView - 1);
-            const slideW = (viewportWidth - totalGap) / slidesPerView;
-            gallery.slideWidth = slideW + gapPixels;
-            return -(index * gallery.slideWidth);
-        }
-    };
-
-    const setTransform = (index, animate = true) => {
-        const track = gallery.track;
-        if (!track) return;
-
-        track.style.transition = animate ? 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)' : 'none';
-        track.style.transform = `translateX(${getOffset(index)}px)`;
-        
-        // Update active slide immediately for responsive feel
-        if (animate) {
-            updateActiveSlide();
-        }
-    };
-
-    const handleTransitionEnd = () => {
-        const { currentIndex, cloneCount, realCount } = gallery;
-        let jumped = false;
-
-        // If we're in the right clones, jump to beginning
-        if (currentIndex >= cloneCount + realCount) {
-            gallery.currentIndex = cloneCount;
-            jumped = true;
-        }
-        // If we're in the left clones, jump to end
-        else if (currentIndex < cloneCount) {
-            gallery.currentIndex = cloneCount + realCount - 1;
-            jumped = true;
-        }
-
-        if (jumped) {
-            // Force reflow
-            gallery.track.offsetHeight;
-            setTransform(gallery.currentIndex, false);
-        }
-
-        gallery.isAnimating = false;
-        updateDots();
-        updateActiveSlide();
-    };
-
-    const next = () => {
-        if (gallery.isAnimating) return;
-        gallery.isAnimating = true;
-        gallery.currentIndex++;
-        setTransform(gallery.currentIndex, true);
-    };
-
-    const prev = () => {
-        if (gallery.isAnimating) return;
-        gallery.isAnimating = true;
-        gallery.currentIndex--;
-        setTransform(gallery.currentIndex, true);
-    };
-
-    const goTo = (realIndex) => {
-        if (gallery.isAnimating) return;
-        gallery.isAnimating = true;
-        gallery.currentIndex = realIndex + gallery.cloneCount;
-        setTransform(gallery.currentIndex, true);
-    };
-
-    const initGallery = () => {
+    const initFeaturedGallery = () => {
         const track = document.getElementById('featured-track');
         const prevBtn = document.getElementById('gallery-prev');
         const nextBtn = document.getElementById('gallery-next');
-        
-        if (!track) return;
-        gallery.track = track;
-
-        // Get real slides (remove any existing clones first)
-        const allSlides = Array.from(track.querySelectorAll('.gallery-slide'));
-        const realSlides = allSlides.filter(s => !s.classList.contains('clone'));
-        gallery.realCount = realSlides.length;
-
-        if (gallery.realCount <= 1) return;
-
-        const slidesPerView = getSlidesPerView();
-        gallery.cloneCount = Math.min(slidesPerView, gallery.realCount - 1);
-
-        // Clear track
-        track.innerHTML = '';
-
-        // Add left clones (last N slides)
-        for (let i = gallery.realCount - gallery.cloneCount; i < gallery.realCount; i++) {
-            const clone = realSlides[i].cloneNode(true);
-            clone.classList.add('clone');
-            clone.dataset.originalIndex = i;
-            track.appendChild(clone);
-        }
-
-        // Add real slides
-        realSlides.forEach((slide, i) => {
-            slide.dataset.index = i;
-            track.appendChild(slide);
-        });
-
-        // Add right clones (first N slides)
-        for (let i = 0; i < gallery.cloneCount; i++) {
-            const clone = realSlides[i].cloneNode(true);
-            clone.classList.add('clone');
-            clone.dataset.originalIndex = i;
-            track.appendChild(clone);
-        }
-
-        // Set initial position to first real slide
-        gallery.currentIndex = gallery.cloneCount;
-        setTransform(gallery.currentIndex, false);
-
-        // Create dots
         const dotsContainer = document.getElementById('featured-dots');
-        dotsContainer.innerHTML = '';
-        for (let i = 0; i < gallery.realCount; i++) {
-            const dot = document.createElement('button');
-            dot.className = 'gallery-dot' + (i === 0 ? ' active' : '');
-            dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-            dot.addEventListener('click', () => goTo(i));
-            dotsContainer.appendChild(dot);
-        }
 
-        updateDots();
-        updateActiveSlide();
-
-        // Transition end listener
-        track.addEventListener('transitionend', handleTransitionEnd);
-
-        // Button listeners
-        if (prevBtn) prevBtn.addEventListener('click', prev);
-        if (nextBtn) nextBtn.addEventListener('click', next);
-
-        // Touch/Drag support
-        setupDrag();
-
-        // Keyboard
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') prev();
-            if (e.key === 'ArrowRight') next();
-        });
-    };
-
-    const setupDrag = () => {
-        const track = gallery.track;
         if (!track) return;
 
-        // Detect iOS/Safari for special handling
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        // Destroy existing gallery if any
+        if (featuredGallery) {
+            featuredGallery.destroy();
+        }
 
-        const onStart = (clientX) => {
-            if (gallery.isAnimating) return;
-            gallery.isDragging = true;
-            gallery.startX = clientX;
-            gallery.currentX = clientX;
-            gallery.startTime = Date.now();
-            track.style.transition = 'none';
-            track.style.cursor = 'grabbing';
-        };
-
-        const onMove = (clientX) => {
-            if (!gallery.isDragging) return;
-            gallery.currentX = clientX;
-            const diff = clientX - gallery.startX;
-            const currentOffset = getOffset(gallery.currentIndex);
-            track.style.transform = `translateX(${currentOffset + diff}px)`;
-        };
-
-        const onEnd = () => {
-            if (!gallery.isDragging) return;
-            gallery.isDragging = false;
-            track.style.cursor = '';
-
-            const diff = gallery.currentX - gallery.startX;
-            const elapsed = Date.now() - gallery.startTime;
-            const threshold = 50;
-            
-            // Velocity-based swipe detection for better mobile feel
-            const velocity = Math.abs(diff) / (elapsed || 1);
-            const isFlick = velocity > 0.5 && Math.abs(diff) > 30;
-
-            if (diff > threshold || (isFlick && diff > 0)) {
-                prev();
-            } else if (diff < -threshold || (isFlick && diff < 0)) {
-                next();
-            } else {
-                setTransform(gallery.currentIndex, true);
+        // Create new gallery instance
+        featuredGallery = new Gallery({
+            track: track,
+            prevBtn: prevBtn,
+            nextBtn: nextBtn,
+            dotsContainer: dotsContainer,
+            options: {
+                slidesPerView: { desktop: 3, tablet: 2, mobile: 1 },
+                gap: 16,
+                mobileGap: 12,
+                mobilePeek: 80,
+                infinite: true,
+                autoplay: false
             }
-        };
+        });
 
-        // Touch events with better iOS handling
-        track.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            gallery.startY = touch.clientY;
-            onStart(touch.clientX);
-        }, { passive: true });
-        
-        track.addEventListener('touchmove', (e) => {
-            // On iOS, we need to check if user is scrolling horizontally
-            if (gallery.isDragging) {
-                const touch = e.touches[0];
-                const diffX = Math.abs(touch.clientX - gallery.startX);
-                const diffY = Math.abs(touch.clientY - (gallery.startY || touch.clientY));
-                
-                // If horizontal movement is greater, prevent default to enable swipe
-                if (diffX > diffY && diffX > 10) {
-                    // Don't preventDefault with passive:true, just handle the swipe
-                    onMove(touch.clientX);
-                }
-            }
-        }, { passive: true });
-        
-        track.addEventListener('touchend', (e) => {
-            // Store the last touch position before ending
-            if (e.changedTouches.length > 0) {
-                gallery.currentX = e.changedTouches[0].clientX;
-            }
-            onEnd();
-        });
-        
-        track.addEventListener('touchcancel', onEnd);
-
-        // Mouse events (desktop)
-        track.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            onStart(e.clientX);
-        });
-        
-        const onMouseMove = (e) => onMove(e.clientX);
-        const onMouseUp = () => {
-            onEnd();
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        };
-
-        track.addEventListener('mousedown', () => {
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-        });
-        
-        // Prevent default drag behavior on images (iOS Safari fix)
-        track.querySelectorAll('img').forEach(img => {
-            img.addEventListener('dragstart', (e) => e.preventDefault());
-            img.style.webkitUserDrag = 'none';
-        });
+        featuredGallery.init();
     };
 
     // ========================================
@@ -497,7 +208,7 @@
             track.appendChild(createGallerySlide(item, index, data.length));
         });
 
-        initGallery();
+        initFeaturedGallery();
     };
 
     const populateCategory = (containerId, data, type) => {
@@ -550,21 +261,6 @@
             [eventsContainer, birthsContainer, deathsContainer].forEach(c => { if (c) showError(c); });
         }
     };
-
-    // Handle resize (with iOS Safari fix for toolbar height changes)
-    let resizeTimeout;
-    let lastWindowWidth = window.innerWidth;
-    window.addEventListener('resize', () => {
-        // On iOS, ignore resize events that only change height (toolbar show/hide)
-        const currentWidth = window.innerWidth;
-        if (currentWidth === lastWindowWidth) return;
-        lastWindowWidth = currentWidth;
-        
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            initGallery();
-        }, 200);
-    });
 
     fetchData();
 })();

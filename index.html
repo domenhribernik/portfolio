@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="base-style.css">
     <link rel="stylesheet" href="homepage/style.css">
     <link rel="stylesheet" href="homepage/apod-styles.css">
+    <link rel="stylesheet" href="components/gallery.css">
 </head>
 
 <body>
@@ -48,7 +49,9 @@
                 <div class="about-description">
                     <div>
                         <h3>Hi, I'm Domen Hribernik,</h3>
-                        <p> a software developer based in Slovenia. I build professional applications for clients and contribute to open-source projects. I'm driven by curiosity and passionate about creating software that solves real problems. </p>
+                        <p> a software developer based in Slovenia. I build professional applications for clients and
+                            contribute to open-source projects. I'm driven by curiosity and passionate about creating
+                            software that solves real problems. </p>
                     </div>
                 </div>
             </div>
@@ -247,6 +250,33 @@
         </div>
     </section>
 
+    <!-- On this day -->
+    <section class="on-this-day-section" id="on-this-day-section">
+        <div class="featured-header">
+            <span class="featured-badge">Featured Events</span>
+        </div>
+        <div class="gallery-container">
+            <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <div class="gallery-viewport">
+                <div class="gallery-track" id="featured-track">
+                    <!-- Gallery slides will be loaded here -->
+                </div>
+            </div>
+            <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next slide">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+        <div class="gallery-dots" id="featured-dots"></div>
+    </section>
+
     <!-- Apod section -->
     <section class="apod-section section">
         <div class="container">
@@ -338,6 +368,7 @@
     <script type="module" src="components/main-navbar.js"></script>
     <script type="module" src="components/project-data.js"></script>
     <script type="module" src="components/project-card.js"></script>
+    <script src="components/gallery.js"></script>
     <script src="homepage/apod-widget.js"></script>
     <script src="homepage/script.js"></script>
     <script type="text/javascript">
@@ -350,7 +381,7 @@
             s0.parentNode.insertBefore(s1, s0);
         })();
     </script>
-    <script>window.gtranslateSettings = {"default_language":"en","languages":["en","sl","de","es","fr","zh-CN"],"globe_color":"#66aaff","wrapper_selector":".gtranslate_wrapper","flag_size":24,"globe_size":40}</script>
+    <script>window.gtranslateSettings = { "default_language": "en", "languages": ["en", "sl", "de", "es", "fr", "zh-CN"], "globe_color": "#66aaff", "wrapper_selector": ".gtranslate_wrapper", "flag_size": 24, "globe_size": 40 }</script>
     <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
 </body>
 
