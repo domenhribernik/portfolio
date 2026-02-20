@@ -98,5 +98,14 @@ export const projects = {
       visitSite: "spy.html",
     },
     iconClass: "fas fa-user-secret",
+  },
+  tarok: {
+    title: "Tarok Scoring",
+    description: "A web-based scoring app for the Slovenian Tarok card game, supporting 3-4 players with real-time score tracking, radelci management, and game history.",
+    tech: ["HTML", "CSS", "JavaScript"],
+    links: {
+      visitSite: "tarok.html",
+    },
+    iconClass: "fa fa-trophy",
   }
 };

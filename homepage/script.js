@@ -244,12 +244,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 engSpan.className = 'lang-eng';
                 engSpan.textContent = 'Show More...';
 
-                const sloSpan = document.createElement('span');
-                sloSpan.className = 'lang-slo';
-                sloSpan.textContent = 'Prikaži Več...';
-
                 toggleBtn.appendChild(engSpan);
-                toggleBtn.appendChild(sloSpan);
 
                 let expanded = false;
                 toggleBtn.addEventListener('click', () => {
@@ -262,7 +257,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     });
 
                     engSpan.textContent = expanded ? 'Show Less...' : 'Show More...';
-                    sloSpan.textContent = expanded ? 'Prikaži Manj...' : 'Prikaži Več...';
                 });
 
                 category.querySelector('.projects-grid').after(toggleBtn);
