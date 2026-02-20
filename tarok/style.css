@@ -286,7 +286,7 @@
 
 /* Scoring Help */
 .scoring-help {
-    margin-top: 0.75rem;
+    margin-top: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     overflow: hidden;
@@ -328,7 +328,7 @@
 }
 
 .scoring-help-content.open {
-    max-height: 500px;
+    max-height: 800px;
 }
 
 .scoring-section {

@@ -158,7 +158,7 @@ function setupScoreInputs() {
         input.type = 'number';
         input.className = 'score-input';
         input.id = `score-${index}`;
-        input.value = '0';
+        input.placeholder = '0';
         input.inputMode = 'numeric';
         input.pattern = '[0-9]*';
 
@@ -282,7 +282,8 @@ function addRound() {
     if (!isNoPlayerGame && playingPlayerIndex >= 0 && radelci[playingPlayerIndex] > 0) {
         // Player has radelci - use one automatically
         useRadelc = true;
-        finalScores = finalScores.map(score => score * 2);
+        // Only the playing player gets double points
+        finalScores[playingPlayerIndex] = finalScores[playingPlayerIndex] * 2;
 
         // Radelc is consumed only if the player wins
         if (currentOutcome === 'win') {
@@ -292,15 +293,8 @@ function addRound() {
 
     // Apply outcome (win/loss)
     if (currentOutcome === 'loss') {
-        // Loss: playing player gets negative, others get positive
-        if (!isNoPlayerGame && playingPlayerIndex >= 0) {
-            finalScores = finalScores.map((score, idx) => {
-                if (idx === playingPlayerIndex) {
-                    return -Math.abs(score);
-                }
-                return Math.abs(score);
-            });
-        }
+        // Loss: all points are subtracted for all players
+        finalScores = finalScores.map(score => -Math.abs(score));
     }
 
     // Add scores to each player
@@ -333,7 +327,7 @@ function addRound() {
 
     // Clear inputs
     for (let i = 0; i < playerCount; i++) {
-        document.getElementById(`score-${i}`).value = '0';
+        document.getElementById(`score-${i}`).value = '';
     }
 
     updateRadelciDisplay();

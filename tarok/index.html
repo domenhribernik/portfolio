@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="sl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="../base-style.css">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="game-container">
         <!-- Setup Screen -->
@@ -63,7 +65,7 @@
             <!-- Round Input Section -->
             <div class="round-input-section" id="roundInputSection">
                 <div class="round-title">Runda <span id="currentRound">1</span></div>
-                
+
                 <!-- Game Type Selection -->
                 <div class="form-group">
                     <label for="gameType">Tip igre</label>
@@ -93,8 +95,10 @@
                 <div class="outcome-wrapper">
                     <label>Izhod</label>
                     <div class="outcome-buttons">
-                        <button type="button" class="outcome-btn active" data-outcome="win" onclick="selectOutcome('win')">✓ Dobljen</button>
-                        <button type="button" class="outcome-btn" data-outcome="loss" onclick="selectOutcome('loss')">✗ Izgubljen</button>
+                        <button type="button" class="outcome-btn active" data-outcome="win"
+                            onclick="selectOutcome('win')">✓ Dobljen</button>
+                        <button type="button" class="outcome-btn" data-outcome="loss" onclick="selectOutcome('loss')">✗
+                            Izgubljen</button>
                     </div>
                 </div>
 
@@ -115,28 +119,71 @@
                         <div class="scoring-section">
                             <h4>Osnovne igre</h4>
                             <table class="scoring-table">
-                                <tr><td>trojka</td><td>10 + razlika</td></tr>
-                                <tr><td>dvojka</td><td>30 + razlika</td></tr>
-                                <tr><td>enka</td><td>50 + razlika</td></tr>
-                                <tr><td>berač (brez talona)</td><td>70</td></tr>
-                                <tr><td>solo brez talona</td><td>80 + razlika</td></tr>
-                                <tr><td>tri – nap. barvni valat</td><td>125</td></tr>
-                                <tr><td>dva – nap. barvni valat</td><td>150</td></tr>
-                                <tr><td>ena – nap. barvni valat</td><td>175</td></tr>
-                                <tr><td>brez – nap. barvni valat</td><td>250</td></tr>
-                                <tr><td>tri – napovedani valat</td><td>250</td></tr>
-                                <tr><td>dva – napovedani valat</td><td>300</td></tr>
-                                <tr><td>ena – napovedani valat</td><td>350</td></tr>
-                                <tr><td>brez talona – nap. valat</td><td>500</td></tr>
+                                <tr>
+                                    <td>tri</td>
+                                    <td>10 + razlika</td>
+                                </tr>
+                                <tr>
+                                    <td>dve</td>
+                                    <td>20 + razlika</td>
+                                </tr>
+                                <tr>
+                                    <td>ena</td>
+                                    <td>30 + razlika</td>
+                                </tr>
+                                <tr>
+                                    <td>solo tri</td>
+                                    <td>40 + razlika</td>
+                                </tr>
+                                <tr>
+                                    <td>solo dve</td>
+                                    <td>50 + razlika</td>
+                                </tr>
+                                <tr>
+                                    <td>solo ena</td>
+                                    <td>60 + razlika</td>
+                                </tr>
+                                <tr>
+                                    <td>berač ⭐</td>
+                                    <td>70</td>
+                                </tr>
+                                <tr>
+                                    <td>solo brez ⭐</td>
+                                    <td>80</td>
+                                </tr>
+                                <tr>
+                                    <td>odprti berač ⭐</td>
+                                    <td>90</td>
+                                </tr>
+                                <tr>
+                                    <td>barvni valat ⭐</td>
+                                    <td>125</td>
+                                </tr>
+                                <tr>
+                                    <td>valat ⭐</td>
+                                    <td>500</td>
+                                </tr>
                             </table>
                         </div>
                         <div class="scoring-section">
                             <h4>Ostale realizacije in napovedi</h4>
                             <table class="scoring-table">
-                                <tr><td>kralji</td><td>10 (napovedani 20)</td></tr>
-                                <tr><td>trula</td><td>10 (napovedana 20)</td></tr>
-                                <tr><td>pagat ultimo</td><td>25 (napovedani 50)</td></tr>
-                                <tr><td>valat (tihi)</td><td>50 (napovedani: glej pod igre)</td></tr>
+                                <tr>
+                                    <td>kralji</td>
+                                    <td>10 (napovedani 20)</td>
+                                </tr>
+                                <tr>
+                                    <td>trula</td>
+                                    <td>10 (napovedana 20)</td>
+                                </tr>
+                                <tr>
+                                    <td>pagat ultimo</td>
+                                    <td>25 (napovedani 50)</td>
+                                </tr>
+                                <tr>
+                                    <td>valat (tihi)</td>
+                                    <td>250 (napovedani: 500)</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
@@ -152,4 +199,5 @@
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>
