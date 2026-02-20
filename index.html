@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="homepage/style.css">
     <link rel="stylesheet" href="homepage/apod-styles.css">
     <link rel="stylesheet" href="components/gallery.css">
+    <link rel="stylesheet" href="homepage/otd-gallery.css">
 </head>
 
 <body>
@@ -251,30 +252,33 @@
     </section>
 
     <!-- On this day -->
-    <section class="on-this-day-section" id="on-this-day-section">
-        <div class="featured-header">
-            <span class="featured-badge">Featured Events</span>
-        </div>
-        <div class="gallery-container">
-            <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-            </button>
-            <div class="gallery-viewport">
-                <div class="gallery-track" id="featured-track">
-                    <!-- Gallery slides will be loaded here -->
-                </div>
+    <section id="on-this-day-section">
+        <div class="featured-section">
+            <div class="otd-header">
+                <p class="otd-label">Wikipedia</p>
+                <h1 class="otd-title">On This Day</h1>
             </div>
-            <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next slide">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-            </button>
+            <p class="otd-view-more">View More That Happened <a href="https://domenhribernik.com/on-this-day.html"><u>On
+                        This Day</u></a></p>
+            <div class="gallery-container">
+                <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <div class="gallery-viewport">
+                    <div class="gallery-track" id="featured-track"></div>
+                </div>
+                <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next slide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+            <div class="gallery-dots" id="featured-dots"></div>
         </div>
-        <div class="gallery-dots" id="featured-dots"></div>
     </section>
 
     <!-- Apod section -->

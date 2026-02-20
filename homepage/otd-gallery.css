@@ -1,0 +1,276 @@
+:root {
+    --bg: #283040;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --bg-card-hover: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.15);
+    --text: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-muted: rgba(255, 255, 255, 0.5);
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --radius-sm: 8px;
+    --radius: 16px;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+    --transition: all 0.2s ease;
+}
+
+#on-this-day-section {
+    background: var(--bg);
+}
+
+.featured-section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-bottom: 60px;
+    animation: fadeInUp 0.6s ease 0.1s both;
+}
+
+.otd-header {
+    text-align: center;
+    padding: 60px 0 40px;
+    animation: fadeInUp 0.6s ease;
+}
+
+.otd-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 12px;
+}
+
+.otd-title {
+    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #fff 0%, var(--accent-hover) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.featured-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 100px;
+    color: var(--accent-hover);
+}
+
+/* Gallery Container Customization */
+.gallery-container {
+    /* Gap is set in base gallery.css, customize here if needed */
+}
+
+.gallery-viewport {
+    border-radius: var(--radius);
+}
+
+/* Gallery Slide Customization */
+.gallery-slide {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: var(--transition);
+}
+
+.gallery-slide:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow);
+}
+
+.gallery-slide.active {
+    border-color: rgba(99, 102, 241, 0.3);
+}
+/* Gallery Slide Content */
+.gallery-image {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    position: relative;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+}
+
+.gallery-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+}
+
+.gallery-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.gallery-slide:hover .gallery-image img {
+    transform: scale(1.05);
+}
+
+.gallery-content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.gallery-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.gallery-year {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    background: var(--accent);
+    border-radius: 100px;
+    color: white;
+}
+
+.gallery-counter {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.gallery-title {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.gallery-extract {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+.gallery-extract p {
+    margin-bottom: 8px;
+}
+
+.gallery-extract p:last-child {
+    margin-bottom: 0;
+}
+
+.gallery-extract a {
+    color: var(--accent-hover);
+    text-decoration: none;
+}
+
+.gallery-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    padding: 10px 16px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    align-self: flex-start;
+    margin-top: auto;
+}
+
+.gallery-link:hover {
+    background: var(--accent-hover);
+    transform: translateX(4px);
+}
+
+.gallery-link svg {
+    transition: transform 0.2s ease;
+}
+
+.gallery-link:hover svg {
+    transform: translate(2px, -2px);
+}
+
+/* Gallery Navigation Customization */
+.gallery-nav {
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    box-shadow: var(--shadow);
+}
+
+.gallery-nav:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Gallery Dots Customization */
+.gallery-dots {
+    /* Base styles in gallery.css */
+}
+
+.gallery-dot {
+    background: var(--text);
+}
+
+.gallery-dot.active {
+    background: var(--accent);
+}
+
+.otd-view-more {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+}
+
+.otd-view-more a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.otd-view-more a:hover {
+    color: var(--accent-hover);
+}
+
+@media (max-width: 767px) {
+    .gallery-slide:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    .featured-badge {
+        margin-left: 25px;
+    }
+    .gallery-slide.active {
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+    .gallery-nav {
+        display: none;
+    }
+}

@@ -284,12 +284,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     const loadingOverlay = document.getElementById('loading-overlay');
-    const currentDateEl = document.getElementById('current-date');
-
-    const today = new Date();
-    currentDateEl.textContent = today.toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
 
     const stripHtml = (html) => {
         const tmp = document.createElement('div');
@@ -409,7 +403,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const populateFeatured = (data) => {
         const track = document.getElementById('featured-track');
-        const section = document.getElementById('featured-section');
+        const section = document.getElementById('on-this-day-section');
 
         if (!track || !section) return;
         track.innerHTML = '';
@@ -427,6 +421,7 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     const fetchData = async () => {
+        console.log("this happened")
         const track = document.getElementById('featured-track');
 
         if (track) {
