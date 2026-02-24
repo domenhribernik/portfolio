@@ -424,7 +424,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('../php/otd-proxy.php');
+            const response = await fetch('../app/Proxys/otd-proxy.php');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
 

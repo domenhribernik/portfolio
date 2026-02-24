@@ -4,3 +4,4 @@ dist
 **/assets/iliana/
 .env
 *cache.json
+vendor

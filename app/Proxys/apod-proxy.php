@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *'); // Or your specific domain
 
-$autoloaderPath = __DIR__ . '/../vendor/autoload.php';
+$autoloaderPath = __DIR__ . '/vendor/autoload.php';
 if (!file_exists($autoloaderPath)) {
     die("Autoloader not found at: $autoloaderPath");
 }
@@ -23,23 +23,23 @@ function fetchUrl($url) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Important for HTTPS
-    
+
     $response = curl_exec($ch);
-    
+
     if (curl_errno($ch)) {
         error_log('cURL error: ' . curl_error($ch));
         curl_close($ch);
         return false;
     }
-    
+
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    
+
     if ($httpCode !== 200) {
         error_log("API returned HTTP code: $httpCode");
         return false;
     }
-    
+
     return $response;
 }
 
@@ -57,7 +57,7 @@ $response = fetchUrl($apiUrl);
 
 if ($response) {
     $newData = json_decode($response, true);
-    
+
     if (isset($newData['date'])) {
         file_put_contents($cacheFile, json_encode($newData));
         echo json_encode($newData);

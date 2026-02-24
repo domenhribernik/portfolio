@@ -3,8 +3,8 @@
     const currentDateEl = document.getElementById('current-date');
 
     const today = new Date();
-    currentDateEl.textContent = today.toLocaleDateString('en-US', { 
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    currentDateEl.textContent = today.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 
     const stripHtml = (html) => {
@@ -120,7 +120,7 @@
         const patterns = [
             /^([^,]+),\s*(.+)$/, /^([^:]+):\s*(.+)$/, /^(.+?\([^)]+\))\s*,?\s*(.+)$/,
         ];
-        
+
         let title = '', description = '';
         const text = stripHtml(item.text || '');
         for (const pattern of patterns) {
@@ -136,7 +136,7 @@
         const imageHtml = imageUrl ? `<img src="${imageUrl}" alt="" class="category-item-image" loading="lazy">` : '';
         const linkStart = pageUrl ? `<a href="${pageUrl}" target="_blank" rel="noopener" class="category-item-link">` : '';
         const linkEnd = pageUrl ? '</a>' : '';
-        const textHtml = description 
+        const textHtml = description
             ? `<p class="category-item-text"><strong class="category-item-title">${title}</strong> ${description}</p>`
             : `<p class="category-item-text"><strong class="category-item-title">${title}</strong></p>`;
 
@@ -195,7 +195,7 @@
     const populateFeatured = (data) => {
         const track = document.getElementById('featured-track');
         const section = document.getElementById('featured-section');
-        
+
         if (!track || !section) return;
         track.innerHTML = '';
 
@@ -245,10 +245,10 @@
         });
 
         try {
-            const response = await fetch('../php/otd-proxy.php');
+            const response = await fetch('../app/Proxys/otd-proxy.php');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
-            
+
             loadingOverlay?.classList.add('hidden');
             populateFeatured(data.selected?.selected);
             populateCategory('events-container', data.events?.events, 'events');
