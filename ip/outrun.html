@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Source IP Locator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void:        #0a0010;
+            --bg-dark:        #0d0018;
+            --bg-card:        #120020;
+            --bg-surface:     #1a002e;
+            --pink:           #ff2d78;
+            --magenta:        #e91e8c;
+            --cyan:           #00f0d4;
+            --purple:         #bf5fff;
+            --orange:         #ff6b2b;
+            --yellow:         #ffe44d;
+            --text-bright:    #fff0ff;
+            --text-mid:       #c9a0e8;
+            --text-dim:       #6b4a8a;
+            --glow-pink:      0 0 12px #ff2d78, 0 0 30px rgba(255,45,120,0.4);
+            --glow-cyan:      0 0 12px #00f0d4, 0 0 30px rgba(0,240,212,0.4);
+            --glow-purple:    0 0 12px #bf5fff, 0 0 30px rgba(191,95,255,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-void);
+            min-height: 100vh;
+            color: var(--text-bright);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ── HORIZON GRID BACKGROUND ── */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        /* Sky gradient */
+        .grid-bg::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(191,95,255,0.35) 0%, transparent 70%),
+                linear-gradient(180deg, #100025 0%, #0a0010 55%, #0d001a 100%);
+        }
+
+        /* Sun */
+        .sun {
+            position: absolute;
+            left: 50%;
+            top: 32%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #ffe44d 0%, #ff6b2b 40%, #ff2d78 70%, #bf5fff 100%);
+            box-shadow: 0 0 60px rgba(255,110,43,0.5), 0 0 120px rgba(255,45,120,0.3);
+            overflow: hidden;
+        }
+
+        /* Horizontal lines slicing the sun */
+        .sun::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                180deg,
+                transparent 0px,
+                transparent 10px,
+                var(--bg-void) 10px,
+                var(--bg-void) 13px
+            );
+            transform: scaleY(1.5) translateY(30%);
+        }
+
+        /* Perspective grid */
+        .grid-floor {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200%;
+            height: 55%;
+            background:
+                /* Horizontal lines */
+                repeating-linear-gradient(
+                    180deg,
+                    transparent 0%,
+                    transparent calc(100% / 12 - 1px),
+                    rgba(255,45,120,0.35) calc(100% / 12 - 1px),
+                    rgba(255,45,120,0.35) calc(100% / 12)
+                ),
+                /* Vertical lines in perspective */
+                repeating-linear-gradient(
+                    90deg,
+                    transparent 0%,
+                    transparent calc(100% / 24 - 1px),
+                    rgba(191,95,255,0.25) calc(100% / 24 - 1px),
+                    rgba(191,95,255,0.25) calc(100% / 24)
+                );
+            transform-origin: bottom center;
+            transform: translateX(-50%) perspective(300px) rotateX(40deg);
+            mask-image: linear-gradient(180deg, transparent 0%, black 30%);
+            -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 30%);
+        }
+
+        /* Scanlines */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 500;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0,0,0,0.18),
+                rgba(0,0,0,0.18) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+        }
+
+        /* ── LAYOUT ── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* ── HEADER ── */
+        header {
+            text-align: center;
+            margin-bottom: 36px;
+            padding-top: 40px;
+        }
+
+        .title-eyebrow {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 6px;
+            color: var(--cyan);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            text-shadow: var(--glow-cyan);
+        }
+
+        h1 {
+            font-family: 'Russo One', sans-serif;
+            font-size: clamp(2.2rem, 6vw, 4rem);
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            line-height: 1;
+            background: linear-gradient(180deg, #fff6ff 0%, var(--pink) 50%, var(--purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px rgba(255,45,120,0.5));
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-family: 'Orbitron', monospace;
+            color: var(--text-mid);
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* ── CHROME DIVIDER ── */
+        .chrome-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--pink), var(--cyan), var(--pink), transparent);
+            margin: 20px 0;
+            box-shadow: 0 0 10px rgba(255,45,120,0.5), 0 0 20px rgba(0,240,212,0.3);
+        }
+
+        /* ── API STATUS BAR ── */
+        .api-status {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 16px 20px;
+            background: rgba(18, 0, 32, 0.8);
+            border: 1px solid rgba(191,95,255,0.3);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .status-label {
+            width: 100%;
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .api-badge {
+            background: rgba(10, 0, 20, 0.8);
+            color: var(--text-dim);
+            padding: 5px 14px;
+            border-radius: 2px;
+            font-size: 0.72rem;
+            border: 1px solid rgba(107,74,138,0.4);
+            font-family: 'Orbitron', monospace;
+            transition: all 0.3s;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+        }
+
+        .api-badge:hover { color: var(--purple); border-color: var(--purple); }
+
+        .api-badge.active {
+            background: rgba(255,45,120,0.12);
+            color: var(--pink);
+            border-color: var(--pink);
+            box-shadow: var(--glow-pink), inset 0 0 10px rgba(255,45,120,0.05);
+            text-shadow: 0 0 8px var(--pink);
+        }
+
+        .api-badge.failed {
+            background: rgba(20,0,10,0.6);
+            color: rgba(107,74,138,0.5);
+            border-color: rgba(107,74,138,0.2);
+            text-decoration: line-through;
+        }
+
+        /* ── SEARCH BOX ── */
+        .search-box {
+            background: rgba(18, 0, 32, 0.85);
+            padding: 20px 24px;
+            border: 1px solid rgba(191,95,255,0.35);
+            border-radius: 4px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            position: relative;
+        }
+
+        .search-box::before {
+            content: "◈";
+            color: var(--pink);
+            font-size: 1.1rem;
+            text-shadow: var(--glow-pink);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 240px;
+            padding: 11px 18px;
+            background: rgba(10, 0, 20, 0.9);
+            border: 1px solid rgba(191,95,255,0.4);
+            border-bottom: 2px solid var(--purple);
+            border-radius: 2px;
+            font-size: 1rem;
+            color: var(--cyan);
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            caret-color: var(--pink);
+        }
+
+        input[type="text"]::placeholder { color: var(--text-dim); font-size: 0.8rem; }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--pink);
+            border-bottom-color: var(--pink);
+            box-shadow: var(--glow-pink);
+        }
+
+        /* ── BUTTONS ── */
+        button {
+            padding: 11px 28px;
+            background: transparent;
+            border: none;
+            border-radius: 2px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s;
+            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+        }
+
+        button::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        button:hover:not(:disabled)::before { opacity: 1; }
+
+        /* Primary */
+        #searchBtn {
+            background: linear-gradient(135deg, var(--pink), var(--magenta));
+            color: #fff0ff;
+            box-shadow: var(--glow-pink);
+            text-shadow: 0 0 8px rgba(255,255,255,0.5);
+        }
+        #searchBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff5590, var(--pink));
+            box-shadow: 0 0 20px rgba(255,45,120,0.8), 0 0 40px rgba(255,45,120,0.4);
+            transform: translateY(-1px);
+        }
+
+        /* My IP */
+        .my-ip-btn {
+            background: linear-gradient(135deg, var(--cyan), #00bfa5);
+            color: #002a24;
+            box-shadow: var(--glow-cyan);
+        }
+        .my-ip-btn:hover:not(:disabled) {
+            box-shadow: 0 0 20px rgba(0,240,212,0.8), 0 0 40px rgba(0,240,212,0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Compare */
+        .toggle-compare {
+            background: transparent;
+            color: var(--purple);
+            border: 1px solid var(--purple);
+            box-shadow: var(--glow-purple);
+        }
+        .toggle-compare:hover:not(:disabled) {
+            background: rgba(191,95,255,0.15);
+            box-shadow: 0 0 20px rgba(191,95,255,0.8), 0 0 40px rgba(191,95,255,0.4);
+            transform: translateY(-1px);
+        }
+
+        button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        /* ── CONTENT GRID ── */
+        .content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .content { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+        }
+
+        /* ── INFO CARD ── */
+        .info-card {
+            background: rgba(18, 0, 32, 0.85);
+            border: 1px solid rgba(191,95,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            height: fit-content;
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, rgba(255,45,120,0.2), rgba(191,95,255,0.1));
+            border-bottom: 1px solid rgba(191,95,255,0.3);
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--pink);
+            box-shadow: var(--glow-pink);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .card-header-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            color: var(--text-mid);
+            text-transform: uppercase;
+        }
+
+        .info-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(191,95,255,0.12);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s;
+        }
+
+        .info-item:last-child { border-bottom: none; }
+        .info-item:hover { background: rgba(255,45,120,0.04); }
+
+        .info-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Orbitron', monospace;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: var(--cyan);
+            font-weight: 600;
+            font-family: 'Rajdhani', sans-serif;
+            text-align: right;
+            text-shadow: 0 0 8px rgba(0,240,212,0.3);
+        }
+
+        .flag { margin-right: 6px; font-size: 1.1rem; }
+
+        /* ── SOURCE TAG ── */
+        .source-tag {
+            display: inline-block;
+            background: rgba(191,95,255,0.15);
+            color: var(--purple);
+            padding: 1px 8px;
+            border-radius: 2px;
+            font-size: 0.6rem;
+            margin-left: 6px;
+            border: 1px solid rgba(191,95,255,0.4);
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 0.5px;
+            vertical-align: middle;
+        }
+
+        /* ── MAP ── */
+        .map-container {
+            background: rgba(18, 0, 32, 0.85);
+            border: 1px solid rgba(191,95,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            height: 500px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(12px);
+        }
+
+        .map-header {
+            background: linear-gradient(90deg, rgba(0,240,212,0.12), rgba(191,95,255,0.08));
+            border-bottom: 1px solid rgba(191,95,255,0.3);
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .map-header-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .map-header-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            color: var(--text-mid);
+            text-transform: uppercase;
+        }
+
+        #map {
+            flex: 1;
+            filter: saturate(0.7) hue-rotate(200deg) brightness(0.85);
+        }
+
+        /* Map legend */
+        .map-legend {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(10,0,20,0.9);
+            border: 1px solid rgba(191,95,255,0.4);
+            border-radius: 4px;
+            padding: 12px 16px;
+            z-index: 1000;
+            display: none;
+            max-width: 190px;
+            backdrop-filter: blur(8px);
+        }
+
+        .map-legend.visible { display: block; }
+
+        .map-legend h4 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            color: var(--pink);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,45,120,0.3);
+            padding-bottom: 8px;
+            text-shadow: var(--glow-pink);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            color: var(--text-mid);
+            margin-bottom: 6px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+        }
+
+        .legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0 6px currentColor;
+        }
+
+        .legend-item.failed { opacity: 0.35; text-decoration: line-through; }
+
+        /* ── LOADING ── */
+        .loading { display: none; padding: 40px; text-align: center; }
+        .loading.active { display: block; }
+
+        .spinner {
+            width: 44px; height: 44px;
+            border: 2px solid rgba(191,95,255,0.2);
+            border-top: 2px solid var(--pink);
+            border-right: 2px solid var(--cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+            box-shadow: var(--glow-pink);
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading p {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            color: var(--text-mid);
+            text-transform: uppercase;
+            animation: flicker-text 1.5s ease-in-out infinite;
+        }
+
+        @keyframes flicker-text {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
+        }
+
+        /* ── ALERTS ── */
+        .error {
+            background: rgba(255,45,120,0.08);
+            color: var(--pink);
+            padding: 14px 18px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,45,120,0.5);
+            border-left: 3px solid var(--pink);
+            margin-top: 10px;
+            display: none;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+        }
+
+        .error.active { display: block; }
+
+        .success-notice {
+            background: rgba(0,240,212,0.06);
+            color: var(--cyan);
+            padding: 10px 18px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,240,212,0.35);
+            border-left: 3px solid var(--cyan);
+            margin-bottom: 16px;
+            display: none;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(0,240,212,0.3);
+        }
+
+        .success-notice.active { display: block; }
+
+        /* ── COMPARE SECTION ── */
+        .compare-mode {
+            margin-top: 24px;
+            background: rgba(18, 0, 32, 0.85);
+            padding: 24px;
+            border: 1px solid rgba(191,95,255,0.3);
+            border-radius: 4px;
+            backdrop-filter: blur(12px);
+        }
+
+        .compare-mode h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 4px;
+            color: var(--purple);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            text-shadow: var(--glow-purple);
+        }
+
+        .compare-mode > p {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 18px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .compare-card {
+            background: rgba(10, 0, 20, 0.8);
+            padding: 14px;
+            border-radius: 2px;
+            border: 1px solid rgba(191,95,255,0.2);
+            border-top: 2px solid var(--pink);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .compare-card:hover {
+            border-color: rgba(191,95,255,0.5);
+            box-shadow: 0 0 15px rgba(191,95,255,0.15);
+        }
+
+        .compare-card h4 {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            color: var(--text-mid);
+        }
+
+        .compare-card p {
+            font-size: 0.85rem;
+            color: var(--text-mid);
+            margin: 5px 0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .compare-card .color-swatch {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+            box-shadow: 0 0 6px currentColor;
+        }
+
+        .hidden { display: none; }
+
+        /* ── FOOTER GLOW LINE ── */
+        .footer-line {
+            text-align: center;
+            padding-top: 40px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background layers -->
+    <div class="grid-bg">
+        <div class="sun"></div>
+        <div class="grid-floor"></div>
+    </div>
+    <div class="scanlines"></div>
+
+    <div class="container">
+        <header>
+            <p class="title-eyebrow">◈ Geolocation Intelligence System ◈</p>
+            <h1>IP Locator</h1>
+            <p class="subtitle">7 Free APIs &nbsp;·&nbsp; Auto-Failover &nbsp;·&nbsp; No Keys</p>
+        </header>
+
+        <div class="chrome-line"></div>
+
+        <div class="api-status" id="apiStatus">
+            <div class="status-label">Active Sources</div>
+            <span class="api-badge" id="badge-ipapi"       onclick="focusBadge('ipapi')">ipapi.co</span>
+            <span class="api-badge" id="badge-ipwho"       onclick="focusBadge('ipwho')">ipwho.org</span>
+            <span class="api-badge" id="badge-ip-api"      onclick="focusBadge('ip-api')">ip-api.com</span>
+            <span class="api-badge" id="badge-freeipapi"   onclick="focusBadge('freeipapi')">freeipapi.com</span>
+            <span class="api-badge" id="badge-hackertarget" onclick="focusBadge('hackertarget')">hackertarget</span>
+            <span class="api-badge" id="badge-ip2location" onclick="focusBadge('ip2location')">ip2location.io</span>
+            <span class="api-badge" id="badge-ipinfo"      onclick="focusBadge('ipinfo')">ipinfo.io</span>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="ipInput" placeholder="Enter IP address (e.g., 8.8.8.8) or leave empty for your IP">
+            <button onclick="lookupIP()" id="searchBtn">Trace</button>
+            <button onclick="getMyIP()" class="my-ip-btn" id="myIpBtn">My IP</button>
+            <button onclick="toggleCompare()" class="toggle-compare" id="compareBtn">Compare</button>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+        <div class="success-notice" id="successMsg"></div>
+
+        <div class="content">
+            <div class="info-card" id="infoCard">
+                <div class="card-header">
+                    <div class="card-header-dot"></div>
+                    <span class="card-header-title">Signal Data</span>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Scanning sources…</p>
+                </div>
+                <div id="infoContent">
+                    <div class="info-item">
+                        <div class="info-label">
+                            IP Addr
+                            <span class="source-tag" id="sourceTag" style="display:none;"></span>
+                        </div>
+                        <div class="info-value" id="ip">—</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Country</div>
+                        <div class="info-value"><span id="flag" class="flag">🏳️</span><span id="country">—</span></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Region</div>
+                        <div class="info-value" id="region">—</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">City</div>
+                        <div class="info-value" id="city">—</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Coords</div>
+                        <div class="info-value" id="coords">—</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">ISP / Org</div>
+                        <div class="info-value" id="org">—</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Timezone</div>
+                        <div class="info-value" id="timezone">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-container">
+                <div class="map-header">
+                    <div class="map-header-dot"></div>
+                    <span class="map-header-title">Coordinate Overlay</span>
+                </div>
+                <div id="map"></div>
+                <div class="map-legend" id="mapLegend">
+                    <h4>▸ API Sources</h4>
+                    <div id="legendItems"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="compare-mode hidden" id="compareSection">
+            <h3>◈ API Comparison Matrix</h3>
+            <p>Cross-reference all sources simultaneously — results plotted above</p>
+            <div class="compare-grid" id="compareGrid"></div>
+        </div>
+
+        <div class="footer-line">◈ &nbsp; Multi-Source Geolocation &nbsp; ◈</div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map, primaryMarker, compareMarkers = [], compareMarkerByApiId = {}, compareMode = false, lastIP = '';
+
+        const API_COLORS = ['#ff2d78','#00f0d4','#bf5fff','#ff6b2b','#ffe44d','#e91e8c','#00bcd4'];
+
+        const APIs = [
+            { name:'ipapi.co', id:'ipapi', url:(ip)=>ip?`https://ipapi.co/${ip}/json/`:'https://ipapi.co/json/', transform:(d)=>({ip:d.ip,country:d.country_name,countryCode:d.country_code,region:d.region,city:d.city,lat:d.latitude,lon:d.longitude,org:d.org,timezone:d.timezone,success:!d.error}) },
+            { name:'ipwho.org', id:'ipwho', url:(ip)=>ip?`https://ipwho.org/ip/${ip}`:'https://ipwho.org/me', transform:(d)=>({ip:d.ip,country:d.country,countryCode:d.country_code,region:d.region,city:d.city,lat:d.latitude,lon:d.longitude,org:d.asn?.organization||d.org,timezone:d.timezone?.id,success:d.success!==false}) },
+            { name:'ip-api.com', id:'ip-api', url:(ip)=>`http://ip-api.com/json/${ip||''}`, transform:(d)=>({ip:d.query,country:d.country,countryCode:d.countryCode,region:d.regionName,city:d.city,lat:d.lat,lon:d.lon,org:d.isp,timezone:d.timezone,success:d.status==='success'}) },
+            { name:'freeipapi.com', id:'freeipapi', url:(ip)=>`https://freeipapi.com/api/json/${ip||''}`, transform:(d)=>({ip:d.ipAddress,country:d.countryName,countryCode:d.countryCode,region:d.regionName,city:d.cityName,lat:d.latitude,lon:d.longitude,org:d.asn?.organization||d.org,timezone:d.timeZone,success:!!d.ipAddress}) },
+            { name:'hackertarget', id:'hackertarget', url:(ip)=>`https://api.hackertarget.com/geoip/?q=${ip||''}&output=json`, transform:(d)=>({ip:d.ip,country:d.country,countryCode:null,region:d.state,city:d.city,lat:parseFloat(d.latitude),lon:parseFloat(d.longitude),org:null,timezone:null,success:!!d.ip&&!d.error}) },
+            { name:'ip2location.io', id:'ip2location', url:(ip)=>`https://api.ip2location.io/?ip=${ip||''}`, transform:(d)=>({ip:d.ip,country:d.country_name,countryCode:d.country_code,region:d.region_name,city:d.city_name,lat:d.latitude,lon:d.longitude,org:d.as,timezone:null,success:!!d.ip&&!d.error}) },
+            { name:'ipinfo.io', id:'ipinfo', url:(ip)=>`https://ipinfo.io/${ip||''}/json`, transform:(d)=>{const[lat,lon]=(d.loc||'').split(',').map(Number);return{ip:d.ip,country:d.country,countryCode:d.country,region:d.region,city:d.city,lat:lat||null,lon:lon||null,org:d.org,timezone:d.timezone,success:!!d.ip&&!d.error};} }
+        ];
+
+        function initMap() {
+            map = L.map('map').setView([20,0],2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap contributors' }).addTo(map);
+        }
+
+        function setLoading(v) {
+            document.getElementById('loading').classList.toggle('active',v);
+            document.getElementById('infoContent').style.display = v ? 'none' : 'block';
+            document.getElementById('searchBtn').disabled = v;
+            document.getElementById('myIpBtn').disabled = v;
+        }
+
+        function showError(msg) { const e=document.getElementById('errorMsg'); e.textContent=msg; e.classList.add('active'); setTimeout(()=>e.classList.remove('active'),5000); }
+        function showSuccess(msg) { const e=document.getElementById('successMsg'); e.textContent=msg; e.classList.add('active'); setTimeout(()=>e.classList.remove('active'),3000); }
+        function updateBadge(id,s) { const b=document.getElementById(`badge-${id}`); b.classList.remove('active','failed'); if(s==='active')b.classList.add('active'); if(s==='failed')b.classList.add('failed'); }
+        function resetBadges() { APIs.forEach(a=>updateBadge(a.id,'')); }
+
+        function focusBadge(apiId) {
+            const e=compareMarkerByApiId[apiId]; if(!e)return;
+            map.setView([e.lat,e.lon],13,{animate:true}); e.marker.openPopup();
+            const b=document.getElementById(`badge-${apiId}`);
+            b.style.transform='scale(1.2)'; b.style.boxShadow='0 0 20px #fff';
+            setTimeout(()=>{b.style.transform='';b.style.boxShadow='';},600);
+        }
+
+        function getFlagEmoji(cc) {
+            if(!cc)return'🏳️';
+            return String.fromCodePoint(...cc.toUpperCase().split('').map(c=>127397+c.charCodeAt()));
+        }
+
+        function createColoredMarker(lat,lon,color,apiName,loc) {
+            const icon=L.divIcon({className:'',html:`<div style="width:14px;height:14px;background:${color};border:2px solid rgba(255,255,255,0.8);border-radius:50%;box-shadow:0 0 8px ${color}"></div>`,iconSize:[14,14],iconAnchor:[7,7],popupAnchor:[0,-10]});
+            return L.marker([lat,lon],{icon}).bindPopup(`<b>${apiName}</b><br>${loc}`);
+        }
+
+        function clearCompareMarkers() {
+            compareMarkers.forEach(m=>map.removeLayer(m)); compareMarkers=[]; compareMarkerByApiId={};
+            document.getElementById('mapLegend').classList.remove('visible');
+            document.getElementById('legendItems').innerHTML='';
+        }
+
+        function updateUI(data,src) {
+            document.getElementById('ip').textContent=data.ip||'—';
+            document.getElementById('country').textContent=data.country||'—';
+            document.getElementById('flag').textContent=getFlagEmoji(data.countryCode);
+            document.getElementById('region').textContent=data.region||'—';
+            document.getElementById('city').textContent=data.city||'—';
+            document.getElementById('coords').textContent=data.lat&&data.lon?`${data.lat.toFixed(4)}, ${data.lon.toFixed(4)}`:'—';
+            document.getElementById('org').textContent=data.org||'—';
+            document.getElementById('timezone').textContent=data.timezone||'—';
+            const st=document.getElementById('sourceTag'); st.textContent=`via ${src}`; st.style.display='inline-block';
+            if(data.lat&&data.lon) {
+                map.setView([data.lat,data.lon],13);
+                if(primaryMarker)map.removeLayer(primaryMarker);
+                primaryMarker=L.marker([data.lat,data.lon]).addTo(map).bindPopup(`<b>${data.city||'Unknown'}</b><br>${data.country||''}`).openPopup();
+            }
+        }
+
+        function plotCompareMarkers(results) {
+            clearCompareMarkers(); if(primaryMarker){map.removeLayer(primaryMarker);primaryMarker=null;}
+            const bounds=[]; const li=document.getElementById('legendItems');
+            results.forEach((r,i)=>{
+                const color=API_COLORS[i%API_COLORS.length]; const apiName=APIs[i].name;
+                const item=document.createElement('div'); item.className='legend-item'+(r.success?'':' failed');
+                item.innerHTML=`<span class="legend-dot" style="background:${color}"></span>${apiName}`; li.appendChild(item);
+                if(!r.success)return;
+                const {lat,lon,city,country}=r.data;
+                if(!lat||!lon||isNaN(lat)||isNaN(lon))return;
+                const label=[city,country].filter(Boolean).join(', ')||`${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+                const marker=createColoredMarker(lat,lon,color,apiName,label); marker.addTo(map);
+                compareMarkers.push(marker); compareMarkerByApiId[APIs[i].id]={marker,lat,lon}; bounds.push([lat,lon]);
+            });
+            if(bounds.length>0){bounds.length===1?map.setView(bounds[0],10):map.fitBounds(bounds,{padding:[40,40]});document.getElementById('mapLegend').classList.add('visible');}
+        }
+
+        async function tryAPI(api,ip) {
+            try {
+                const ctrl=new AbortController(); const tid=setTimeout(()=>ctrl.abort(),5000);
+                const r=await fetch(api.url(ip),{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+                clearTimeout(tid);
+                if(!r.ok)throw new Error(`HTTP ${r.status}`);
+                const d=await r.json(); const t=api.transform(d);
+                if(!t.success)throw new Error('Invalid data');
+                return{success:true,data:t,api:api.name};
+            } catch(e){return{success:false,error:e.message,api:api.name};}
+        }
+
+        async function lookupIP() {
+            const ip=document.getElementById('ipInput').value.trim(); lastIP=ip;
+            setLoading(true); resetBadges(); clearCompareMarkers();
+            if(compareMode){document.getElementById('compareGrid').innerHTML='';await runComparison(ip);setLoading(false);return;}
+            let lastError='';
+            for(const api of APIs){
+                updateBadge(api.id,'active');
+                const r=await tryAPI(api,ip);
+                if(r.success){updateUI(r.data,r.api);updateBadge(api.id,'active');showSuccess(`Located via ${r.api}`);setLoading(false);return;}
+                else{updateBadge(api.id,'failed');lastError=`${api.name}: ${r.error}`;}
+            }
+            setLoading(false); showError(`All APIs failed. Last: ${lastError}`);
+        }
+
+        async function toggleCompare() {
+            compareMode=!compareMode;
+            const s=document.getElementById('compareSection'); const b=document.getElementById('compareBtn');
+            if(compareMode){s.classList.remove('hidden');b.textContent='Close';b.style.background='rgba(255,45,120,0.3)';const ip=lastIP||document.getElementById('ipInput').value.trim();if(ip!==undefined)await runComparison(ip);}
+            else{s.classList.add('hidden');b.textContent='Compare';b.style.background='';clearCompareMarkers();}
+        }
+
+        async function runComparison(ip) {
+            const grid=document.getElementById('compareGrid');
+            grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:var(--text-dim);font-family:Orbitron,monospace;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">Querying all APIs…</p>';
+            const results=await Promise.all(APIs.map(async(api,i)=>{const r=await tryAPI(api,ip);updateBadge(api.id,r.success?'active':'failed');return{...r,api};}));
+            plotCompareMarkers(results);
+            grid.innerHTML=results.map((r,i)=>{
+                const color=API_COLORS[i%API_COLORS.length];
+                if(!r.success)return`<div class="compare-card" style="border-top-color:${color};opacity:0.5"><h4><span class="color-swatch" style="background:${color}"></span>${r.api.name}</h4><p style="color:var(--pink)">Failed</p><p style="font-size:0.75rem;color:var(--text-dim)">${r.error}</p></div>`;
+                const d=r.data; const hc=d.lat&&d.lon&&!isNaN(d.lat)&&!isNaN(d.lon);
+                return`<div class="compare-card" style="border-top-color:${color}"><h4><span class="color-swatch" style="background:${color}"></span>${r.api.name}</h4><p><strong>${d.city||'Unknown'}</strong>, ${d.country||'Unknown'} ${getFlagEmoji(d.countryCode)}</p><p style="font-size:0.8rem;color:var(--text-dim)">${hc?`📍 ${d.lat.toFixed(3)}, ${d.lon.toFixed(3)}`:'No coords'}</p><p style="font-size:0.75rem;color:var(--text-dim);margin-top:8px">${d.org||'No ISP data'}</p></div>`;
+            }).join('');
+        }
+
+        function getMyIP() { document.getElementById('ipInput').value=''; lookupIP(); }
+
+        initMap();
+        window.addEventListener('load', getMyIP);
+        document.getElementById('ipInput').addEventListener('keypress',(e)=>{if(e.key==='Enter')lookupIP();});
+    </script>
+</body>
+</html>
