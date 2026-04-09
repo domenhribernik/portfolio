@@ -1,0 +1,330 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    overscroll-behavior: none;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    max-width: 1000px;
+    width: 100%;
+    padding: 24px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 24px;
+    font-size: 26px;
+}
+
+/* ── Desktop layout ── */
+.content {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+}
+
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.controls-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.buttons-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-group label {
+    font-weight: 600;
+    color: #333;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+select,
+input[type="range"],
+input[type="text"] {
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+    touch-action: manipulation;
+}
+
+input[type="text"] {
+    width: 100%;
+    font-family: inherit;
+}
+
+input[type="text"]:hover,
+input[type="text"]:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#charCounter {
+    font-weight: normal;
+    color: #aaa;
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+select:hover,
+select:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+input[type="range"] {
+    width: 100%;
+    padding: 6px 0;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+}
+
+button {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.create-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.create-btn:hover,
+.create-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+}
+
+.delete-btn {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+}
+
+.delete-btn:hover,
+.delete-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(231, 76, 60, 0.35);
+}
+
+.clear-btn {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.clear-btn:hover,
+.clear-btn:active {
+    background: #e0e0e0;
+}
+
+.tips {
+    padding: 12px;
+    background: #f0f7ff;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #555;
+    line-height: 1.7;
+}
+
+/* ── Canvas area ── */
+.canvas-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+#canvas {
+    border: 3px solid #ddd;
+    border-radius: 12px;
+    display: block;
+    width: 100%;
+    height: 560px;
+    touch-action: none;
+}
+
+.canvas-hint {
+    text-align: center;
+    font-size: 13px;
+    color: #999;
+    font-style: italic;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.stat-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.stat-label {
+    color: #666;
+    font-weight: 600;
+}
+
+.stat-value {
+    color: #667eea;
+    font-weight: 700;
+}
+
+/* ── Tablet (≤ 768px) ── */
+@media (max-width: 768px) {
+    body {
+        padding: 12px;
+        align-items: flex-start;
+    }
+
+    .container {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    h1 {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    /* Controls go below the canvas on mobile */
+    .canvas-wrapper {
+        order: 1;
+    }
+
+    .control-panel {
+        order: 2;
+        gap: 12px;
+    }
+
+    /* Horizontal controls row on tablet/mobile */
+    .controls-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+    }
+
+    .text-group {
+        grid-column: 1 / -1;
+    }
+
+    .buttons-row {
+        flex-direction: row;
+    }
+
+    .buttons-row button {
+        flex: 1;
+    }
+
+    #canvas {
+        height: 380px;
+    }
+
+    .tips {
+        font-size: 11px;
+    }
+}
+
+/* ── Phone (≤ 480px) ── */
+@media (max-width: 480px) {
+    body {
+        padding: 8px;
+    }
+
+    .container {
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    h1 {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+
+    .controls-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    /* Show all three controls stacked but compact */
+    .control-group label {
+        font-size: 12px;
+    }
+
+    .buttons-row {
+        flex-wrap: wrap;
+    }
+
+    button {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    #canvas {
+        height: 300px;
+    }
+
+    .stats {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .tips {
+        display: none;
+    }
+}
