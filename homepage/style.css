@@ -4,6 +4,8 @@
     margin: 0 auto;
     margin-top: -200px;
     text-align: center;
+    min-height: unset;
+    padding-bottom: 3rem;
 }
 
 .about-grid {
@@ -92,91 +94,109 @@
     font-weight: 500;
 }
 
-/* Skills Section */
-#technologies {
-    background: var(--bg-dark-about);
+/* Read More Link */
+.read-more-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    transition: var(--transition);
 }
 
-.technologies {
+.read-more-link:hover {
+    color: var(--primary-hover);
+    gap: 0.75rem;
+}
+
+/* Code Stats Section */
+.code-stats {
+    background: var(--bg-dark-about);
+    min-height: unset;
+    padding-bottom: 3rem;
+}
+
+.stats-content {
+    max-width: 700px;
+    margin: 0 auto;
     text-align: center;
 }
 
-.tech-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    justify-content: center;
-    align-items: center;
-    max-width: 1000px;
-    margin: 0 auto;
+.stats-context {
+    font-size: 1rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
 }
 
-.tech-item {
+.stats-total {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1.5rem;
-    background: var(--bg-card);
-    border-radius: 25px;
-    transition: var(--transition);
-    box-shadow: var(--shadow);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    min-width: 100px;
+    margin-bottom: 2.5rem;
 }
 
-.tech-icon img,
-.tech-icon svg,
-.tech-icon i {
-    display: block;
-    top: 0;
+.stats-number {
+    font-size: 4rem;
+    font-weight: 800;
+    background: var(--bg-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
 }
 
-.tech-item:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-hover);
-}
-
-.tech-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 50px;
-    color: var(--text-light);
-    transition: var(--transition);
-}
-
-.tech-item:hover .tech-icon {
-    transform: scale(1.1);
-}
-
-/* Tooltip */
-.tech-item::before {
-    content: attr(data-tech);
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-card);
-    color: var(--text-light);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
+.stats-label {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
     font-weight: 500;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: var(--shadow);
-    z-index: 10;
 }
 
-.tech-item:hover::before {
-    opacity: 1;
-    visibility: visible;
+.stats-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
-.tech-item:hover .tech-name {
-    opacity: 1;
+.stats-lang {
+    text-align: left;
+}
+
+.stats-lang-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.4rem;
+}
+
+.stats-lang-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.stats-lang-info {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.stats-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stats-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Projects Section */
@@ -505,10 +525,6 @@
         grid-template-columns: 1fr;
     }
 
-    .progress-button {
-        margin-top: 2rem;
-    }
-
     .about-title {
         font-size: 3rem;
     }
@@ -527,33 +543,5 @@
     .about-description {
         font-size: 1.2rem;
         padding: 0 1rem;
-    }
-
-    .tech-grid {
-        gap: 1rem;
-    }
-
-    .tech-item {
-        padding: 1rem;
-        min-width: 80px;
-    }
-
-    .tech-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 40px;
-    }
-
-    .quote-section {
-        padding: 4rem 0;
-    }
-
-    .quote {
-        padding: 0;
-    }
-
-    .quote::before,
-    .quote::after {
-        font-size: 3rem;
     }
 }

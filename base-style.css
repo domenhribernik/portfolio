@@ -246,11 +246,6 @@ body {
     margin-bottom: 3rem;
 }
 
-.progress-button {
-    text-align: center;
-    margin-top: 4rem;
-}
-
 /* Footer */
 .footer {
     background: var(--bg-dark);

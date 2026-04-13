@@ -1,3 +1,57 @@
+// ===== Code Stats =====
+
+(async () => {
+    try {
+        const res = await fetch('app/proxys/stats-proxy.php');
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+
+        const totalEl = document.getElementById('stats-total-number');
+        const breakdownEl = document.getElementById('stats-breakdown');
+        if (!totalEl || !breakdownEl) return;
+
+        totalEl.textContent = data.total.toLocaleString();
+
+        const colors = {
+            html: '#e34c26',
+            css: '#563d7c',
+            js: '#f1e05a',
+            php: '#4F5D95'
+        };
+
+        const labels = {
+            html: 'HTML',
+            css: 'CSS',
+            js: 'JavaScript',
+            php: 'PHP'
+        };
+
+        breakdownEl.innerHTML = '';
+        for (const [lang, info] of Object.entries(data.counts)) {
+            const item = document.createElement('div');
+            item.className = 'stats-lang';
+            item.innerHTML = `
+                <div class="stats-lang-header">
+                    <span class="stats-lang-name">${labels[lang] || lang}</span>
+                    <span class="stats-lang-info">${info.lines.toLocaleString()} lines · ${info.files} files</span>
+                </div>
+                <div class="stats-bar">
+                    <div class="stats-bar-fill" style="width: 0%; background: ${colors[lang] || '#667eea'}"></div>
+                </div>
+            `;
+            breakdownEl.appendChild(item);
+
+            // Animate bar after append
+            requestAnimationFrame(() => {
+                item.querySelector('.stats-bar-fill').style.width = info.percent + '%';
+            });
+        }
+    } catch (e) {
+        const content = document.getElementById('stats-content');
+        if (content) content.innerHTML = '<p style="text-align:center;color:var(--text-muted)">Unable to load stats.</p>';
+    }
+})();
+
 // ===== APOD (Astronomy Picture of the Day) =====
 
 (async () => {
