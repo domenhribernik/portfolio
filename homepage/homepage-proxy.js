@@ -1,11 +1,44 @@
-(() => {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const currentDateEl = document.getElementById('current-date');
+// ===== APOD (Astronomy Picture of the Day) =====
 
-    const today = new Date();
-    currentDateEl.textContent = today.toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+(async () => {
+    const spinner = document.getElementById('apod-spinner');
+    const body    = document.getElementById('apod-body');
+    const imgEl   = document.getElementById('apod-img');
+
+    try {
+        const res = await fetch('app/proxys/apod-proxy.php');
+        if (!res.ok) throw new Error(res.status);
+        const d = await res.json();
+
+        document.getElementById('apod-title').textContent   = d.title;
+        document.getElementById('apod-date').textContent    = new Date(d.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('apod-explain').textContent = d.explanation;
+        document.getElementById('apod-link').href           = `https://apod.nasa.gov/apod/ap${d.date.replace(/-/g, '').slice(2)}.html`;
+
+        if (d.copyright) {
+            document.getElementById('apod-copy').textContent = `© ${d.copyright}`;
+        } else {
+            document.getElementById('apod-copy').textContent = '';
+        }
+
+        imgEl.src = d.url;
+        imgEl.alt = d.title;
+        imgEl.title = d.title;
+        imgEl.addEventListener('click', () => window.open(d.hdurl || d.url, '_blank'));
+
+        spinner.hidden = true;
+        body.hidden    = false;
+    } catch (e) {
+        spinner.hidden = true;
+        body.hidden    = false;
+        body.innerHTML = `<p style="text-align:center;color:var(--error)">Unable to load picture.</p>`;
+    }
+})();
+
+// ===== OTD (On This Day) =====
+
+window.addEventListener('DOMContentLoaded', () => {
+    const loadingOverlay = document.getElementById('loading-overlay');
 
     const stripHtml = (html) => {
         const tmp = document.createElement('div');
@@ -30,10 +63,6 @@
         return page?.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${page?.title}`;
     };
 
-    // ========================================
-    // GALLERY INSTANCE
-    // ========================================
-
     let featuredGallery = null;
 
     const initFeaturedGallery = () => {
@@ -44,12 +73,10 @@
 
         if (!track) return;
 
-        // Destroy existing gallery if any
         if (featuredGallery) {
             featuredGallery.destroy();
         }
 
-        // Create new gallery instance
         featuredGallery = new Gallery({
             track: track,
             prevBtn: prevBtn,
@@ -67,10 +94,6 @@
 
         featuredGallery.init();
     };
-
-    // ========================================
-    // UI COMPONENTS
-    // ========================================
 
     const createGallerySlide = (item, index, total) => {
         const article = document.createElement('article');
@@ -113,46 +136,6 @@
         return article;
     };
 
-    const createCategoryItem = (item, type) => {
-        const div = document.createElement('div');
-        div.className = 'category-item';
-
-        const patterns = [
-            /^([^,]+),\s*(.+)$/, /^([^:]+):\s*(.+)$/, /^(.+?\([^)]+\))\s*,?\s*(.+)$/,
-        ];
-
-        let title = '', description = '';
-        const text = stripHtml(item.text || '');
-        for (const pattern of patterns) {
-            const match = text.match(pattern);
-            if (match) { title = match[1].trim(); description = match[2].trim(); break; }
-        }
-        if (!title) { title = text; }
-
-        const year = item.year || '';
-        const imageUrl = getFirstImage(item.pages);
-        const pageUrl = getFirstPageUrl(item.pages);
-
-        const imageHtml = imageUrl ? `<img src="${imageUrl}" alt="" class="category-item-image" loading="lazy">` : '';
-        const linkStart = pageUrl ? `<a href="${pageUrl}" target="_blank" rel="noopener" class="category-item-link">` : '';
-        const linkEnd = pageUrl ? '</a>' : '';
-        const textHtml = description
-            ? `<p class="category-item-text"><strong class="category-item-title">${title}</strong> ${description}</p>`
-            : `<p class="category-item-text"><strong class="category-item-title">${title}</strong></p>`;
-
-        div.innerHTML = `
-            ${linkStart}
-            ${imageHtml}
-            <div class="category-item-content">
-                ${year ? `<span class="category-item-year ${type}">${year}</span>` : ''}
-                ${textHtml}
-            </div>
-            ${linkEnd}
-        `;
-
-        return div;
-    };
-
     const createGalleryPlaceholder = () => {
         const div = document.createElement('div');
         div.className = 'gallery-slide loading';
@@ -167,34 +150,13 @@
         return div;
     };
 
-    const createCategoryPlaceholder = () => {
-        const div = document.createElement('div');
-        div.className = 'category-item loading';
-        div.innerHTML = `
-            <div class="loading-block category-item-image"></div>
-            <div class="category-item-content">
-                <div class="loading-line short"></div>
-                <div class="loading-line"></div>
-            </div>
-        `;
-        return div;
-    };
-
     const showError = (container) => {
         container.innerHTML = `<div class="error-state"><span class="error-icon">⚠️</span><p>Unable to load data.</p></div>`;
     };
 
-    const showEmpty = (container) => {
-        container.innerHTML = `<div class="empty-state"><p>No entries available.</p></div>`;
-    };
-
-    // ========================================
-    // DATA LOADING
-    // ========================================
-
     const populateFeatured = (data) => {
         const track = document.getElementById('featured-track');
-        const section = document.getElementById('featured-section');
+        const section = document.getElementById('on-this-day-section');
 
         if (!track || !section) return;
         track.innerHTML = '';
@@ -211,56 +173,27 @@
         initFeaturedGallery();
     };
 
-    const populateCategory = (containerId, data, type) => {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        container.innerHTML = '';
-
-        if (!data || data.length === 0) {
-            showEmpty(container);
-            return;
-        }
-
-        data.slice(0, 15).forEach(item => {
-            container.appendChild(createCategoryItem(item, type));
-        });
-    };
-
     const fetchData = async () => {
         const track = document.getElementById('featured-track');
-        const eventsContainer = document.getElementById('events-container');
-        const birthsContainer = document.getElementById('births-container');
-        const deathsContainer = document.getElementById('deaths-container');
 
         if (track) {
             track.innerHTML = '';
             for (let i = 0; i < 3; i++) track.appendChild(createGalleryPlaceholder());
         }
 
-        [eventsContainer, birthsContainer, deathsContainer].forEach(container => {
-            if (container) {
-                container.innerHTML = '';
-                for (let i = 0; i < 5; i++) container.appendChild(createCategoryPlaceholder());
-            }
-        });
-
         try {
-            const response = await fetch('../app/proxys/otd-proxy.php');
+            const response = await fetch('app/proxys/otd-proxy.php');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
 
             loadingOverlay?.classList.add('hidden');
             populateFeatured(data.selected?.selected);
-            populateCategory('events-container', data.events?.events, 'events');
-            populateCategory('births-container', data.births?.births, 'births');
-            populateCategory('deaths-container', data.deaths?.deaths, 'deaths');
         } catch (error) {
             console.error('Error:', error);
             loadingOverlay?.classList.add('hidden');
             if (track) showError(track);
-            [eventsContainer, birthsContainer, deathsContainer].forEach(c => { if (c) showError(c); });
         }
     };
 
     fetchData();
-})();
+});

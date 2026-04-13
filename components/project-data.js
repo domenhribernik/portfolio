@@ -44,7 +44,7 @@ export const projects = {
     description: "My thesis focuses on creating a digital twin of a runner, integrating multiple subprojects into an application to demonstrate practical use of various technologies.",
     tech: ["Blockchain", "Web", "Android", "Data Analysis", "AI", "Game dev", "Parallel computing"],
     links: {
-      readMore: "thesis.html",
+      readMore: "thesis",
       code: "https://github.com/orgs/ni-imena/repositories"
     },
     iconClass: "fas fa-running",
@@ -86,7 +86,7 @@ export const projects = {
     description: "A personal project built to manage scattered MP3 backing tracks across devices. This custom web player lets you play guitar backing tracks directly in the browser, with a clean and responsive interface tailored for quick practice sessions.",
     tech: ["HTML", "CSS", "JavaScript"],
     links: {
-      visitSite: "music.html"
+      visitSite: "music"
     },
     iconClass: "fas fa-music",
   },
@@ -95,7 +95,7 @@ export const projects = {
     description: "A simple web-based game where players take turns guessing the location of a spy on a grid. The game is designed for two players and includes basic AI functionality for single-player mode.",
     tech: ["HTML", "CSS", "JavaScript"],
     links: {
-      visitSite: "spy.html",
+      visitSite: "spy",
     },
     iconClass: "fas fa-user-secret",
   },
@@ -104,7 +104,7 @@ export const projects = {
     description: "A web-based scoring app for the Slovenian Tarok card game, supporting 3-4 players with real-time score tracking, radelci management, and game history.",
     tech: ["HTML", "CSS", "JavaScript"],
     links: {
-      visitSite: "tarok.html",
+      visitSite: "tarok",
     },
     iconClass: "fa fa-trophy",
   }

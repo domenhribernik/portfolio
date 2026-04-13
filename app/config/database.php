@@ -6,8 +6,13 @@ if (!defined('SECURE_ACCESS')) {
     exit('Access denied.');
 }
 
+require_once __DIR__ . '/dev-mode.php';
+
+$basePath     = $DEV_MODE ? dirname(__DIR__)              : '/usr/home/meuhdy';
+$vendorPath   = $DEV_MODE ? dirname(__DIR__) . '/vendor'  : '/usr/home/meuhdy/vendor';
+
 // Load autoloader silently
-$autoloaderPath = __DIR__ . '/../vendor/autoload.php';
+$autoloaderPath = $vendorPath . '/autoload.php';
 if (!file_exists($autoloaderPath)) {
     error_log("Database Error: Autoloader not found at $autoloaderPath");
     die("System configuration error. Contact administrator.");
@@ -16,15 +21,11 @@ require_once $autoloaderPath;
 
 // Load .env silently
 if (empty($_ENV['DB_HOST'])) {
-    $paths = [__DIR__ . '/../.env', __DIR__ . '/.env', __DIR__ . '/../../.env'];
-    foreach ($paths as $path) {
-        if (file_exists($path)) {
-            try {
-                Dotenv\Dotenv::createImmutable(dirname($path))->safeLoad();
-                break;
-            } catch (Exception $e) {
-                error_log("Dotenv error: " . $e->getMessage());
-            }
+    if (file_exists($basePath . '/.env')) {
+        try {
+            Dotenv\Dotenv::createImmutable($basePath)->safeLoad();
+        } catch (Exception $e) {
+            error_log("Dotenv error: " . $e->getMessage());
         }
     }
 }

@@ -3,7 +3,7 @@ const config = {
         'cHJldHR5cGxlYXNl': 'Iliana',
         'c3RheXByZXNlbnQ=': 'Domen'
     },
-    targetDate: new Date('2026-02-06T14:00:00').getTime(),
+    targetDate: new Date('2026-04-21T17:30:00').getTime(),
 };
 
 // Drawing variables

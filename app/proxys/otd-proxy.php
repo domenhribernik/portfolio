@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-$cacheFile = __DIR__ . '/otd-cache.json';
+$cacheFile = __DIR__ . '/../cache/otd-cache.json';
 $language = 'en';
 $month = date('n');
 $day = date('j');

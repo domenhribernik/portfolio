@@ -2,18 +2,23 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *'); // Or your specific domain
 
-$autoloaderPath = __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../config/dev-mode.php';
+
+$basePath     = $DEV_MODE ? dirname(__DIR__)              : '/usr/home/meuhdy';
+$vendorPath   = $DEV_MODE ? dirname(__DIR__) . '/vendor'  : '/usr/home/meuhdy/vendor';
+
+$autoloaderPath = $vendorPath . '/autoload.php';
 if (!file_exists($autoloaderPath)) {
     die("Autoloader not found at: $autoloaderPath");
 }
 require $autoloaderPath;
 
-$envPath = __DIR__ . '/.env';
+$envPath = $basePath . '/.env';
 if (!file_exists($envPath)) {
     die(".env file not found at: $envPath");
 }
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv = Dotenv\Dotenv::createImmutable($basePath);
 $dotenv->load();
 $apiKey = htmlspecialchars($_ENV['NASA_API_KEY']);
 
@@ -43,7 +48,7 @@ function fetchUrl($url) {
     return $response;
 }
 
-$cacheFile = __DIR__ . '/apod-cache.json';
+$cacheFile = __DIR__ . '/../cache/apod-cache.json';
 $today = date('Y-m-d');
 $cachedData = file_exists($cacheFile) ? json_decode(file_get_contents($cacheFile), true) : null;
 
