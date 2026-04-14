@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS plants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    nickname VARCHAR(255) DEFAULT NULL,
+    type VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    watering_frequency_text VARCHAR(255) NOT NULL,
+    watering_min_days INT NOT NULL,
+    watering_max_days INT NOT NULL,
+    light VARCHAR(255) NOT NULL,
+    humidity VARCHAR(255) NOT NULL,
+    temperature VARCHAR(100) NOT NULL,
+    soil VARCHAR(255) NOT NULL,
+    common_issues JSON NOT NULL,
+    useful_tips JSON NOT NULL,
+    image_data LONGBLOB DEFAULT NULL,
+    image_mime VARCHAR(50) DEFAULT NULL,
+    last_watered DATETIME DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

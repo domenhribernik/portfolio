@@ -107,5 +107,14 @@ export const projects = {
       visitSite: "tarok",
     },
     iconClass: "fa fa-trophy",
+  },
+  botaniq: {
+    title: "Botaniq",
+    description: "A plant care manager with watering countdown timers, detailed care guides, and image uploads. Track your houseplants and never forget to water them again.",
+    tech: ["HTML", "CSS", "JavaScript", "PHP", "MySQL"],
+    links: {
+      visitSite: "botaniq",
+    },
+    iconClass: "fas fa-leaf",
   }
 };

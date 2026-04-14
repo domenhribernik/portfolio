@@ -16,14 +16,16 @@
             html: '#e34c26',
             css: '#563d7c',
             js: '#f1e05a',
-            php: '#4F5D95'
+            php: '#4F5D95',
+            sql: '#e38c00'
         };
 
         const labels = {
             html: 'HTML',
             css: 'CSS',
             js: 'JavaScript',
-            php: 'PHP'
+            php: 'PHP',
+            sql: 'SQL'
         };
 
         breakdownEl.innerHTML = '';

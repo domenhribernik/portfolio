@@ -13,7 +13,7 @@ if ($cachedData && isset($cachedData['date']) && $cachedData['date'] === $today)
     exit;
 }
 
-$extensions = ['html', 'css', 'js', 'php'];
+$extensions = ['html', 'css', 'js', 'php', 'sql'];
 $counts = [];
 foreach ($extensions as $ext) {
     $counts[$ext] = ['lines' => 0, 'files' => 0];
