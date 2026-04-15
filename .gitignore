@@ -5,3 +5,7 @@ dist
 .env
 *cache.json
 vendor
+/assets/uploads/*
+!/assets/uploads/.gitkeep
+/app/cache/*
+!/app/cache/.gitkeep
