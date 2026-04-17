@@ -13,10 +13,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="base-style.css">
-    <link rel="stylesheet" href="homepage/style.css">
-    <link rel="stylesheet" href="homepage/apod-styles.css">
+    <link rel="stylesheet" href="views/homepage/style.css">
+    <link rel="stylesheet" href="views/homepage/apod-styles.css">
     <link rel="stylesheet" href="components/gallery.css">
-    <link rel="stylesheet" href="homepage/otd-gallery.css">
+    <link rel="stylesheet" href="views/homepage/otd-gallery.css">
 </head>
 
 <body>
@@ -53,7 +53,7 @@
                         <p> a software developer based in Slovenia. I build professional applications for clients and
                             contribute to open-source projects. I'm driven by curiosity and passionate about creating
                             software that solves real problems. </p>
-                        <a href="about/" class="read-more-link">Read more <i class="fas fa-arrow-right"></i></a>
+                        <a href="views/about/" class="read-more-link">Read more <i class="fas fa-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
@@ -84,46 +84,19 @@
             <!-- Professional/Freelance Projects -->
             <div class="project-category">
                 <h3 class="category-title">Professional & Freelance Work</h3>
-                <div class="projects-grid">
-                    <project-card class="project-card" project="CWCyprus"
-                        gradient="linear-gradient(45deg, #ffcd1c 0%, #ffa41c 100%)"></project-card>
-                    <project-card class="project-card" project="vitaMavric"
-                        gradient="linear-gradient(45deg, #f093fb 0%, #f5576c 100%)"></project-card>
-                    <project-card class="project-card" project="gasperStrazisar"
-                        gradient="linear-gradient(45deg, #4facfe 0%, #00f2fe 100%)"></project-card>
-                    <project-card class="project-card" project="ajsaPetSpa"
-                        gradient="linear-gradient(45deg, #D4C49A 0%, #8B7355 100%)"></project-card>
-                </div>
+                <projects-grid category="professional"></projects-grid>
             </div>
 
             <!-- Academic Projects -->
             <div class="project-category">
                 <h3 class="category-title">Academic Work & Research</h3>
-                <div class="projects-grid">
-                    <project-card class="project-card" project="thesis"
-                        gradient="linear-gradient(45deg, #667eea 0%, #a779e9 100%)"></project-card>
-                    <project-card class="project-card" project="OCRAlgorithm"
-                        gradient="linear-gradient(45deg, #7fc955 0%, #45c2b0 100%)"></project-card>
-                    <project-card class="project-card" project="FruitAlgorithm"
-                        gradient="linear-gradient(45deg, #f2994a 0%, #f2c94c 100%)"></project-card>
-                </div>
+                <projects-grid category="academic"></projects-grid>
             </div>
 
             <!-- Personal/Passion Projects -->
             <div class="project-category">
                 <h3 class="category-title">Passion Projects</h3>
-                <div class="projects-grid">
-                    <project-card class="project-card" project="wordleBot"
-                        gradient="linear-gradient(45deg, #fc6076 0%, #ff9a44 100%)"></project-card>
-                    <project-card class="project-card" project="guitarBackingTracks"
-                        gradient="linear-gradient(45deg, #667eea 0%, #56ccf2 100%)"></project-card>
-                    <project-card class="project-card" project="tarok"
-                        gradient="linear-gradient(45deg, #ff006e 0%, #ff4d4d 100%)"></project-card>
-                    <project-card class="project-card" project="spyGame"
-                        gradient="linear-gradient(45deg, #b24592 0%, #f15f79 100%)"></project-card>
-                    <project-card class="project-card" project="botaniq"
-                        gradient="linear-gradient(45deg, #56ab2f 0%, #a8e063 100%)"></project-card>
-                </div>
+                <projects-grid category="passion"></projects-grid>
             </div>
         </div>
     </section>
@@ -136,7 +109,7 @@
                 <h1 class="otd-title">On This Day</h1>
             </div>
             <p class="otd-view-more">View More That Happened <a
-                    href="https://domenhribernik.com/on-this-day"><u>On
+                    href="views/on-this-day"><u>On
                         This Day</u></a></p>
             <div class="gallery-container">
                 <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
@@ -250,9 +223,10 @@
     <script type="module" src="components/main-navbar.js"></script>
     <script type="module" src="components/project-data.js"></script>
     <script type="module" src="components/project-card.js"></script>
+    <script type="module" src="components/projects-grid.js"></script>
     <script src="components/gallery.js"></script>
-    <script src="homepage/homepage-proxy.js"></script>
-    <script src="homepage/script.js"></script>
+    <script src="views/homepage/homepage-proxy.js"></script>
+    <script src="views/homepage/script.js"></script>
     <script src="components/tawk-chat.js"></script>
     <script src="components/gtranslate.js"></script>
 </body>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Botaniq — Plant Care Manager</title>
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                },
+            },
+        },
+    }
+    </script>
+</head>
+<body class="font-sans bg-neutral-50 text-neutral-900 min-h-screen m-0 p-0 leading-relaxed">
+    <div>
+        <header class="bg-white border-b border-neutral-200 sticky top-0 z-[100]">
+            <div class="max-w-[1200px] mx-auto px-8 py-4 flex items-center justify-between max-md:px-4 max-md:py-3">
+                <a href="../../" class="text-neutral-500 no-underline text-lg transition-colors hover:text-neutral-900 w-10">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-leaf text-[#2d6a4f] text-xl"></i>
+                    <h1 class="text-xl font-bold tracking-tight">Botaniq</h1>
+                </div>
+                <button class="bg-neutral-900 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm border-none cursor-pointer transition-colors hover:bg-neutral-700" id="addPlantBtn" title="Add plant">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="max-w-[1200px] mx-auto p-8 max-md:p-4">
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5 max-md:grid-cols-1" id="plantsGrid"></div>
+
+            <div class="text-center py-16 px-8 text-neutral-400" id="emptyState" style="display: none;">
+                <div class="text-5xl mb-4">🪴</div>
+                <p class="mb-6 text-base">No plants yet</p>
+                <button class="bg-neutral-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-700" id="emptyAddBtn">Add your first plant</button>
+            </div>
+
+            <div class="flex justify-center py-16" id="loadingState">
+                <div class="loading-spinner"></div>
+            </div>
+
+            <div class="text-center py-16 px-8 text-neutral-400" id="errorState" style="display: none;">
+                <i class="fas fa-exclamation-triangle text-4xl mb-4 text-red-600 block"></i>
+                <p class="mb-6" id="errorMessage">Failed to load plants</p>
+                <button class="bg-neutral-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-700" id="retryBtn">Retry</button>
+            </div>
+        </main>
+
+        <!-- Plant Detail Modal -->
+        <div class="modal-overlay" id="detailModal">
+            <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative p-8 max-md:rounded-xl max-md:max-h-[95vh]">
+                <button class="absolute top-4 right-4 bg-transparent border-none text-neutral-400 cursor-pointer text-lg p-1 rounded-md transition-colors hover:text-neutral-900 hover:bg-neutral-100" id="detailClose"><i class="fas fa-times"></i></button>
+                <div id="detailContent"></div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Plant Modal -->
+        <div class="modal-overlay" id="formModal">
+            <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative px-8 pt-6 pb-8 max-md:rounded-xl max-md:max-h-[95vh] max-md:px-5">
+                <div class="flex justify-between items-center mb-5">
+                    <h2 class="text-lg font-semibold" id="formTitle">Add Plant</h2>
+                    <button class="absolute top-4 right-4 bg-transparent border-none text-neutral-400 cursor-pointer text-lg p-1 rounded-md transition-colors hover:text-neutral-900 hover:bg-neutral-100" id="formClose"><i class="fas fa-times"></i></button>
+                </div>
+                <form id="plantForm" novalidate>
+                    <input type="hidden" id="plantId">
+
+                    <div class="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+                        <div class="flex flex-col">
+                            <label for="plantName" class="text-xs font-medium text-neutral-500 mb-1">Scientific Name <span class="text-red-600">*</span></label>
+                            <input type="text" id="plantName" maxlength="255" required class="form-input">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="plantNickname" class="text-xs font-medium text-neutral-500 mb-1">Nickname</label>
+                            <input type="text" id="plantNickname" maxlength="255" placeholder="Optional" class="form-input">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="plantType" class="text-xs font-medium text-neutral-500 mb-1">Type <span class="text-red-600">*</span></label>
+                            <input type="text" id="plantType" required placeholder="e.g. Indoor bonsai tree" class="form-input">
+                        </div>
+                        <div class="flex flex-col col-span-full">
+                            <label for="plantDescription" class="text-xs font-medium text-neutral-500 mb-1">Description <span class="text-red-600">*</span></label>
+                            <textarea id="plantDescription" rows="3" required class="form-input"></textarea>
+                        </div>
+
+                        <div class="col-span-full text-xs font-semibold uppercase tracking-widest text-neutral-400 pt-2 border-t border-neutral-100">Watering</div>
+                        <div class="flex flex-col">
+                            <label for="wateringText" class="text-xs font-medium text-neutral-500 mb-1">Frequency Description <span class="text-red-600">*</span></label>
+                            <input type="text" id="wateringText" required placeholder="e.g. Every 5-7 days" class="form-input">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="wateringMin" class="text-xs font-medium text-neutral-500 mb-1">Min Days <span class="text-red-600">*</span></label>
+                            <input type="number" id="wateringMin" min="1" max="365" required class="form-input">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="wateringMax" class="text-xs font-medium text-neutral-500 mb-1">Max Days <span class="text-red-600">*</span></label>
+                            <input type="number" id="wateringMax" min="1" max="365" required class="form-input">
+                        </div>
+
+                        <div class="col-span-full text-xs font-semibold uppercase tracking-widest text-neutral-400 pt-2 border-t border-neutral-100">Environment</div>
+                        <div class="flex flex-col">
+                            <label for="plantLight" class="text-xs font-medium text-neutral-500 mb-1">Light <span class="text-red-600">*</span></label>
+                            <input type="text" id="plantLight" required placeholder="e.g. Bright indirect light" class="form-input">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="plantHumidity" class="text-xs font-medium text-neutral-500 mb-1">Humidity <span class="text-red-600">*</span></label>
+                            <input type="text" id="plantHumidity" required placeholder="e.g. Moderate to high" class="form-input">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="plantTemperature" class="text-xs font-medium text-neutral-500 mb-1">Temperature (°C) <span class="text-red-600">*</span></label>
+                            <input type="text" id="plantTemperature" required placeholder="e.g. 18-25" class="form-input">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="plantSoil" class="text-xs font-medium text-neutral-500 mb-1">Soil <span class="text-red-600">*</span></label>
+                            <input type="text" id="plantSoil" required placeholder="e.g. Well-draining mix" class="form-input">
+                        </div>
+
+                        <div class="col-span-full text-xs font-semibold uppercase tracking-widest text-neutral-400 pt-2 border-t border-neutral-100">Details</div>
+                        <div class="flex flex-col col-span-full">
+                            <label class="text-xs font-medium text-neutral-500 mb-1">Common Issues</label>
+                            <div class="list-input" id="issuesList">
+                                <div class="list-items" id="issuesItems"></div>
+                                <div class="list-add">
+                                    <input type="text" id="issueInput" placeholder="Add an issue...">
+                                    <button type="button" class="list-add-btn" id="addIssueBtn"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col col-span-full">
+                            <label class="text-xs font-medium text-neutral-500 mb-1">Useful Tips</label>
+                            <div class="list-input" id="tipsList">
+                                <div class="list-items" id="tipsItems"></div>
+                                <div class="list-add">
+                                    <input type="text" id="tipInput" placeholder="Add a tip...">
+                                    <button type="button" class="list-add-btn" id="addTipBtn"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-span-full text-xs font-semibold uppercase tracking-widest text-neutral-400 pt-2 border-t border-neutral-100">Image</div>
+                        <div class="flex flex-col col-span-full">
+                            <label for="plantImage" class="text-xs font-medium text-neutral-500 mb-1">Plant Photo</label>
+                            <div class="image-upload" id="imageUpload">
+                                <input type="file" id="plantImage" accept="image/jpeg,image/png,image/webp,image/gif">
+                                <div class="image-preview" id="imagePreview">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Click or drag to upload</span>
+                                </div>
+                            </div>
+                            <label class="remove-image-label" id="removeImageLabel" style="display: none;">
+                                <input type="checkbox" id="removeImage"> Remove current image
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-error" id="formError" style="display: none;"></div>
+
+                    <div class="flex gap-3 justify-end mt-5">
+                        <button type="button" class="bg-neutral-100 text-neutral-900 px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-200" id="formCancel">Cancel</button>
+                        <button type="submit" class="bg-neutral-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-700 inline-flex items-center gap-1.5" id="formSubmit">
+                            <span class="btn-text">Save Plant</span>
+                            <span class="btn-loading" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal-overlay" id="deleteModal">
+            <div class="bg-white rounded-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto relative p-8 text-center">
+                <h3 class="mb-3">Delete Plant</h3>
+                <p class="text-neutral-500 mb-6">Are you sure you want to delete <strong id="deletePlantName"></strong>?</p>
+                <div class="flex gap-3 justify-end">
+                    <button class="bg-neutral-100 text-neutral-900 px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-200" id="deleteCancelBtn">Cancel</button>
+                    <button class="bg-red-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-red-700" id="deleteConfirmBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div class="fixed bottom-6 right-6 z-[2000] flex flex-col gap-2" id="toastContainer"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

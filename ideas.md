@@ -23,7 +23,6 @@
 ## Refactoring
 
 - Restyle every project with Tailwind CSS
-- Move project folder into `views/` — better now than later
 - Figure out how to seperate git repositories, to seperate the big projects, people would be interested in seeing
 
 ## Project Ideas

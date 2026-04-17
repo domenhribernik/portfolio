@@ -48,25 +48,41 @@ function fetchUrl($url) {
     return $response;
 }
 
-$cacheFile = __DIR__ . '/../cache/apod-cache.json';
-$today = date('Y-m-d');
+$cacheFile  = __DIR__ . '/../cache/apod-cache.json';
+$today      = date('Y-m-d');
 $cachedData = file_exists($cacheFile) ? json_decode(file_get_contents($cacheFile), true) : null;
+$refresh    = isset($_GET['refresh']);
 
-if ($cachedData && isset($cachedData['date']) && $cachedData['date'] === $today) {
+// Without ?refresh — serve cache immediately if it exists (even if stale)
+if (!$refresh && $cachedData) {
     echo json_encode($cachedData);
     exit;
 }
 
-$apiUrl = "https://api.nasa.gov/planetary/apod?api_key={$apiKey}&date={$today}";
-$response = fetchUrl($apiUrl);
+// With ?refresh (or no cache at all) — try to fetch fresh data
+$datesToTry = [$today, date('Y-m-d', strtotime('-1 day'))];
 
-if ($response) {
-    $newData = json_decode($response, true);
+foreach ($datesToTry as $date) {
+    $apiUrl   = "https://api.nasa.gov/planetary/apod?api_key={$apiKey}&date={$date}";
+    $response = fetchUrl($apiUrl);
 
-    if (isset($newData['date'])) {
-        file_put_contents($cacheFile, json_encode($newData));
-        echo json_encode($newData);
-        exit;
+    if ($response) {
+        $newData = json_decode($response, true);
+
+        if (isset($newData['date'])) {
+            file_put_contents($cacheFile, json_encode($newData));
+            echo json_encode($newData);
+            exit;
+        }
     }
 }
+
+// All fetches failed — serve stale cache if available
+if ($cachedData) {
+    echo json_encode($cachedData);
+    exit;
+}
+
+http_response_code(503);
+echo json_encode(['error' => 'Failed to fetch APOD data']);
 ?>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>On This Day - Wikipedia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../components/gallery.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../base-style.css">
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <main-navbar site="../../index.html"></main-navbar>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <p class="header-label">Wikipedia</p>
+                <h1 class="header-title">On This Day</h1>
+                <p class="header-date" id="current-date"></p>
+            </div>
+        </header>
+
+        <!-- Featured Section (Gallery) -->
+        <section class="featured-section" id="featured-section">
+            <div class="featured-header">
+                <span class="featured-badge">Featured Events</span>
+            </div>
+            <div class="gallery-container">
+                <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <div class="gallery-viewport">
+                    <div class="gallery-track" id="featured-track">
+                        <!-- Gallery slides will be loaded here -->
+                    </div>
+                </div>
+                <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next slide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+            <div class="gallery-dots" id="featured-dots"></div>
+        </section>
+
+        <!-- Categories Grid -->
+        <div class="categories">
+            <!-- Events -->
+            <section class="category">
+                <div class="category-header">
+                    <span class="category-icon">📜</span>
+                    <h2>Historical Events</h2>
+                </div>
+                <div class="category-list" id="events-container">
+                    <!-- Events will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Births -->
+            <section class="category">
+                <div class="category-header births">
+                    <span class="category-icon">👶</span>
+                    <h2>Births</h2>
+                </div>
+                <div class="category-list" id="births-container">
+                    <!-- Births will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Deaths -->
+            <section class="category">
+                <div class="category-header deaths">
+                    <span class="category-icon">🕯️</span>
+                    <h2>Deaths</h2>
+                </div>
+                <div class="category-list" id="deaths-container">
+                    <!-- Deaths will be loaded here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Data provided by <a href="https://www.wikipedia.org/" target="_blank">Wikipedia</a></p>
+    </footer>
+
+    <script type="module" src="../../components/main-navbar.js"></script>
+    <script src="../../components/gallery.js"></script>
+    <script src="script.js"></script>
+    <script>window.gtranslateSettings = { "default_language": "en", "languages": ["en", "sl", "de", "es", "fr", "zh-CN"], "globe_color": "#66aaff", "wrapper_selector": ".gtranslate_wrapper", "flag_size": 24, "globe_size": 40 }</script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
+</body>
+
+</html>

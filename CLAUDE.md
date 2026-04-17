@@ -10,11 +10,11 @@ Personal portfolio website for Domen Hribernik. Pure static site on the frontend
 
 ### Frontend — Page Structure
 
-The main entry point is `index.html` (root), which loads its page-specific logic from [homepage/script.js](homepage/script.js). The `homepage/` folder contains HTML partials, CSS, and JS unique to the landing page.
+The main entry point is `index.html` (root), which loads its page-specific logic from [views/homepage/script.js](views/homepage/script.js). The `views/homepage/` folder contains CSS and JS unique to the landing page.
 
-Each project/feature lives in its own directory named to match its URL path (e.g., `/rocks` → [rocks/](rocks/), `/tarok` → [tarok/](tarok/)). Each directory is self-contained with its own `index.html`, `style.css`, and `script.js`. Global styles shared across all pages are in [base-style.css](base-style.css).
+All page directories live under [views/](views/), named to match their URL path (e.g., `/views/rocks` → [views/rocks/](views/rocks/), `/views/tarok` → [views/tarok/](views/tarok/)). Each directory is self-contained with its own `index.html`, `style.css`, and `script.js`. Global styles shared across all pages are in [base-style.css](base-style.css).
 
-Current project directories: `about`, `botaniq`, `homepage`, `iliana`, `ip`, `music`, `on-this-day`, `quizz`, `rocks`, `spy`, `tarok`, `thesis`.
+Current project directories: `views/about`, `views/botaniq`, `views/homepage`, `views/iliana`, `views/ip`, `views/music`, `views/on-this-day`, `views/quizz`, `views/rocks`, `views/spy`, `views/tarok`, `views/thesis`.
 
 ### Frontend — Component System
 
@@ -47,7 +47,7 @@ All media (images, video, audio, documents) and data files live in [assets/](ass
 
 1. **Register the project** in [components/project-data.js](components/project-data.js) following the existing schema (`title`, `description`, `tech`, `links`, `iconClass`). Place the entry under the correct comment section (`Professional Projects`, `Academic Projects`, `Personal Projects`).
 2. **Add a `<project-card>` tag** to [index.html](index.html) inside the matching category's `.projects-grid` div. Pick a gradient that fits the project's theme. The `project` attribute must match the key used in `project-data.js`.
-3. **Create the project directory** matching the desired URL path (e.g., `botaniq/`), containing `index.html`, `style.css`, and `script.js`. Import shared components (`main-navbar.js`, etc.) and `base-style.css` using relative paths (`../`).
+3. **Create the project directory** under `views/` matching the desired URL path (e.g., `views/botaniq/`), containing `index.html`, `style.css`, and `script.js`. Import shared components (`main-navbar.js`, etc.) and `base-style.css` using `../../` relative paths (two levels up to reach the root).
 4. **If the project uses a database**, create an SQL model file at `app/models/<name>-model.sql` with the `CREATE TABLE` and seed `INSERT` statements. SQL is always executed manually via phpMyAdmin — never run SQL from code or migrations automatically. Create the corresponding controller at `app/controllers/<name>-controller.php` following the existing CRUD pattern.
 5. **Update the project directory list** in this file's "Frontend — Page Structure" section.
 

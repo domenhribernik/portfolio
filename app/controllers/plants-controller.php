@@ -32,6 +32,8 @@ try {
         case 'POST':
             if ($action === 'water' && $id) {
                 waterPlant($id);
+            } elseif ($id) {
+                updatePlant($id);
             } else {
                 createPlant();
             }
