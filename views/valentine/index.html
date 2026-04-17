@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Heart System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Floating Background Emojis -->
+    <div class="hearts-bg" id="heartsBg"></div>
+
+    <!-- Main Game Container -->
+    <div class="container" id="gameContainer">
+        <div class="lock-icon">🔒</div>
+        <h1>Website is Locked</h1>
+        <p class="subtitle">Enter the password to unlock my heart</p>
+        
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="password" 
+                placeholder="Enter password..." 
+                autocomplete="off" 
+                autocapitalize="off"
+                spellcheck="false"
+                inputmode="text"
+            >
+        </div>
+        
+        <button id="submit">Unlock</button>
+        
+        <div class="rules-container" id="rulesList"></div>
+    </div>
+
+    <!-- Final Valentine Screen -->
+    <div id="final-screen">
+        <canvas id="confetti-canvas"></canvas>
+        <div class="final-content">
+            <div class="success-hearts">💖🔓💖</div>
+            <div class="final-text">You broke all the rules for me...</div>
+            <div class="final-text">You found the only password that matters.</div>
+            
+            <div class="valentine-question">Will you be my valentine?</div>
+            
+            <div class="buttons">
+                <button class="btn btn-yes" id="yesBtn">Yes, forever ❤️</button>
+                <button class="btn btn-no" id="noBtn">No</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
