@@ -1,0 +1,226 @@
+:root {
+    --night: #0e0a07;
+    --night-soft: #14100c;
+    --cream: #f5ecd7;
+    --gold: #b89a5c;
+    --gold-bright: #d4b876;
+    --herb: #4a9d5a;
+    --ember: #e8533a;
+}
+
+body {
+    background-color: var(--night);
+    background-image:
+        radial-gradient(circle at 15% 10%, rgba(74, 157, 90, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 85% 90%, rgba(232, 83, 58, 0.05) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(184, 154, 92, 0.03) 0%, transparent 60%);
+    background-attachment: fixed;
+}
+
+/* Tiled herb pattern very subtle */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image:
+        radial-gradient(circle at 2px 2px, var(--gold) 1px, transparent 0);
+    background-size: 24px 24px;
+    z-index: 0;
+}
+
+main, header, section {
+    position: relative;
+    z-index: 1;
+}
+
+/* ────────── Checkbox ────────── */
+.checkbox {
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.checkbox .check-icon {
+    opacity: 0;
+    transition: opacity 0.15s;
+    font-size: 9px;
+    color: var(--night);
+}
+
+.checkbox.checked {
+    background-color: var(--herb) !important;
+    border-color: var(--herb) !important;
+    box-shadow: 0 0 12px rgba(74, 157, 90, 0.35);
+}
+
+.checkbox.checked .check-icon {
+    opacity: 1;
+    color: var(--cream);
+}
+
+.plant-item:active .checkbox {
+    transform: scale(0.88);
+}
+
+.plant-name {
+    transition: opacity 0.2s, text-decoration 0.2s;
+}
+
+.plant-name.done {
+    text-decoration: line-through;
+    text-decoration-color: var(--herb);
+    opacity: 0.35;
+}
+
+/* ────────── Sparkles ────────── */
+.sparkle {
+    animation: twinkle 3.2s ease-in-out infinite;
+    display: inline-block;
+    pointer-events: none;
+}
+.sparkle-1 { animation-delay: 0s; }
+.sparkle-2 { animation-delay: 0.7s; }
+.sparkle-3 { animation-delay: 1.4s; }
+.sparkle-4 { animation-delay: 2.1s; }
+.sparkle-5 { animation-delay: 1.0s; }
+.sparkle-6 { animation-delay: 2.6s; }
+
+@keyframes twinkle {
+    0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    50% { opacity: 0.25; transform: scale(0.6) rotate(15deg); }
+}
+
+.season-dot {
+    animation: season-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes season-pulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(74, 157, 90, 0.45);
+    }
+    50% {
+        opacity: 0.55;
+        box-shadow: 0 0 0 4px rgba(74, 157, 90, 0);
+    }
+}
+
+/* ────────── Bottle frame ────────── */
+.bottle-wrap {
+    position: relative;
+}
+
+.bottle-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -10% -8%;
+    background: radial-gradient(ellipse at center,
+        rgba(184, 154, 92, 0.18) 0%,
+        rgba(74, 157, 90, 0.08) 35%,
+        transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+    animation: glow-breathe 5s ease-in-out infinite;
+}
+
+@keyframes glow-breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.75; }
+}
+
+.bottle-img {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 22px rgba(184, 154, 92, 0.22));
+}
+
+.hand-tag {
+    transform: rotate(-7deg);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+
+/* ────────── Hero frame ────────── */
+.hero-frame {
+    position: relative;
+    border: 1.5px dashed rgba(184, 154, 92, 0.32);
+    border-radius: 18px;
+    background:
+        linear-gradient(145deg, rgba(184, 154, 92, 0.04), rgba(232, 83, 58, 0.025));
+}
+
+.hero-frame .corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ember);
+    font-size: 14px;
+    background: var(--night);
+    border-radius: 50%;
+}
+.hero-frame .corner.tl { top: -7px; left: -7px; }
+.hero-frame .corner.tr { top: -7px; right: -7px; }
+.hero-frame .corner.bl { bottom: -7px; left: -7px; }
+.hero-frame .corner.br { bottom: -7px; right: -7px; }
+
+/* ────────── Section headers ────────── */
+.group-header .flourish {
+    color: var(--gold);
+    opacity: 0.5;
+    letter-spacing: 2px;
+}
+
+.group-header.all-done .group-name {
+    color: var(--herb) !important;
+}
+
+.group-header.all-done .group-done-check {
+    display: inline !important;
+}
+
+/* ────────── Progress bar ────────── */
+#progress-bar {
+    background: linear-gradient(90deg, var(--herb) 0%, var(--gold-bright) 100%);
+    box-shadow: 0 0 10px rgba(74, 157, 90, 0.4);
+}
+
+/* ────────── Accordion ────────── */
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.accordion-content.open {
+    max-height: 3000px;
+}
+
+.accordion-chevron {
+    transition: transform 0.3s ease;
+}
+
+.accordion-chevron.open {
+    transform: rotate(180deg);
+}
+
+/* ────────── Scroll/recipe look ────────── */
+.scroll-card {
+    background:
+        linear-gradient(180deg, rgba(184, 154, 92, 0.035), rgba(232, 83, 58, 0.02));
+    border: 1px dashed rgba(184, 154, 92, 0.25);
+}
+
+/* ────────── Marquee ────────── */
+.marquee {
+    display: flex;
+    white-space: nowrap;
+    will-change: transform;
+}
+
+/* ────────── Visitor badge / footer sig ────────── */
+.sig-badge {
+    border: 1.5px dashed rgba(184, 154, 92, 0.4);
+    background: rgba(14, 10, 7, 0.5);
+}

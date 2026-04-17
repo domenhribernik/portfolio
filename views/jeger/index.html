@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dom's Jeger ❦ Domači zeliščni liker</title>
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=UnifrakturMaguntia&family=Caveat:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    night: '#0e0a07',
+                    'night-soft': '#14100c',
+                    cream: '#f5ecd7',
+                    gold: '#b89a5c',
+                    'gold-bright': '#d4b876',
+                    herb: '#4a9d5a',
+                    ember: '#e8533a',
+                },
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    display: ['UnifrakturMaguntia', 'serif'],
+                    script: ['Caveat', 'cursive'],
+                    mono: ['"Special Elite"', 'monospace'],
+                },
+            },
+        },
+    }
+    </script>
+</head>
+<body class="text-cream min-h-screen font-sans">
+
+    <!-- ╔══════ HEADER ══════╗ -->
+    <header class="sticky top-0 z-50 bg-night/90 backdrop-blur-sm border-b border-gold/20">
+        <div class="max-w-4xl mx-auto px-5 py-4 relative flex items-center">
+            <a href="../../" class="text-gold/60 hover:text-gold-bright transition-colors text-xl">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <span class="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <span class="text-ember">✦</span>
+                <span class="font-display text-gold-bright text-2xl tracking-wider">Dom's Jeger</span>
+                <span class="text-ember">✦</span>
+            </span>
+            <a href="#recipe-section" class="ml-auto">
+                <img src="../../assets/img/jeger.png" alt="Recept"
+                     class="h-9 sm:h-11 w-auto opacity-60 hover:opacity-100 transition-opacity"
+                     style="filter: drop-shadow(0 0 8px rgba(184,154,92,0.5))">
+            </a>
+        </div>
+        <div class="h-[2px] bg-gradient-to-r from-transparent via-ember/40 to-transparent"></div>
+    </header>
+
+    <!-- Top marquee banner -->
+    <div class="border-b border-gold/10 bg-night-soft/60 overflow-hidden py-1.5">
+        <div class="marquee text-gold/50 text-xs tracking-wider font-mono">
+            <span class="mx-8">✦ welcome to dom's jeger ✦ 37 zelišč od marca do novembra ✦ nabiraj počasi ✦ kozarec mora biti vedno pokrit ✦ homemade with ♥ in Slovenija ✦</span>
+        </div>
+    </div>
+
+    <!-- ╔══════ HERO ══════╗ -->
+    <section class="max-w-4xl mx-auto px-5 pt-10 pb-8">
+        <div class="hero-frame p-6 sm:p-7">
+            <span class="corner tl">❋</span>
+            <span class="corner tr">❋</span>
+            <span class="corner bl">❋</span>
+            <span class="corner br">❋</span>
+
+            <div class="flex flex-row items-end gap-4 sm:gap-6">
+                <div class="flex-[3] min-w-0">
+                    <p class="text-ember text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.25em] sm:tracking-[0.35em] mb-2 sm:mb-3">
+                        <span class="text-gold/60">·</span> Domači zeliščni liker <span class="text-gold/60">·</span>
+                    </p>
+                    <h1 class="font-display text-gold-bright text-4xl sm:text-5xl md:text-6xl leading-[0.95] mb-2">
+                        Dom's<br>Jeger
+                    </h1>
+                    <p class="font-script text-ember text-base sm:text-lg mt-1 sm:mt-2 mb-4 sm:mb-6">po receptu tete pehte</p>
+
+                    <!-- Progress -->
+                    <div class="mb-2 flex items-center justify-between text-xs">
+                        <span class="text-cream/70 font-mono text-[10px] sm:text-xs" id="progress-text">0 / 37 zelišč nabranih</span>
+                        <span class="text-gold-bright font-bold font-mono text-[10px] sm:text-xs" id="progress-pct">0%</span>
+                    </div>
+                    <div class="h-2 bg-night-soft rounded-full overflow-hidden border border-gold/20">
+                        <div class="h-full rounded-full transition-all duration-500" id="progress-bar" style="width: 0%"></div>
+                    </div>
+
+                    <div class="mt-3 flex items-center gap-2 text-xs text-gold/60">
+                        <span class="season-dot w-1.5 h-1.5 rounded-full bg-herb inline-block"></span>
+                        <span class="font-mono text-[10px] sm:text-xs">v sezoni ta mesec (<span id="season-month" class="text-herb">—</span>)</span>
+                    </div>
+                </div>
+
+                <!-- Bottle -->
+                <div class="flex justify-center flex-shrink-0 w-[42%] sm:w-auto sm:pl-6">
+                    <div class="bottle-wrap flex-shrink-0">
+                        <span class="absolute top-2 -left-4 text-gold-bright text-xl sparkle sparkle-1">✦</span>
+                        <span class="absolute top-14 -right-3 text-ember text-sm sparkle sparkle-2">✧</span>
+                        <span class="absolute bottom-12 -left-5 text-cream text-xs sparkle sparkle-3">⋆</span>
+                        <span class="absolute bottom-28 -right-2 text-gold text-sm sparkle sparkle-4">✦</span>
+                        <span class="absolute top-36 -left-3 text-herb text-[10px] sparkle sparkle-5">✧</span>
+                        <img src="../../assets/img/jeger.png" alt="Jägermeister bottle"
+                             class="bottle-img h-56 sm:h-64 w-auto">
+                        <div class="hand-tag absolute top-5 -right-2 font-script text-ember text-sm" style="transform:rotate(26deg)">37 zelišč</div>
+                        <div class="hand-tag absolute top-10 -left-8 font-script text-ember text-sm" style="transform:rotate(-34deg)">babičin recept</div>
+                        <div class="hand-tag absolute -bottom-4 -left-6 font-script text-ember text-base">homemade</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All done message -->
+        <div id="all-done-msg" class="mt-6 hidden text-center py-4 px-6 rounded-xl bg-herb/10 border-2 border-dashed border-herb/40 text-herb text-sm font-bold">
+            <span class="font-script text-xl text-gold-bright">✦ Vsa zelišča nabrana! ✦</span><br>
+            <span class="text-cream/70 font-normal">Čas je za varjenje 🌿</span>
+        </div>
+    </section>
+
+    <!-- ╔══════ PLANT CHECKLIST ══════╗ -->
+    <main class="max-w-4xl mx-auto px-5 pb-4">
+        <div id="plant-list"></div>
+
+        <!-- ╔══════ RECIPE ══════╗ -->
+        <div id="recipe-section" class="mt-10 mb-8 scroll-mt-24">
+            <div class="text-center mb-3 text-gold/50 text-xs tracking-[0.35em] uppercase font-mono">
+                ❦ &nbsp;·&nbsp; recept &nbsp;·&nbsp; ❦
+            </div>
+            <div class="px-4 pt-5 pb-2 space-y-5 text-sm leading-relaxed text-cream/75">
+
+                    <div>
+                        <h4 class="text-gold-bright font-semibold mb-1.5 font-mono text-xs uppercase tracking-widest">✦ Mere</h4>
+                        <p>Listov pest · cvetov 10–20 · plodov majhna peščica</p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-gold-bright font-semibold mb-1.5 font-mono text-xs uppercase tracking-widest">✦ Osnova</h4>
+                        <p>V večji steklen kozarec za vlaganje nalijemo <strong class="text-ember">5 l žganja</strong> (tropinovec ali sadjevec) ter postopoma, po nabiramo, dodajamo rožice. Kozarec mora biti vedno pokrit, da tekočina ne izhlapeva. Vedno, ko dodamo rožice, z leseno žlico premešamo. Rastline morajo biti oprane in osušene. Jeseni, ko rožice prenehamo dodajati, pustimo še 14 dni, vmes občasno premešamo. Rastline popijejo alkohol, zato ga postopoma dolijemo še kakšnih <strong class="text-ember">½ l</strong>. Kozarec naj ne stoji na vročem soncu.</p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-gold-bright font-semibold mb-1.5 font-mono text-xs uppercase tracking-widest">✦ Precedek</h4>
+                        <p>Žganje precedimo najprej skozi cedilo, nato še enkrat skozi gazo.</p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-gold-bright font-semibold mb-1.5 font-mono text-xs uppercase tracking-widest">✦ Karamelni sladkor</h4>
+                        <p>Na <strong class="text-ember">1 l žganja → ½ kg sladkorja</strong>. Sladkor karameliziramo v večji posodi. Ko lepo porjavi, zalijemo s prekuhano vodo (<strong class="text-ember">½ kg sladkorja → ½ l vode</strong>), pustimo da zavre in se razpusti, odstavimo in ohladimo. Dolijemo žganje, premešamo in pustimo stati uro. Nalijemo v čiste steklenice.</p>
+                    </div>
+
+                    <div class="border-t border-dashed border-gold/20 pt-4">
+                        <h4 class="text-gold-bright font-semibold mb-2 font-mono text-xs uppercase tracking-widest">❦ Opombe</h4>
+                        <ul class="space-y-2 text-cream/55">
+                            <li class="flex gap-2"><span class="text-ember mt-0.5">✦</span><span>Če niste našli ali uspeli nabrati kakšne rastline, lahko daste tudi posušene, vendar so sveže boljše.</span></li>
+                            <li class="flex gap-2"><span class="text-ember mt-0.5">✦</span><span>Moja mama čisto na koncu nalije še ½ l špirita, ali doda ½ l konjaka, če ga ima.</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="border-t border-dashed border-gold/10 pt-3 mt-1">
+                        <p class="text-gold/55 text-xs font-mono">
+                            originalni recept: <a href="https://www.kulinarika.net/recepti/ozimnica/pijace/jagermaister-tete-pehte/3158/" target="_blank" rel="noopener" class="hover:text-gold/60 transition-colors underline underline-offset-2">kulinarika.net</a>
+                        </p>
+                    </div>
+            </div>
+        </div>
+
+        <!-- ╔══════ FOOTER SIG ══════╗ -->
+        <div class="flex justify-center pb-8">
+            <div class="sig-badge px-5 py-3 rounded-lg text-center">
+                <div class="font-script text-gold-bright text-xl leading-tight">Dom's Jeger</div>
+                <div class="text-[10px] font-mono text-gold/50 uppercase tracking-[0.3em] mt-1">
+                    est. 2026 · slovenija
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

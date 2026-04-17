@@ -151,17 +151,5 @@ export const projects = {
       visitSite: "views/ip",
     },
     iconClass: "fas fa-map-marker-alt",
-  },
-  slovenia: {
-    category: "passion",
-    gradient: "linear-gradient(45deg, #003DA5 0%, #EF3340 100%)",
-    title: "Slovenia Through History",
-    description: "An interactive timeline tracing Slovenia's history from Celtic Noricum and the Duchy of Carantania through the Habsburg era, Reformation, Napoleon, national awakening, WWII, Yugoslav rule, and independence in 1991.",
-    tech: ["HTML", "CSS", "JavaScript", "Tailwind"],
-    links: {
-      visitSite: "views/slovenia",
-    },
-    iconClass: "fas fa-landmark",
-    noTarget: "true",
   }
 };
