@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slovenia Through History</title>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'si-blue': '#003DA5',
+                        'si-red': '#EF3340',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="../../components/gallery.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gray-950 text-white font-sans">
+    <main-navbar site="../../"></main-navbar>
+
+    <!-- Hero -->
+    <section class="relative min-h-[70vh] flex items-center overflow-hidden">
+        <div class="hero-gradient absolute inset-0"></div>
+        <div class="absolute inset-0 bg-[url('https://picsum.photos/seed/alpine-slovenia/1600/900')] bg-cover bg-center opacity-10"></div>
+
+        <!-- Flag stripe accent -->
+        <div class="absolute left-0 top-0 h-full w-1.5 flex flex-col">
+            <div class="flex-1 bg-si-blue"></div>
+            <div class="flex-1 bg-white"></div>
+            <div class="flex-1 bg-si-red"></div>
+        </div>
+
+        <div class="container mx-auto px-6 md:px-12 py-24 relative z-10">
+            <div class="max-w-3xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="text-5xl">🇸🇮</span>
+                    <span class="text-xs uppercase tracking-[0.25em] text-gray-400 font-medium">A Journey Through Time</span>
+                </div>
+                <h1 class="text-6xl md:text-8xl font-black mb-6 leading-none tracking-tight">
+                    <span class="text-white">Slovenia</span><br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-si-blue via-blue-400 to-si-red">Through History</span>
+                </h1>
+                <p class="text-gray-300 text-lg md:text-xl leading-relaxed max-w-2xl mb-10">
+                    From ancient Celtic kingdoms and medieval Slavic principalities to the birth of a modern
+                    European democracy — explore the remarkable 2,000-year journey of one of Europe's newest nations.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="#timeline" class="inline-flex items-center gap-2 bg-si-blue hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:-translate-y-0.5">
+                        <i class="fas fa-stream text-sm"></i>
+                        Explore Timeline
+                    </a>
+                    <a href="#gallery" class="inline-flex items-center gap-2 border border-white/20 hover:border-white/50 text-white/80 hover:text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:-translate-y-0.5">
+                        <i class="fas fa-images text-sm"></i>
+                        View Gallery
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="absolute bottom-0 left-0 right-0 border-t border-white/5 bg-black/30 backdrop-blur-sm">
+            <div class="container mx-auto px-6 md:px-12">
+                <div class="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/5">
+                    <div class="stat-chip">
+                        <span class="stat-value">~600 AD</span>
+                        <span class="stat-label">First Slavic settlement</span>
+                    </div>
+                    <div class="stat-chip">
+                        <span class="stat-value">1991</span>
+                        <span class="stat-label">Independence declared</span>
+                    </div>
+                    <div class="stat-chip">
+                        <span class="stat-value">2004</span>
+                        <span class="stat-label">Joined the EU &amp; NATO</span>
+                    </div>
+                    <div class="stat-chip">
+                        <span class="stat-value">20,273 km²</span>
+                        <span class="stat-label">Size of the country</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="py-20 px-6 md:px-12">
+        <div class="container mx-auto">
+            <div class="mb-12">
+                <p class="text-si-blue font-semibold uppercase tracking-widest text-sm mb-2">Historical Highlights</p>
+                <h2 class="text-4xl md:text-5xl font-bold text-white">Moments That Shaped Slovenia</h2>
+            </div>
+
+            <div class="gallery-container" id="historyGallery">
+                <button class="gallery-nav gallery-nav-prev" id="galleryPrev" aria-label="Previous">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+
+                <div class="gallery-viewport">
+                    <div class="gallery-track" id="galleryTrack">
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/alpine-tribes/800/450" alt="Celtic Noricum" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#6366f1">~400 BC</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>Kingdom of Noricum</h3>
+                                    <p>Celtic tribes establish a kingdom in the Eastern Alps, trading iron with Rome and laying early cultural foundations.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/slavic-duchy/800/450" alt="Duchy of Carantania" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#0ea5e9">~650 AD</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>Duchy of Carantania</h3>
+                                    <p>The earliest known Slovenian state, a Slavic principality in the Eastern Alps that pioneered a unique democratic enthronement ritual.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/medieval-castle/800/450" alt="Medieval Ljubljana" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#7c3aed">1278</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>Habsburg Rule Begins</h3>
+                                    <p>Rudolf I of Habsburg gains control, beginning over 600 years of Habsburg-Austrian rule that would define Slovenian culture and identity.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/reformation-books/800/450" alt="Primož Trubar" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#d97706">1550</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>Primož Trubar &amp; the Reformation</h3>
+                                    <p>Protestant reformer Primož Trubar publishes the first books in the Slovenian language, creating the literary foundation of the nation.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/napoleon-provinces/800/450" alt="Illyrian Provinces" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#0891b2">1809</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>Illyrian Provinces</h3>
+                                    <p>Napoleon establishes the Illyrian Provinces with Ljubljana as capital, briefly elevating Slovenian language and culture to official status.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/1848-spring/800/450" alt="Spring of Nations 1848" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#16a34a">1848</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>The March Programme</h3>
+                                    <p>During the Spring of Nations, Slovenian intellectuals demand Zedinjena Slovenija — a unified autonomous Slovenia within the Habsburg empire.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/ww2-partisans/800/450" alt="WWII Partisan Resistance" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#dc2626">1941</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>Partisan Resistance</h3>
+                                    <p>Occupied by Germany, Italy, and Hungary, Slovenians form the Liberation Front — one of Europe's strongest resistance movements.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/independence-1991/800/450" alt="Independence 1991" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#003DA5">1991</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>Declaration of Independence</h3>
+                                    <p>On June 25, Slovenia declares independence from Yugoslavia. A 10-day war follows before Yugoslav forces withdraw permanently.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gallery-slide">
+                            <div class="gallery-card">
+                                <div class="gallery-img-wrap">
+                                    <img src="https://picsum.photos/seed/europe-2004/800/450" alt="EU Accession 2004" loading="lazy">
+                                    <span class="gallery-era-badge" style="background:#003DA5">2004</span>
+                                </div>
+                                <div class="gallery-info">
+                                    <h3>EU &amp; NATO Membership</h3>
+                                    <p>Slovenia joins both the European Union and NATO, marking the completion of its transition to a Western liberal democracy.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button class="gallery-nav gallery-nav-next" id="galleryNext" aria-label="Next">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="gallery-dots" id="galleryDots"></div>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section id="timeline" class="py-20 px-6 md:px-12">
+        <div class="container mx-auto">
+            <div class="mb-10 text-center">
+                <p class="text-si-red font-semibold uppercase tracking-widest text-sm mb-2">From the Beginning</p>
+                <h2 class="text-4xl md:text-5xl font-bold text-white">Key Events in Slovenian History</h2>
+            </div>
+
+            <!-- Era tab bar -->
+            <div class="era-tabs-scroll">
+                <div class="era-tabs" id="eraTabs" role="tablist">
+                    <button class="era-tab active" data-era="ancient"       data-color="#6366f1" role="tab">🏔️ Ancient</button>
+                    <button class="era-tab"         data-era="medieval"     data-color="#7c3aed" role="tab">🏰 Medieval</button>
+                    <button class="era-tab"         data-era="reformation"  data-color="#d97706" role="tab">📖 Reformation</button>
+                    <button class="era-tab"         data-era="napoleon"     data-color="#0891b2" role="tab">💡 Enlightenment</button>
+                    <button class="era-tab"         data-era="awakening"    data-color="#16a34a" role="tab">🌱 Awakening</button>
+                    <button class="era-tab"         data-era="wars"         data-color="#dc2626" role="tab">⚡ World Wars</button>
+                    <button class="era-tab"         data-era="yugoslav"     data-color="#ca8a04" role="tab">⭐ Yugoslav</button>
+                    <button class="era-tab"         data-era="independence" data-color="#003DA5" role="tab">🇸🇮 Independence</button>
+                </div>
+            </div>
+
+            <!-- Era panels -->
+            <div id="eraPanels">
+
+                <div class="era-panel active" id="era-ancient">
+                    <div class="era-heading">Ancient Origins <span>Before 600 AD</span></div>
+                    <div class="tl-list">
+                        <div class="tl-item" style="--dot:#6366f1">
+                            <div class="tl-year">~400 BC</div>
+                            <div class="tl-body"><h4>Kingdom of Noricum</h4><p>Celtic tribes establish a kingdom across the Eastern Alps renowned for iron production. They traded extensively with Rome and developed a sophisticated coinage system.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#6366f1">
+                            <div class="tl-year">15 BC</div>
+                            <div class="tl-body"><h4>Roman Conquest</h4><p>Rome annexes Noricum peacefully. Emona (modern Ljubljana) becomes a major garrison city and the hub of Alpine trade routes linking Italy to the Danube.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#6366f1">
+                            <div class="tl-year">~550 AD</div>
+                            <div class="tl-body"><h4>Slavic Migration</h4><p>Slavic tribes migrate into the Eastern Alps as Roman authority collapses. Over the next century they become the dominant population, gradually displacing or absorbing earlier groups.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="era-panel" id="era-medieval">
+                    <div class="era-heading">Early Slavic &amp; Medieval <span>600 – 1500</span></div>
+                    <div class="tl-list">
+                        <div class="tl-item" style="--dot:#7c3aed">
+                            <div class="tl-year">~650 AD</div>
+                            <div class="tl-body"><h4>Duchy of Carantania</h4><p>The earliest known Slovenian state. Carantanian dukes were enthroned on the <em>Knežji kamen</em> (Ducal Stone) — a proto-democratic ceremony unique in medieval Europe that later inspired Thomas Jefferson.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#7c3aed">
+                            <div class="tl-year">745 AD</div>
+                            <div class="tl-body"><h4>Frankish Conquest</h4><p>The Frankish Empire subjugates Carantania. Slovenians lose independent statehood for over 1,200 years. Bavarian missionaries begin rapid Christianization of the region.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#7c3aed">
+                            <div class="tl-year">~800 AD</div>
+                            <div class="tl-body"><h4>Freising Manuscripts</h4><p>The oldest surviving documents written in a Slavic language using Latin script are composed in the region — among the most important early Slovenian literary monuments.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#7c3aed">
+                            <div class="tl-year">1278</div>
+                            <div class="tl-body"><h4>Habsburg Rule Begins</h4><p>Rudolf I of Habsburg defeats Ottokar II of Bohemia at Marchfeld and gains control of Slovenian lands. Habsburg rule would last until 1918 — over 640 years.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#7c3aed">
+                            <div class="tl-year">1515</div>
+                            <div class="tl-body"><h4>Great Peasant Revolt</h4><p>A massive uprising sweeps all Slovenian lands against feudal lords. Though crushed, it plants deep seeds of national consciousness and is remembered as the first pan-Slovenian political event.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="era-panel" id="era-reformation">
+                    <div class="era-heading">Reformation &amp; Counter-Reformation <span>1500 – 1800</span></div>
+                    <div class="tl-list">
+                        <div class="tl-item" style="--dot:#d97706">
+                            <div class="tl-year">1550</div>
+                            <div class="tl-body"><h4>Primož Trubar — First Slovenian Books</h4><p>Protestant reformer Primož Trubar publishes <em>Abecedarium</em> and <em>Catechismus</em> in Tübingen — the first books ever written in the Slovenian language, establishing its literary foundation.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#d97706">
+                            <div class="tl-year">1584</div>
+                            <div class="tl-body"><h4>Bible &amp; First Grammar</h4><p>Jurij Dalmatin completes the full Bible in Slovenian, and Adam Bohorič publishes the first Slovenian grammar (<em>Arcticae horulae</em>), standardising the written language across dialects.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#d97706">
+                            <div class="tl-year">1598</div>
+                            <div class="tl-body"><h4>Counter-Reformation Crackdown</h4><p>Habsburg authorities enforce Catholicism. Protestant books are publicly burned, clergy expelled, and schools closed. Slovenian literary development is set back by nearly two centuries.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="era-panel" id="era-napoleon">
+                    <div class="era-heading">Enlightenment &amp; Napoleon <span>1780 – 1848</span></div>
+                    <div class="tl-list">
+                        <div class="tl-item" style="--dot:#0891b2">
+                            <div class="tl-year">1780s</div>
+                            <div class="tl-body"><h4>The Zois Circle</h4><p>Baron Žiga Zois gathers Slovenian intellectuals — Linhart, Vodnik, Kopitar — in Ljubljana. This cultural circle launches the modern Slovenian national movement and the revival of Slovenian language in public life.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#0891b2">
+                            <div class="tl-year">1809 – 1813</div>
+                            <div class="tl-body"><h4>Illyrian Provinces</h4><p>Napoleon creates the Illyrian Provinces with Ljubljana as capital. For the first time in centuries, Slovenian is used in courts, schools, and official documents, generating lasting national pride.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#0891b2">
+                            <div class="tl-year">1844</div>
+                            <div class="tl-body"><h4>France Prešeren — National Poet</h4><p>Prešeren publishes <em>Poezije</em>, his collected works. His poem <em>Zdravljica</em> (A Toast) — a vision of universal freedom and brotherhood — would become the national anthem after independence.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="era-panel" id="era-awakening">
+                    <div class="era-heading">National Awakening <span>1848 – 1918</span></div>
+                    <div class="tl-list">
+                        <div class="tl-item" style="--dot:#16a34a">
+                            <div class="tl-year">1848</div>
+                            <div class="tl-body"><h4>The March Programme</h4><p>During the Spring of Nations, Slovenian intellectuals draft <em>Zedinjena Slovenija</em> (United Slovenia) — the first modern demand for Slovenian political autonomy within a unified linguistic territory.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#16a34a">
+                            <div class="tl-year">1867</div>
+                            <div class="tl-body"><h4>Austria-Hungary Compromise</h4><p>The empire divides into Austrian and Hungarian halves. Slovenians remain under Austria, excluded from the compromise entirely, intensifying organised national political movements.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#16a34a">
+                            <div class="tl-year">1895</div>
+                            <div class="tl-body"><h4>Ljubljana Earthquake &amp; Rebirth</h4><p>A devastating earthquake destroys much of the city. Rebuilding under Mayor Ivan Hribar transforms Ljubljana into a Vienna Secession and Art Nouveau showcase — the city's modern character is born.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="era-panel" id="era-wars">
+                    <div class="era-heading">World Wars <span>1914 – 1945</span></div>
+                    <div class="tl-list">
+                        <div class="tl-item" style="--dot:#dc2626">
+                            <div class="tl-year">1914 – 1918</div>
+                            <div class="tl-body"><h4>WWI — The Isonzo Front</h4><p>Twelve battles are fought along the Isonzo River on Slovenian soil. Over 300,000 die on this single front. The Karst plateau is permanently scarred, and the civilian population is largely evacuated.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#dc2626">
+                            <div class="tl-year">1918</div>
+                            <div class="tl-body"><h4>Kingdom of Serbs, Croats and Slovenes</h4><p>Austria-Hungary collapses. Slovenians join the new South Slav state. The Rapallo Treaty immediately cedes the Slovenian Littoral to Italy, leaving some 400,000 Slovenians under Fascist rule.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#dc2626">
+                            <div class="tl-year">1941</div>
+                            <div class="tl-body"><h4>WWII — Tripartite Occupation</h4><p>Nazi Germany, Fascist Italy, and Hungary partition Slovenia. All three occupiers pursue aggressive denationalization — banning Slovenian, deporting tens of thousands, and resettling colonists.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#dc2626">
+                            <div class="tl-year">1941 – 1945</div>
+                            <div class="tl-body"><h4>Liberation Front &amp; Partisan Resistance</h4><p>The <em>Osvobodilna fronta</em> becomes one of the most organised resistance movements in occupied Europe. Per capita, Slovenian Partisans engaged more combatants than almost any other occupied nation.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="era-panel" id="era-yugoslav">
+                    <div class="era-heading">Yugoslav Era <span>1945 – 1991</span></div>
+                    <div class="tl-list">
+                        <div class="tl-item" style="--dot:#ca8a04">
+                            <div class="tl-year">1945</div>
+                            <div class="tl-body"><h4>Socialist Republic of Slovenia</h4><p>Slovenia becomes one of six constituent republics of Tito's Yugoslavia. While political freedoms are limited, postwar reconstruction proceeds rapidly and Slovenia emerges as the federation's most prosperous region.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#ca8a04">
+                            <div class="tl-year">1948</div>
+                            <div class="tl-body"><h4>Tito-Stalin Split</h4><p>Yugoslavia breaks with the Soviet Union and charts an independent "third way." Non-alignment abroad and worker self-management at home makes Slovenia the most open economy in the communist bloc.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#ca8a04">
+                            <div class="tl-year">1960s – 70s</div>
+                            <div class="tl-body"><h4>Economic Miracle</h4><p>With only 8% of Yugoslavia's population, Slovenia generates over 20% of GDP and 30% of exports. Living standards approach Western Europe, and Ljubljana becomes a cosmopolitan cultural centre.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#ca8a04">
+                            <div class="tl-year">1987 – 1989</div>
+                            <div class="tl-body"><h4>Slovenian Spring</h4><p>The journal <em>Nova revija</em> publishes democratic demands. Rock bands, artists, and intellectuals push openly for pluralism. Slovenia's civil society rapidly outpaces the rest of Yugoslavia, setting the path to independence.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="era-panel" id="era-independence">
+                    <div class="era-heading">Independence &amp; Modern Slovenia <span>1990 – Present</span></div>
+                    <div class="tl-list">
+                        <div class="tl-item" style="--dot:#003DA5">
+                            <div class="tl-year">April 1990</div>
+                            <div class="tl-body"><h4>First Free Elections</h4><p>The DEMOS coalition wins Slovenia's first multi-party elections since 1927. Lojze Peterle becomes Prime Minister and Milan Kučan President — both committed to independence.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#003DA5">
+                            <div class="tl-year">December 1990</div>
+                            <div class="tl-body"><h4>Independence Plebiscite</h4><p>88.5% of Slovenians vote for independence on a record 93.2% turnout — one of the clearest democratic mandates in European history.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#EF3340">
+                            <div class="tl-year">June – July 1991</div>
+                            <div class="tl-body"><h4>Declaration &amp; the Ten-Day War</h4><p>Independence is declared on 25 June. The Yugoslav People's Army invades the next day but is repelled by Territorial Defence units. The Brioni Agreement ends the conflict; JNA withdraws by October.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#003DA5">
+                            <div class="tl-year">1992</div>
+                            <div class="tl-body"><h4>International Recognition</h4><p>The EU recognises Slovenia in January. The UN admits it as a full member in May. In just six months, Slovenia goes from breakaway republic to recognised sovereign state.</p></div>
+                        </div>
+                        <div class="tl-item" style="--dot:#003DA5">
+                            <div class="tl-year">2004 – Today</div>
+                            <div class="tl-body"><h4>EU, NATO &amp; the Euro</h4><p>Slovenia joins the EU and NATO in May 2004, adopts the Euro in 2007 — the first former Yugoslav republic to do so — and now ranks in the top 30 globally on the Human Development Index.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer back link -->
+    <footer class="py-12 border-t border-white/5 text-center">
+        <a href="../../" class="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200">
+            <i class="fas fa-arrow-left text-sm"></i>
+            Back to Portfolio
+        </a>
+    </footer>
+
+    <script type="module">
+        import '../../components/main-navbar.js';
+    </script>
+    <script src="../../components/gallery.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

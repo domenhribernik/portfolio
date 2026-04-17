@@ -1,0 +1,287 @@
+/* ── Hero ──────────────────────────────────────────── */
+.hero-gradient {
+    background: radial-gradient(ellipse at 20% 50%, rgba(0, 61, 165, 0.25) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(239, 51, 64, 0.15) 0%, transparent 60%),
+                linear-gradient(180deg, #030712 0%, #0a0f1e 100%);
+}
+
+.stat-chip {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1.5rem;
+    gap: 2px;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Gallery cards ─────────────────────────────────── */
+.gallery-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+    height: 100%;
+}
+
+.gallery-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.gallery-img-wrap {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+}
+
+.gallery-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.gallery-card:hover .gallery-img-wrap img {
+    transform: scale(1.05);
+}
+
+.gallery-era-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(4px);
+}
+
+.gallery-info {
+    padding: 1rem 1.25rem 1.25rem;
+}
+
+.gallery-info h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.4rem;
+}
+
+.gallery-info p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.55;
+}
+
+/* Gallery nav styling */
+.gallery-nav-prev,
+.gallery-nav-next {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.gallery-nav-prev:hover,
+.gallery-nav-next:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.gallery-dots .gallery-dot {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.gallery-dots .gallery-dot.active {
+    background: #003DA5;
+}
+
+/* ── Era tabs ──────────────────────────────────────── */
+.era-tabs-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-bottom: 2rem;
+    padding-bottom: 2px;
+}
+
+.era-tabs-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.era-tabs {
+    display: flex;
+    gap: 8px;
+    min-width: max-content;
+}
+
+.era-tab {
+    padding: 0.5rem 1.1rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.era-tab:hover {
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.09);
+}
+
+.era-tab.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* ── Era panels ────────────────────────────────────── */
+.era-panel {
+    display: none;
+}
+
+.era-panel.active {
+    display: block;
+    animation: eraIn 0.25s ease;
+}
+
+@keyframes eraIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.era-heading {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.era-heading span {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* ── Timeline list ─────────────────────────────────── */
+.tl-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-left: 2.25rem;
+}
+
+/* Vertical line */
+.tl-list::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
+    border-radius: 2px;
+}
+
+.tl-item {
+    position: relative;
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    padding: 0 0 1.25rem 0;
+}
+
+/* Dot on the line — line is at left:6px on .tl-list, dot is 14px wide.
+   .tl-item starts at padding-left:2.25rem from .tl-list edge.
+   To center dot on the line: dot left = -(2.25rem) + 6px - 7px = -(2.25rem) - 1px */
+.tl-item::before {
+    content: '';
+    position: absolute;
+    left: calc(-2.25rem - 1px);
+    top: 0.9rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--dot, #667eea);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+    z-index: 1;
+}
+
+.tl-year {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.38);
+    white-space: nowrap;
+    min-width: 90px;
+    padding-top: 0.85rem;
+    flex-shrink: 0;
+}
+
+.tl-body {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 0.85rem 1.1rem;
+    flex: 1;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.tl-body:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.tl-body h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.3rem;
+    line-height: 1.3;
+}
+
+.tl-body p {
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.58);
+    line-height: 1.65;
+    margin: 0;
+}
+
+.tl-body p em {
+    color: rgba(255, 255, 255, 0.8);
+    font-style: italic;
+}
+
+/* Mobile: hide year label to save space */
+@media (max-width: 540px) {
+    .tl-year {
+        display: none;
+    }
+}
