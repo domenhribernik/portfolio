@@ -1,0 +1,15 @@
+.set-row.done {
+    opacity: 0.55;
+}
+
+.rep-btn:active {
+    transform: scale(0.92);
+}
+
+.exercise-card {
+    transition: border-color 0.2s;
+}
+
+.exercise-card.all-done {
+    border-color: #22c55e33;
+}

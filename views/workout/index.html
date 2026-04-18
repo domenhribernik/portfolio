@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker</title>
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    surface: '#111827',
+                    'surface-raised': '#1f2937',
+                    'surface-border': '#374151',
+                    accent: '#3b82f6',
+                    'accent-dim': '#1d4ed8',
+                    success: '#22c55e',
+                    muted: '#6b7280',
+                    label: '#e5e7eb',
+                },
+            },
+        },
+    }
+    </script>
+</head>
+<body class="bg-surface text-label min-h-screen font-sans">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-surface/95 backdrop-blur-sm border-b border-surface-border">
+        <div class="max-w-2xl mx-auto px-5 py-4 flex items-center gap-4">
+            <a href="../../" class="text-muted hover:text-label transition-colors text-lg">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-base font-semibold leading-tight">Workout Tracker</h1>
+                <p class="text-xs text-muted" id="session-date"></p>
+            </div>
+            <div class="ml-auto flex items-center gap-3">
+                <span class="text-xs text-muted" id="overall-progress">0 / 0 sets</span>
+                <button id="reset-btn" class="text-xs text-muted hover:text-label border border-surface-border rounded px-2.5 py-1 transition-colors hover:border-muted">
+                    Reset
+                </button>
+            </div>
+        </div>
+        <div class="h-0.5 bg-surface-raised">
+            <div id="global-progress-bar" class="h-full bg-accent transition-all duration-500" style="width: 0%"></div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="max-w-2xl mx-auto px-5 py-6 space-y-4" id="exercise-list">
+    </main>
+
+    <!-- DONE BANNER -->
+    <div id="done-banner" class="hidden max-w-2xl mx-auto px-5 pb-8">
+        <div class="rounded-xl border border-success/30 bg-success/5 px-5 py-4 text-center">
+            <p class="text-success font-semibold text-sm">Session complete</p>
+            <p class="text-muted text-xs mt-1">Good work. All sets logged.</p>
+            <div id="session-summary" class="mt-4 space-y-1 text-left text-xs text-muted"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -151,5 +151,16 @@ export const projects = {
       visitSite: "views/ip",
     },
     iconClass: "fas fa-map-marker-alt",
+  },
+  workout: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #f46b45 0%, #eea849 100%)",
+    title: "Workout Tracker",
+    description: "A minimal session tracker for calisthenics workouts — log reps per set with a stepper, mark sets done, and see a full session summary when you finish.",
+    tech: ["HTML", "CSS", "JavaScript"],
+    links: {
+      visitSite: "views/workout",
+    },
+    iconClass: "fas fa-dumbbell",
   }
 };
