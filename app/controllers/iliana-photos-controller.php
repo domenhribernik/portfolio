@@ -69,10 +69,9 @@ function sanitize(string $value): string
 function mimeToExt(string $mime): string
 {
     return match ($mime) {
-        'image/webp' => 'webp',
         'image/jpeg' => 'jpg',
         'image/png'  => 'png',
-        default      => 'webp',
+        default      => 'jpg',
     };
 }
 

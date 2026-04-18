@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Upload Test</title>
+    <style>
+        body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 0 20px; background: #111; color: #eee; }
+        h1 { color: #aef; }
+        label { display: block; margin-top: 12px; color: #aaa; font-size: 13px; }
+        input, select { margin-top: 4px; padding: 6px 10px; background: #222; color: #eee; border: 1px solid #444; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        input[type=file] { padding: 4px; }
+        button { margin-top: 20px; padding: 10px 24px; background: #1a6; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; }
+        button:hover { background: #1c7; }
+        #result { margin-top: 24px; white-space: pre-wrap; background: #1a1a1a; border: 1px solid #333; padding: 16px; border-radius: 6px; font-size: 13px; min-height: 60px; }
+        #result.ok { border-color: #1a6; color: #8fc; }
+        #result.err { border-color: #c44; color: #f99; }
+        #preview { margin-top: 16px; max-width: 100%; max-height: 300px; display: none; border-radius: 6px; }
+        .row { display: flex; gap: 16px; }
+        .row > div { flex: 1; }
+    </style>
+</head>
+<body>
+    <h1>Image Upload Test</h1>
+    <p style="color:#888">Sends to <code>/portfolio/app/controllers/images-controller.php</code></p>
+
+    <form id="uploadForm">
+        <label>Image file (required)</label>
+        <input type="file" name="image" accept="image/*" required>
+
+        <div class="row">
+            <div>
+                <label>Folder</label>
+                <input type="text" name="folder" value="test">
+            </div>
+            <div>
+                <label>Size</label>
+                <select name="size">
+                    <option value="thumb">thumb (150×150)</option>
+                    <option value="small">small (400px)</option>
+                    <option value="medium" selected>medium (800px)</option>
+                    <option value="large">large (1200px)</option>
+                    <option value="original">original</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div>
+                <label>Format</label>
+                <select name="format">
+                    <option value="jpeg" selected>jpeg</option>
+                    <option value="png">png</option>
+                    <option value="gif">gif (GIF input only)</option>
+                </select>
+            </div>
+            <div>
+                <label>Quality (1–100)</label>
+                <input type="number" name="quality" value="80" min="1" max="100">
+            </div>
+        </div>
+
+        <label>Strip EXIF</label>
+        <select name="strip_exif">
+            <option value="1" selected>Yes</option>
+            <option value="0">No</option>
+        </select>
+
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="result">Response will appear here...</div>
+    <img id="preview" alt="Uploaded preview">
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = document.getElementById('result');
+            const preview = document.getElementById('preview');
+            result.textContent = 'Uploading...';
+            result.className = '';
+            preview.style.display = 'none';
+
+            const fd = new FormData(e.target);
+
+            let res, text;
+            try {
+                res = await fetch('/portfolio/app/controllers/images-controller.php', {
+                    method: 'POST',
+                    body: fd,
+                });
+                text = await res.text();
+            } catch (err) {
+                result.textContent = 'Network error: ' + err.message;
+                result.className = 'err';
+                return;
+            }
+
+            let json;
+            try { json = JSON.parse(text); } catch (_) { json = null; }
+
+            if (!res.ok || json?.error) {
+                result.className = 'err';
+                result.textContent = `HTTP ${res.status}\n\n` + (json ? JSON.stringify(json, null, 2) : text);
+                return;
+            }
+
+            result.className = 'ok';
+            result.textContent = JSON.stringify(json, null, 2);
+
+            // Show preview using the uuid + folder
+            if (json.uuid && json.folder && json.mime_type) {
+                const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif' }[json.mime_type] ?? 'jpg';
+                preview.src = `/portfolio/assets/uploads/${json.folder}/${json.uuid}.${ext}`;
+                preview.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

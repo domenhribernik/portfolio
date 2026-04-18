@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Manager</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: monospace; max-width: 1100px; margin: 40px auto; padding: 0 20px; background: #111; color: #eee; }
+        h1 { color: #aef; margin-bottom: 4px; }
+        p.sub { color: #666; font-size: 13px; margin-top: 0; margin-bottom: 28px; }
+        #status { font-size: 13px; color: #888; margin-bottom: 16px; min-height: 18px; }
+        #status.err { color: #f99; }
+
+        /* Folder buttons */
+        #folder-section { margin-bottom: 32px; }
+        #folder-section h2 { color: #8af; font-size: 14px; margin-bottom: 12px; letter-spacing: .05em; text-transform: uppercase; }
+        #folders { display: flex; flex-wrap: wrap; gap: 10px; }
+        .folder-btn {
+            padding: 8px 18px; background: #1a1a2e; color: #adf; border: 1px solid #335;
+            border-radius: 6px; cursor: pointer; font-family: monospace; font-size: 13px;
+            transition: background .15s, border-color .15s;
+        }
+        .folder-btn:hover { background: #223; border-color: #66a; }
+        .folder-btn.active { background: #1a4a7a; border-color: #48f; color: #fff; }
+        .folder-btn .count { color: #667; margin-left: 6px; }
+
+        /* Image grid */
+        #gallery-section { display: none; }
+        #gallery-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+        #gallery-header h2 { color: #8af; font-size: 14px; letter-spacing: .05em; text-transform: uppercase; margin: 0; }
+        #back-btn {
+            padding: 5px 14px; background: #222; color: #aaa; border: 1px solid #444;
+            border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 12px;
+        }
+        #back-btn:hover { background: #2a2a2a; color: #eee; }
+        #folder-title { color: #eee; font-size: 15px; }
+        #img-count { color: #666; font-size: 13px; }
+
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+        .img-card {
+            background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px;
+            overflow: hidden; position: relative;
+        }
+        .img-card img {
+            width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+            background: #111;
+        }
+        .img-card .meta {
+            padding: 8px 10px; font-size: 11px; color: #888; line-height: 1.5;
+            border-top: 1px solid #222;
+        }
+        .img-card .meta .name { color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .img-card .actions { padding: 6px 10px 10px; }
+        .del-btn {
+            width: 100%; padding: 5px 0; background: #3a1010; color: #f88; border: 1px solid #622;
+            border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 12px;
+        }
+        .del-btn:hover { background: #5a1515; }
+        .del-btn:disabled { opacity: .4; cursor: default; }
+
+        #empty { color: #555; font-size: 14px; padding: 20px 0; display: none; }
+    </style>
+</head>
+<body>
+    <h1>Image Manager</h1>
+    <p class="sub">Browse and delete uploaded images by folder.</p>
+    <div id="status">Loading folders…</div>
+
+    <div id="folder-section">
+        <h2>Folders</h2>
+        <div id="folders"></div>
+    </div>
+
+    <div id="gallery-section">
+        <div id="gallery-header">
+            <button id="back-btn">← Back</button>
+            <h2>Folder:</h2>
+            <span id="folder-title"></span>
+            <span id="img-count"></span>
+        </div>
+        <div id="grid"></div>
+        <div id="empty">No images in this folder.</div>
+    </div>
+
+    <script>
+        const API = '/portfolio/app/controllers/images-controller.php';
+        const UPLOADS = '/portfolio/assets/uploads';
+
+        const statusEl = document.getElementById('status');
+        const foldersEl = document.getElementById('folders');
+        const folderSection = document.getElementById('folder-section');
+        const gallerySection = document.getElementById('gallery-section');
+        const gridEl = document.getElementById('grid');
+        const emptyEl = document.getElementById('empty');
+        const folderTitle = document.getElementById('folder-title');
+        const imgCount = document.getElementById('img-count');
+        const backBtn = document.getElementById('back-btn');
+
+        let allImages = [];
+        let activeFolder = null;
+
+        function mimeToExt(mime) {
+            return { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif' }[mime] ?? 'jpg';
+        }
+
+        function imgSrc(img) {
+            return `${UPLOADS}/${img.folder}/${img.uuid}.${mimeToExt(img.mime_type)}`;
+        }
+
+        function fmtBytes(b) {
+            if (!b) return '?';
+            if (b < 1024) return b + ' B';
+            if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1024 / 1024).toFixed(2) + ' MB';
+        }
+
+        async function loadAll() {
+            statusEl.className = '';
+            try {
+                const res = await fetch(API);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                allImages = await res.json();
+                buildFolderButtons();
+                statusEl.textContent = `${allImages.length} image(s) across ${getFolders().length} folder(s).`;
+            } catch (e) {
+                statusEl.className = 'err';
+                statusEl.textContent = 'Failed to load images: ' + e.message;
+            }
+        }
+
+        function getFolders() {
+            const seen = new Set();
+            return allImages.filter(i => seen.has(i.folder) ? false : seen.add(i.folder)).map(i => i.folder);
+        }
+
+        function buildFolderButtons() {
+            foldersEl.innerHTML = '';
+            const folders = getFolders();
+            if (!folders.length) {
+                foldersEl.innerHTML = '<span style="color:#555">No images uploaded yet.</span>';
+                return;
+            }
+            folders.forEach(folder => {
+                const count = allImages.filter(i => i.folder === folder).length;
+                const btn = document.createElement('button');
+                btn.className = 'folder-btn';
+                btn.dataset.folder = folder;
+                btn.innerHTML = `${folder}<span class="count">(${count})</span>`;
+                btn.addEventListener('click', () => openFolder(folder));
+                foldersEl.appendChild(btn);
+            });
+        }
+
+        function openFolder(folder) {
+            activeFolder = folder;
+            document.querySelectorAll('.folder-btn').forEach(b => b.classList.toggle('active', b.dataset.folder === folder));
+            folderSection.style.display = 'none';
+            gallerySection.style.display = 'block';
+            folderTitle.textContent = folder;
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const images = allImages.filter(i => i.folder === activeFolder);
+            imgCount.textContent = `— ${images.length} image(s)`;
+            gridEl.innerHTML = '';
+            emptyEl.style.display = images.length ? 'none' : 'block';
+            images.forEach(img => gridEl.appendChild(makeCard(img)));
+        }
+
+        function makeCard(img) {
+            const card = document.createElement('div');
+            card.className = 'img-card';
+            card.dataset.uuid = img.uuid;
+
+            const thumb = document.createElement('img');
+            thumb.src = imgSrc(img);
+            thumb.alt = img.original_name ?? img.uuid;
+            thumb.loading = 'lazy';
+
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            meta.innerHTML = `
+                <div class="name" title="${img.original_name ?? ''}">${img.original_name ?? img.uuid}</div>
+                <div>${img.width ?? '?'} × ${img.height ?? '?'} &nbsp;·&nbsp; ${fmtBytes(img.file_size)}</div>
+                <div>${img.mime_type}</div>
+            `;
+
+            const actions = document.createElement('div');
+            actions.className = 'actions';
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'del-btn';
+            delBtn.textContent = 'Delete';
+            delBtn.addEventListener('click', () => deleteImage(img.uuid, delBtn));
+            actions.appendChild(delBtn);
+
+            card.append(thumb, meta, actions);
+            return card;
+        }
+
+        async function deleteImage(uuid, btn) {
+            if (!confirm('Delete this image? This cannot be undone.')) return;
+            btn.disabled = true;
+            btn.textContent = 'Deleting…';
+            try {
+                const res = await fetch(`${API}?uuid=${encodeURIComponent(uuid)}`, { method: 'DELETE' });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+                allImages = allImages.filter(i => i.uuid !== uuid);
+                document.querySelector(`.img-card[data-uuid="${uuid}"]`)?.remove();
+                const remaining = allImages.filter(i => i.folder === activeFolder).length;
+                imgCount.textContent = `— ${remaining} image(s)`;
+                emptyEl.style.display = remaining ? 'none' : 'block';
+                statusEl.textContent = `Deleted. ${allImages.length} image(s) remaining.`;
+                // Update folder button count
+                const fbtn = document.querySelector(`.folder-btn[data-folder="${activeFolder}"]`);
+                if (fbtn) fbtn.querySelector('.count').textContent = `(${remaining})`;
+                if (!remaining) {
+                    allImages = allImages.filter(i => i.folder !== activeFolder);
+                    backBtn.click();
+                }
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = 'Delete';
+                statusEl.className = 'err';
+                statusEl.textContent = 'Delete failed: ' + e.message;
+            }
+        }
+
+        backBtn.addEventListener('click', () => {
+            gallerySection.style.display = 'none';
+            folderSection.style.display = 'block';
+            document.querySelectorAll('.folder-btn').forEach(b => b.classList.remove('active'));
+            activeFolder = null;
+            buildFolderButtons();
+        });
+
+        loadAll();
+    </script>
+</body>
+</html>

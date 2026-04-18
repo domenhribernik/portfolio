@@ -12,8 +12,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+require_once __DIR__ . '/../config/dev-mode.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/image-service.php';
+
+// Catch fatal errors (e.g. out-of-memory) that bypass try-catch
+register_shutdown_function(function () {
+    global $DEV_MODE;
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        http_response_code(500);
+        $msg = ($DEV_MODE ?? false)
+            ? 'Fatal error: ' . $err['message'] . ' [' . basename($err['file']) . ':' . $err['line'] . ']'
+            : 'Internal server error';
+        echo json_encode(['error' => $msg], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+});
 
 $method = $_SERVER['REQUEST_METHOD'];
 $uuid   = isset($_GET['uuid']) ? trim($_GET['uuid']) : null;
@@ -50,9 +64,13 @@ try {
     }
 } catch (InvalidArgumentException $e) {
     sendError($e->getMessage(), 400);
-} catch (Exception $e) {
-    error_log('Images controller error: ' . $e->getMessage());
-    sendError('Internal server error', 500);
+} catch (\Throwable $e) {
+    global $DEV_MODE;
+    error_log('Images controller error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    $msg = ($DEV_MODE ?? false)
+        ? get_class($e) . ': ' . $e->getMessage() . ' [' . basename($e->getFile()) . ':' . $e->getLine() . ']'
+        : 'Internal server error';
+    sendError($msg, 500);
 }
 
 // ------------------------------------------------------------------
@@ -69,7 +87,7 @@ function sendJson(mixed $data, int $code = 200): void
 function sendError(string $message, int $code = 400): void
 {
     http_response_code($code);
-    echo json_encode(['error' => $message], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => $message], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     exit;
 }
 

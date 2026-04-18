@@ -17,8 +17,10 @@
 - **Rocks** — finish *(by Friday)*
 - **Botaniq** — finish styling
 - **IP** — finish
-- Make automatic commit - git action - to my ftp
-- Look into unit testing, and add them before commit. And on actions as well? 
+- **Make automatic commit** - git action - to my ftp
+- **Look into unit testing**, and add them before commit. And on actions as well? 
+- **Add skills** - learn how to make skills and add as many as you can think of
+- Add webp to image service, and then also figure out the jpg edge case
 
 ## Refactoring
 
@@ -37,3 +39,8 @@
   - Static codes cost nothing to host and are highly shareable
 - **Historic period explorer** — website that presents a historic period in sequence with nice design, lets users follow along or quickly learn something; QR code to scan and read about it on the go. Present as a prototype/concept to gauge interest.
 - **Pravna zakonodaja (SLO)** — Brezplačna spletna stran, ki pomaga ljudem razumeti zakone in njihove spremembe. Neke vrste vodič skozi zakonodajo. Posvetovati se s pravniki/odvetniki pred objavo.
+- **Every app in one place** — Example is my workout project, it does 3 things better than mobile apps: 
+  - Personalized design, no paying for dark theme
+  - Data is under my control, can write any query to group data, and can ask chatgpt for workout advice based on the specific data / trend
+  - No ads, completely free to use, from any device (pc, iphone, android)
+  - Fast development, took me 5 minutes to create the workout app (ui, not connected to db)

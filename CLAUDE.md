@@ -49,6 +49,7 @@ All media (images, video, audio, documents) and data files live in [assets/](ass
 2. **Add a `<project-card>` tag** to [index.html](index.html) inside the matching category's `.projects-grid` div. Pick a gradient that fits the project's theme. The `project` attribute must match the key used in `project-data.js`.
 3. **Create the project directory** under `views/` matching the desired URL path (e.g., `views/botaniq/`), containing `index.html`, `style.css`, and `script.js`. Import shared components (`main-navbar.js`, etc.) and `base-style.css` using `../../` relative paths (two levels up to reach the root).
 4. **If the project uses a database**, create an SQL model file at `app/models/<name>-model.sql` with the `CREATE TABLE` and seed `INSERT` statements. SQL is always executed manually via phpMyAdmin — never run SQL from code or migrations automatically. Create the corresponding controller at `app/controllers/<name>-controller.php` following the existing CRUD pattern.
+   - **If the project stores images**, do NOT duplicate image columns (`uuid`, `mime_type`, `width`, `height`, `file_size`) in the domain table. Instead, add an `image_id INT NOT NULL` column that foreign-keys to `images(id)` with `ON DELETE CASCADE`. The `images` table (and `ImageService`) handles all file storage; the domain table only holds its own context-specific metadata. Example: `iliana_photos.image_id → images.id`.
 5. **Update the project directory list** in this file's "Frontend — Page Structure" section.
 
 ## External Dependencies

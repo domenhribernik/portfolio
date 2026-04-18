@@ -33,7 +33,6 @@ class ImageService
     private const ALLOWED_MIMES = [
         'image/jpeg',
         'image/png',
-        'image/webp',
         'image/gif',
         'image/heic',
         'image/heif',
@@ -58,10 +57,10 @@ class ImageService
     ];
 
     private const FORMAT_MAP = [
-        'webp' => 'image/webp',
         'jpeg' => 'image/jpeg',
         'jpg'  => 'image/jpeg',
         'png'  => 'image/png',
+        'gif'  => 'image/gif',
     ];
 
     /**
@@ -80,7 +79,8 @@ class ImageService
             throw new InvalidArgumentException('Image data is empty');
         }
         if (strlen($rawData) > self::MAX_INPUT_BYTES) {
-            throw new InvalidArgumentException('Image exceeds maximum allowed size of 20 MB');
+            $mb = round(strlen($rawData) / 1024 / 1024, 2);
+            throw new InvalidArgumentException("Image is {$mb} MB — exceeds the 20 MB maximum");
         }
 
         // --- Validate MIME via actual content (not user-supplied headers) ---
@@ -88,7 +88,7 @@ class ImageService
         $mime  = $finfo->buffer($rawData);
         if (!in_array($mime, self::ALLOWED_MIMES, true)) {
             throw new InvalidArgumentException(
-                'Invalid image type "' . $mime . '". Allowed: JPEG, PNG, WebP, GIF, HEIC'
+                'Invalid image type "' . $mime . '". Allowed: JPEG, PNG, GIF, HEIC'
             );
         }
 
@@ -100,7 +100,7 @@ class ImageService
 
         // --- Parse options ---
         $sizeName  = $options['size']       ?? 'medium';
-        $formatKey = $options['format']     ?? 'webp';
+        $formatKey = $options['format']     ?? 'jpeg';
         $stripExif = $options['strip_exif'] ?? true;
         $quality   = $options['quality']    ?? 80;
 
@@ -116,13 +116,34 @@ class ImageService
                 'Unknown format "' . $formatKey . '". Allowed: ' . implode(', ', array_keys(self::FORMAT_MAP))
             );
         }
+        if ($formatKey === 'gif' && $mime !== 'image/gif') {
+            throw new InvalidArgumentException('GIF output is only allowed when the uploaded file is a GIF.');
+        }
+
+        // GIFs are stored as-is to preserve animation and palette.
+        // GD would collapse all frames to one, so we bypass it entirely.
+        if ($formatKey === 'gif') {
+            $info = getimagesizefromstring($rawData);
+            if ($info === false) {
+                throw new RuntimeException('Failed to read GIF dimensions.');
+            }
+            return [
+                'data'   => $rawData,
+                'mime'   => 'image/gif',
+                'width'  => $info[0],
+                'height' => $info[1],
+            ];
+        }
 
         $quality = max(1, min(100, (int) $quality));
 
         // --- Create GD resource from raw data ---
         $src = @imagecreatefromstring($rawData);
         if ($src === false) {
-            throw new RuntimeException('Failed to decode image — file may be corrupt');
+            throw new RuntimeException(
+                'Failed to decode image. The file may be corrupt or use an unsupported '
+                . 'color space (e.g. CMYK). Try converting to sRGB JPEG or PNG first.'
+            );
         }
 
         $srcW = imagesx($src);
@@ -270,9 +291,18 @@ class ImageService
             throw new InvalidArgumentException('Invalid file upload entry');
         }
         if ($fileEntry['error'] !== UPLOAD_ERR_OK) {
-            throw new InvalidArgumentException(
-                'Upload error code ' . $fileEntry['error']
-            );
+            $uploadErrors = [
+                UPLOAD_ERR_INI_SIZE   => 'File exceeds upload_max_filesize in php.ini',
+                UPLOAD_ERR_FORM_SIZE  => 'File exceeds MAX_FILE_SIZE in the HTML form',
+                UPLOAD_ERR_PARTIAL    => 'File was only partially uploaded',
+                UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder on server',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+                UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the upload',
+            ];
+            $code = $fileEntry['error'];
+            $desc = $uploadErrors[$code] ?? 'Unknown upload error';
+            throw new InvalidArgumentException("Upload failed (code $code): $desc");
         }
         if (!is_uploaded_file($fileEntry['tmp_name'])) {
             throw new InvalidArgumentException('File is not a valid upload');
@@ -298,9 +328,9 @@ class ImageService
     private static function mimeToExtension(string $mime): string
     {
         return match ($mime) {
-            'image/webp' => 'webp',
             'image/jpeg' => 'jpg',
             'image/png'  => 'png',
+            'image/gif'  => 'gif',
             default      => throw new RuntimeException('No extension mapping for mime: ' . $mime),
         };
     }
@@ -402,9 +432,9 @@ class ImageService
     {
         ob_start();
         $ok = match ($format) {
-            'webp'         => imagewebp($img, null, $quality),
             'jpeg', 'jpg'  => imagejpeg($img, null, $quality),
             'png'          => imagepng($img, null, (int) round(9 - ($quality / 100 * 9))),
+            'gif'          => imagegif($img),
             default        => false,
         };
         $data = ob_get_clean();
