@@ -78,6 +78,7 @@ function mimeToExt(string $mime): string
 function formatPhoto(array $row): array
 {
     $row['id']        = (int) $row['id'];
+    $row['image_id']  = (int) $row['image_id'];
     $row['width']     = $row['width']     !== null ? (int) $row['width']     : null;
     $row['height']    = $row['height']    !== null ? (int) $row['height']    : null;
     $row['file_size'] = $row['file_size'] !== null ? (int) $row['file_size'] : null;
@@ -88,7 +89,12 @@ function formatPhoto(array $row): array
 
 function fetchById(int $id): array
 {
-    $stmt = Database::read()->prepare('SELECT * FROM iliana_photos WHERE id = ?');
+    $sql = 'SELECT p.id, p.image_id, p.caption, p.photo_date, p.added_by, p.created_at, p.updated_at,
+                   i.uuid, i.mime_type, i.width, i.height, i.file_size
+            FROM iliana_photos p
+            JOIN images i ON i.id = p.image_id
+            WHERE p.id = ?';
+    $stmt = Database::read()->prepare($sql);
     $stmt->execute([$id]);
     $row = $stmt->fetch();
     if (!$row) sendError('Photo not found', 404);
@@ -125,9 +131,12 @@ function validateInput(array $data): array
 
 function getAllPhotos(): void
 {
-    $stmt = Database::read()->query(
-        'SELECT * FROM iliana_photos ORDER BY photo_date ASC, created_at ASC'
-    );
+    $sql = 'SELECT p.id, p.image_id, p.caption, p.photo_date, p.added_by, p.created_at, p.updated_at,
+                   i.uuid, i.mime_type, i.width, i.height, i.file_size
+            FROM iliana_photos p
+            JOIN images i ON i.id = p.image_id
+            ORDER BY p.photo_date ASC, p.created_at ASC';
+    $stmt = Database::read()->query($sql);
     $photos = array_map('formatPhoto', $stmt->fetchAll());
     sendJson($photos);
 }
@@ -158,16 +167,25 @@ function createPhoto(): void
     $prepared = ImageService::prepareFromUpload($_FILES['image'], ['size' => 'large', 'format' => 'jpeg']);
     $stored   = ImageService::store($prepared, 'iliana');
 
-    $sql = 'INSERT INTO iliana_photos (uuid, mime_type, width, height, file_size, caption, photo_date, added_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-    $stmt = Database::write()->prepare($sql);
-    $stmt->execute([
+    $imgSql = 'INSERT INTO images (uuid, folder, mime_type, width, height, file_size)
+               VALUES (?, ?, ?, ?, ?, ?)';
+    $imgStmt = Database::write()->prepare($imgSql);
+    $imgStmt->execute([
         $stored['uuid'],
+        $stored['folder'],
         $stored['mime'],
         $stored['width'],
         $stored['height'],
         $stored['file_size'],
-        sanitize($data['caption']),
+    ]);
+    $imageId = (int) Database::write()->lastInsertId();
+
+    $sql = 'INSERT INTO iliana_photos (image_id, caption, photo_date, added_by)
+            VALUES (?, ?, ?, ?)';
+    $stmt = Database::write()->prepare($sql);
+    $stmt->execute([
+        $imageId,
+        trim($data['caption']),
         $data['photo_date'],
         $data['added_by'],
     ]);
@@ -184,12 +202,6 @@ function updatePhoto(int $id): void
 
     $existing = fetchById($id);
 
-    $newUuid     = $existing['uuid'];
-    $newMime     = $existing['mime_type'];
-    $newWidth    = $existing['width'];
-    $newHeight   = $existing['height'];
-    $newFileSize = $existing['file_size'];
-
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         try {
             ImageService::remove($existing['uuid'], 'iliana', $existing['mime_type']);
@@ -197,27 +209,25 @@ function updatePhoto(int $id): void
             error_log('Failed to remove old iliana photo file: ' . $e->getMessage());
         }
 
-        $prepared    = ImageService::prepareFromUpload($_FILES['image'], ['size' => 'large', 'format' => 'jpeg']);
-        $stored      = ImageService::store($prepared, 'iliana');
-        $newUuid     = $stored['uuid'];
-        $newMime     = $stored['mime'];
-        $newWidth    = $stored['width'];
-        $newHeight   = $stored['height'];
-        $newFileSize = $stored['file_size'];
+        $prepared = ImageService::prepareFromUpload($_FILES['image'], ['size' => 'large', 'format' => 'jpeg']);
+        $stored   = ImageService::store($prepared, 'iliana');
+
+        $imgSql = 'UPDATE images SET uuid = ?, mime_type = ?, width = ?, height = ?, file_size = ? WHERE id = ?';
+        $imgStmt = Database::write()->prepare($imgSql);
+        $imgStmt->execute([
+            $stored['uuid'],
+            $stored['mime'],
+            $stored['width'],
+            $stored['height'],
+            $stored['file_size'],
+            $existing['image_id'],
+        ]);
     }
 
-    $sql = 'UPDATE iliana_photos
-            SET uuid = ?, mime_type = ?, width = ?, height = ?, file_size = ?,
-                caption = ?, photo_date = ?, added_by = ?
-            WHERE id = ?';
+    $sql = 'UPDATE iliana_photos SET caption = ?, photo_date = ?, added_by = ? WHERE id = ?';
     $stmt = Database::write()->prepare($sql);
     $stmt->execute([
-        $newUuid,
-        $newMime,
-        $newWidth,
-        $newHeight,
-        $newFileSize,
-        sanitize($data['caption']),
+        trim($data['caption']),
         $data['photo_date'],
         $data['added_by'],
         $id,
@@ -230,14 +240,17 @@ function deletePhoto(int $id): void
 {
     $existing = fetchById($id);
 
+    $stmt = Database::write()->prepare('DELETE FROM iliana_photos WHERE id = ?');
+    $stmt->execute([$id]);
+
+    $stmt = Database::write()->prepare('DELETE FROM images WHERE id = ?');
+    $stmt->execute([$existing['image_id']]);
+
     try {
         ImageService::remove($existing['uuid'], 'iliana', $existing['mime_type']);
     } catch (RuntimeException $e) {
         error_log('Failed to remove iliana photo file: ' . $e->getMessage());
     }
-
-    $stmt = Database::write()->prepare('DELETE FROM iliana_photos WHERE id = ?');
-    $stmt->execute([$id]);
 
     sendJson(['message' => 'Photo deleted']);
 }

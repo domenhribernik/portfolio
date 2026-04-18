@@ -198,16 +198,25 @@
             <div class="modal-info">
                 <div id="modalDate" class="modal-date"></div>
                 <div id="modalCaption" class="modal-caption"></div>
+                <div id="modalAuthor" class="modal-author"></div>
+                <div class="modal-actions">
+                    <button id="modalEditBtn" class="modal-action-btn edit-btn" title="Edit memory">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button id="modalDeleteBtn" class="modal-action-btn delete-btn" title="Delete memory">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Add / Edit Photo Modal -->
-    <div class="photo-form-overlay" id="photoFormOverlay">
-        <div class="photo-form-card">
-            <div class="photo-form-header">
+    <div class="dialog-overlay" id="photoFormOverlay">
+        <div class="dialog-card">
+            <div class="dialog-header">
                 <h2 id="photoFormTitle">Add Memory</h2>
-                <button class="photo-form-close" id="photoFormClose"><i class="fas fa-times"></i></button>
+                <button class="dialog-close" id="photoFormClose"><i class="fas fa-times"></i></button>
             </div>
             <form id="photoForm" novalidate>
                 <input type="hidden" id="photoId">
@@ -259,8 +268,8 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="delete-overlay" id="deleteOverlay">
-        <div class="delete-card">
+    <div class="dialog-overlay" id="deleteOverlay">
+        <div class="dialog-card delete-card">
             <h3>Delete Memory</h3>
             <p>Are you sure you want to delete this memory? This cannot be undone.</p>
             <div class="delete-actions">

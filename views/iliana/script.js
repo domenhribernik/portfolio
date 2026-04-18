@@ -168,29 +168,16 @@ function renderPhotoGallery() {
             <div class="photo-info">
                 <div class="photo-date">${displayDate}</div>
                 <div class="photo-caption">${escapeHtml(photo.caption)}</div>
-                <div class="photo-info-footer">
-                    <div class="photo-added-by">♥ ${photo.added_by}</div>
-                    <div class="photo-actions">
-                        <button class="photo-action-btn edit-btn" title="Edit memory">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
-                        <button class="photo-action-btn delete-btn" title="Delete memory">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
             </div>
         `;
 
-        item.querySelector('.edit-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            openEditPhotoForm(photo.id);
-        });
-        item.querySelector('.delete-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            openDeleteConfirm(photo.id);
-        });
-        item.addEventListener('click', () => openModal({ src: imgSrc, date: displayDate, caption: photo.caption }));
+        item.addEventListener('click', () => openModal({
+            id: photo.id,
+            src: imgSrc,
+            date: displayDate,
+            caption: photo.caption,
+            addedBy: photo.added_by,
+        }));
 
         gallery.appendChild(item);
     });
@@ -204,15 +191,16 @@ function escapeHtml(str) {
 
 function openModal(photo) {
     const modal       = document.getElementById('imageModal');
-    const modalImage  = document.getElementById('modalImage');
-    const modalDate   = document.getElementById('modalDate');
-    const modalCaption = document.getElementById('modalCaption');
     const scrollY     = window.scrollY || window.pageYOffset;
 
-    modalImage.src          = photo.src;
-    modalImage.alt          = photo.caption;
-    modalDate.textContent   = photo.date;
-    modalCaption.textContent = photo.caption;
+    document.getElementById('modalImage').src          = photo.src;
+    document.getElementById('modalImage').alt          = photo.caption;
+    document.getElementById('modalDate').textContent   = photo.date;
+    document.getElementById('modalCaption').textContent = photo.caption;
+    document.getElementById('modalAuthor').textContent  = 'by ' + photo.addedBy;
+
+    document.getElementById('modalEditBtn').onclick = () => { closeModal(); openEditPhotoForm(photo.id); };
+    document.getElementById('modalDeleteBtn').onclick = () => { closeModal(); openDeleteConfirm(photo.id); };
 
     modal.style.top    = `${scrollY}px`;
     modal.style.height = `${window.innerHeight}px`;
