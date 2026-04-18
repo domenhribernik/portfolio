@@ -732,3 +732,390 @@ td {
 .upload-btn:hover {
     background: var(--primary-pink);
 }
+
+/* Gallery section header */
+.gallery-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.add-photo-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--primary-pink);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--text-black);
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.add-photo-btn:hover {
+    background: var(--primary-pink-hover);
+    transform: scale(1.08);
+}
+
+/* Photo card actions */
+.photo-info-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.photo-added-by {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    font-family: 'Courier New', monospace;
+}
+
+.photo-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.photo-action-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    transition: var(--transition);
+}
+
+.photo-action-btn.edit-btn {
+    background: #f0f0f0;
+    color: #555;
+}
+
+.photo-action-btn.edit-btn:hover {
+    background: var(--primary-pink);
+    color: var(--text-black);
+}
+
+.photo-action-btn.delete-btn {
+    background: #ffeaea;
+    color: #cc3333;
+}
+
+.photo-action-btn.delete-btn:hover {
+    background: #ff4444;
+    color: white;
+}
+
+/* Gallery empty/loading state */
+.gallery-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+/* Photo form overlay */
+.photo-form-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.photo-form-overlay.active {
+    display: flex;
+}
+
+.photo-form-card {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    animation: zoomIn 0.25s ease-out;
+}
+
+.photo-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.photo-form-header h2 {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.9rem;
+    color: var(--text-black);
+}
+
+.photo-form-close {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--text-light);
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.photo-form-close:hover {
+    background: #f0f0f0;
+    color: var(--text-black);
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.form-field label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-gray);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-field input,
+.form-field select {
+    padding: 10px 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-white);
+    color: var(--text-black);
+    transition: var(--transition);
+}
+
+.form-field input:focus,
+.form-field select:focus {
+    outline: none;
+    border-color: var(--primary-pink);
+}
+
+.form-field input.invalid,
+.form-field select.invalid {
+    border-color: #ff4444;
+}
+
+/* Image upload area */
+.photo-upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-upload-area:hover {
+    border-color: var(--primary-pink);
+    background: #fff8f9;
+}
+
+.photo-upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+}
+
+.photo-upload-preview {
+    pointer-events: none;
+    width: 100%;
+}
+
+.photo-upload-preview img {
+    max-width: 100%;
+    max-height: 160px;
+    border-radius: 6px;
+    object-fit: contain;
+}
+
+.photo-upload-placeholder {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.photo-upload-placeholder i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 8px;
+    color: #ccc;
+}
+
+.form-error {
+    color: #cc3333;
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    background: #fff0f0;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 22px;
+}
+
+.form-btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-btn-cancel {
+    background: #f0f0f0;
+    color: var(--text-black);
+}
+
+.form-btn-cancel:hover {
+    background: #e0e0e0;
+}
+
+.form-btn-submit {
+    background: var(--primary-pink);
+    color: var(--text-black);
+}
+
+.form-btn-submit:hover {
+    background: var(--primary-pink-hover);
+}
+
+.form-btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-btn-delete {
+    background: #ff4444;
+    color: white;
+}
+
+.form-btn-delete:hover {
+    background: #cc3333;
+}
+
+/* Delete confirmation overlay */
+.delete-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.delete-overlay.active {
+    display: flex;
+}
+
+.delete-card {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 30px 28px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    animation: zoomIn 0.25s ease-out;
+}
+
+.delete-card h3 {
+    font-size: 1.2rem;
+    color: var(--text-black);
+    margin-bottom: 10px;
+}
+
+.delete-card p {
+    color: var(--text-gray);
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.delete-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* Toast notifications */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-family: 'Poppins', sans-serif;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    animation: slideInRight 0.3s ease-out;
+    max-width: 280px;
+}
+
+.toast-success {
+    background: #fff8fa;
+    color: #6b2737;
+    border-left: 3px solid var(--primary-pink);
+}
+
+.toast-error {
+    background: #fff5f5;
+    color: #c53030;
+    border-left: 3px solid #fc8181;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100px); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+}
