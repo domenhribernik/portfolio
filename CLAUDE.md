@@ -24,6 +24,9 @@ Reusable web components live in [components/](components/) and are imported as E
 - [components/main-navbar.js](components/main-navbar.js) — Site-wide navigation bar
 - [components/project-card.js](components/project-card.js) — Project display card
 - [components/project-data.js](components/project-data.js) — **Central data registry** for all portfolio projects; add new projects here
+- [components/rocks/](components/rocks/) — Rocks feature: `rock-builder.js` (shared Three.js geometry/mesh builder) and `rocks-showcase.js` (`<rocks-showcase>` embeddable rotating view). The editor at `views/rocks` imports the builder so both stay visually in sync.
+
+When a feature grows to need multiple component files (shared builders + extra web components), group them under `components/<feature>/` rather than flat at the root.
 
 ### Backend (PHP)
 

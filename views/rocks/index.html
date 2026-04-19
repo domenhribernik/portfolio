@@ -6,77 +6,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>3D Rock Simulator</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="../../assets/iliana.ico" />
+    <title>Our Rock Pile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { script: ['Dancing Script', 'cursive'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; overscroll-behavior: none; }
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .zoom-in { animation: zoomIn 0.2s ease-out; }
+    </style>
     <base target="_blank">
 </head>
-<body>
-    <div class="container">
-        <h1>🪨 3D Rock Simulator</h1>
+<body class="bg-[#fdf7f8] min-h-screen flex justify-center items-start p-5">
 
-        <div class="content">
-            <div class="control-panel">
-                <div class="controls-row">
-                    <div class="control-group">
-                        <label for="shapeSelect">Shape</label>
-                        <select id="shapeSelect">
-                            <option value="random">Random</option>
-                            <option value="heart">Heart</option>
-                            <option value="star">Star</option>
-                            <option value="moon">Moon</option>
-                        </select>
+    <div class="bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] max-w-[1000px] w-full p-6">
+
+        <div class="relative mb-6">
+            <a href="../iliana/" onclick="this.href='../iliana/?t='+Date.now()" target="_self"
+               class="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#ffc2cc] hover:bg-[#ffb3c1] flex items-center justify-center text-black text-xl font-semibold transition-all hover:scale-110 no-underline"
+               title="Back to Iliana">←</a>
+            <h1 class="font-script text-5xl font-bold text-center text-black">Our Rocks 🪨</h1>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
+
+            <!-- Canvas + stats — first in DOM so canvas appears on top on mobile -->
+            <div class="flex flex-col gap-3 min-w-0 md:col-start-2 md:row-start-1">
+                <div id="canvas" class="border-2 border-[#f0dde2] rounded-xl w-full h-[300px] sm:h-[380px] md:h-[560px]" style="touch-action:none;"></div>
+                <p id="canvasHint" class="text-center text-xs text-gray-400 italic">Tap "+ Place Rock" then tap the canvas to place a stone</p>
+                <div class="flex justify-between items-center px-4 py-3 bg-[#fff8f9] rounded-lg text-sm border border-[#f5dde2]">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-gray-500">Total Rocks:</span>
+                        <span id="rockCount" class="font-bold text-[#ffb3c1]">0</span>
                     </div>
-
-                    <div class="control-group">
-                        <label for="thicknessInput">Thickness</label>
-                        <input type="range" id="thicknessInput" min="0.2" max="2" value="0.5" step="0.1">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-gray-500">FPS:</span>
+                        <span id="fpsCounter" class="font-bold text-[#ffb3c1]">60</span>
                     </div>
-
-                    <div class="control-group">
-                        <label for="sizeInput">Size</label>
-                        <input type="range" id="sizeInput" min="0.5" max="3" value="1.5" step="0.1">
-                    </div>
-
-                    <div class="control-group text-group">
-                        <label for="rockText">Label <span id="charCounter">0/6</span></label>
-                        <input type="text" id="rockText" placeholder="Optional text..." maxlength="6">
-                    </div>
-                </div>
-
-                <div class="buttons-row">
-                    <button class="create-btn" id="createBtn">Create Rock</button>
-                    <button class="delete-btn" id="deleteBtn">Delete Rock</button>
-                    <button class="clear-btn" id="clearBtn">Clear All</button>
-                </div>
-
-                <div class="tips">
-                    <strong>Tips:</strong><br>
-                    • Tap "Create Rock" then tap the canvas<br>
-                    • Drag rocks to move them<br>
-                    • Tap "Delete Rock" then tap a rock to remove it<br>
-                    • Right-click drag (or one-finger swipe) to rotate view
                 </div>
             </div>
 
-            <div class="canvas-wrapper">
-                <div id="canvas"></div>
-                <div class="canvas-hint" id="canvasHint">Tap "Create Rock" and then tap the canvas to place your stone</div>
+            <!-- Controls — second in DOM, placed in col 1 on desktop -->
+            <div class="flex flex-col gap-4 md:col-start-1 md:row-start-1">
 
-                <div class="stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Total Rocks:</span>
-                        <span class="stat-value" id="rockCount">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">FPS:</span>
-                        <span class="stat-value" id="fpsCounter">60</span>
-                    </div>
+                <div class="flex flex-col gap-1.5">
+                    <label for="shapeSelect" class="text-[0.82rem] font-semibold text-gray-500 uppercase tracking-wider">Shape</label>
+                    <select id="shapeSelect" class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-black bg-white focus:outline-none focus:border-[#ffc2cc] transition-colors">
+                        <option value="random">Random</option>
+                        <option value="heart">Heart</option>
+                        <option value="star">Star</option>
+                    </select>
                 </div>
+
+                <div class="flex flex-col gap-1.5 mt-2">
+                    <label for="thicknessInput" class="text-[0.82rem] font-semibold text-gray-500 uppercase tracking-wider">Thickness</label>
+                    <input type="range" id="thicknessInput" min="1" max="3" value="1.5" step="0.1" class="w-full cursor-pointer accent-[#ffc2cc]">
+                </div>
+
+                <div class="flex flex-col gap-1.5 mt-2">
+                    <label for="sizeInput" class="text-[0.82rem] font-semibold text-gray-500 uppercase tracking-wider">Size</label>
+                    <input type="range" id="sizeInput" min="0.5" max="3" value="1.5" step="0.1" class="w-full cursor-pointer accent-[#ffc2cc]">
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label for="rockText" class="text-[0.82rem] font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
+                        Label
+                        <span id="charCounter" class="font-normal text-gray-300 text-[11px] tracking-normal normal-case">0/6</span>
+                    </label>
+                    <input type="text" id="rockText" placeholder="Optional text..." maxlength="6"
+                           class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-black bg-white focus:outline-none focus:border-[#ffc2cc] transition-colors">
+                </div>
+
+                <div class="flex flex-col gap-2.5 mt-1">
+                    <button id="createBtn"
+                        class="w-full py-3 px-5 bg-[#ffc2cc] text-black rounded-lg text-sm font-semibold transition-all hover:bg-[#ffb3c1] hover:-translate-y-px">
+                        + Place Rock
+                    </button>
+                    <button id="deleteBtn"
+                        class="w-full py-3 px-5 bg-[#ffeaea] text-red-600 rounded-lg text-sm font-semibold transition-all hover:bg-red-400 hover:text-white hover:-translate-y-px">
+                        − Remove Rock
+                    </button>
+                    <button id="clearBtn"
+                        class="w-full py-3 px-5 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold transition-all hover:bg-gray-200">
+                        🗑 Clear All
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Clear All confirmation dialog -->
+    <div id="clearDialog" style="display:none;" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-5">
+        <div class="bg-white rounded-xl p-7 max-w-[320px] w-full shadow-2xl text-center zoom-in">
+            <div class="text-4xl mb-3">🪨</div>
+            <h3 class="text-base font-semibold text-black mb-1.5">Clear all rocks?</h3>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed">This will remove every stone from the pile.</p>
+            <div class="flex gap-3 justify-center">
+                <button id="clearCancelBtn" class="px-5 py-2.5 bg-gray-100 text-black rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">Keep them</button>
+                <button id="clearConfirmBtn" class="px-5 py-2.5 bg-red-400 text-white rounded-lg text-sm font-semibold hover:bg-red-500 transition-colors">Clear All</button>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
