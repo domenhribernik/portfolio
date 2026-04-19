@@ -315,6 +315,159 @@ td {
     background: var(--primary-pink);
 }
 
+/* Personality Test */
+.personality-subtitle {
+    text-align: center;
+    color: var(--text-gray);
+    font-size: 1rem;
+    margin-bottom: 30px;
+}
+
+.personality-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.personality-card {
+    display: block;
+    text-decoration: none;
+    background: #fefefe;
+    border-radius: var(--border-radius);
+    padding: 30px 20px;
+    text-align: center;
+    border: 1px solid #e8e8e8;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.personality-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: currentColor;
+    opacity: 0.8;
+}
+
+.personality-card.architect {
+    color: #8a6fa3;
+}
+
+.personality-card.campaigner {
+    color: #4ba87a;
+}
+
+.personality-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.personality-image-wrap {
+    height: 180px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.personality-image-wrap img {
+    max-height: 100%;
+    max-width: 140px;
+    object-fit: contain;
+}
+
+.personality-name {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-black);
+    margin-bottom: 4px;
+}
+
+.personality-type {
+    color: currentColor;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.personality-desc {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+.personality-heart {
+    font-size: 2.5rem;
+    color: var(--primary-pink-hover);
+    text-align: center;
+    padding: 0 10px;
+    animation: heartBeat 1.6s ease-in-out infinite;
+}
+
+@keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.personality-match {
+    margin-top: 35px;
+    text-align: center;
+    padding: 25px 20px;
+    background: linear-gradient(135deg, #8a6fa322 0%, #ffc2cc44 50%, #4ba87a22 100%);
+    border-radius: var(--border-radius);
+    border: 1px solid #f0dde2;
+}
+
+.match-badge {
+    display: inline-block;
+    background: var(--primary-pink);
+    color: var(--text-black);
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(255, 194, 204, 0.5);
+}
+
+.match-text {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+@media (max-width: 678px) {
+    .personality-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .personality-heart {
+        font-size: 2rem;
+        padding: 20px 0;
+    }
+
+    .personality-image-wrap {
+        height: 160px;
+    }
+}
+
 /* Photo Gallery */
 .photo-gallery {
     display: grid;
@@ -421,7 +574,7 @@ td {
 .modal-image {
     width: 100%;
     height: auto;
-    max-height: 70vh;
+    max-height: 60vh;
     object-fit: contain;
     margin-bottom: 20px;
 }
@@ -522,6 +675,18 @@ td {
         font-size: 2rem;
     }
 
+    .login-card {
+        margin: 0 20px;
+    }
+
+    .countdown {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+
     .photo-gallery {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -529,7 +694,21 @@ td {
     }
 
     .photo-container {
-        height: 200px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+
+    .photo-item:hover {
+        transform: rotate(-2deg);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .photo-item:nth-child(even):hover {
+        transform: rotate(2deg);
+    }
+
+    .modal-image {
+        max-height: 70vh;
     }
 }
 
@@ -560,6 +739,57 @@ td {
 .add-photo-btn:hover {
     background: var(--primary-pink-hover);
     transform: scale(1.08);
+}
+
+/* Gallery date filter */
+.gallery-date-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.gallery-date-input {
+    padding: 7px 10px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-gray);
+    background: var(--bg-white);
+    transition: var(--transition);
+    flex: 1;
+}
+
+.gallery-date-input:focus {
+    outline: none;
+    border-color: var(--primary-pink);
+}
+
+.gallery-date-sep {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.gallery-filter-clear {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: #f0f0f0;
+    color: var(--text-gray);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.gallery-filter-clear:hover {
+    background: var(--primary-pink);
 }
 
 /* Gallery empty/loading state */

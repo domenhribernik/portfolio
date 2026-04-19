@@ -96,7 +96,7 @@
             </section> -->
 
             <!-- Human Benchmark section -->
-            <section class="section hb">
+            <!-- <section class="section hb">
                 <h2 class="section-title">The winner is Dom 🏆</h2><br>
                 <table id="benchmarkTable">
                     <thead>
@@ -156,6 +156,40 @@
                         </tr>
                     </tfoot>
                 </table>
+            </section> -->
+
+            <!-- Personality Test -->
+            <section class="section personality">
+                <h2 class="section-title">Our Personality Types</h2>
+                <p class="personality-subtitle">We took the 16 Personalities test. Here's what it said about us</p>
+                <div class="personality-grid">
+                    <a class="personality-card architect" href="https://www.16personalities.com/intj-personality" target="_blank" rel="noopener">
+                        <div class="personality-image-wrap">
+                            <img src="../../assets/iliana/architect.png" alt="Architect personality">
+                        </div>
+                        <div class="personality-name">Domen</div>
+                        <div class="personality-type">Architect · INTJ</div>
+                        <p class="personality-desc">Imaginative and strategic thinkers, with a plan for everything.</p>
+                    </a>
+
+                    <div class="personality-heart">
+                        <i class="fas fa-heart"></i>
+                    </div>
+
+                    <a class="personality-card campaigner" href="https://www.16personalities.com/enfp-personality" target="_blank" rel="noopener">
+                        <div class="personality-image-wrap">
+                            <img src="../../assets/iliana/campaigner.png" alt="Campaigner personality">
+                        </div>
+                        <div class="personality-name">Iliana</div>
+                        <div class="personality-type">Campaigner · ENFP</div>
+                        <p class="personality-desc">Enthusiastic, creative and sociable free spirits, who always find a reason to smile.</p>
+                    </a>
+                </div>
+
+                <div class="personality-match">
+                    <span class="match-badge">Ideal Match</span>
+                    <p class="match-text">INTJ and ENFP are listed as one of the most compatible pairings. <br> Opposites that complete each other 💕</p>
+                </div>
             </section>
 
             <!-- Divorce Button -->
@@ -176,6 +210,14 @@
                     <h2 class="section-title" style="margin-bottom:0">Our Memories</h2>
                     <button class="add-photo-btn" id="addPhotoBtn" title="Add memory" onclick="openAddPhotoForm()">
                         <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="gallery-date-filter">
+                    <input type="date" id="filterFrom" class="gallery-date-input" title="From date">
+                    <span class="gallery-date-sep">—</span>
+                    <input type="date" id="filterTo" class="gallery-date-input" title="To date">
+                    <button class="gallery-filter-clear" id="filterClearBtn" title="Clear filter" style="display:none">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="photo-gallery" id="photoGallery">

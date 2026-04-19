@@ -1,7 +1,6 @@
 node_modules
 .DS_Store
 dist
-**/assets/iliana/
 .env
 *cache.json
 vendor

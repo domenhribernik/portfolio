@@ -131,12 +131,32 @@ function validateInput(array $data): array
 
 function getAllPhotos(): void
 {
+    $params = [];
+    $where  = [];
+
+    if (!empty($_GET['from'])) {
+        $d = DateTime::createFromFormat('Y-m-d', $_GET['from']);
+        if (!$d || $d->format('Y-m-d') !== $_GET['from']) sendError('Invalid from date', 400);
+        $where[]  = 'p.photo_date >= ?';
+        $params[] = $_GET['from'];
+    }
+
+    if (!empty($_GET['to'])) {
+        $d = DateTime::createFromFormat('Y-m-d', $_GET['to']);
+        if (!$d || $d->format('Y-m-d') !== $_GET['to']) sendError('Invalid to date', 400);
+        $where[]  = 'p.photo_date <= ?';
+        $params[] = $_GET['to'];
+    }
+
     $sql = 'SELECT p.id, p.image_id, p.caption, p.photo_date, p.added_by, p.created_at, p.updated_at,
                    i.uuid, i.mime_type, i.width, i.height, i.file_size
             FROM iliana_photos p
-            JOIN images i ON i.id = p.image_id
-            ORDER BY p.photo_date ASC, p.created_at ASC';
-    $stmt = Database::read()->query($sql);
+            JOIN images i ON i.id = p.image_id'
+        . (!empty($where) ? ' WHERE ' . implode(' AND ', $where) : '')
+        . ' ORDER BY p.photo_date ASC, p.created_at ASC';
+
+    $stmt = Database::read()->prepare($sql);
+    $stmt->execute($params);
     $photos = array_map('formatPhoto', $stmt->fetchAll());
     sendJson($photos);
 }

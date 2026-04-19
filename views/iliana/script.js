@@ -21,8 +21,12 @@ async function apiFetch(url, options = {}) {
     return data;
 }
 
-async function loadPhotosFromApi() {
-    return apiFetch(API);
+async function loadPhotosFromApi(from = '', to = '') {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to)   params.set('to', to);
+    const query = params.toString();
+    return apiFetch(API + (query ? '?' + query : ''));
 }
 
 async function createPhotoApi(formData) {
@@ -134,10 +138,12 @@ function formatDisplayDate(dateStr) {
 }
 
 async function loadPhotos() {
+    const from = document.getElementById('filterFrom').value;
+    const to   = document.getElementById('filterTo').value;
     const gallery = document.getElementById('photoGallery');
     gallery.innerHTML = '<div class="gallery-state"><p>Loading memories...</p></div>';
     try {
-        photos = await loadPhotosFromApi();
+        photos = await loadPhotosFromApi(from, to);
         renderPhotoGallery();
     } catch (e) {
         gallery.innerHTML = '<div class="gallery-state"><p>Could not load memories. Is the server running?</p></div>';
@@ -380,6 +386,28 @@ function showToast(message, type = 'success') {
     container.appendChild(toast);
     setTimeout(() => toast.remove(), 3500);
 }
+
+// === Date filter ===
+
+(function () {
+    const fromEl  = document.getElementById('filterFrom');
+    const toEl    = document.getElementById('filterTo');
+    const clearEl = document.getElementById('filterClearBtn');
+
+    function updateClearBtn() {
+        clearEl.style.display = (fromEl.value || toEl.value) ? 'inline-flex' : 'none';
+    }
+
+    fromEl.addEventListener('change', () => { updateClearBtn(); loadPhotos(); });
+    toEl.addEventListener('change',   () => { updateClearBtn(); loadPhotos(); });
+
+    clearEl.addEventListener('click', () => {
+        fromEl.value = '';
+        toEl.value   = '';
+        updateClearBtn();
+        loadPhotos();
+    });
+})();
 
 // === Keyboard shortcuts ===
 
