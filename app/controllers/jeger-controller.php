@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$cacheFile = __DIR__ . '/../cache/jeger-checklist.json';
+$cacheFile = __DIR__ . '/../data/jeger-checklist.json';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     echo file_exists($cacheFile) ? file_get_contents($cacheFile) : '{}';
