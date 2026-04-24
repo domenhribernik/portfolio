@@ -162,5 +162,16 @@ export const projects = {
       visitSite: "views/workout",
     },
     iconClass: "fas fa-dumbbell",
+  },
+  maze: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #4b6cb7 0%, #182848 100%)",
+    title: "Maze Generator",
+    description: "Generates mazes on square and hexagonal grids using 7 algorithms (DFS, Prim's, Kruskal's, Wilson's, Sidewinder, Binary Tree, Recursive Division). Scores difficulty via BFS analysis and exports to print-perfect SVG.",
+    tech: ["HTML", "CSS", "JavaScript", "SVG", "Algorithms"],
+    links: {
+      visitSite: "views/maze",
+    },
+    iconClass: "fas fa-puzzle-piece",
   }
 };

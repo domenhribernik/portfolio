@@ -1,0 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0f1117;
+  --surface:  #1a1d27;
+  --border:   #2c2f3e;
+  --accent:   #7c6ff7;
+  --text:     #e2e5f0;
+  --muted:    #8b90a8;
+  --radius:   10px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Layout ── */
+.page-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 1rem 1rem;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0 0.75rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+header h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.back-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: color 0.15s;
+}
+.back-link:hover { color: var(--text); }
+
+.main-layout {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Config panel ── */
+.config-panel {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.config-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+}
+
+.config-section h3 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+}
+
+.field { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.5rem; }
+.field:last-child { margin-bottom: 0; }
+.field label { font-size: 0.78rem; color: var(--muted); }
+
+input[type=text], input[type=number], select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.82rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus {
+  border-color: var(--accent);
+}
+
+.seed-row { display: flex; gap: 0.4rem; }
+.seed-row input { flex: 1; }
+
+.btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { opacity: 0.85; }
+.btn.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.btn.ghost:hover { border-color: var(--accent); color: var(--text); }
+.btn.full { width: 100%; justify-content: center; display: flex; align-items: center; gap: 0.4rem; }
+
+.dims-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.4rem; }
+.dims-row span { text-align: center; color: var(--muted); font-size: 0.8rem; }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+input[type=checkbox] {
+  accent-color: var(--accent);
+  width: 14px; height: 14px;
+  cursor: pointer;
+}
+
+/* ── Score widget ── */
+.score-widget {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+}
+
+.score-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#score-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+#score-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.score-bar-track {
+  background: var(--border);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+}
+
+#score-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease, background 0.4s ease;
+  width: 0%;
+}
+
+/* ── Maze area ── */
+.maze-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+#maze-container {
+  flex: 1;
+  background: white;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+#maze-container svg, #solution-container svg {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Solution page — screen: hidden */
+.solution-page { display: none; }
+
+/* ── Print ── */
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+
+  body { background: white; color: black; }
+
+  main-navbar, header, .config-panel { display: none !important; }
+
+  .page-wrap { padding: 0; max-width: 100%; }
+
+  .main-layout { display: block; }
+
+  .maze-area { gap: 0; }
+
+  #maze-container {
+    border-radius: 0;
+    background: white;
+    width: 100%;
+    height: auto;
+    page-break-after: avoid;
+    display: block;
+  }
+
+  #maze-container svg {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+  }
+
+  /* Solution page: only show when checkbox is ticked */
+  .solution-page { display: none !important; }
+  body.include-solution-page .solution-page {
+    display: block !important;
+    page-break-before: always;
+    text-align: center;
+  }
+
+  body.include-solution-page #solution-container svg {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+  }
+
+  body.include-solution-page .solution-page h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: black;
+    font-family: sans-serif;
+  }
+
+  .solution { display: block !important; }
+
+  /* Hide score widget when printing */
+  .score-widget, .maze-toolbar { display: none !important; }
+}

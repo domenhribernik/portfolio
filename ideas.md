@@ -13,13 +13,12 @@
   - Add `author`, `date_added`, `date_modified` tags to all records
   - Admin page with secure access
   - Google OAuth + account linking with classic accounts
-- **Rocks** — finish *(by Friday)*
 - **IP** — finish
 - **Make automatic commit** - git action - to my ftp
 - **Look into unit testing**, and add them before commit. And on actions as well? 
 - **Add skills** - learn how to make skills and add as many as you can think of
 - Add webp to image service, and then also figure out the jpg edge case
-
+- ~~**Dynamic maze generator** + print~~ *(done)*
 ## Refactoring
 
 - Restyle every project with Tailwind CSS
@@ -28,7 +27,6 @@
 ## Project Ideas
 
 - **Garage door** — open with website
-- **Dynamic maze generator** + print
 - **ASCII art converter** — transform images to ASCII (lightest to darkest); already have a project, put it on the portfolio
 - **Pixel encoder to YouTube video** — encode data into video frames (B&W and RGB); explore glitch AI art angle to avoid content removal
 - **QR / barcode generator**
