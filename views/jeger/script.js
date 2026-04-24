@@ -25,7 +25,6 @@ const GROUPS = [
         name: 'Maj', icon: '🌿',
         plants: [
             { id: 'brin-zelene', name: 'Brin', detail: 'zelene jagode', period: 'maj', months: [[5,5]] },
-            { id: 'vinska-rutica', name: 'Vinska rutica', period: 'maj', months: [[5,5]] },
             { id: 'lapuh-listje', name: 'Lapuh', detail: 'listje', period: 'maj–junij', months: [[5,6]] },
             { id: 'kamilica-cvet', name: 'Kamilica', detail: 'cvet', period: 'maj–junij', months: [[5,6]] },
             { id: 'gozdna-jagoda', name: 'Gozdna jagoda', detail: 'listje', period: 'maj–junij', months: [[5,6]] },
