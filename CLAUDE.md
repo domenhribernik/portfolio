@@ -16,6 +16,8 @@ All page directories live under [views/](views/), named to match their URL path 
 
 Current project directories: `views/about`, `views/botaniq`, `views/homepage`, `views/iliana`, `views/ip`, `views/jeger`, `views/maze`, `views/music`, `views/on-this-day`, `views/quizz`, `views/rocks`, `views/slovenia`, `views/spy`, `views/tarok`, `views/thesis`, `views/workout`.
 
+A view directory may include its own `CLAUDE.md` for project-specific notes that don't belong in this root file (grid contracts, tricky invariants, file-map for a complex subtree, etc.). These are auto-loaded when working inside that directory. Existing per-view CLAUDE.md files: [views/maze/CLAUDE.md](views/maze/CLAUDE.md). When a view grows complex enough that re-deriving its conventions from the code wastes context, add a `CLAUDE.md` to that view rather than expanding this root file.
+
 ### Frontend — Component System
 
 Reusable web components live in [components/](components/) and are imported as ES modules via `<script type="module">`:

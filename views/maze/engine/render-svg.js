@@ -6,69 +6,152 @@ function el(tag, attrs) {
   return e;
 }
 
-// --- Square renderer ---
+function bgRect(x, y, w, h) {
+  return el('rect', { x, y, width: w, height: h, fill: 'white' });
+}
+
+const SOLUTION_STROKE    = '#b04848';
+const SOLUTION_WIDTH     = 2.5;
+const LABEL_PAD          = 56;
+const LABEL_OFFSET       = 14;
+const LABEL_OFFSET_OUTER = 22; // hex/triangle: label origin is already at the maze boundary
+
+function addLabel(svg, x, y, text, anchor = 'middle') {
+  const t = el('text', {
+    x, y,
+    'text-anchor': anchor,
+    'dominant-baseline': 'middle',
+    'font-family': 'Inter, system-ui, sans-serif',
+    'font-size': '13',
+    'font-weight': '600',
+    fill: '#222',
+  });
+  t.textContent = text;
+  svg.appendChild(t);
+}
+
+function placeLabelByOutwardVector(midX, midY, cx, cy, distance) {
+  const dx = midX - cx, dy = midY - cy;
+  const len = Math.hypot(dx, dy) || 1;
+  return { x: midX + (dx / len) * distance, y: midY + (dy / len) * distance };
+}
+
+// Smooth curve through arbitrary points: each interior point is a quadratic
+// control, and the curve anchors at midpoints between consecutive points. The
+// curve passes through the first and last points exactly.
+function solutionPolyline(centers) {
+  if (centers.length < 2) return null;
+  const r = (n) => Math.round(n * 100) / 100;
+  const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  let d = `M ${r(centers[0].x)} ${r(centers[0].y)}`;
+  if (centers.length === 2) {
+    d += ` L ${r(centers[1].x)} ${r(centers[1].y)}`;
+  } else {
+    const m1 = mid(centers[0], centers[1]);
+    d += ` L ${r(m1.x)} ${r(m1.y)}`;
+    for (let i = 1; i < centers.length - 1; i++) {
+      const m = mid(centers[i], centers[i + 1]);
+      d += ` Q ${r(centers[i].x)} ${r(centers[i].y)} ${r(m.x)} ${r(m.y)}`;
+    }
+    const last = centers[centers.length - 1];
+    d += ` L ${r(last.x)} ${r(last.y)}`;
+  }
+  return el('path', {
+    d,
+    fill: 'none',
+    stroke: SOLUTION_STROKE,
+    'stroke-width': SOLUTION_WIDTH,
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
+    opacity: '0.9',
+  });
+}
+
+function buildSkipMap(entrance, exit) {
+  const m = new Map();
+  for (const e of [entrance, exit]) {
+    if (!e) continue;
+    if (!m.has(e.id)) m.set(e.id, new Set());
+    m.get(e.id).add(e.openDir);
+  }
+  return m;
+}
+
+// Walls between adjacent cells get drawn from both sides — use a canonical
+// segment key to dedupe. Without this, interior walls render at ~2× the
+// stroke weight of perimeter walls.
+function makeWallDedup() {
+  const seen = new Set();
+  const r = (n) => Math.round(n * 100) / 100;
+  return (x1, y1, x2, y2) => {
+    const a = `${r(x1)},${r(y1)}`, b = `${r(x2)},${r(y2)}`;
+    const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  };
+}
+
+// ── Square renderer ────────────────────────────────────────────────────────
+
 function renderSquare(grid, opts) {
   const { cellSize, wallWidth, solutionPath, entrance, exit, fitWidth, fitHeight } = opts;
   const W = grid.cols * cellSize + wallWidth;
   const H = grid.rows * cellSize + wallWidth;
-  const scaleX = fitWidth  ? fitWidth  / W : 1;
-  const scaleY = fitHeight ? fitHeight / H : 1;
-  const scale  = Math.min(scaleX, scaleY, 1);
-  const sw = W * scale, sh = H * scale;
+  const totalW = W + 2 * LABEL_PAD;
+  const totalH = H + 2 * LABEL_PAD;
+  const scale = Math.min(fitWidth / totalW, fitHeight / totalH, 1);
 
-  const svg = el('svg', { xmlns: SVG_NS, viewBox: `0 0 ${W} ${H}`, width: sw, height: sh });
+  const svg = el('svg', { xmlns: SVG_NS, viewBox: `${-LABEL_PAD} ${-LABEL_PAD} ${totalW} ${totalH}`, width: totalW * scale, height: totalH * scale });
+  svg.appendChild(bgRect(-LABEL_PAD, -LABEL_PAD, totalW, totalH));
 
-  // Background
-  svg.appendChild(el('rect', { x: 0, y: 0, width: W, height: H, fill: 'white' }));
-
-  const pathSet = new Set(solutionPath || []);
-
-  // Solution path highlight
-  if (pathSet.size) {
-    const g = el('g', { class: 'solution' });
-    grid.cells.forEach(cell => {
-      if (!pathSet.has(cell.id)) return;
-      g.appendChild(el('rect', {
-        x: cell.col * cellSize + wallWidth / 2,
-        y: cell.row * cellSize + wallWidth / 2,
-        width: cellSize, height: cellSize,
-        fill: '#ffe082', opacity: '0.7',
-      }));
-    });
-    svg.appendChild(g);
-  }
-
-  // Walls
-  const g = el('g', { stroke: '#111', 'stroke-width': wallWidth, 'stroke-linecap': 'square' });
+  const skip = buildSkipMap(entrance, exit);
+  const dedup = makeWallDedup();
+  const addLine = (g, x1, y1, x2, y2) => {
+    if (dedup(x1, y1, x2, y2)) g.appendChild(el('line', { x1, y1, x2, y2 }));
+  };
+  const wg = el('g', { stroke: '#111', 'stroke-width': wallWidth, 'stroke-linecap': 'square' });
   grid.cells.forEach(cell => {
     const x = cell.col * cellSize + wallWidth / 2;
     const y = cell.row * cellSize + wallWidth / 2;
-    if (cell.walls.N) g.appendChild(el('line', { x1: x, y1: y, x2: x + cellSize, y2: y }));
-    if (cell.walls.S) g.appendChild(el('line', { x1: x, y1: y + cellSize, x2: x + cellSize, y2: y + cellSize }));
-    if (cell.walls.W) g.appendChild(el('line', { x1: x, y1: y, x2: x, y2: y + cellSize }));
-    if (cell.walls.E) g.appendChild(el('line', { x1: x + cellSize, y1: y, x2: x + cellSize, y2: y + cellSize }));
+    const sk = skip.get(cell.id);
+    if (cell.walls.N && !sk?.has('N')) addLine(wg, x, y, x + cellSize, y);
+    if (cell.walls.S && !sk?.has('S')) addLine(wg, x, y + cellSize, x + cellSize, y + cellSize);
+    if (cell.walls.W && !sk?.has('W')) addLine(wg, x, y, x, y + cellSize);
+    if (cell.walls.E && !sk?.has('E')) addLine(wg, x + cellSize, y, x + cellSize, y + cellSize);
   });
-  svg.appendChild(g);
+  svg.appendChild(wg);
 
-  // Entrance / exit openings
-  function openWall(cell, dir) {
+  if (solutionPath.length) {
+    const centers = solutionPath.map(id => {
+      const c = grid.cells[id];
+      return {
+        x: c.col * cellSize + cellSize / 2 + wallWidth / 2,
+        y: c.row * cellSize + cellSize / 2 + wallWidth / 2,
+      };
+    });
+    const line = solutionPolyline(centers);
+    if (line) svg.appendChild(line);
+  }
+
+  const labelForSquare = (cell, openDir, text) => {
     const x = cell.col * cellSize + wallWidth / 2;
     const y = cell.row * cellSize + wallWidth / 2;
-    const gap = el('line', { stroke: 'white', 'stroke-width': wallWidth + 1 });
-    const m = cellSize * 0.2;
-    if (dir === 'N') { gap.setAttribute('x1', x + m); gap.setAttribute('y1', y); gap.setAttribute('x2', x + cellSize - m); gap.setAttribute('y2', y); }
-    if (dir === 'S') { gap.setAttribute('x1', x + m); gap.setAttribute('y1', y + cellSize); gap.setAttribute('x2', x + cellSize - m); gap.setAttribute('y2', y + cellSize); }
-    if (dir === 'W') { gap.setAttribute('x1', x); gap.setAttribute('y1', y + m); gap.setAttribute('x2', x); gap.setAttribute('y2', y + cellSize - m); }
-    if (dir === 'E') { gap.setAttribute('x1', x + cellSize); gap.setAttribute('y1', y + m); gap.setAttribute('x2', x + cellSize); gap.setAttribute('y2', y + cellSize - m); }
-    svg.appendChild(gap);
-  }
-  if (entrance) openWall(grid.cells[entrance.id], entrance.openDir);
-  if (exit)     openWall(grid.cells[exit.id],     exit.openDir);
+    const cx = x + cellSize / 2;
+    const cy = y + cellSize / 2;
+    if (openDir === 'N') addLabel(svg, cx, y - LABEL_OFFSET, text);
+    else if (openDir === 'S') addLabel(svg, cx, y + cellSize + LABEL_OFFSET, text);
+    else if (openDir === 'W') addLabel(svg, x - LABEL_OFFSET, cy, text, 'end');
+    else if (openDir === 'E') addLabel(svg, x + cellSize + LABEL_OFFSET, cy, text, 'start');
+  };
+  if (entrance) labelForSquare(grid.cells[entrance.id], entrance.openDir, 'Start');
+  if (exit)     labelForSquare(grid.cells[exit.id],     exit.openDir,     'End');
 
   return svg;
 }
 
-// --- Hex renderer (pointy-top) ---
+// ── Hex renderer ──────────────────────────────────────────────────────────
+
 function hexCorners(cx, cy, size) {
   return Array.from({ length: 6 }, (_, i) => {
     const a = Math.PI / 180 * (60 * i - 30);
@@ -78,62 +161,263 @@ function hexCorners(cx, cy, size) {
 
 function renderHex(grid, opts) {
   const { cellSize, wallWidth, solutionPath, entrance, exit, fitWidth, fitHeight } = opts;
-  const R = cellSize;
+  const R    = cellSize;
   const hexW = Math.sqrt(3) * R;
   const hexH = 2 * R;
-  const W = hexW * grid.cols + hexW / 2 + wallWidth * 2;
-  const H = hexH * 0.75 * grid.rows + hexH * 0.25 + wallWidth * 2;
-  const scaleX = fitWidth  ? fitWidth  / W : 1;
-  const scaleY = fitHeight ? fitHeight / H : 1;
-  const scale  = Math.min(scaleX, scaleY, 1);
+  const W    = hexW * grid.cols + hexW / 2 + wallWidth * 2;
+  const H    = hexH * 0.75 * grid.rows + hexH * 0.25 + wallWidth * 2;
+  const totalW = W + 2 * LABEL_PAD;
+  const totalH = H + 2 * LABEL_PAD;
+  const scale = Math.min(fitWidth / totalW, fitHeight / totalH, 1);
 
-  const svg = el('svg', { xmlns: SVG_NS, viewBox: `0 0 ${W} ${H}`, width: W * scale, height: H * scale });
-  svg.appendChild(el('rect', { x: 0, y: 0, width: W, height: H, fill: 'white' }));
-
-  const pathSet = new Set(solutionPath || []);
+  const svg = el('svg', { xmlns: SVG_NS, viewBox: `${-LABEL_PAD} ${-LABEL_PAD} ${totalW} ${totalH}`, width: totalW * scale, height: totalH * scale });
+  svg.appendChild(bgRect(-LABEL_PAD, -LABEL_PAD, totalW, totalH));
 
   function cellCenter(cell) {
     const { col: c, row: r } = cell;
-    const cx = wallWidth + hexW / 2 + c * hexW + (r % 2 === 1 ? hexW / 2 : 0);
-    const cy = wallWidth + R + r * hexH * 0.75;
-    return { cx, cy };
+    return {
+      cx: wallWidth + hexW / 2 + c * hexW + (r % 2 === 1 ? hexW / 2 : 0),
+      cy: wallWidth + R + r * hexH * 0.75,
+    };
   }
 
-  // Solution highlight
-  if (pathSet.size) {
-    const g = el('g', { class: 'solution' });
-    grid.cells.forEach(cell => {
-      if (!pathSet.has(cell.id)) return;
-      const { cx, cy } = cellCenter(cell);
-      const pts = hexCorners(cx, cy, R - wallWidth / 2).map(p => p.join(',')).join(' ');
-      g.appendChild(el('polygon', { points: pts, fill: '#ffe082', opacity: '0.7' }));
-    });
-    svg.appendChild(g);
-  }
-
-  // Draw walls — each cell draws its NW, W, SW edges (avoids doubles)
-  // Directions: NE=0, E=1, SE=2, SW=3, W=4, NW=5  (pointy-top corners 0-5)
-  // Edge between corner i and i+1 corresponds to direction:
-  // corner pairs: [0,1]=NE, [1,2]=E, [2,3]=SE, [3,4]=SW, [4,5]=W, [5,0]=NW
-  const dirEdge = { NE: [0, 1], E: [1, 2], SE: [2, 3], SW: [3, 4], W: [4, 5], NW: [5, 0] };
-
-  const wallGroup = el('g', { stroke: '#111', 'stroke-width': wallWidth, 'stroke-linecap': 'round' });
+  const dirEdge = { NE: [5,0], E: [0,1], SE: [1,2], SW: [2,3], W: [3,4], NW: [4,5] };
+  const skip = buildSkipMap(entrance, exit);
+  const dedup = makeWallDedup();
+  const wg = el('g', { stroke: '#111', 'stroke-width': wallWidth, 'stroke-linecap': 'round' });
   grid.cells.forEach(cell => {
     const { cx, cy } = cellCenter(cell);
     const corners = hexCorners(cx, cy, R);
+    const sk = skip.get(cell.id);
     for (const [dir, [i, j]] of Object.entries(dirEdge)) {
-      if (cell.walls[dir]) {
-        const [x1, y1] = corners[i];
-        const [x2, y2] = corners[j];
-        wallGroup.appendChild(el('line', { x1, y1, x2, y2 }));
+      if (cell.walls[dir] && !sk?.has(dir)) {
+        const [x1, y1] = corners[i], [x2, y2] = corners[j];
+        if (dedup(x1, y1, x2, y2)) wg.appendChild(el('line', { x1, y1, x2, y2 }));
       }
     }
   });
-  svg.appendChild(wallGroup);
+  svg.appendChild(wg);
+
+  if (solutionPath.length) {
+    const centers = solutionPath.map(id => cellCenter(grid.cells[id]))
+      .map(p => ({ x: p.cx, y: p.cy }));
+    const line = solutionPolyline(centers);
+    if (line) svg.appendChild(line);
+  }
+
+  const labelForHex = (cell, openDir, text) => {
+    const { cx: ccx, cy: ccy } = cellCenter(cell);
+    const corners = hexCorners(ccx, ccy, R);
+    const [i, j] = dirEdge[openDir];
+    const mx = (corners[i][0] + corners[j][0]) / 2;
+    const my = (corners[i][1] + corners[j][1]) / 2;
+    const { x, y } = placeLabelByOutwardVector(mx, my, ccx, ccy, LABEL_OFFSET_OUTER);
+    addLabel(svg, x, y, text);
+  };
+  if (entrance) labelForHex(grid.cells[entrance.id], entrance.openDir, 'Start');
+  if (exit)     labelForHex(grid.cells[exit.id],     exit.openDir,     'End');
 
   return svg;
 }
 
+// ── Triangle renderer ─────────────────────────────────────────────────────
+
+function renderTriangle(grid, opts) {
+  const { cellSize, wallWidth, solutionPath, entrance, exit, fitWidth, fitHeight } = opts;
+  const halfW = cellSize / 2;
+  const h     = cellSize * Math.sqrt(3) / 2;
+  const off   = wallWidth / 2;
+  const W     = (grid.cols + 1) * halfW + wallWidth;
+  const H     = (grid.rows + 1) * h     + wallWidth;
+  const totalW = W + 2 * LABEL_PAD;
+  const totalH = H + 2 * LABEL_PAD;
+  const scale = Math.min(fitWidth / totalW, fitHeight / totalH, 1);
+
+  const svg = el('svg', { xmlns: SVG_NS, viewBox: `${-LABEL_PAD} ${-LABEL_PAD} ${totalW} ${totalH}`, width: totalW * scale, height: totalH * scale });
+  svg.appendChild(bgRect(-LABEL_PAD, -LABEL_PAD, totalW, totalH));
+
+  // ▲: [apex, leftBase, rightBase]; ▽: [leftTop, rightTop, apexBottom]
+  function verts(cell) {
+    const { col: c, row: r, up } = cell;
+    if (up) return [
+      { x: (c+1)*halfW+off, y:  r   *h+off },
+      { x:  c   *halfW+off, y: (r+1)*h+off },
+      { x: (c+2)*halfW+off, y: (r+1)*h+off },
+    ];
+    return [
+      { x:  c   *halfW+off, y:  r   *h+off },
+      { x: (c+2)*halfW+off, y:  r   *h+off },
+      { x: (c+1)*halfW+off, y: (r+1)*h+off },
+    ];
+  }
+
+  const skip = buildSkipMap(entrance, exit);
+  const dedup = makeWallDedup();
+  const addLine = (g, x1, y1, x2, y2) => {
+    if (dedup(x1, y1, x2, y2)) g.appendChild(el('line', { x1, y1, x2, y2 }));
+  };
+  const wg = el('g', { stroke: '#111', 'stroke-width': wallWidth, 'stroke-linecap': 'round' });
+  grid.cells.forEach(cell => {
+    const [v0, v1, v2] = verts(cell);
+    const sk = skip.get(cell.id);
+    if (cell.up) {
+      // ▲ v0=apex v1=leftBase v2=rightBase
+      if (cell.walls.W && !sk?.has('W')) addLine(wg, v0.x, v0.y, v1.x, v1.y);
+      if (cell.walls.E && !sk?.has('E')) addLine(wg, v0.x, v0.y, v2.x, v2.y);
+      if (cell.walls.S && !sk?.has('S')) addLine(wg, v1.x, v1.y, v2.x, v2.y);
+    } else {
+      // ▽ v0=leftTop v1=rightTop v2=apexBottom
+      if (cell.walls.W && !sk?.has('W')) addLine(wg, v0.x, v0.y, v2.x, v2.y);
+      if (cell.walls.E && !sk?.has('E')) addLine(wg, v1.x, v1.y, v2.x, v2.y);
+      if (cell.walls.N && !sk?.has('N')) addLine(wg, v0.x, v0.y, v1.x, v1.y);
+    }
+  });
+  svg.appendChild(wg);
+
+  if (solutionPath.length) {
+    const centers = solutionPath.map(id => {
+      const v = verts(grid.cells[id]);
+      return { x: (v[0].x + v[1].x + v[2].x) / 3, y: (v[0].y + v[1].y + v[2].y) / 3 };
+    });
+    const line = solutionPolyline(centers);
+    if (line) svg.appendChild(line);
+  }
+
+  const labelForTri = (cell, openDir, text) => {
+    const v = verts(cell);
+    const ccx = (v[0].x + v[1].x + v[2].x) / 3;
+    const ccy = (v[0].y + v[1].y + v[2].y) / 3;
+    let mx, my;
+    if (cell.up) {
+      if (openDir === 'W')      { mx = (v[0].x + v[1].x)/2; my = (v[0].y + v[1].y)/2; }
+      else if (openDir === 'E') { mx = (v[0].x + v[2].x)/2; my = (v[0].y + v[2].y)/2; }
+      else                      { mx = (v[1].x + v[2].x)/2; my = (v[1].y + v[2].y)/2; }
+    } else {
+      if (openDir === 'W')      { mx = (v[0].x + v[2].x)/2; my = (v[0].y + v[2].y)/2; }
+      else if (openDir === 'E') { mx = (v[1].x + v[2].x)/2; my = (v[1].y + v[2].y)/2; }
+      else                      { mx = (v[0].x + v[1].x)/2; my = (v[0].y + v[1].y)/2; }
+    }
+    const { x, y } = placeLabelByOutwardVector(mx, my, ccx, ccy, LABEL_OFFSET_OUTER);
+    addLabel(svg, x, y, text);
+  };
+  if (entrance) labelForTri(grid.cells[entrance.id], entrance.openDir, 'Start');
+  if (exit)     labelForTri(grid.cells[exit.id],     exit.openDir,     'End');
+
+  return svg;
+}
+
+// ── Polar renderer ────────────────────────────────────────────────────────
+
+function polarArcPath(cx, cy, R, startA, endA) {
+  const x1 = cx + R * Math.cos(startA), y1 = cy + R * Math.sin(startA);
+  const x2 = cx + R * Math.cos(endA),   y2 = cy + R * Math.sin(endA);
+  const large = endA - startA > Math.PI ? 1 : 0;
+  return `M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2}`;
+}
+
+function polarSectorPath(cx, cy, innerR, outerR, startA, endA) {
+  const cos0 = Math.cos(startA), sin0 = Math.sin(startA);
+  const cos1 = Math.cos(endA),   sin1 = Math.sin(endA);
+  const large = endA - startA > Math.PI ? 1 : 0;
+  if (innerR < 0.5) {
+    return `M ${cx} ${cy} L ${cx+outerR*cos0} ${cy+outerR*sin0} A ${outerR} ${outerR} 0 ${large} 1 ${cx+outerR*cos1} ${cy+outerR*sin1} Z`;
+  }
+  return [
+    `M ${cx+innerR*cos0} ${cy+innerR*sin0}`,
+    `A ${innerR} ${innerR} 0 ${large} 1 ${cx+innerR*cos1} ${cy+innerR*sin1}`,
+    `L ${cx+outerR*cos1} ${cy+outerR*sin1}`,
+    `A ${outerR} ${outerR} 0 ${large} 0 ${cx+outerR*cos0} ${cy+outerR*sin0}`,
+    'Z',
+  ].join(' ');
+}
+
+function renderPolar(grid, opts) {
+  const { cellSize, wallWidth, solutionPath, entrance, exit, fitWidth, fitHeight } = opts;
+  const { ringCounts, ringStart, rows: rings } = grid;
+  const maxR  = rings * cellSize;
+  const pad   = wallWidth + 2;
+  const size  = (maxR + pad) * 2;
+  const total = size + 2 * LABEL_PAD;
+  const scale = Math.min(fitWidth / total, fitHeight / total, 1);
+  const cx = maxR + pad, cy = maxR + pad;
+
+  const svg = el('svg', { xmlns: SVG_NS, viewBox: `${-LABEL_PAD} ${-LABEL_PAD} ${total} ${total}`, width: total * scale, height: total * scale });
+  svg.appendChild(bgRect(-LABEL_PAD, -LABEL_PAD, total, total));
+
+  const entrId = entrance?.id ?? -1;
+  const exitId = exit?.id     ?? -1;
+
+  function cellAngles(r, c) {
+    const count = ringCounts[r];
+    return {
+      startA: -Math.PI / 2 + 2 * Math.PI * c / count,
+      endA:   -Math.PI / 2 + 2 * Math.PI * (c + 1) / count,
+    };
+  }
+
+  const wg = el('g', { stroke: '#111', 'stroke-width': wallWidth, fill: 'none', 'stroke-linecap': 'round' });
+
+  grid.cells.forEach(cell => {
+    const { ring: r, col: c } = cell;
+    const innerR = r * cellSize, outerR = (r + 1) * cellSize;
+    const { startA, endA } = cellAngles(r, c);
+
+    if (r > 0 && cell.walls.IN) {
+      wg.appendChild(el('path', { d: polarArcPath(cx, cy, innerR, startA, endA) }));
+    }
+
+    if (cell.walls.CW) {
+      const cwAngle = endA;
+      wg.appendChild(el('line', {
+        x1: cx + innerR * Math.cos(cwAngle), y1: cy + innerR * Math.sin(cwAngle),
+        x2: cx + outerR * Math.cos(cwAngle), y2: cy + outerR * Math.sin(cwAngle),
+      }));
+    }
+  });
+
+  const outerRing = rings - 1;
+  grid.cells.slice(ringStart[outerRing]).forEach(cell => {
+    if (cell.id === entrId || cell.id === exitId) return;
+    const { startA, endA } = cellAngles(outerRing, cell.col);
+    wg.appendChild(el('path', { d: polarArcPath(cx, cy, maxR, startA, endA) }));
+  });
+
+  svg.appendChild(wg);
+  svg.appendChild(el('circle', { cx, cy, r: cellSize, fill: 'white' }));
+  svg.appendChild(el('circle', { cx, cy, r: Math.max(wallWidth * 1.5, 2), fill: '#111' }));
+
+  if (solutionPath.length) {
+    const centers = solutionPath.map(id => {
+      const cell = grid.cells[id];
+      const { ring: r, col: c } = cell;
+      const midR = r === 0 ? cellSize * 0.5 : (r + 0.5) * cellSize;
+      const { startA, endA } = cellAngles(r, c);
+      const midA = (startA + endA) / 2;
+      return { x: cx + midR * Math.cos(midA), y: cy + midR * Math.sin(midA) };
+    });
+    const line = solutionPolyline(centers);
+    if (line) svg.appendChild(line);
+  }
+
+  const labelForPolar = (cell, text) => {
+    const { startA, endA } = cellAngles(cell.ring, cell.col);
+    const midA = (startA + endA) / 2;
+    const labelR = maxR + LABEL_OFFSET;
+    addLabel(svg, cx + labelR * Math.cos(midA), cy + labelR * Math.sin(midA), text);
+  };
+  if (entrance) labelForPolar(grid.cells[entrance.id], 'Start');
+  if (exit)     labelForPolar(grid.cells[exit.id],     'End');
+
+  return svg;
+}
+
+// ── Dispatcher ────────────────────────────────────────────────────────────
+
 export function renderMaze(grid, opts) {
-  return grid.type === 'hex' ? renderHex(grid, opts) : renderSquare(grid, opts);
+  const defaults = { cellSize: 20, wallWidth: 1.5, solutionPath: [], entrance: null, exit: null, fitWidth: 600, fitHeight: 600 };
+  const o = { ...defaults, ...opts };
+  if (grid.type === 'hex')      return renderHex(grid, o);
+  if (grid.type === 'triangle') return renderTriangle(grid, o);
+  if (grid.type === 'polar')    return renderPolar(grid, o);
+  return renderSquare(grid, o);
 }

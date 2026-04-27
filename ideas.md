@@ -18,7 +18,6 @@
 - **Look into unit testing**, and add them before commit. And on actions as well? 
 - **Add skills** - learn how to make skills and add as many as you can think of
 - Add webp to image service, and then also figure out the jpg edge case
-- ~~**Dynamic maze generator** + print~~ *(done)*
 ## Refactoring
 
 - Restyle every project with Tailwind CSS
