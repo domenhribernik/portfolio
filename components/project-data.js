@@ -167,7 +167,7 @@ export const projects = {
     category: "passion",
     gradient: "linear-gradient(45deg, #3d5af1 0%, #22d1ee 100%)",
     title: "Maze Generator",
-    description: "Generates mazes on square and hexagonal grids using 7 algorithms (DFS, Prim's, Kruskal's, Wilson's, Sidewinder, Binary Tree, Recursive Division). Scores difficulty via BFS analysis and exports to print-perfect SVG.",
+    description: "Generates mazes on square, hexagonal, triangular, polar, and upsilon (octagon + square) grids using multiple algorithms (DFS, Prim's, Kruskal's, Wilson's, Aldous-Broder, Hunt-and-Kill, Sidewinder, Binary Tree, Recursive Division, Eller's). Scores difficulty via BFS analysis and exports to print-perfect SVG.",
     tech: ["HTML", "CSS", "JavaScript", "SVG", "Algorithms"],
     links: {
       visitSite: "views/maze",

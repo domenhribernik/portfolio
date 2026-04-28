@@ -7,7 +7,7 @@ Pure-frontend maze generator. Vanilla JS ES modules, no build, SVG output.
 ```
 views/maze/
   index.html      — controls (sliders, selects, theme toggle, print)
-  style.css       — sliders, light theme, breakdown bars, print styles
+  style.css       — sliders, light theme, radar breakdown, print styles
   script.js       — UI wiring; orchestrates generate → score → render
   engine/
     prng.js               — seedable PRNG (Mulberry32 + xmur3 string hash)
@@ -65,23 +65,27 @@ Consequences:
 | Metric          | Weight | What it measures |
 |-----------------|--------|------------------|
 | pathNorm        | 0.15   | absolute solution path length / 300 (capped) — scales with grid size *and* entrance-exit placement |
-| decisionDensity | 0.30   | mean side-branches per path cell `(degree-2)`, capped at 2/cell, normalized to /2 |
-| deadEndRatio    | 0.08   | dead ends / total cells |
-| junctionRatio   | 0.08   | cells with degree ≥3 / total cells |
-| trapNorm        | 0.12   | mean off-path dead-end depth / √total (size-aware) |
-| sizeNorm        | 0.27   | √total / 80 (capped) — bigger grid = harder by default |
+| decisionDensity | 0.32   | mean side-branches per path cell `(degree-2)`, /0.7 calibrated, × `pathFactor` |
+| deadEndNorm     | 0.10   | off-path dead ends / path length / 2, × `pathFactor` — density of traps along the route, not maze-wide |
+| trapNorm        | 0.16   | mean off-path dead-end chain depth / 6, × `pathFactor` |
+| sizeNorm        | 0.27   | √total / sizeRef (capped at 1.0) — sizeRef = √(maxCells for current grid type), so every type saturates at its own slider maximum |
 
-Labels: <20 Trivial, <40 Easy, <60 Medium, <80 Hard, else Brutal. Returned `breakdown` keys feed the UI breakdown bars.
+`pathFactor = min(path.length / 30, 1)` damps `decisionDensity`, `deadEndNorm`, and `trapNorm` for very short paths. A 5-cell tortuous solution shouldn't max a structural bar regardless of how branchy the surrounding maze is — the solver never sees that complexity. Without this, a 2-cell path (e.g. adjacent start/end under "random" placement) would divide by almost nothing and saturate `deadEndNorm` to 100%.
+
+Labels: <20 Trivial, <40 Easy, <60 Medium, <80 Hard, else Brutal. Returned `breakdown` keys feed the radar chart in the score widget.
 
 `openCounts` is precomputed once per `score()` call as an `Int8Array` — don't re-scan walls per metric.
 
 ### Why these metrics, and what changed
 
-- `branchNorm` (mean openings ÷ 4) was removed: for any spanning tree mean openings is ~2(n-1)/n ≈ 2, so this metric was nearly constant across all algorithms — it didn't differentiate Prim's from DFS. Replaced with `junctionRatio`, which actually measures how branchy the topology is.
+- `branchNorm` (mean openings ÷ 4) was removed: for any spanning tree mean openings is ~2(n-1)/n ≈ 2, so this metric was nearly constant across all algorithms — it didn't differentiate Prim's from DFS.
+- `junctionRatio` (degree ≥3 cells) was added then removed: it's nearly redundant with `deadEndNorm` (both measure how branchy the spanning tree is — a tree with more branches has both more leaves and more internal junctions). Its 0.08 weight was redistributed to `decisionDensity` and `trapNorm`.
 - `decisionRatio` was a binary "≥3 openings" flag; replaced with `decisionDensity` so a 4-way crossing weighs more than a T-junction.
 - `solutionRatio` (path / total) cancelled size out — a 50-cell path in 100 cells read the same as a 200-cell path in 400. Replaced with `pathNorm` (absolute length / 300) so longer absolute paths score higher. This also makes "farthest pair" placement read as harder than "random", which it genuinely is for the solver.
-- `trapNorm` previously divided by a fixed 10, so traps in a 5×5 maze and a 80×80 maze were normalized against the same yardstick. Now divided by √total so trap depth is read relative to maze diameter.
-- `sizeNorm` is new and weighted heavily (0.27): a 60×60 DFS maze is intrinsically more taxing than a 5×5 of the same algorithm even when the structural metrics are identical. Without this, small mazes could trivially score "Brutal" with a tortuous solution.
+- **All structural metrics are now calibrated against observed realistic maxes** rather than theoretical ones. The previous version normalized against worst-case theoretical bounds, so the bars hovered at 10-30% even for hard mazes. New divisors: `decisionDensity / 0.7`, `deadEndNorm / 2 (per path cell)`, `trapNorm / 6`. A genuinely branchy maze now fills these bars.
+- `trapNorm` previously divided by √total (size-aware). Removed: size is already a separate metric, and the √total divisor was so large it kept the trap bar tiny for big mazes.
+- **Structural metrics are path-relative, not maze-wide**. Earlier versions counted dead ends across the whole maze; replaced with off-path dead ends per path cell. Reasoning: a solver only experiences cells they walk through, so dead ends in unreachable corners shouldn't inflate the score. `pathFactor = min(pathLen/30, 1)` further damps decisions and traps when the solution is too short to contain meaningful difficulty.
+- `sizeNorm` is weighted heavily (0.27): a 60×60 DFS maze is intrinsically more taxing than a 5×5 of the same algorithm even when the structural metrics are identical. Without this, small mazes could trivially score "Brutal" with a tortuous solution.
 
 ## Entrance/exit placement
 
@@ -121,7 +125,7 @@ Path entries are `{ cell, dir }` where `dir` is the direction taken from the pre
 ## UI invariants
 
 - Dimension inputs are `<input type="range">` sliders. Their min/max and the labels (`Cols/Rows` vs `Divisions/Rings`) are swapped by `updateDimensions()` based on grid type — polar uses tighter ranges.
-- Breakdown bar elements are cached at module load: `breakdownBars = BREAKDOWN_KEYS.map(k => document.getElementById(k.id))`. Keep the ID list and HTML in sync.
+- The breakdown radar is built once at module load by an IIFE (`RADAR`) that creates rings/axes/labels into `#bk-radar`. Each render only updates the value polygon and dots via `updateRadar(breakdown)`. `BREAKDOWN_KEYS` drives both the axis order and the labels — adding/removing a metric requires nothing else.
 - The PRNG is local to `generate()` (`const prng = new PRNG(seed)`) — don't reintroduce a module-level `currentPrng`.
 
 ## Testing locally

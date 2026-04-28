@@ -411,6 +411,108 @@ function renderPolar(grid, opts) {
   return svg;
 }
 
+// ── Upsilon renderer ──────────────────────────────────────────────────────
+
+function renderUpsilon(grid, opts) {
+  const { cellSize, wallWidth, solutionPath, entrance, exit, fitWidth, fitHeight } = opts;
+  const c = cellSize * 1.18;        // slight upscale — upsilon reads cramped at base size
+  const s = c / (1 + Math.SQRT2);  // octagon side length
+  const t = (c - s) / 2;            // corner cut size = diamond half-diagonal
+  const off = wallWidth / 2;
+  const W = grid.cols * c + wallWidth;
+  const H = grid.rows * c + wallWidth;
+  const totalW = W + 2 * LABEL_PAD;
+  const totalH = H + 2 * LABEL_PAD;
+  const scale = Math.min(fitWidth / totalW, fitHeight / totalH, 1);
+
+  const svg = el('svg', { xmlns: SVG_NS, viewBox: `${-LABEL_PAD} ${-LABEL_PAD} ${totalW} ${totalH}`, width: totalW * scale, height: totalH * scale });
+  svg.appendChild(bgRect(-LABEL_PAD, -LABEL_PAD, totalW, totalH));
+
+  const octCenter  = (oc, or) => ({ x: off + oc * c + c / 2, y: off + or * c + c / 2 });
+  const diaCenter  = (dc, dr) => ({ x: off + (dc + 1) * c,    y: off + (dr + 1) * c });
+  const cellCenter = (cell) => cell.kind === 'octagon' ? octCenter(cell.col, cell.row) : diaCenter(cell.col, cell.row);
+
+  const skip  = buildSkipMap(entrance, exit);
+  const dedup = makeWallDedup();
+  const wg = el('g', { stroke: '#111', 'stroke-width': wallWidth, 'stroke-linecap': 'round' });
+  const addLine = (x1, y1, x2, y2) => {
+    if (dedup(x1, y1, x2, y2)) wg.appendChild(el('line', { x1, y1, x2, y2 }));
+  };
+
+  for (const cell of grid.cells) {
+    const sk = skip.get(cell.id);
+    if (cell.kind === 'octagon') {
+      const { x: cx, y: cy } = octCenter(cell.col, cell.row);
+      const v = [
+        { x: cx - s/2, y: cy - c/2 }, // 0
+        { x: cx + s/2, y: cy - c/2 }, // 1
+        { x: cx + c/2, y: cy - s/2 }, // 2
+        { x: cx + c/2, y: cy + s/2 }, // 3
+        { x: cx + s/2, y: cy + c/2 }, // 4
+        { x: cx - s/2, y: cy + c/2 }, // 5
+        { x: cx - c/2, y: cy + s/2 }, // 6
+        { x: cx - c/2, y: cy - s/2 }, // 7
+      ];
+      const draw = (dir, a, b) => {
+        if (cell.walls[dir] && !sk?.has(dir)) addLine(a.x, a.y, b.x, b.y);
+      };
+      draw('N',  v[0], v[1]);
+      draw('NE', v[1], v[2]);
+      draw('E',  v[2], v[3]);
+      draw('SE', v[3], v[4]);
+      draw('S',  v[4], v[5]);
+      draw('SW', v[5], v[6]);
+      draw('W',  v[6], v[7]);
+      draw('NW', v[7], v[0]);
+    } else {
+      const { x: dx, y: dy } = diaCenter(cell.col, cell.row);
+      const N = { x: dx,     y: dy - t };
+      const E = { x: dx + t, y: dy };
+      const S = { x: dx,     y: dy + t };
+      const Wv = { x: dx - t, y: dy };
+      const draw = (dir, a, b) => {
+        if (cell.walls[dir] && !sk?.has(dir)) addLine(a.x, a.y, b.x, b.y);
+      };
+      draw('NE', N, E);
+      draw('SE', E, S);
+      draw('SW', S, Wv);
+      draw('NW', Wv, N);
+    }
+  }
+  svg.appendChild(wg);
+
+  if (solutionPath.length) {
+    const centers = solutionPath.map(id => cellCenter(grid.cells[id]));
+    const line = solutionPolyline(centers);
+    if (line) svg.appendChild(line);
+  }
+
+  // Walls are drawn from a center; place each label outward along the
+  // wall midpoint vector for consistent positioning at any boundary direction.
+  const labelForUpsilon = (cell, openDir, text) => {
+    const { x: cx, y: cy } = cellCenter(cell);
+    const half = c / 2;
+    const diag = (s + c) / 4;
+    const wallMid = {
+      N:  { x: cx,         y: cy - half },
+      S:  { x: cx,         y: cy + half },
+      E:  { x: cx + half,  y: cy        },
+      W:  { x: cx - half,  y: cy        },
+      NE: { x: cx + diag,  y: cy - diag },
+      NW: { x: cx - diag,  y: cy - diag },
+      SE: { x: cx + diag,  y: cy + diag },
+      SW: { x: cx - diag,  y: cy + diag },
+    }[openDir];
+    if (!wallMid) return;
+    const { x, y } = placeLabelByOutwardVector(wallMid.x, wallMid.y, cx, cy, LABEL_OFFSET_OUTER);
+    addLabel(svg, x, y, text);
+  };
+  if (entrance) labelForUpsilon(grid.cells[entrance.id], entrance.openDir, 'Start');
+  if (exit)     labelForUpsilon(grid.cells[exit.id],     exit.openDir,     'End');
+
+  return svg;
+}
+
 // ── Dispatcher ────────────────────────────────────────────────────────────
 
 export function renderMaze(grid, opts) {
@@ -419,5 +521,6 @@ export function renderMaze(grid, opts) {
   if (grid.type === 'hex')      return renderHex(grid, o);
   if (grid.type === 'triangle') return renderTriangle(grid, o);
   if (grid.type === 'polar')    return renderPolar(grid, o);
+  if (grid.type === 'upsilon')  return renderUpsilon(grid, o);
   return renderSquare(grid, o);
 }

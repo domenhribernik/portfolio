@@ -11,14 +11,7 @@
   <title>Maze Generator</title>
 </head>
 <body>
-  <main-navbar></main-navbar>
-
   <div class="page-wrap">
-    <header>
-      <a href="../../" class="back-link"><i class="fas fa-arrow-left"></i> Portfolio</a>
-      <h1><i class="fas fa-puzzle-piece" style="color:var(--accent);margin-right:0.4rem"></i>Maze Generator</h1>
-    </header>
-
     <div class="main-layout">
       <!-- Config panel -->
       <aside class="config-panel">
@@ -32,6 +25,7 @@
               <option value="hex">Hexagonal</option>
               <option value="triangle">Triangle</option>
               <option value="polar">Polar</option>
+              <option value="upsilon">Upsilon</option>
             </select>
           </div>
           <div class="field">
@@ -58,9 +52,12 @@
               <option value="prims">Prim's</option>
               <option value="kruskals">Kruskal's</option>
               <option value="wilsons">Wilson's</option>
+              <option value="aldousBroder">Aldous-Broder</option>
+              <option value="huntAndKill">Hunt-and-Kill</option>
               <option value="sidewinder">Sidewinder</option>
               <option value="binaryTree">Binary Tree</option>
               <option value="recursiveDiv">Recursive Division</option>
+              <option value="ellers">Eller's</option>
             </select>
           </div>
           <div class="seed-row">
@@ -79,6 +76,20 @@
 
         <div class="config-section">
           <h3>Output</h3>
+          <div class="field">
+            <label class="slider-label">
+              <span>Cell size</span>
+              <span id="val-cellsize" class="slider-val">20</span>
+            </label>
+            <input type="range" id="cell-size" min="5" max="50" step="1" value="20">
+          </div>
+          <div class="field">
+            <label class="slider-label">
+              <span>Wall thickness</span>
+              <span id="val-wallwidth" class="slider-val">1.5</span>
+            </label>
+            <input type="range" id="wall-width" min="0.5" max="5" step="0.1" value="1.5">
+          </div>
           <label class="toggle-row">
             <span>Show solution</span>
             <input type="checkbox" id="show-solution">
@@ -91,11 +102,16 @@
             <select id="paper-size">
               <option value="a4">A4</option>
               <option value="letter">Letter</option>
+              <option value="custom">Custom (mm)</option>
             </select>
             <select id="paper-orient">
               <option value="portrait">Portrait</option>
               <option value="landscape">Landscape</option>
             </select>
+          </div>
+          <div class="print-row" id="paper-custom-row" style="margin-top:0.4rem; display:none">
+            <input type="number" id="paper-w" min="20" max="2000" step="1" value="210" placeholder="Width (mm)">
+            <input type="number" id="paper-h" min="20" max="2000" step="1" value="297" placeholder="Height (mm)">
           </div>
         </div>
 
@@ -118,39 +134,20 @@
             <div id="score-bar"></div>
           </div>
 
-          <div class="breakdown">
-            <div class="breakdown-row">
-              <span class="bk-label">Path length</span>
-              <div class="bk-wrap"><div class="bk-bar" id="bk-solution"></div></div>
-            </div>
-            <div class="breakdown-row">
-              <span class="bk-label">Decisions</span>
-              <div class="bk-wrap"><div class="bk-bar" id="bk-decision"></div></div>
-            </div>
-            <div class="breakdown-row">
-              <span class="bk-label">Dead ends</span>
-              <div class="bk-wrap"><div class="bk-bar" id="bk-deadend"></div></div>
-            </div>
-            <div class="breakdown-row">
-              <span class="bk-label">Junctions</span>
-              <div class="bk-wrap"><div class="bk-bar" id="bk-junction"></div></div>
-            </div>
-            <div class="breakdown-row">
-              <span class="bk-label">Trap depth</span>
-              <div class="bk-wrap"><div class="bk-bar" id="bk-trap"></div></div>
-            </div>
-            <div class="breakdown-row">
-              <span class="bk-label">Size</span>
-              <div class="bk-wrap"><div class="bk-bar" id="bk-size"></div></div>
-            </div>
-          </div>
+          <svg id="bk-radar" class="bk-radar" viewBox="0 0 200 190" aria-hidden="true"></svg>
         </div>
 
       </aside>
 
       <!-- Maze + solution -->
       <div class="maze-area">
-        <div id="maze-container"></div>
+        <div class="maze-wrap">
+          <div class="maze-title">
+            <span class="maze-title-main">Maze Generator</span>
+            <span class="maze-title-sub">by Domen Hribernik</span>
+          </div>
+          <div id="maze-container"></div>
+        </div>
 
         <!-- Solution page — hidden on screen, printed as second page when toggled -->
         <div class="solution-page">
@@ -160,8 +157,6 @@
       </div>
     </div>
   </div>
-
-  <script type="module" src="../../components/main-navbar.js"></script>
   <script type="module" src="script.js"></script>
 </body>
 </html>

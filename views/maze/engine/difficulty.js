@@ -52,7 +52,7 @@ export function solve(grid, startId, endId) {
   return { path, dist };
 }
 
-export function score(grid, startId, endId) {
+export function score(grid, startId, endId, opts = {}) {
   const result = solve(grid, startId, endId);
   if (!result) return { score: 0, label: 'Unsolvable', path: [], breakdown: {} };
 
@@ -73,28 +73,31 @@ export function score(grid, startId, endId) {
   //    and that genuinely makes the maze harder to walk.
   const pathNorm = Math.min(path.length / 300, 1);
 
+  // Path length is the lens through which the structural metrics are read —
+  // a solver only experiences the maze through the cells they traverse.
+  // pathFactor damps decisions / dead-ends / traps when the path is too
+  // short to contain meaningful difficulty: a 5-cell solution shouldn't max
+  // any structural bar regardless of how branchy the surrounding maze is.
+  const pathFactor = Math.min(path.length / 30, 1);
+
   // 2. Decision density on the path. (degree - 2) counts actual side branches
   //    at each step: corridor=0, T-junction=1, 4-way=2. Capped at 2 per cell.
+  //    /0.7 calibrates against the observed max for branchy spanning trees.
+  //    Multiplied by pathFactor so a tiny tortuous path doesn't max the bar.
   let decisionSum = 0;
   for (const id of path) decisionSum += Math.max(0, Math.min(2, openCounts[id] - 2));
-  const decisionDensity = Math.min(decisionSum / Math.max(path.length, 1) / 2, 1);
+  const decisionDensity =
+    Math.min(decisionSum / Math.max(path.length, 1) / 0.7, 1) * pathFactor;
 
-  // 3. Dead-end density across the whole maze.
-  let deadEnds = 0;
-  for (let i = 0; i < total; i++) if (openCounts[i] === 1) deadEnds++;
-  const deadEndRatio = deadEnds / total;
+  // 3. Off-path dead ends, normalized by path length. This is the density of
+  //    dead-end branches a solver actually encounters while walking the path,
+  //    not maze-wide noise. /2 calibrates against branchy mazes: ~2 off-path
+  //    dead ends per path cell maps to a full bar.
+  //    Computed inside the trap loop below to avoid two passes.
 
-  // 4. Junction density (degree >= 3). Replaces the old branchNorm — for any
-  //    spanning tree mean-openings is ~2, so the old metric was nearly
-  //    constant and didn't differentiate algorithms.
-  let junctions = 0;
-  for (let i = 0; i < total; i++) if (openCounts[i] >= 3) junctions++;
-  const junctionRatio = junctions / total;
-
-  // 5. Mean depth of off-path dead-end traps, normalized to maze diameter
-  //    scale. Using sqrt(total) instead of a fixed /10 makes traps in a 80×80
-  //    maze comparable to traps in a 20×20 — depth 8 is shallow in the big
-  //    one, deep in the small.
+  // 4. Mean trap depth (off-path dead-end chain length). /6 calibrates to
+  //    typical DFS trap depths; Prim's-style averages 1-3 and stays low.
+  //    pathFactor damping ensures short paths can't earn a tall trap bar.
   let trapTotal = 0, trapCount = 0;
   grid.cells.forEach(cell => {
     if (!pathSet.has(cell.id) && openCounts[cell.id] === 1) {
@@ -113,20 +116,24 @@ export function score(grid, startId, endId) {
     }
   });
   const meanTrap = trapCount ? trapTotal / trapCount : 0;
-  const trapNorm = Math.min(meanTrap / Math.sqrt(Math.max(total, 1)), 1);
+  const trapNorm = Math.min(meanTrap / 6, 1) * pathFactor;
+  // pathFactor damping: a 2-cell path (e.g. adjacent start/end) divides
+  // trapCount by ~nothing and the bar would saturate even though the solver
+  // never walks past any dead end. Same reasoning as decisionDensity / trapNorm.
+  const deadEndNorm = Math.min(trapCount / Math.max(path.length, 1) / 2, 1) * pathFactor;
 
   // 6. Size factor. A bigger maze is intrinsically harder to solve regardless
-  //    of structure — more cells to track, longer to scan. sqrt curve so
-  //    perceived difficulty grows with linear maze dimension, not area.
-  //    Calibrated so an 80×80-equivalent maze (6400 cells) saturates at 1.0.
-  const sizeNorm = Math.min(Math.sqrt(total) / 80, 1);
+  //    of structure. Normalised against the true maximum cell count for this
+  //    grid type (passed in via opts.sizeRef) so every grid type saturates at
+  //    1.0 at its own slider maximum — a hex grid caps at 40×40, not 80×80.
+  const sizeRef = opts.sizeRef ?? 80;
+  const sizeNorm = Math.min(Math.sqrt(total) / sizeRef, 1);
 
   const raw = (
     pathNorm         * 0.15 +
-    decisionDensity  * 0.30 +
-    deadEndRatio     * 0.08 +
-    junctionRatio    * 0.08 +
-    trapNorm         * 0.12 +
+    decisionDensity  * 0.32 +
+    deadEndNorm      * 0.10 +
+    trapNorm         * 0.16 +
     sizeNorm         * 0.27
   );
 
@@ -135,6 +142,6 @@ export function score(grid, startId, endId) {
 
   return {
     score: s, label, path,
-    breakdown: { pathNorm, decisionDensity, deadEndRatio, junctionRatio, trapNorm, sizeNorm },
+    breakdown: { pathNorm, decisionDensity, deadEndNorm, trapNorm, sizeNorm },
   };
 }
