@@ -1,13 +1,11 @@
 :root {
     --bg-primary: #050508;
-    --bg-secondary: #0a0a0f;
     --bg-card: #0f0f14;
     --bg-terminal: #08080c;
     --neon-green: #00ff41;
     --neon-cyan: #00f0ff;
     --neon-red: #ff0040;
     --neon-yellow: #f0ff00;
-    --text-primary: #e0e0e0;
     --text-secondary: #6b7280;
     --border-color: #1f2937;
     --border-highlight: #374151;
@@ -15,56 +13,29 @@
     --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.4);
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 
-html {
-    font-size: 16px;
-    -webkit-text-size-adjust: 100%;
-}
-
-body {
-    font-family: 'JetBrains Mono', 'Share Tech Mono', monospace;
-    background: var(--bg-primary);
-    min-height: 100vh;
-    padding: clamp(10px, 3vw, 20px);
-    color: var(--text-primary);
-    position: relative;
-    overflow-x: hidden;
-    line-height: 1.5;
-}
-
-/* Scanline effect - reduced on mobile for performance */
+/* Scanline overlay */
 body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        0deg,
+    inset: 0;
+    background: repeating-linear-gradient(0deg,
         rgba(0, 0, 0, 0.2),
         rgba(0, 0, 0, 0.2) 1px,
         transparent 1px,
-        transparent 2px
-    );
+        transparent 2px);
     pointer-events: none;
     z-index: 1000;
     opacity: 0.8;
 }
 
-/* CRT flicker - disabled on mobile to save battery */
+/* CRT flicker */
 body::after {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0, 255, 65, 0.03);
     pointer-events: none;
     z-index: 999;
@@ -77,29 +48,13 @@ body::after {
     100% { opacity: 0.03; }
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-    width: 100%;
-}
-
-/* Glitch header effect */
-header {
-    text-align: center;
-    margin-bottom: clamp(20px, 4vw, 30px);
-    position: relative;
-    padding: 0 10px;
-}
-
+/* Glitch header */
 h1 {
-    font-size: clamp(1.5rem, 6vw, 3rem);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: clamp(-1px, -0.5vw, -2px);
     color: var(--neon-green);
-    text-shadow: 
+    text-shadow:
         0 0 10px var(--neon-green),
         0 0 20px var(--neon-green),
         0 0 40px var(--neon-green);
@@ -159,37 +114,12 @@ h1::after {
     100% { clip: rect(23px, 9999px, 79px, 0); }
 }
 
-.subtitle {
-    color: var(--text-secondary);
-    font-size: clamp(0.75rem, 2vw, 0.9rem);
-    margin-top: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    word-break: break-word;
-}
-
 .subtitle::before {
     content: "> ";
     color: var(--neon-green);
 }
 
-/* Terminal-style API status */
-.api-status {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 20px;
-    padding: 15px;
-    background: var(--bg-terminal);
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    border-left: 1px solid var(--border-highlight);
-    border-radius: 8px;
-    position: relative;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
+/* Terminal prompt label above api-status box */
 .api-status::before {
     content: "root@kali:~# ./check_apis.sh";
     display: block;
@@ -203,8 +133,9 @@ h1::after {
     white-space: nowrap;
 }
 
+/* API badges */
 .api-badge {
-    background: var(--bg-secondary);
+    background: #0a0a0f;
     color: var(--text-secondary);
     padding: 8px 12px;
     border-radius: 4px;
@@ -258,23 +189,7 @@ h1::after {
     color: var(--neon-red);
 }
 
-/* Terminal input style */
-.search-box {
-    background: var(--bg-terminal);
-    padding: clamp(15px, 3vw, 20px);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    border-left: 1px solid var(--border-highlight);
-    margin-bottom: 20px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    position: relative;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    align-items: stretch;
-}
-
+/* Terminal prompt prefix inside search box */
 .search-box::before {
     content: "root@kali:~# ";
     color: var(--neon-green);
@@ -294,7 +209,7 @@ input[type="text"] {
     border: 1px solid var(--border-color);
     border-top: 1px solid var(--border-highlight);
     border-radius: 4px;
-    font-size: 16px; /* Prevents iOS zoom */
+    font-size: 16px;
     color: var(--neon-cyan);
     font-family: 'JetBrains Mono', monospace;
     transition: all 0.3s;
@@ -314,7 +229,7 @@ input[type="text"]:focus {
     box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
 }
 
-/* Hacker buttons */
+/* Hacker buttons with sweep effect */
 button {
     padding: 12px 20px;
     background: transparent;
@@ -344,12 +259,7 @@ button::before {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(0, 255, 65, 0.2),
-        transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
     transition: left 0.5s;
 }
 
@@ -396,27 +306,7 @@ button:disabled {
     text-shadow: 0 0 5px var(--neon-yellow);
 }
 
-/* Content grid */
-.content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-}
-
-/* Terminal info card */
-.info-card {
-    background: var(--bg-terminal);
-    padding: clamp(15px, 3vw, 25px);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    border-left: 1px solid var(--border-highlight);
-    height: fit-content;
-    position: relative;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    overflow: hidden;
-}
-
+/* Terminal label inside info card */
 .info-card::before {
     content: "cat /proc/net/ip_info";
     display: block;
@@ -428,87 +318,12 @@ button:disabled {
     word-break: break-all;
 }
 
-.info-item {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.info-item:last-child {
-    border-bottom: none;
-}
-
-.info-label {
-    font-size: clamp(0.8rem, 3vw, 1rem);
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-family: 'Share Tech Mono', monospace;
-    flex-shrink: 0;
-    line-height: 1.4;
-}
-
 .info-label::before {
     content: "# ";
     color: var(--neon-cyan);
 }
 
-.info-value {
-    font-size: clamp(0.85rem, 2.5vw, 1rem);
-    color: var(--neon-cyan);
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    text-align: right;
-    word-break: break-all;
-    flex: 1;
-    min-width: 0;
-    line-height: 1.4;
-}
-
-.info-label-source {
-    display: flex;
-    flex-direction: column;
-}
-
-.source-tag {
-    display: inline-block;
-    background: rgba(0, 240, 255, 0.15);
-    color: var(--neon-cyan);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: clamp(0.6rem, 1.5vw, 0.65rem);
-    width: 90px;
-    margin:5px 0 0 8px;
-    border: 1px solid var(--neon-cyan);
-    font-family: 'Share Tech Mono', monospace;
-    vertical-align: middle;
-}
-
-.flag {
-    margin-right: 8px;
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
-    font-size: clamp(1rem, 3vw, 1.2rem);
-}
-
-/* Map container with terminal look */
-.map-container {
-    background: var(--bg-terminal);
-    padding: clamp(15px, 3vw, 20px);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    border-left: 1px solid var(--border-highlight);
-    height: clamp(300px, 50vw, 500px);
-    min-height: 300px;
-    height: 100%;
-    position: relative;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
+/* Map */
 #map {
     width: 100%;
     height: 100%;
@@ -518,37 +333,9 @@ button:disabled {
     min-height: 250px;
 }
 
-/* Map legend */
-.map-legend {
-    position: absolute;
-    bottom: clamp(25px, 5vw, 32px);
-    left: clamp(15px, 3vw, 32px);
-    background: var(--bg-terminal);
-    border-radius: 8px;
-    padding: 12px 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    z-index: 1000;
-    display: none;
-    max-width: min(200px, 80%);
-    backdrop-filter: blur(5px);
-}
-
-.map-legend.visible {
-    display: block;
-}
-
-.map-legend h4 {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--neon-green);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 8px;
-}
+/* Map legend visibility (toggled by JS) */
+.map-legend { display: none; }
+.map-legend.visible { display: block; }
 
 .legend-item {
     display: flex;
@@ -574,17 +361,9 @@ button:disabled {
     text-decoration: line-through;
 }
 
-/* Loading animation */
-.loading {
-    display: none;
-    text-align: center;
-    padding: clamp(30px, 5vw, 40px);
-    color: var(--neon-green);
-}
-
-.loading.active {
-    display: block;
-}
+/* Loading state (toggled by JS) */
+.loading { display: none; }
+.loading.active { display: block; }
 
 .spinner {
     width: clamp(30px, 8vw, 40px);
@@ -602,7 +381,7 @@ button:disabled {
     100% { transform: rotate(360deg); }
 }
 
-/* Error/Success messages */
+/* Error / success messages (toggled by JS) */
 .error {
     background: rgba(255, 0, 64, 0.15);
     color: var(--neon-red);
@@ -651,52 +430,18 @@ button:disabled {
 }
 
 /* Compare section */
-.compare-mode {
-    margin-top: 20px;
-    background: var(--bg-terminal);
-    padding: clamp(15px, 3vw, 20px);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    border-left: 1px solid var(--border-highlight);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.compare-mode h3 {
-    color: var(--neon-yellow);
-    font-family: 'JetBrains Mono', monospace;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-size: clamp(1rem, 3vw, 1.2rem);
-}
-
 .compare-mode h3::before {
     content: "$ ";
     color: var(--text-secondary);
-}
-
-.compare-mode > p {
-    color: #666;
-    margin-bottom: 15px;
-    font-size: clamp(0.85rem, 2vw, 1rem);
-}
-
-.compare-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
-    margin-top: 15px;
 }
 
 .compare-card {
     background: var(--bg-card);
     padding: 15px;
     border-radius: 4px;
-    border-left: 3px solid var(--neon-cyan);
     border: 1px solid var(--border-color);
     border-top: 1px solid var(--border-highlight);
-    border-left-width: 3px;
+    border-left: 3px solid var(--neon-cyan);
     overflow: hidden;
 }
 
@@ -728,105 +473,15 @@ button:disabled {
     flex-shrink: 0;
 }
 
-.hidden {
-    display: none;
-}
+.hidden { display: none; }
 
-/* Blinking cursor effect */
-.cursor::after {
-    content: "█";
-    animation: blink 1s infinite;
-    color: var(--neon-green);
-    margin-left: 2px;
-}
-
-@keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
-}
-
-/* Binary background decoration */
-.binary-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.03;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    line-height: 14px;
-    overflow: hidden;
-    color: var(--neon-green);
-    white-space: pre;
-    user-select: none;
-}
-
-/* ==================== TABLET BREAKPOINT (600px+) ==================== */
-@media (min-width: 600px) {
-    .content {
-        grid-template-columns: 1fr 1.5fr;
-    }
-    
-    .compare-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    input[type="text"] {
-        flex: 1 1 auto;
-        min-width: 250px;
-    }
-    
-    button {
-        flex: 0 0 auto;
-        min-width: 100px;
-    }
-    
-    .info-item {
-        flex-wrap: nowrap;
-    }
-    
-    .info-value {
-        text-align: right;
-    }
-}
-
-/* ==================== DESKTOP BREAKPOINT (900px+) ==================== */
-@media (min-width: 900px) {
-    .content {
-        grid-template-columns: 1fr 2fr;
-    }
-    
-    .compare-grid {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    }
-    
-    .api-badge {
-        flex: 0 0 auto;
-    }
-}
-
-
+/* ==================== SMALL MOBILE (<= 450px) ==================== */
 @media (max-width: 450px) {
-    body {
-        padding: 8px;
-    }
-    
-    .api-badge {
-        max-width: none;
-    }
+    .api-badge { max-width: none; }
 
-    
-    .search-box::before {
-        display: none;
-    }
-    
-    .search-box {
-        padding-top: 25px;
-    }
-    
+    /* Swap inline terminal prompt for one anchored above the search box */
+    .search-box::before { display: none; }
+    .search-box { padding-top: 25px; }
     .search-box::after {
         content: "root@kali:~#";
         position: absolute;
@@ -835,56 +490,21 @@ button:disabled {
         color: var(--neon-green);
         font-size: 0.75rem;
     }
-    
-    /* .map-legend {
-        display: none !important;
-    } */
 
-    .info-card{
-        order: 2;
-    }
-
-    .map-container {
-        order: 1;
-    }
-    
-    .legend-item {
-        font-size: 0.7rem;
-    }
-    
-    .legend-dot {
-        width: 9px;
-        height: 9px;
-    }
-    
-    /* Disable heavy animations on small mobile */
-    body::after {
-        display: none;
-    }
-    
-    h1 {
-        animation: none;
-    }
-    
+    /* Disable heavy effects on small screens */
+    body::after { display: none; }
+    h1 { animation: none; }
     h1::before,
-    h1::after {
-        display: none;
-    }
+    h1::after { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-    
-    body::after {
-        animation: none;
-    }
-    
+    body::after { animation: none; }
     .spinner {
         animation: none;
         border-top-color: var(--neon-green);
@@ -893,54 +513,26 @@ button:disabled {
     }
 }
 
-/* ==================== LANDSCAPE ORIENTATION ==================== */
 @media (max-height: 500px) and (orientation: landscape) {
-    .map-container {
-        height: 250px;
-        min-height: 200px;
-    }
-    
-    #map {
-        min-height: 150px;
-    }
-    
-    h1 {
-        font-size: 1.5rem;
-    }
-    
-    .subtitle {
-        display: none;
-    }
+    .map-container { height: 250px; min-height: 200px; }
+    #map { min-height: 150px; }
+    h1 { font-size: 1.5rem; }
+    .subtitle { display: none; }
 }
 
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     .legend-dot,
-    .color-swatch {
-        transform: translateZ(0); /* Prevent subpixel rendering issues */
-    }
+    .color-swatch { transform: translateZ(0); }
 }
 
 @media (prefers-color-scheme: dark) {
-    /* Already dark theme, but ensure consistency */
-    :root {
-        color-scheme: dark;
-    }
+    :root { color-scheme: dark; }
 }
 
 @media print {
-    body {
-        background: white;
-        color: black;
-        padding: 0;
-    }
-    
+    body { background: white; color: black; padding: 0; }
     body::before,
-    body::after,
-    .binary-bg {
-        display: none;
-    }
-    
-    .map-container,
+    body::after { display: none; }
     .api-status,
     .search-box,
     .compare-mode {
@@ -948,9 +540,5 @@ button:disabled {
         border: 1px solid #ccc;
         box-shadow: none;
     }
-    
-    h1 {
-        color: black;
-        text-shadow: none;
-    }
+    h1 { color: black; text-shadow: none; }
 }

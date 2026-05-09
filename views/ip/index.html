@@ -7,16 +7,43 @@
     <title>Multi-Source IP Locator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-green': '#00ff41',
+                        'neon-cyan': '#00f0ff',
+                        'neon-red': '#ff0040',
+                        'neon-yellow': '#f0ff00',
+                        'term-bg': '#050508',
+                        'term-panel': '#0a0a0f',
+                        'term-card': '#0f0f14',
+                        'term-deep': '#08080c',
+                        'term-text': '#e0e0e0',
+                        'term-muted': '#6b7280',
+                        'term-border': '#1f2937',
+                        'term-border-hl': '#374151',
+                    },
+                    fontFamily: {
+                        jb: ['"JetBrains Mono"', 'monospace'],
+                        share: ['"Share Tech Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Multi-Source IP Locator</h1>
-            <p class="subtitle">7 Free APIs • Auto-Failover • No API Keys Needed</p>
+<body class="font-jb bg-term-bg min-h-screen text-term-text relative overflow-x-hidden leading-normal p-[clamp(10px,3vw,20px)]">
+    <div class="max-w-[1200px] mx-auto relative z-[1] w-full">
+        <header class="text-center mb-[clamp(20px,4vw,30px)] relative px-2.5">
+            <h1 class="text-[clamp(1.5rem,6vw,3rem)]">Multi-Source IP Locator</h1>
+            <p class="subtitle text-term-muted text-[clamp(0.75rem,2vw,0.9rem)] mt-2.5 tracking-[2px] uppercase break-words">7 Free APIs • Auto-Failover • No API Keys Needed</p>
         </header>
- 
-        <div class="api-status" id="apiStatus">
+
+        <div class="api-status flex gap-2 flex-wrap justify-center mb-5 p-[15px] bg-term-deep rounded-lg relative border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)]" id="apiStatus">
             <span class="api-badge" id="badge-ipapi"      onclick="focusBadge('ipapi')">ipapi.co</span>
             <span class="api-badge" id="badge-ipwho"      onclick="focusBadge('ipwho')">ipwho.org</span>
             <span class="api-badge" id="badge-ip-api"     onclick="focusBadge('ip-api')">ip-api.com</span>
@@ -25,74 +52,74 @@
             <span class="api-badge" id="badge-ip2location" onclick="focusBadge('ip2location')">ip2location.io</span>
             <span class="api-badge" id="badge-ipinfo"     onclick="focusBadge('ipinfo')">ipinfo.io</span>
         </div>
- 
-        <div class="search-box">
+
+        <div class="search-box bg-term-deep p-[clamp(15px,3vw,20px)] rounded-lg mb-5 flex gap-2.5 flex-wrap relative items-stretch border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)]">
             <input type="text" id="ipInput" placeholder="Enter IP address (e.g., 8.8.8.8) or leave empty for your IP">
             <button onclick="lookupIP()" id="searchBtn">Lookup</button>
             <button onclick="getMyIP()" class="my-ip-btn" id="myIpBtn">My IP</button>
             <button onclick="toggleCompare()" class="toggle-compare" id="compareBtn">Compare</button>
         </div>
- 
+
         <div class="error" id="errorMsg"></div>
         <div class="success-notice" id="successMsg"></div>
- 
-        <div class="content">
-            <div class="info-card" id="infoCard">
-                <div class="loading" id="loading">
+
+        <div class="grid grid-cols-1 min-[600px]:grid-cols-[1fr_1.5fr] min-[900px]:grid-cols-[1fr_2fr] gap-5">
+            <div class="info-card bg-term-deep p-[clamp(15px,3vw,25px)] rounded-lg h-fit relative overflow-hidden border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)] max-[450px]:order-2" id="infoCard">
+                <div class="loading text-center p-[clamp(30px,5vw,40px)] text-neon-green" id="loading">
                     <div class="spinner"></div>
                     <p>Trying multiple sources...</p>
                 </div>
                 <div id="infoContent">
-                    <div class="info-item">
-                        <div class="info-label-source">
-                            <div class="info-label">IP Address</div>
-                            <span class="source-tag" id="sourceTag" style="display: none;"></span>
+                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
+                        <div class="flex flex-col">
+                            <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">IP Address</div>
+                            <span class="source-tag inline-block bg-neon-cyan/15 text-neon-cyan py-0.5 px-2 rounded text-[clamp(0.6rem,1.5vw,0.65rem)] w-[90px] mt-[5px] ml-2 border border-neon-cyan font-share align-middle" id="sourceTag" style="display: none;"></span>
                         </div>
-                        <div class="info-value" id="ip">-</div>
+                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="ip">-</div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Country</div>
-                        <div class="info-value"><span id="flag" class="flag">🏳️</span> <span id="country">-</span></div>
+                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
+                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">Country</div>
+                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]"><span id="flag" class="mr-2 text-[clamp(1rem,3vw,1.2rem)] [filter:drop-shadow(0_0_5px_rgba(255,255,255,0.3))]">🏳️</span> <span id="country">-</span></div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Region</div>
-                        <div class="info-value" id="region">-</div>
+                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
+                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">Region</div>
+                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="region">-</div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">City</div>
-                        <div class="info-value" id="city">-</div>
+                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
+                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">City</div>
+                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="city">-</div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Coordinates</div>
-                        <div class="info-value" id="coords">-</div>
+                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
+                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">Coordinates</div>
+                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="coords">-</div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">ISP / Org.</div>
-                        <div class="info-value" id="org">-</div>
+                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
+                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">ISP / Org.</div>
+                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="org">-</div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">Timezone</div>
-                        <div class="info-value" id="timezone">-</div>
+                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
+                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">Timezone</div>
+                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="timezone">-</div>
                     </div>
                 </div>
             </div>
- 
-            <div class="map-container">
+
+            <div class="map-container bg-term-deep p-[clamp(15px,3vw,20px)] rounded-lg h-full min-h-[300px] relative border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)] max-[450px]:order-1">
                 <div id="map"></div>
-                <div class="map-legend" id="mapLegend">
-                    <h4>API Sources</h4>
+                <div class="map-legend bg-term-deep rounded-lg py-3 px-4 border border-term-border border-t-term-border-hl border-l-term-border-hl absolute z-[1000] max-w-[min(200px,80%)] bottom-[clamp(25px,5vw,32px)] left-[clamp(15px,3vw,32px)] backdrop-blur-[5px] shadow-[0_4px_20px_rgba(0,0,0,0.8)]" id="mapLegend">
+                    <h4 class="text-xs font-bold text-neon-green uppercase tracking-[0.5px] mb-2.5 border-b border-term-border pb-2">API Sources</h4>
                     <div id="legendItems"></div>
                 </div>
             </div>
         </div>
- 
-        <div class="compare-mode hidden" id="compareSection">
-            <h3>API Comparison Mode</h3>
-            <p style="color: #666; margin-bottom: 15px;">See how different APIs locate the same IP — all results are plotted on the map above</p>
-            <div class="compare-grid" id="compareGrid"></div>
+
+        <div class="compare-mode hidden mt-5 bg-term-deep p-[clamp(15px,3vw,20px)] rounded-lg border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)]" id="compareSection">
+            <h3 class="text-neon-yellow font-jb mb-2.5 uppercase tracking-[2px] text-[clamp(1rem,3vw,1.2rem)]">API Comparison Mode</h3>
+            <p class="text-[#666] mb-[15px] text-[clamp(0.85rem,2vw,1rem)]">See how different APIs locate the same IP — all results are plotted on the map above</p>
+            <div class="grid grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[15px] mt-[15px]" id="compareGrid"></div>
         </div>
     </div>
- 
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>

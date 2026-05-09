@@ -18,6 +18,19 @@ Current project directories: `views/about`, `views/botaniq`, `views/homepage`, `
 
 A view directory may include its own `CLAUDE.md` for project-specific notes that don't belong in this root file (grid contracts, tricky invariants, file-map for a complex subtree, etc.). These are auto-loaded when working inside that directory. Existing per-view CLAUDE.md files: [views/maze/CLAUDE.md](views/maze/CLAUDE.md). When a view grows complex enough that re-deriving its conventions from the code wastes context, add a `CLAUDE.md` to that view rather than expanding this root file.
 
+### Frontend — Styling
+
+Default to **Tailwind CSS** for styling on any new view. Pull it in via the CDN (`<script src="https://cdn.tailwindcss.com"></script>`) and, if needed, configure custom colors and fonts inline with `tailwind.config = { ... }` — see [views/rocks/index.html](views/rocks/index.html) and [views/ip/index.html](views/ip/index.html) for examples. There is no build step.
+
+Use the view's `style.css` only for things Tailwind can't cleanly express:
+- `@keyframes` and named animations
+- `::before` / `::after` pseudo-element decorations (terminal prompts, glitch overlays, scanlines, generated content)
+- Complex hover/focus effects that involve sweeping pseudo-elements, multi-layer text-shadows, or stacked filters
+- State classes toggled by JS where the *default* must be `display: none` (e.g., `.loading`, `.error`, `.visible`)
+- Print styles, `prefers-reduced-motion` overrides, and other rare media queries
+
+Existing views written before this convention (e.g. `homepage`, `about`, `tarok`) still use a plain `style.css`. Don't migrate them as part of unrelated work — convert only when explicitly asked.
+
 ### Frontend — Component System
 
 Reusable web components live in [components/](components/) and are imported as ES modules via `<script type="module">`:
