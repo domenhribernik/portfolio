@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>Vrata</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-[100dvh] bg-neutral-950 text-neutral-100 font-sans antialiased flex flex-col items-center justify-center p-4 sm:p-6"
+      style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);">
+
+    <main class="w-full max-w-sm sm:max-w-md mx-auto flex flex-col gap-4">
+
+        <!-- Key entry view -->
+        <section id="keyView" class="hidden bg-neutral-900 border border-neutral-800 rounded-2xl p-5 sm:p-6 shadow-xl">
+            <h1 class="text-lg font-medium mb-1">Enter key</h1>
+            <p class="text-sm text-neutral-400 mb-4">Stored locally on this device only.</p>
+            <form id="keyForm" autocomplete="off" novalidate>
+                <input
+                    id="keyInput"
+                    type="password"
+                    inputmode="text"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    autocorrect="off"
+                    spellcheck="false"
+                    name="k"
+                    class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-3 text-base font-mono tracking-tight outline-none focus:border-neutral-600 focus:ring-1 focus:ring-neutral-600"
+                    aria-label="Access key"
+                    required>
+                <button
+                    type="submit"
+                    class="mt-3 w-full bg-neutral-100 text-neutral-900 font-medium rounded-lg py-3 text-base hover:bg-white active:bg-neutral-200 transition">
+                    Save
+                </button>
+            </form>
+        </section>
+
+        <!-- Action view -->
+        <section id="actionView" class="hidden flex flex-col gap-4">
+
+            <!-- Camera placeholder -->
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+                <div id="cameraSlot"
+                     class="relative w-full aspect-video bg-neutral-950 flex items-center justify-center text-neutral-600">
+                    <!-- future: <img>, <video>, or <iframe> goes here -->
+                    <div class="flex flex-col items-center gap-2 text-center px-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.5" class="w-10 h-10 sm:w-12 sm:h-12">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M6.75 7.5h7.5a2.25 2.25 0 0 1 2.25 2.25v4.5A2.25 2.25 0 0 1 14.25 16.5h-7.5A2.25 2.25 0 0 1 4.5 14.25v-4.5A2.25 2.25 0 0 1 6.75 7.5Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m16.5 10.5 3-1.5v6l-3-1.5"/>
+                        </svg>
+                        <span class="text-xs sm:text-sm">Camera feed</span>
+                    </div>
+                </div>
+                <div class="border-t border-neutral-800 p-3 flex items-center justify-between gap-3">
+                    <span id="cameraStatus" class="text-xs text-neutral-500 truncate">Offline</span>
+                    <button
+                        id="refreshBtn"
+                        type="button"
+                        class="inline-flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed text-neutral-100 text-sm font-medium rounded-lg px-3 py-2 transition"
+                        aria-label="Refresh camera">
+                        <svg id="refreshIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M4.5 12a7.5 7.5 0 0 1 13-5.196V4.5m0 2.304h-2.304M19.5 12a7.5 7.5 0 0 1-13 5.196V19.5m0-2.304h2.304"/>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+            <br>
+
+            <!-- Unlock -->
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+                <button
+                    id="openBtn"
+                    type="button"
+                    class="w-full bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 disabled:bg-neutral-700 disabled:cursor-not-allowed text-neutral-950 font-semibold rounded-xl py-5 sm:py-6 text-lg sm:text-xl tracking-wide transition shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+                    </svg>
+                    <span id="openLabel">Unlock</span>
+                </button>
+                <p id="statusMsg" class="mt-3 text-sm text-center text-neutral-400 min-h-[1.25rem]" aria-live="polite"></p>
+                <div class="mt-1 text-center">
+                    <button
+                        id="forgetBtn"
+                        type="button"
+                        class="text-xs text-neutral-500 hover:text-neutral-300 transition">
+                        Forget key
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+<script>
+(() => {
+    'use strict';
+
+    const STORAGE_KEY = '_dk';
+    const ENDPOINT = '../../app/proxys/vrata.php';
+    const REQUEST_TIMEOUT_MS = 10000;
+
+    const keyView      = document.getElementById('keyView');
+    const actionView   = document.getElementById('actionView');
+    const keyForm      = document.getElementById('keyForm');
+    const keyInput     = document.getElementById('keyInput');
+    const openBtn      = document.getElementById('openBtn');
+    const openLabel    = document.getElementById('openLabel');
+    const forgetBtn    = document.getElementById('forgetBtn');
+    const statusMsg    = document.getElementById('statusMsg');
+    const refreshBtn   = document.getElementById('refreshBtn');
+    const refreshIcon  = document.getElementById('refreshIcon');
+    const cameraStatus = document.getElementById('cameraStatus');
+
+    let inFlight = false;
+
+    const safeGetKey = () => {
+        try { return localStorage.getItem(STORAGE_KEY); }
+        catch { return null; }
+    };
+    const safeSetKey = (v) => {
+        try { localStorage.setItem(STORAGE_KEY, v); return true; }
+        catch { return false; }
+    };
+    const safeClearKey = () => {
+        try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    };
+
+    const showView = (which) => {
+        keyView.classList.toggle('hidden', which !== 'key');
+        actionView.classList.toggle('hidden', which !== 'action');
+        if (which === 'key') {
+            keyInput.value = '';
+            setTimeout(() => keyInput.focus(), 0);
+        }
+    };
+
+    const setStatus = (text, tone) => {
+        statusMsg.textContent = text || '';
+        statusMsg.className = 'mt-3 text-sm text-center min-h-[1.25rem] ' + (
+            tone === 'ok'   ? 'text-emerald-400' :
+            tone === 'err'  ? 'text-red-400'     :
+                              'text-neutral-400'
+        );
+    };
+
+    const init = () => {
+        const stored = safeGetKey();
+        if (stored && stored.length > 0) {
+            showView('action');
+        } else {
+            showView('key');
+        }
+    };
+
+    keyForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const v = keyInput.value.trim();
+        if (!v) return;
+        if (!safeSetKey(v)) {
+            setStatus('Could not save key on this device.', 'err');
+            return;
+        }
+        keyInput.value = '';
+        showView('action');
+        setStatus('', null);
+    });
+
+    forgetBtn.addEventListener('click', () => {
+        safeClearKey();
+        setStatus('', null);
+        showView('key');
+    });
+
+    refreshBtn.addEventListener('click', () => {
+        // placeholder — wire up actual camera reload here later
+        refreshBtn.disabled = true;
+        refreshIcon.classList.add('animate-spin');
+        cameraStatus.textContent = 'Refreshing...';
+        setTimeout(() => {
+            refreshIcon.classList.remove('animate-spin');
+            refreshBtn.disabled = false;
+            cameraStatus.textContent = 'Offline';
+        }, 600);
+    });
+
+    openBtn.addEventListener('click', async () => {
+        if (inFlight) return;
+        const key = safeGetKey();
+        if (!key) { showView('key'); return; }
+
+        inFlight = true;
+        openBtn.disabled = true;
+        openLabel.textContent = 'Opening...';
+        setStatus('', null);
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+        try {
+            const url = ENDPOINT + '?key=' + encodeURIComponent(key);
+            const res = await fetch(url, {
+                method: 'GET',
+                credentials: 'omit',
+                cache: 'no-store',
+                redirect: 'error',
+                referrerPolicy: 'no-referrer',
+                signal: controller.signal,
+            });
+
+            if (res.status === 403) {
+                setStatus('Key rejected.', 'err');
+                safeClearKey();
+                showView('key');
+                return;
+            }
+            if (!res.ok) {
+                setStatus('Request failed (' + res.status + ').', 'err');
+                return;
+            }
+
+            setStatus('Unlocked.', 'ok');
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                setStatus('Timed out.', 'err');
+            } else {
+                setStatus('Network error.', 'err');
+            }
+        } finally {
+            clearTimeout(timer);
+            inFlight = false;
+            openBtn.disabled = false;
+            openLabel.textContent = 'Unlock';
+        }
+    });
+
+    init();
+})();
+</script>
+</body>
+</html>
