@@ -3,7 +3,7 @@ const config = {
         'cHJldHR5cGxlYXNl': 'Iliana',
         'c3RheXByZXNlbnQ=': 'Domen'
     },
-    targetDate: new Date('2026-04-21T17:30:00').getTime(),
+    targetDate: new Date('2026-06-18T12:35:00').getTime(),
 };
 
 const API = '../../app/controllers/iliana-photos-controller.php';

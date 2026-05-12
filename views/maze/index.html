@@ -6,21 +6,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../base-style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'maze-bg':      '#0f1117',
+            'maze-surface': '#1a1d27',
+            'maze-border':  '#2c2f3e',
+            'maze-accent':  '#7c6ff7',
+            'maze-text':    '#e2e5f0',
+            'maze-muted':   '#8b90a8',
+          },
+          fontFamily: { inter: ['Inter', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
   <link rel="stylesheet" href="style.css">
   <title>Maze Generator</title>
 </head>
-<body>
-  <div class="page-wrap">
-    <div class="main-layout">
-      <!-- Config panel -->
-      <aside class="config-panel">
+<body class="font-inter bg-maze-bg text-maze-text min-h-screen flex flex-col">
+  <div class="page-wrap flex flex-col flex-1 max-w-[1400px] w-full mx-auto px-2 py-2 md:px-4 md:pt-3 md:pb-4">
+    <div class="main-layout flex flex-col md:flex-row gap-3 md:gap-4 flex-1 min-h-0">
 
-        <div class="config-section">
-          <h3>Grid</h3>
-          <div class="field">
-            <label>Type</label>
-            <select id="grid-type">
+      <!-- Config panel -->
+      <aside class="config-panel order-2 md:order-none grid grid-cols-2 gap-2.5 md:flex md:flex-col md:gap-2 md:w-60 md:shrink-0 md:overflow-y-auto">
+
+        <!-- Grid -->
+        <div class="bg-maze-surface border border-maze-border rounded-[10px] px-[0.6rem] py-[0.55rem] md:p-3 col-start-1 row-start-1">
+          <h3 class="text-[0.65rem] md:text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-maze-muted mb-1.5 md:mb-2.5">Grid</h3>
+          <div class="flex flex-col gap-1 mb-2">
+            <label class="text-[0.72rem] md:text-[0.78rem] text-maze-muted">Type</label>
+            <select id="grid-type" class="bg-maze-bg border border-maze-border rounded-md text-maze-text px-2 py-1.5 text-[0.82rem] w-full outline-none focus:border-maze-accent transition-colors">
               <option value="square">Square</option>
               <option value="hex">Hexagonal</option>
               <option value="triangle">Triangle</option>
@@ -28,26 +51,27 @@
               <option value="upsilon">Upsilon</option>
             </select>
           </div>
-          <div class="field">
-            <label class="slider-label">
+          <div class="flex flex-col gap-1 mb-2">
+            <label class="flex justify-between items-center text-[0.72rem] md:text-[0.78rem] text-maze-muted">
               <span id="label-cols">Cols</span>
-              <span id="val-cols" class="slider-val">20</span>
+              <span id="val-cols" class="text-[0.78rem] font-semibold text-maze-accent">20</span>
             </label>
             <input type="range" id="grid-width" min="3" max="80" value="20">
           </div>
-          <div class="field">
-            <label class="slider-label">
+          <div class="flex flex-col gap-1">
+            <label class="flex justify-between items-center text-[0.72rem] md:text-[0.78rem] text-maze-muted">
               <span id="label-rows">Rows</span>
-              <span id="val-rows" class="slider-val">20</span>
+              <span id="val-rows" class="text-[0.78rem] font-semibold text-maze-accent">20</span>
             </label>
             <input type="range" id="grid-height" min="3" max="80" value="20">
           </div>
         </div>
 
-        <div class="config-section">
-          <h3>Algorithm</h3>
-          <div class="field">
-            <select id="algorithm">
+        <!-- Algorithm -->
+        <div class="bg-maze-surface border border-maze-border rounded-[10px] px-[0.6rem] py-[0.55rem] md:p-3 col-start-2 row-start-1">
+          <h3 class="text-[0.65rem] md:text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-maze-muted mb-1.5 md:mb-2.5">Algorithm</h3>
+          <div class="flex flex-col gap-1 mb-2">
+            <select id="algorithm" class="bg-maze-bg border border-maze-border rounded-md text-maze-text px-2 py-1.5 text-[0.82rem] w-full outline-none focus:border-maze-accent transition-colors">
               <option value="dfs">Recursive Backtracker</option>
               <option value="prims">Prim's</option>
               <option value="kruskals">Kruskal's</option>
@@ -60,13 +84,13 @@
               <option value="ellers">Eller's</option>
             </select>
           </div>
-          <div class="seed-row">
-            <input type="text" id="seed" placeholder="Seed (random)">
-            <button class="btn ghost" id="random-seed" title="New random seed"><i class="fas fa-dice"></i></button>
+          <div class="flex gap-1.5 mt-1.5">
+            <input type="text" id="seed" placeholder="Seed (random)" class="bg-maze-bg border border-maze-border rounded-md text-maze-text px-2 py-1.5 text-[0.82rem] flex-1 min-w-0 outline-none focus:border-maze-accent transition-colors">
+            <button id="random-seed" title="New random seed" class="bg-transparent border border-maze-border text-maze-muted rounded-md px-2.5 text-[0.82rem] cursor-pointer transition-colors hover:border-maze-accent hover:text-maze-text"><i class="fas fa-dice"></i></button>
           </div>
-          <div class="field" style="margin-top:0.4rem">
-            <label>Entrance / Exit</label>
-            <select id="entrance-placement">
+          <div class="flex flex-col gap-1 mt-2">
+            <label class="text-[0.72rem] md:text-[0.78rem] text-maze-muted">Entrance / Exit</label>
+            <select id="entrance-placement" class="bg-maze-bg border border-maze-border rounded-md text-maze-text px-2 py-1.5 text-[0.82rem] w-full outline-none focus:border-maze-accent transition-colors">
               <option value="corners">Opposite corners</option>
               <option value="farthest">Farthest pair</option>
               <option value="random">Random</option>
@@ -74,79 +98,79 @@
           </div>
         </div>
 
-        <div class="config-section">
-          <h3>Output</h3>
-          <div class="field">
-            <label class="slider-label">
+        <!-- Output -->
+        <div class="bg-maze-surface border border-maze-border rounded-[10px] px-[0.6rem] py-[0.55rem] md:p-3 col-start-1 row-start-2">
+          <h3 class="text-[0.65rem] md:text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-maze-muted mb-1.5 md:mb-2.5">Output</h3>
+          <div class="flex flex-col gap-1 mb-2">
+            <label class="flex justify-between items-center text-[0.72rem] md:text-[0.78rem] text-maze-muted">
               <span>Cell size</span>
-              <span id="val-cellsize" class="slider-val">20</span>
+              <span id="val-cellsize" class="text-[0.78rem] font-semibold text-maze-accent">20</span>
             </label>
             <input type="range" id="cell-size" min="5" max="50" step="1" value="20">
           </div>
-          <div class="field">
-            <label class="slider-label">
+          <div class="flex flex-col gap-1 mb-2">
+            <label class="flex justify-between items-center text-[0.72rem] md:text-[0.78rem] text-maze-muted">
               <span>Wall thickness</span>
-              <span id="val-wallwidth" class="slider-val">1.5</span>
+              <span id="val-wallwidth" class="text-[0.78rem] font-semibold text-maze-accent">1.5</span>
             </label>
             <input type="range" id="wall-width" min="0.5" max="5" step="0.1" value="1.5">
           </div>
-          <label class="toggle-row">
+          <label class="flex items-center justify-between text-[0.82rem] text-maze-muted cursor-pointer select-none">
             <span>Show solution</span>
-            <input type="checkbox" id="show-solution">
+            <input type="checkbox" id="show-solution" class="w-3.5 h-3.5 cursor-pointer accent-maze-accent">
           </label>
-          <label class="toggle-row" style="margin-top:0.4rem">
+          <label class="flex items-center justify-between text-[0.82rem] text-maze-muted cursor-pointer select-none mt-1.5">
             <span>Solution page (print)</span>
-            <input type="checkbox" id="solution-page">
+            <input type="checkbox" id="solution-page" class="w-3.5 h-3.5 cursor-pointer accent-maze-accent">
           </label>
-          <div class="print-row" style="margin-top:0.5rem">
-            <select id="paper-size">
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <select id="paper-size" class="bg-maze-bg border border-maze-border rounded-md text-maze-text px-2 py-1.5 text-[0.82rem] w-full outline-none focus:border-maze-accent transition-colors">
               <option value="a4">A4</option>
               <option value="letter">Letter</option>
               <option value="custom">Custom (mm)</option>
             </select>
-            <select id="paper-orient">
+            <select id="paper-orient" class="bg-maze-bg border border-maze-border rounded-md text-maze-text px-2 py-1.5 text-[0.82rem] w-full outline-none focus:border-maze-accent transition-colors">
               <option value="portrait">Portrait</option>
               <option value="landscape">Landscape</option>
             </select>
           </div>
-          <div class="print-row" id="paper-custom-row" style="margin-top:0.4rem; display:none">
-            <input type="number" id="paper-w" min="20" max="2000" step="1" value="210" placeholder="Width (mm)">
-            <input type="number" id="paper-h" min="20" max="2000" step="1" value="297" placeholder="Height (mm)">
+          <div id="paper-custom-row" class="grid grid-cols-2 gap-2 mt-1.5" style="display:none">
+            <input type="number" id="paper-w" min="20" max="2000" step="1" value="210" placeholder="Width (mm)" class="bg-maze-bg border border-maze-border rounded-md text-maze-text px-2 py-1.5 text-[0.82rem] w-full outline-none focus:border-maze-accent transition-colors">
+            <input type="number" id="paper-h" min="20" max="2000" step="1" value="297" placeholder="Height (mm)" class="bg-maze-bg border border-maze-border rounded-md text-maze-text px-2 py-1.5 text-[0.82rem] w-full outline-none focus:border-maze-accent transition-colors">
           </div>
         </div>
 
-        <button class="btn full" id="generate-btn">
+        <!-- Score widget -->
+        <div class="score-widget bg-maze-surface border border-maze-border rounded-[10px] px-[0.6rem] py-[0.55rem] md:p-3 col-start-2 row-start-2">
+          <h3 class="text-[0.65rem] md:text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-maze-muted mb-2">Difficulty</h3>
+          <div class="flex items-baseline gap-2 mb-2">
+            <span id="score-value" class="text-3xl max-[480px]:text-2xl font-bold leading-none">–</span>
+            <span id="score-label" class="text-[0.85rem] font-semibold text-maze-accent">–</span>
+          </div>
+          <div class="bg-maze-border rounded h-1.5 overflow-hidden mb-3">
+            <div id="score-bar" class="h-full rounded transition-all duration-[400ms] ease-out w-0"></div>
+          </div>
+          <svg id="bk-radar" class="bk-radar block w-full mt-1.5" viewBox="0 0 200 190" aria-hidden="true"></svg>
+        </div>
+
+        <button id="generate-btn" class="bg-maze-accent text-white rounded-md px-3 py-1.5 text-[0.82rem] font-medium cursor-pointer transition-opacity whitespace-nowrap hover:opacity-85 w-full flex items-center justify-center gap-1.5 col-start-1 row-start-3">
           <i class="fas fa-redo-alt"></i> Generate
         </button>
 
-        <button class="btn full ghost" id="print-btn">
+        <button id="print-btn" class="bg-transparent border border-maze-border text-maze-muted rounded-md px-3 py-1.5 text-[0.82rem] font-medium cursor-pointer transition-colors whitespace-nowrap hover:border-maze-accent hover:text-maze-text w-full flex items-center justify-center gap-1.5 col-start-2 row-start-3">
           <i class="fas fa-print"></i> Print / Save as PDF
         </button>
-
-        <!-- Score widget -->
-        <div class="score-widget">
-          <h3 class="widget-title">Difficulty</h3>
-          <div class="score-header">
-            <span id="score-value">–</span>
-            <span id="score-label">–</span>
-          </div>
-          <div class="score-bar-track">
-            <div id="score-bar"></div>
-          </div>
-
-          <svg id="bk-radar" class="bk-radar" viewBox="0 0 200 190" aria-hidden="true"></svg>
-        </div>
 
       </aside>
 
       <!-- Maze + solution -->
-      <div class="maze-area">
-        <div class="maze-wrap">
-          <div class="maze-title">
-            <span class="maze-title-main">Maze Generator</span>
-            <span class="maze-title-sub">by Domen Hribernik</span>
+      <div class="maze-area flex flex-col gap-3 min-w-0 flex-1 order-1 md:order-none">
+        <div class="relative flex-1 min-h-0 flex flex-col">
+          <div class="maze-title absolute z-10 flex items-baseline gap-1.5 px-2.5 py-1 rounded-tl-[10px] rounded-br-[7px] pointer-events-none text-maze-bg">
+            <span class="text-[0.82rem] md:text-base font-bold tracking-tight">Maze Generator</span>
+            <span class="text-[0.62rem] md:text-sm font-normal text-maze-muted">by Domen Hribernik</span>
           </div>
-          <div id="maze-container"></div>
+          <div id="maze-container" class="flex-1 bg-white rounded-[10px] flex items-center justify-center overflow-hidden min-h-[80vw] max-h-[80vh] md:min-h-[300px] md:max-h-none"></div>
         </div>
 
         <!-- Solution page — hidden on screen, printed as second page when toggled -->

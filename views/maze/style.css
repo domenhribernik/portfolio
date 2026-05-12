@@ -1,101 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
-  --bg:      #0f1117;
-  --surface: #1a1d27;
-  --border:  #2c2f3e;
-  --accent:  #7c6ff7;
-  --text:    #e2e5f0;
-  --muted:   #8b90a8;
-  --radius:  10px;
+  --maze-bg:      #0f1117;
+  --maze-border:  #2c2f3e;
+  --maze-accent:  #7c6ff7;
+  --maze-muted:   #8b90a8;
 }
 
-body {
-  font-family: 'Inter', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Layout ── */
-.page-wrap {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-  padding: 0.75rem 1rem 1rem;
-}
-
-.main-layout {
-  display: flex;
-  gap: 1rem;
-  flex: 1;
-  min-height: 0;
-}
-
-/* ── Config panel ── */
-.config-panel {
-  width: 240px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  overflow-y: auto;
-}
-
-.config-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.75rem;
-}
-
-.config-section h3 {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin-bottom: 0.6rem;
-}
-
-.field { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.5rem; }
-.field:last-child { margin-bottom: 0; }
-.field label { font-size: 0.78rem; color: var(--muted); }
-
-input[type=text], select {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  padding: 0.35rem 0.5rem;
-  font-size: 0.82rem;
-  width: 100%;
-  outline: none;
-  transition: border-color 0.15s;
-}
-input[type=text]:focus, select:focus { border-color: var(--accent); }
-
-/* ── Sliders ── */
-.slider-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.78rem;
-  color: var(--muted);
-}
-.slider-val {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--accent);
-}
-
+/* ── Sliders — Tailwind can't reach the WebKit/Firefox thumb + track pseudos ── */
 input[type=range] {
   -webkit-appearance: none;
   appearance: none;
@@ -108,13 +18,13 @@ input[type=range] {
 }
 input[type=range]::-webkit-slider-runnable-track {
   height: 6px;
-  background: var(--border);
+  background: var(--maze-border);
   border-radius: 3px;
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 20px; height: 20px;
-  background: var(--accent);
+  background: var(--maze-accent);
   border-radius: 50%;
   cursor: pointer;
   margin-top: -7px;
@@ -126,280 +36,46 @@ input[type=range]::-webkit-slider-thumb:hover {
 }
 input[type=range]::-moz-range-track {
   height: 6px;
-  background: var(--border);
+  background: var(--maze-border);
   border-radius: 3px;
 }
 input[type=range]::-moz-range-thumb {
   width: 20px; height: 20px;
-  background: var(--accent);
+  background: var(--maze-accent);
   border-radius: 50%;
   border: none;
   cursor: pointer;
 }
 
-.seed-row { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
-.seed-row input { flex: 1; }
-
-.print-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-
-.btn {
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.15s;
-  white-space: nowrap;
-}
-.btn:hover { opacity: 0.85; }
-.btn.ghost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--muted);
-}
-.btn.ghost:hover { border-color: var(--accent); color: var(--text); }
-.btn.full { width: 100%; justify-content: center; display: flex; align-items: center; gap: 0.4rem; }
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.82rem;
-  color: var(--muted);
-  cursor: pointer;
-  user-select: none;
-}
-
-input[type=checkbox] {
-  accent-color: var(--accent);
-  width: 14px; height: 14px;
-  cursor: pointer;
-}
-
-/* ── Score widget ── */
-.score-widget {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.75rem;
-}
-
-.widget-title {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin-bottom: 0.5rem;
-}
-
-.score-header {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-#score-value {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-#score-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.score-bar-track {
-  background: var(--border);
-  border-radius: 4px;
-  height: 6px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-#score-bar {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease, background 0.4s ease;
-  width: 0%;
-}
-
-/* ── Difficulty breakdown (radar) ── */
-.bk-radar {
-  display: block;
-  width: 100%;
-  margin-top: 0.4rem;
-}
+/* ── Difficulty radar — script.js builds the SVG groups at runtime with these
+   exact class names, so Tailwind utilities can't be attached to them. ── */
 .bk-radar-grid polygon {
   fill: none;
-  stroke: var(--border);
+  stroke: var(--maze-border);
   stroke-width: 0.5;
 }
 .bk-radar-axis line {
-  stroke: var(--border);
+  stroke: var(--maze-border);
   stroke-width: 0.5;
 }
 .bk-radar-labels text {
   font-size: 9px;
-  fill: var(--muted);
+  fill: var(--maze-muted);
 }
 .bk-radar-value {
-  fill: var(--accent);
+  fill: var(--maze-accent);
   fill-opacity: 0.22;
-  stroke: var(--accent);
+  stroke: var(--maze-accent);
   stroke-width: 1.2;
   stroke-linejoin: round;
 }
 .bk-radar-dots circle {
-  fill: var(--accent);
+  fill: var(--maze-accent);
 }
 
-/* ── Maze area ── */
-.maze-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.maze-wrap {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.maze-title {
-  position: absolute;
-  z-index: 1;
-  color: var(--bg);
-  display: flex;
-  align-items: baseline;
-  gap: 0.45rem;
-  padding: 0.3rem 0.65rem;
-  border-top-left-radius: var(--radius);
-  border-bottom-right-radius: 7px;
-  pointer-events: none;
-}
-
-.maze-title-main {
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.maze-title-sub {
-  font-size: 0.8rem;
-  color: var(--muted);
-  font-weight: 400;
-}
-
-#maze-container {
-  flex: 1;
-  background: white;
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  min-height: 300px;
-}
-
-#maze-container svg, #solution-container svg {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-}
-
-/* Solution page — hidden on screen */
+/* Solution page is hidden on screen by default; print rules below flip it
+   on when body.include-solution-page is set. */
 .solution-page { display: none; }
-
-/* ── Mobile ── */
-@media (max-width: 768px) {
-  .page-wrap { padding: 0.5rem 0.5rem 0.5rem; }
-
-  .main-layout {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .config-panel {
-    width: 100%;
-    overflow-y: visible;
-    order: 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.65rem;
-  }
-
-  /* Grid — col 1, row 1 */
-  .config-panel > .config-section:nth-child(1) {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  /* Algorithm — col 2, row 1 */
-  .config-panel > .config-section:nth-child(2) {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  /* Output — col 1, row 2 */
-  .config-panel > .config-section:nth-child(3) {
-    grid-column: 1;
-    grid-row: 2;
-  }
-
-  /* Difficulty — col 2, row 2 */
-  .score-widget {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  /* Generate — col 1, row 3 */
-  #generate-btn {
-    grid-column: 1;
-    grid-row: 3;
-  }
-
-  /* Print — col 2, row 3 */
-  #print-btn {
-    grid-column: 2;
-    grid-row: 3;
-  }
-
-  .maze-area { order: 1; }
-
-  #maze-container {
-    min-height: 80vw;
-    max-height: 80vh;
-  }
-
-  .maze-title-main {
-    font-size: 0.82rem;
-  }
-
-  .maze-title-sub {
-    font-size: 0.62rem;
-  }
-
-  .config-section { padding: 0.55rem 0.6rem; }
-  .field label, .slider-label { font-size: 0.72rem; }
-  .config-section h3 { font-size: 0.65rem; margin-bottom: 0.4rem; }
-  .print-row { grid-template-columns: 1fr 1fr; }
-}
-
-@media (max-width: 480px) {
-  #score-value { font-size: 1.5rem; }
-}
 
 /* ── Print ── */
 @media print {
@@ -410,16 +86,15 @@ input[type=checkbox] {
   .page-wrap { padding: 0; max-width: 100%; }
   .main-layout { display: block; }
   .maze-area { gap: 0; }
-
-  .maze-title {
-    display: none;
-  }
+  .maze-title { display: none; }
 
   #maze-container {
     border-radius: 0;
     background: white;
     width: 100%;
     height: auto;
+    min-height: 0;
+    max-height: none;
     page-break-after: avoid;
     display: block;
   }
@@ -448,6 +123,5 @@ input[type=checkbox] {
     font-family: sans-serif;
   }
 
-  .solution { display: block !important; }
   .score-widget { display: none !important; }
 }

@@ -11,48 +11,75 @@
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../components/gallery.css">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="../../components/gallery.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'otd-bg': '#0f0f1a',
+                        'otd-card': 'rgba(255, 255, 255, 0.03)',
+                        'otd-card-hover': 'rgba(255, 255, 255, 0.06)',
+                        'otd-border': 'rgba(255, 255, 255, 0.08)',
+                        'otd-border-hover': 'rgba(255, 255, 255, 0.15)',
+                        'otd-text-secondary': 'rgba(255, 255, 255, 0.7)',
+                        'otd-text-muted': 'rgba(255, 255, 255, 0.5)',
+                        'otd-accent': '#6366f1',
+                        'otd-accent-hover': '#818cf8',
+                    },
+                    boxShadow: {
+                        'otd': '0 4px 20px rgba(0, 0, 0, 0.3)',
+                        'otd-lg': '0 8px 40px rgba(0, 0, 0, 0.4)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="bg-otd-bg text-white antialiased min-h-screen mt-[60px] leading-[1.6] max-md:overflow-x-hidden">
     <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay">
-        <div class="loading-spinner"></div>
+    <div class="loading-overlay fixed inset-0 bg-otd-bg flex items-center justify-center z-[1000] transition-[opacity,visibility] duration-300"
+         id="loading-overlay">
+        <div class="w-10 h-10 border-[3px] border-otd-border border-t-otd-accent rounded-full animate-spin"></div>
     </div>
 
     <main-navbar site="../../index.html"></main-navbar>
 
     <!-- Main Content -->
-    <main class="main">
+    <main class="max-w-[1400px] mx-auto px-5 pb-[60px] max-md:px-0 max-md:pb-10">
         <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <p class="header-label">Wikipedia</p>
-                <h1 class="header-title">On This Day</h1>
-                <p class="header-date" id="current-date"></p>
+        <header class="text-center pt-[60px] pb-10 max-md:pt-10 max-md:px-4 max-md:pb-8">
+            <div class="animate-[fadeInUp_0.6s_ease]">
+                <p class="text-xs font-semibold uppercase tracking-[3px] text-otd-accent mb-3 max-md:text-[11px] max-md:tracking-[2px]">Wikipedia</p>
+                <h1 class="text-[clamp(2.5rem,8vw,4.5rem)] font-bold tracking-[-0.03em] mb-3 bg-gradient-to-br from-white to-otd-accent-hover bg-clip-text text-transparent">On This Day</h1>
+                <p class="text-[1.1rem] font-medium text-otd-text-secondary max-md:text-base" id="current-date"></p>
             </div>
         </header>
 
         <!-- Featured Section (Gallery) -->
-        <section class="featured-section" id="featured-section">
-            <div class="featured-header">
-                <span class="featured-badge">Featured Events</span>
+        <section class="mb-[60px] max-md:mb-12 animate-[fadeInUp_0.6s_ease_0.1s_both]" id="featured-section">
+            <div class="flex items-center justify-between flex-wrap gap-3 mb-5 max-md:flex-col max-md:items-start max-md:mb-4 max-md:px-4">
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[1px] px-4 py-2 rounded-full bg-gradient-to-br from-[rgba(99,102,241,0.2)] to-[rgba(168,85,247,0.2)] border border-[rgba(99,102,241,0.3)] text-otd-accent-hover ml-[60px] max-md:ml-[25px]">Featured Events</span>
             </div>
             <div class="gallery-container">
-                <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
+                <button class="gallery-nav gallery-prev border border-otd-border bg-otd-card text-white shadow-otd hover:bg-otd-card-hover hover:border-otd-border-hover hover:shadow-otd-lg"
+                        id="gallery-prev" aria-label="Previous slide">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
                 </button>
-                <div class="gallery-viewport">
+                <div class="gallery-viewport rounded-2xl max-md:rounded-lg">
                     <div class="gallery-track" id="featured-track">
                         <!-- Gallery slides will be loaded here -->
                     </div>
                 </div>
-                <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next slide">
+                <button class="gallery-nav gallery-next border border-otd-border bg-otd-card text-white shadow-otd hover:bg-otd-card-hover hover:border-otd-border-hover hover:shadow-otd-lg"
+                        id="gallery-next" aria-label="Next slide">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="9 18 15 12 9 6"></polyline>
@@ -63,36 +90,36 @@
         </section>
 
         <!-- Categories Grid -->
-        <div class="categories">
+        <div class="grid grid-cols-1 min-[993px]:grid-cols-3 gap-6 max-md:gap-5 max-md:px-4 animate-[fadeInUp_0.6s_ease_0.2s_both]">
             <!-- Events -->
-            <section class="category">
-                <div class="category-header">
-                    <span class="category-icon">📜</span>
-                    <h2>Historical Events</h2>
+            <section class="bg-otd-card border border-otd-border rounded-2xl overflow-hidden">
+                <div class="flex items-center gap-3 px-6 py-5 bg-gradient-to-br from-[rgba(99,102,241,0.15)] to-[rgba(99,102,241,0.05)] border-b border-otd-border max-md:px-5 max-md:py-4">
+                    <span class="text-2xl max-md:text-[1.25rem]">📜</span>
+                    <h2 class="text-[1.1rem] font-semibold text-white max-md:text-base">Historical Events</h2>
                 </div>
-                <div class="category-list" id="events-container">
+                <div class="category-list p-4 max-h-[600px] overflow-y-auto max-md:p-3 max-md:max-h-[500px]" id="events-container">
                     <!-- Events will be loaded here -->
                 </div>
             </section>
 
             <!-- Births -->
-            <section class="category">
-                <div class="category-header births">
-                    <span class="category-icon">👶</span>
-                    <h2>Births</h2>
+            <section class="bg-otd-card border border-otd-border rounded-2xl overflow-hidden">
+                <div class="flex items-center gap-3 px-6 py-5 bg-gradient-to-br from-[rgba(34,197,94,0.15)] to-[rgba(34,197,94,0.05)] border-b border-otd-border max-md:px-5 max-md:py-4">
+                    <span class="text-2xl max-md:text-[1.25rem]">👶</span>
+                    <h2 class="text-[1.1rem] font-semibold text-white max-md:text-base">Births</h2>
                 </div>
-                <div class="category-list" id="births-container">
+                <div class="category-list p-4 max-h-[600px] overflow-y-auto max-md:p-3 max-md:max-h-[500px]" id="births-container">
                     <!-- Births will be loaded here -->
                 </div>
             </section>
 
             <!-- Deaths -->
-            <section class="category">
-                <div class="category-header deaths">
-                    <span class="category-icon">🕯️</span>
-                    <h2>Deaths</h2>
+            <section class="bg-otd-card border border-otd-border rounded-2xl overflow-hidden">
+                <div class="flex items-center gap-3 px-6 py-5 bg-gradient-to-br from-[rgba(239,68,68,0.15)] to-[rgba(239,68,68,0.05)] border-b border-otd-border max-md:px-5 max-md:py-4">
+                    <span class="text-2xl max-md:text-[1.25rem]">🕯️</span>
+                    <h2 class="text-[1.1rem] font-semibold text-white max-md:text-base">Deaths</h2>
                 </div>
-                <div class="category-list" id="deaths-container">
+                <div class="category-list p-4 max-h-[600px] overflow-y-auto max-md:p-3 max-md:max-h-[500px]" id="deaths-container">
                     <!-- Deaths will be loaded here -->
                 </div>
             </section>
@@ -100,8 +127,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <p>Data provided by <a href="https://www.wikipedia.org/" target="_blank">Wikipedia</a></p>
+    <footer class="text-center py-10 px-5 border-t border-otd-border mt-5 max-md:px-4">
+        <p class="text-[0.9rem] text-otd-text-muted">Data provided by
+            <a class="text-otd-accent-hover font-medium no-underline hover:underline" href="https://www.wikipedia.org/" target="_blank">Wikipedia</a>
+        </p>
     </footer>
 
     <script type="module" src="../../components/main-navbar.js"></script>

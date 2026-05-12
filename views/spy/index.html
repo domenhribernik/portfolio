@@ -7,67 +7,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'spy-from': '#667eea',
+                        'spy-to': '#764ba2',
+                        'spy-gold': '#fbbf24',
+                        'spy-success-from': '#4ade80',
+                        'spy-success-to': '#22c55e',
+                        'spy-danger-from': '#ef4444',
+                        'spy-danger-to': '#dc2626',
+                        'spy-cyan': '#03dac6',
+                        'spy-cyan-hl': '#1ae5d1',
+                    },
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="style.css">
     <title>Spy Game</title>
 </head>
 
-<body>
-    <div class="container">
+<body class="font-sans min-h-screen flex flex-col justify-center items-center text-white bg-gradient-to-br from-spy-from to-spy-to m-0">
+    <div class="max-w-[800px] w-full p-8 min-h-screen flex justify-center items-center">
         <!-- Title Screen -->
-        <div class="title-screen" id="titleScreen">
-            <h1 class="main-title">SPY</h1>
-            <p class="subtitle">The Ultimate Deception Game</p>
-            <button class="btn" onclick="showPlayerSelection()">Start Game</button>
+        <div class="screen text-center" id="titleScreen">
+            <h1 class="text-[4rem] font-bold mb-4 [text-shadow:2px_2px_4px_rgba(0,0,0,0.3)]">SPY</h1>
+            <p class="text-[1.2rem] mb-8 opacity-90">The Ultimate Deception Game</p>
+            <button class="px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" onclick="showPlayerSelection()">Start Game</button>
         </div>
 
         <!-- Player Selection -->
-        <div class="player-selection" id="playerSelection">
-            <h2 class="section-title">Number of Players</h2>
-            <div class="player-counter">
-                <button class="counter-btn" id="decreaseBtn" onclick="changePlayerCount(-1)">−</button>
-                <div class="player-count-display" id="playerCountDisplay">3</div>
-                <button class="counter-btn" id="increaseBtn" onclick="changePlayerCount(1)">+</button>
+        <div class="screen text-center" id="playerSelection">
+            <h2 class="text-[2rem] mb-8 [text-shadow:1px_1px_2px_rgba(0,0,0,0.3)]">Number of Players</h2>
+            <div class="flex items-center justify-center gap-4 my-8">
+                <button class="w-[60px] h-[60px] rounded-full text-white border-0 text-[2rem] font-bold cursor-pointer bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:scale-110 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" id="decreaseBtn" onclick="changePlayerCount(-1)">−</button>
+                <div class="text-5xl font-bold min-w-[100px] text-center [text-shadow:2px_2px_4px_rgba(0,0,0,0.3)]" id="playerCountDisplay">3</div>
+                <button class="w-[60px] h-[60px] rounded-full text-white border-0 text-[2rem] font-bold cursor-pointer bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:scale-110 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" id="increaseBtn" onclick="changePlayerCount(1)">+</button>
             </div>
-            <p style="margin: 1rem 0; opacity: 0.8;">3+ players</p>
-            <button class="btn" onclick="setupRoles()">Start Setup</button>
+            <p class="my-4 opacity-80">3+ players</p>
+            <button class="px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" onclick="setupRoles()">Start Setup</button>
         </div>
 
         <!-- Role Cards -->
-        <div class="role-cards" id="roleCards">
-            <h2 class="section-title">Player Roles</h2>
-            <p style="margin-bottom: 2rem;">Click each card to reveal your role (keep it secret!)</p>
-            <div id="playerCardsContainer"></div>
-            <button class="btn btn-success hidden" id="startGameBtn" onclick="startGame()">Start Game</button>
+        <div class="screen text-center" id="roleCards">
+            <h2 class="text-[2rem] mb-8 [text-shadow:1px_1px_2px_rgba(0,0,0,0.3)]">Player Roles</h2>
+            <p class="mb-8">Click each card to reveal your role (keep it secret!)</p>
+            <div id="playerCardsContainer" class="grid gap-6 my-8 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]"></div>
+            <button class="hidden px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-success-from to-spy-success-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" id="startGameBtn" onclick="startGame()">Start Game</button>
         </div>
 
         <!-- Game Screen -->
-        <div class="game-screen" id="gameScreen">
-            <h2 class="section-title">Game in Progress</h2>
-            <div class="game-info">
-                <p><strong>Players:</strong> <span id="gamePlayerCount"></span></p>
-                <p style="margin-top: 1rem; color: #fbbf24;">Find the spy among you!</p>
+        <div class="screen text-center" id="gameScreen">
+            <h2 class="text-[2rem] mb-8 [text-shadow:1px_1px_2px_rgba(0,0,0,0.3)]">Game in Progress</h2>
+            <div class="bg-white/10 [backdrop-filter:blur(10px)] rounded-[15px] p-6 my-8 border border-white/20">
+                <p class="my-2 text-lg"><strong>Players:</strong> <span id="gamePlayerCount"></span></p>
+                <p class="mt-4 text-lg text-spy-gold">Find the spy among you!</p>
             </div>
-            <div class="timer-display" id="timerDisplay">05:00</div>
-            <div class="timer-bar">
-                <div class="timer-progress" id="timerProgress"></div>
+            <div id="timerDisplay" class="text-5xl font-bold my-8 text-spy-gold [text-shadow:2px_2px_4px_rgba(0,0,0,0.3)]">05:00</div>
+            <div class="w-full h-2.5 bg-white/20 rounded my-4 overflow-hidden">
+                <div class="h-full bg-spy-gold w-0 [transition:width_1s_ease]" id="timerProgress"></div>
             </div>
-            <button class="btn btn-danger" onclick="endGame()">End Game Early</button>
+            <button class="px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-danger-from to-spy-danger-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" onclick="endGame()">End Game Early</button>
         </div>
 
         <!-- Game Over Screen -->
-        <div class="title-screen hidden" id="gameOverScreen">
-            <h1 class="main-title">Time's Up!</h1>
-            <h2>Did you find the spy?</h2>
-            <div class="game-info">
-                <p>Discuss and vote for who you think the spy was.</p>
-                <p style="margin-top: 1rem;">If voted out, the spy has 1 try to guess the location. If guessed correctly he wins anyways.</p>
+        <div class="screen hidden text-center" id="gameOverScreen">
+            <h1 class="text-[4rem] font-bold mb-4 [text-shadow:2px_2px_4px_rgba(0,0,0,0.3)]">Time's Up!</h1>
+            <h2 class="text-2xl">Did you find the spy?</h2>
+            <div class="bg-white/10 [backdrop-filter:blur(10px)] rounded-[15px] p-6 my-8 border border-white/20">
+                <p class="my-2 text-lg">Discuss and vote for who you think the spy was.</p>
+                <p class="mt-4 text-lg">If voted out, the spy has 1 try to guess the location. If guessed correctly he wins anyways.</p>
             </div>
-            <button class="btn" onclick="restartGame()">Play Again</button>
+            <button class="px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" onclick="restartGame()">Play Again</button>
         </div>
     </div>
-    <footer class="footer">
-        <a class="back-link" href="/">
-            <i class="fas fa-arrow-left"></i>
+    <footer class="w-full text-center bg-slate-900 text-white/70 py-8">
+        <a class="inline-flex items-center gap-2 text-spy-cyan no-underline font-medium [transition:all_0.3s_ease] hover:text-spy-cyan-hl hover:-translate-x-[5px]" href="/">
+            <i class="fas fa-arrow-left text-sm"></i>
             Back to Portfolio
         </a>
     </footer>

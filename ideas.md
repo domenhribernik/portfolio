@@ -13,19 +13,16 @@
   - Add `author`, `date_added`, `date_modified` tags to all records
   - Admin page with secure access
   - Google OAuth + account linking with classic accounts
-- **IP** — finish
 - **Make automatic commit** - git action - to my ftp
 - **Look into unit testing**, and add them before commit. And on actions as well? 
 - **Add skills** - learn how to make skills and add as many as you can think of
 - Add webp to image service, and then also figure out the jpg edge case
 ## Refactoring
 
-- Restyle every project with Tailwind CSS
+- Restyle every project with Tailwind CSS (needed for homepage, music, thesis)
 - Figure out how to seperate git repositories, to seperate the big projects, people would be interested in seeing
 
 ## Project Ideas
-
-- **Garage door** — open with website
 - **ASCII art converter** — transform images to ASCII (lightest to darkest); already have a project, put it on the portfolio
 - **Pixel encoder to YouTube video** — encode data into video frames (B&W and RGB); explore glitch AI art angle to avoid content removal
 - **QR / barcode generator**
