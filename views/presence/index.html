@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Presence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: '#0c0d10',
+                        panel: '#15171c',
+                        card: '#1c1f26',
+                        edge: '#2a2e38',
+                        edgeHi: '#3a3f4b',
+                        text: '#e8e6e1',
+                        muted: '#8a8780',
+                        dim: '#5a5852',
+                        amber: '#d4a574',
+                        amberHi: '#e6bb88',
+                        rose: '#b87a7a',
+                        sage: '#7a9b7a',
+                        warn: '#c97f5a',
+                        bad: '#a85c5c',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Fraunces', 'Georgia', 'serif'],
+                    },
+                    boxShadow: {
+                        soft: '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans bg-ink text-text min-h-screen antialiased">
+    <div class="max-w-3xl mx-auto px-5 py-8 sm:py-12">
+
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="font-serif italic text-3xl sm:text-4xl text-amber tracking-tight">Presence</h1>
+            <p class="text-muted text-sm mt-1">A quiet place to show up better.</p>
+        </header>
+
+        <!-- Her right now strip -->
+        <section id="her-right-now" class="mb-8 bg-card border border-edge rounded-lg p-5 shadow-soft">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                <div>
+                    <div class="text-dim uppercase text-[10px] tracking-widest mb-1">Her time</div>
+                    <div id="her-time" class="font-serif text-xl text-text">—</div>
+                </div>
+                <div>
+                    <div class="text-dim uppercase text-[10px] tracking-widest mb-1">Next visit</div>
+                    <div id="next-visit" class="font-serif text-xl text-text">—</div>
+                </div>
+                <div>
+                    <div class="text-dim uppercase text-[10px] tracking-widest mb-1">Last visit</div>
+                    <div id="last-visit" class="font-serif text-xl text-text">—</div>
+                </div>
+                <div>
+                    <div class="text-dim uppercase text-[10px] tracking-widest mb-1">Last contact</div>
+                    <div id="last-contact" class="font-serif text-xl text-text">—</div>
+                </div>
+            </div>
+            <div id="last-call" class="text-muted text-xs mt-3">—</div>
+        </section>
+
+        <!-- Today -->
+        <section id="today" class="mb-8">
+            <h2 class="font-serif text-xl text-text mb-4">Today <span id="today-date" class="text-muted text-sm font-sans ml-2">—</span></h2>
+            <div class="bg-card border border-edge rounded-lg p-5 shadow-soft space-y-5">
+                <div id="behaviors" class="space-y-2">
+                    <!-- toggles rendered by JS -->
+                </div>
+                <div class="border-t border-edge pt-4 flex items-center justify-between">
+                    <div>
+                        <div class="text-text text-sm">Silent leaves today</div>
+                        <div class="text-dim text-xs">Messages I left hanging without a "busy, will reply at X"</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="silent-minus" class="w-8 h-8 rounded-full bg-panel border border-edge text-text hover:border-edgeHi transition">−</button>
+                        <span id="silent-count" class="font-serif text-2xl w-8 text-center text-text">0</span>
+                        <button id="silent-plus" class="w-8 h-8 rounded-full bg-panel border border-edge text-text hover:border-edgeHi transition">+</button>
+                    </div>
+                </div>
+                <div class="border-t border-edge pt-4 space-y-3">
+                    <label class="block">
+                        <span class="text-dim uppercase text-[10px] tracking-widest">Reflection</span>
+                        <textarea id="reflection" rows="3" class="mt-1 w-full bg-panel border border-edge rounded-md p-3 text-text placeholder-dim focus:border-amber focus:outline-none transition resize-none"></textarea>
+                    </label>
+                    <label class="block">
+                        <span class="text-dim uppercase text-[10px] tracking-widest">Covert contract noticed</span>
+                        <textarea id="covert" rows="2" class="mt-1 w-full bg-panel border border-edge rounded-md p-3 text-text placeholder-dim focus:border-amber focus:outline-none transition resize-none" placeholder="Did I do something 'nice' today expecting an unspoken return? Name it."></textarea>
+                    </label>
+                    <label class="block">
+                        <span class="text-dim uppercase text-[10px] tracking-widest">Where I showed up</span>
+                        <textarea id="showed-up" rows="2" class="mt-1 w-full bg-panel border border-edge rounded-md p-3 text-text placeholder-dim focus:border-amber focus:outline-none transition resize-none" placeholder="One thing — however small — that you did right today."></textarea>
+                    </label>
+                </div>
+                <div id="save-indicator" class="text-xs text-dim text-right h-4"></div>
+            </div>
+        </section>
+
+        <!-- She mentioned -->
+        <section id="she-mentioned" class="mb-8">
+            <h2 class="font-serif text-xl text-text mb-4">She mentioned</h2>
+            <div class="bg-card border border-edge rounded-lg p-5 shadow-soft">
+                <form id="mentioned-form" class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] gap-2 mb-4">
+                    <input type="text" id="mentioned-topic" required placeholder="Topic (e.g. presentation Tuesday)" class="bg-panel border border-edge rounded-md p-2.5 text-sm text-text placeholder-dim focus:border-amber focus:outline-none">
+                    <input type="text" id="mentioned-detail" placeholder="Detail (optional)" class="bg-panel border border-edge rounded-md p-2.5 text-sm text-text placeholder-dim focus:border-amber focus:outline-none">
+                    <input type="date" id="mentioned-followup" class="bg-panel border border-edge rounded-md p-2.5 text-sm text-text focus:border-amber focus:outline-none">
+                    <button type="submit" class="bg-amber text-ink font-medium rounded-md px-4 py-2.5 hover:bg-amberHi transition">Add</button>
+                </form>
+                <div id="mentioned-list" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- Triggers -->
+        <section id="triggers" class="mb-8">
+            <h2 class="font-serif text-xl text-text mb-1">Trigger log</h2>
+            <p class="text-muted text-xs mb-4">Counter-intuitive: more entries here means more self-awareness, not regression.</p>
+            <div class="bg-card border border-edge rounded-lg p-5 shadow-soft">
+                <form id="trigger-form" class="space-y-2 mb-4">
+                    <input type="text" id="trigger-situation" required placeholder="What happened?" class="w-full bg-panel border border-edge rounded-md p-2.5 text-sm text-text placeholder-dim focus:border-amber focus:outline-none">
+                    <input type="text" id="trigger-did" required placeholder="What I did" class="w-full bg-panel border border-edge rounded-md p-2.5 text-sm text-text placeholder-dim focus:border-amber focus:outline-none">
+                    <input type="text" id="trigger-next" placeholder="What I could do next time (optional)" class="w-full bg-panel border border-edge rounded-md p-2.5 text-sm text-text placeholder-dim focus:border-amber focus:outline-none">
+                    <button type="submit" class="bg-amber text-ink font-medium rounded-md px-4 py-2 hover:bg-amberHi transition">Log trigger</button>
+                </form>
+                <div id="trigger-list" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- Weekly review -->
+        <section id="weekly-review" class="mb-8">
+            <h2 class="font-serif text-xl text-text mb-1">Weekly review</h2>
+            <p id="weekly-subtitle" class="text-muted text-xs mb-4">—</p>
+            <div id="weekly-body" class="bg-card border border-edge rounded-lg p-5 shadow-soft"></div>
+        </section>
+
+        <!-- Metrics -->
+        <section id="metrics" class="mb-8">
+            <h2 class="font-serif text-xl text-text mb-4">Metrics</h2>
+
+            <div class="bg-card border border-edge rounded-lg p-5 shadow-soft mb-4 text-center">
+                <div class="text-dim uppercase text-[10px] tracking-widest">Weekly Presence Index</div>
+                <div id="wpi" class="font-serif text-5xl text-amber mt-1">—</div>
+                <div id="wpi-breakdown" class="text-dim text-xs mt-2">—</div>
+            </div>
+
+            <div class="bg-card border border-edge rounded-lg p-5 shadow-soft mb-4">
+                <div class="text-dim uppercase text-[10px] tracking-widest mb-3">Last 30 days</div>
+                <div id="heatmap" class="heatmap"></div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4" id="streak-grid"></div>
+
+            <div class="bg-card border border-edge rounded-lg p-5 shadow-soft mb-4">
+                <div class="text-dim uppercase text-[10px] tracking-widest mb-3">Weekly scores · last 12 weeks</div>
+                <canvas id="weeklyChart" height="160"></canvas>
+            </div>
+
+            <div class="bg-card border border-edge rounded-lg p-5 shadow-soft">
+                <div class="text-dim uppercase text-[10px] tracking-widest mb-3">Triggers logged · last 14 days</div>
+                <canvas id="triggerChart" height="120"></canvas>
+                <p class="text-muted text-xs mt-3 italic">Going up early on is a good sign — you're noticing more.</p>
+            </div>
+        </section>
+
+        <!-- Settings -->
+        <section id="settings" class="mb-8">
+            <button id="settings-toggle" class="text-muted text-xs hover:text-text transition flex items-center gap-2">
+                <i class="fa-solid fa-gear"></i> Settings
+            </button>
+            <div id="settings-body" class="hidden mt-3 bg-card border border-edge rounded-lg p-5 shadow-soft space-y-3">
+                <label class="block">
+                    <span class="text-dim uppercase text-[10px] tracking-widest">Her timezone (IANA)</span>
+                    <input type="text" id="set-tz" class="mt-1 w-full bg-panel border border-edge rounded-md p-2 text-sm text-text focus:border-amber focus:outline-none">
+                </label>
+                <label class="block">
+                    <span class="text-dim uppercase text-[10px] tracking-widest">Next visit date</span>
+                    <input type="date" id="set-next" class="mt-1 w-full bg-panel border border-edge rounded-md p-2 text-sm text-text focus:border-amber focus:outline-none">
+                </label>
+                <label class="block">
+                    <span class="text-dim uppercase text-[10px] tracking-widest">Last visit date</span>
+                    <input type="date" id="set-last" class="mt-1 w-full bg-panel border border-edge rounded-md p-2 text-sm text-text focus:border-amber focus:outline-none">
+                </label>
+                <button id="settings-save" class="bg-amber text-ink font-medium rounded-md px-4 py-2 hover:bg-amberHi transition">Save settings</button>
+            </div>
+        </section>
+
+        <footer class="text-dim text-xs text-center pt-8 pb-4">
+            <span class="italic">"Did I show up as a partner or as a project manager?"</span>
+        </footer>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

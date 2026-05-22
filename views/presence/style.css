@@ -1,0 +1,68 @@
+/* Only what Tailwind can't cleanly express. */
+
+@keyframes prompt-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+#reflection::placeholder {
+    animation: prompt-fade 600ms ease-out;
+    color: #6b6862;
+    font-style: italic;
+}
+
+/* 30-day heatmap: 5 rows (behaviors) × 30 cols (days). */
+.heatmap {
+    display: grid;
+    grid-template-columns: 110px repeat(30, 1fr);
+    gap: 2px;
+    align-items: center;
+}
+.heatmap .hm-label {
+    color: #8a8780;
+    font-size: 11px;
+    padding-right: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.heatmap .hm-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 3px;
+    background: #1c1f26;
+}
+.heatmap .hm-cell.on   { background: #7a9b7a; }
+.heatmap .hm-cell.off  { background: #a85c5c; }
+.heatmap .hm-cell.na   { background: #2a2e38; }
+.heatmap .hm-cell.miss { background: #15171c; }
+
+/* JS-toggled visibility defaults — Tailwind can't express "hidden by default until JS adds class" cleanly without inline styles. */
+.is-hidden { display: none !important; }
+
+/* Triggers/mentioned list rows. Pure decoration handled by Tailwind classes in JS templates,
+   but the overdue dot is a pseudo-element to keep markup tidy. */
+.mentioned-row.overdue::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #c97f5a;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@media print {
+    #trigger-form, #mentioned-form, #settings-toggle, #settings-body {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #reflection::placeholder {
+        animation: none;
+    }
+    * {
+        transition: none !important;
+    }
+}
