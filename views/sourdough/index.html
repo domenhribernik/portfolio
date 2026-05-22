@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sourdough Tracker</title>
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans:    ['Inter', 'system-ui', 'sans-serif'],
+                    display: ['Special Elite', 'Courier New', 'monospace'],
+                },
+                colors: {
+                    crust:  '#c8741a',
+                    crumb:  '#f3e3c3',
+                    flour:  '#f9f1e1',
+                    char:   '#2a1d10',
+                    yeast:  '#7a5a2e',
+                    rye:    '#7c3b0d',
+                    fridge: '#5a8da5',
+                },
+                boxShadow: {
+                    stamp:    '6px 6px 0px 0px #2a1d10',
+                    'stamp-sm': '4px 4px 0px 0px #2a1d10',
+                    'stamp-lg': '8px 8px 0px 0px #2a1d10',
+                },
+            },
+        },
+    };
+    </script>
+</head>
+<body class="font-sans bg-flour text-char min-h-screen m-0 p-0 leading-relaxed wheat-bg">
+
+    <!-- Header -->
+    <header class="border-b-4 border-char bg-crumb">
+        <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+                <a href="../../" class="text-char no-underline hover:text-crust transition-colors inline-flex items-center gap-2 font-medium">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="hidden sm:inline text-base">back to portfolio</span>
+                </a>
+            </div>
+            <h1 class="font-display text-lg sm:text-xl md:text-2xl tracking-wide flex items-center gap-2">
+                <span class="select-none">🍞</span>
+                <span>sourdough tracker</span>
+            </h1>
+            <div class="flex-1"></div>
+        </div>
+    </header>
+
+    <main class="max-w-[1100px] mx-auto px-6 py-8 max-md:px-4 max-md:py-6">
+
+        <!-- Starter section -->
+        <section class="mb-12">
+            <h2 class="font-display text-lg mb-3 tracking-wider text-rye flex items-center gap-2">
+                <span class="text-2xl">🫙</span> the starter
+            </h2>
+            <div id="starterCard" class="bg-crumb border-4 border-char rounded-xl p-6 shadow-stamp">
+                <div class="loading-spinner mx-auto"></div>
+            </div>
+        </section>
+
+        <!-- Breads section -->
+        <section>
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h2 class="font-display text-lg tracking-wider text-rye flex items-center gap-2">
+                    <span class="text-2xl">🧑‍🍳</span> active loaves
+                </h2>
+                <button id="newBreadBtn" class="bg-char text-flour font-display text-sm px-3 py-1.5 border-2 border-char shadow-stamp-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all tracking-wider">
+                    + MIX NEW DOUGH
+                </button>
+            </div>
+
+            <div id="breadsLoading" class="flex justify-center py-12">
+                <div class="loading-spinner"></div>
+            </div>
+
+            <div id="breadsEmpty" class="text-center py-12 px-6 hidden">
+                <div class="text-5xl mb-3 select-none">🌾</div>
+                <p class="font-display text-lg text-yeast tracking-wider">no loaves rising yet</p>
+                <p class="text-sm text-yeast mt-1">click "mix new dough" to start one.</p>
+            </div>
+
+            <div id="breadsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-5 hidden"></div>
+
+            <div id="breadsError" class="hidden border-4 border-rye bg-rye/10 text-rye p-4 rounded-xl">
+                <p id="breadsErrorMsg" class="font-medium"></p>
+                <button id="retryBtn" class="mt-2 underline font-display text-lg tracking-wider">retry</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- New bread modal -->
+    <div class="modal-overlay" id="newBreadModal">
+        <div class="bg-flour border-4 border-char rounded-xl w-full max-w-md p-6 shadow-stamp-lg">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-display text-lg tracking-wider">mix new dough</h3>
+                <button id="newBreadClose" class="text-char hover:text-crust text-base"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="newBreadForm">
+                <label for="breadName" class="block text-xs uppercase tracking-widest text-yeast font-semibold mb-1">Name this loaf</label>
+                <input type="text" id="breadName" autocomplete="off" maxlength="100" required placeholder="e.g. Dom's bread"
+                       class="w-full px-3 py-2 bg-crumb border-2 border-char rounded font-sans text-base focus:outline-none focus:bg-flour">
+                <p class="text-xs text-yeast mt-2">The timer starts the moment you click <em>start mixing</em>.</p>
+
+                <div id="newBreadError" class="hidden mt-3 text-sm text-rye font-medium"></div>
+
+                <div class="flex gap-2 justify-end mt-5">
+                    <button type="button" id="newBreadCancel" class="bg-crumb text-char border-2 border-char px-3 py-1.5 font-display text-sm tracking-wider hover:bg-flour transition-colors">cancel</button>
+                    <button type="submit" class="bg-char text-flour border-2 border-char px-3 py-1.5 font-display text-sm tracking-wider shadow-stamp-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all">
+                        <span class="btn-text">start mixing</span>
+                        <span class="btn-loading hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="bg-flour border-4 border-char rounded-xl w-full max-w-sm p-6 shadow-stamp-lg text-center">
+            <div class="text-4xl mb-2 select-none">🗑️</div>
+            <h3 class="font-display text-lg tracking-wider mb-1">forget this loaf?</h3>
+            <p class="text-sm text-yeast mb-5">This will remove <strong id="deleteBreadName" class="text-char"></strong> from your list.</p>
+            <div class="flex gap-2 justify-center">
+                <button id="deleteCancelBtn" class="bg-crumb text-char border-2 border-char px-3 py-1.5 font-display text-sm tracking-wider hover:bg-flour transition-colors">keep it</button>
+                <button id="deleteConfirmBtn" class="bg-rye text-flour border-2 border-rye px-3 py-1.5 font-display text-sm tracking-wider shadow-stamp-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all">delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[2000] flex flex-col gap-2"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

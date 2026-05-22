@@ -1,0 +1,105 @@
+/* Sourdough Tracker — Tailwind handles layout/colors/typography. This file only carries what Tailwind can't cleanly express. */
+
+/* Wheat-grain background pattern, inline SVG via data URL so we don't ship an asset. */
+.wheat-bg {
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(122, 90, 46, 0.18) 1px, transparent 0),
+        radial-gradient(circle at 12px 14px, rgba(200, 116, 26, 0.10) 1.5px, transparent 0);
+    background-size: 24px 24px, 48px 48px;
+}
+
+/* Modal overlay — same pattern as botaniq, toggled by .active */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(42, 29, 16, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    backdrop-filter: blur(2px);
+}
+.modal-overlay.active { display: flex; }
+
+/* Phase stamp — rotated rubber-stamp look */
+.phase-stamp {
+    display: inline-block;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border: 2px double currentColor;
+    border-radius: 4px;
+    transform: rotate(-4deg);
+    user-select: none;
+    line-height: 1.15;
+    filter: contrast(1.05);
+}
+.phase-stamp.stamp-bulk     { color: #c8741a; background: rgba(200, 116, 26, 0.08); }
+.phase-stamp.stamp-fridge   { color: #5a8da5; background: rgba(90, 141, 165, 0.10); }
+.phase-stamp.stamp-bench    { color: #b88425; background: rgba(184, 132, 37, 0.12); }
+.phase-stamp.stamp-bake1    { color: #b34516; background: rgba(179, 69, 22, 0.12); }
+.phase-stamp.stamp-bake2    { color: #7c3b0d; background: rgba(124, 59, 13, 0.14); }
+.phase-stamp.stamp-finished { color: #2d6a31; background: rgba(45, 106, 49, 0.12); transform: rotate(-7deg); }
+
+/* Attention glow — fold due, bake timer ringing */
+.attention {
+    animation: attentionPulse 1.4s ease-in-out infinite;
+}
+@keyframes attentionPulse {
+    0%, 100% { box-shadow: 6px 6px 0px 0px #2a1d10, 0 0 0px 0px rgba(200, 116, 26, 0.0); }
+    50%      { box-shadow: 6px 6px 0px 0px #2a1d10, 0 0 26px 6px rgba(200, 116, 26, 0.55); }
+}
+
+/* Finished bread celebration card */
+.celebrate {
+    position: relative;
+    overflow: hidden;
+    animation: celebrateBg 4s ease-in-out infinite;
+}
+@keyframes celebrateBg {
+    0%, 100% { background-color: #f3e3c3; }
+    50%      { background-color: #fff4d6; }
+}
+
+/* Streamers / confetti — light decorative spans positioned absolutely */
+.streamer {
+    position: absolute;
+    top: -20px;
+    width: 8px;
+    height: 16px;
+    opacity: 0.9;
+    animation: streamerFall linear infinite;
+}
+@keyframes streamerFall {
+    0%   { transform: translateY(-10px) rotate(0deg);    opacity: 0; }
+    10%  { opacity: 1; }
+    100% { transform: translateY(420px) rotate(540deg); opacity: 0; }
+}
+
+/* Toast in/out animations */
+.toast        { animation: toastIn 0.25s ease; }
+.toast.out    { animation: toastOut 0.25s ease forwards; }
+@keyframes toastIn  { from { opacity: 0; transform: translateY(8px);  } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateY(0);    } to { opacity: 0; transform: translateY(8px); } }
+
+/* Loading spinner (matches botaniq's vibe but in crust color) */
+.loading-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #e7d6b3;
+    border-top-color: #c8741a;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .attention,
+    .celebrate,
+    .streamer,
+    .loading-spinner { animation: none; }
+}

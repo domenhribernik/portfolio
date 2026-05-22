@@ -173,5 +173,16 @@ export const projects = {
       visitSite: "views/maze",
     },
     iconClass: "fas fa-puzzle-piece",
+  },
+  sourdough: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #c8741a 0%, #f3e3c3 100%)",
+    title: "Sourdough Tracker",
+    description: "A retro bakery-themed tracker for the whole sourdough process — starter feeding countdown, multiple loaves in parallel, fold reminders, bake timers with a bell, and a finishing celebration. Built so two people can keep tabs on shared dough.",
+    tech: ["HTML", "CSS", "JavaScript", "Tailwind", "PHP", "SQL"],
+    links: {
+      visitSite: "views/sourdough",
+    },
+    iconClass: "fas fa-bread-slice",
   }
 };
