@@ -1,0 +1,12 @@
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ticker-row {
+    animation: slideIn 0.15s ease-out;
+}
+
+input[type="text"]:focus {
+    caret-color: #22c55e;
+}
