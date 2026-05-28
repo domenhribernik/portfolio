@@ -1,0 +1,370 @@
+/* Pricing Calculator — Tailwind handles layout/colors/typography.
+   This file carries only what Tailwind cannot cleanly express. */
+
+/* ─── Parchment paper texture ─── */
+.parchment-bg {
+    background-image:
+        radial-gradient(circle at 1px 1px,  rgba(42, 29, 16, 0.06) 1px, transparent 0),
+        radial-gradient(circle at 14px 17px, rgba(184, 154, 92, 0.05) 1.5px, transparent 0),
+        linear-gradient(160deg, rgba(184, 154, 92, 0.03) 0%, transparent 60%);
+    background-size: 22px 22px, 44px 44px, 100% 100%;
+}
+
+/* ─── Hero frame ornament ─── */
+.hero-frame {
+    border: 2px dashed rgba(42, 29, 16, 0.25);
+    border-radius: 4px;
+    background: linear-gradient(145deg, rgba(184, 154, 92, 0.06), rgba(200, 116, 26, 0.03));
+}
+
+.corner-glyph {
+    position: absolute;
+    font-size: 18px;
+    color: #b89a5c;
+    background: #f5ecd1;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    line-height: 1;
+}
+.corner-glyph.tl { top: -10px; left: -10px; }
+.corner-glyph.tr { top: -10px; right: -10px; }
+.corner-glyph.bl { bottom: -10px; left: -10px; }
+.corner-glyph.br { bottom: -10px; right: -10px; }
+
+/* ─── Marquee ─── */
+.marquee-track {
+    display: flex;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.marquee-content {
+    display: inline-flex;
+    animation: marqueeScroll 28s linear infinite;
+    will-change: transform;
+}
+@keyframes marqueeScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ─── Package cards ─── */
+.package-card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.3s ease;
+}
+.package-card.dimmed {
+    opacity: 0.35;
+    transform: scale(0.97);
+}
+.package-card.highlighted {
+    animation: cardPulse 0.5s ease;
+}
+@keyframes cardPulse {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+.plus-hero {
+    position: relative;
+}
+
+/* Rotated "MOST POPULAR" rubber-stamp badge */
+.stamp-badge {
+    position: absolute;
+    top: -12px;
+    right: -8px;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c8741a;
+    background: #f5ecd1;
+    border: 2px solid #c8741a;
+    padding: 3px 7px;
+    transform: rotate(4deg);
+    white-space: nowrap;
+    box-shadow: 2px 2px 0 #a05a10;
+    animation: stampPulse 3s ease-in-out infinite;
+}
+@keyframes stampPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.75; }
+}
+
+/* ─── Form elements ─── */
+.form-section {
+    transition: border-color 0.15s ease;
+}
+
+.section-label {
+    font-family: 'Special Elite', 'Courier New', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    color: #2a1d10;
+    margin-bottom: 0.75rem;
+}
+
+.section-sublabel {
+    font-family: 'Special Elite', 'Courier New', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #4a3828;
+}
+
+/* Radio options */
+.radio-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+}
+.radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+.radio-box {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid rgba(42, 29, 16, 0.25);
+    background: #fdf6e8;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    color: #2a1d10;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+    line-height: 1.4;
+}
+.radio-option input[type="radio"]:checked + .radio-box {
+    border-color: #2a1d10;
+    background: #f5ecd1;
+    box-shadow: 3px 3px 0 #2a1d10;
+}
+.radio-box:hover {
+    border-color: #c8741a;
+}
+
+/* Checkbox options */
+.check-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+}
+.check-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+.check-box {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border: 2px solid rgba(42, 29, 16, 0.4);
+    background: #fdf6e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: background 0.12s, border-color 0.12s;
+    cursor: pointer;
+    position: relative;
+}
+.check-box::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid #fdf6e8;
+    border-bottom: 2px solid #fdf6e8;
+    transform: rotate(-45deg) translateY(-1px);
+    opacity: 0;
+    transition: opacity 0.1s;
+    margin-top: -2px;
+}
+.check-option input[type="checkbox"]:checked + .check-box {
+    background: #2a1d10;
+    border-color: #2a1d10;
+}
+.check-option input[type="checkbox"]:checked + .check-box::after {
+    opacity: 1;
+}
+.check-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    color: #2a1d10;
+    line-height: 1.5;
+    padding-top: 1px;
+    cursor: pointer;
+}
+.check-option:hover .check-box {
+    border-color: #c8741a;
+}
+
+/* ─── Terminal window (loading state) ─── */
+.terminal-window {
+    background: #1a1208;
+    border: 3px solid #b89a5c;
+    box-shadow: 8px 8px 0 #2a1d10;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.terminal-titlebar {
+    background: #2a1d10;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.terminal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot-red    { background: #ff5f57; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green  { background: #28c840; }
+.terminal-title {
+    margin-left: 8px;
+    font-family: 'Special Elite', monospace;
+    font-size: 11px;
+    color: rgba(245, 236, 209, 0.5);
+    letter-spacing: 0.05em;
+}
+.terminal-body {
+    padding: 20px 20px 24px;
+    color: #d4b876;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    font-size: 0.8rem;
+    min-height: 180px;
+    line-height: 1.8;
+}
+.terminal-prompt {
+    color: #7a8a5a;
+}
+.terminal-prompt.success {
+    color: #28c840;
+}
+.terminal-line {
+    color: #b89a5c;
+}
+.terminal-line.dim {
+    color: rgba(184, 154, 92, 0.45);
+}
+
+/* Blinking cursor */
+.cursor {
+    display: inline-block;
+    animation: blink 0.9s step-end infinite;
+    color: #c8741a;
+    margin-left: 2px;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+/* ─── Receipt panel ─── */
+.receipt-panel {
+    font-family: 'Special Elite', 'Courier New', monospace;
+}
+
+.receipt-line-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.78rem;
+    padding: 3px 0;
+    border-bottom: 1px dashed rgba(42, 29, 16, 0.12);
+}
+.receipt-line-item:last-child {
+    border-bottom: none;
+}
+.receipt-line-item .item-name {
+    color: #4a3828;
+    flex: 1;
+}
+.receipt-line-item .item-price {
+    color: #2a1d10;
+    font-weight: normal;
+    white-space: nowrap;
+}
+.receipt-line-item.item-base .item-name {
+    color: #2a1d10;
+    font-size: 0.82rem;
+}
+.receipt-line-item.item-contact {
+    color: #c8741a;
+}
+
+/* Total reveal animation */
+.result-total-reveal {
+    animation: totalReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes totalReveal {
+    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* Results state entrance */
+#state-results {
+    animation: stateReveal 0.45s ease both;
+}
+@keyframes stateReveal {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Package result badge colour variants */
+.package-result-badge.badge-MINI    { background: #f5ecd1; color: #2a1d10; border-color: #2a1d10; }
+.package-result-badge.badge-BASIC   { background: #f5ecd1; color: #2a1d10; border-color: #2a1d10; }
+.package-result-badge.badge-PLUS    { background: #2a1d10; color: #d4b876; border-color: #2a1d10; }
+.package-result-badge.badge-PREMIUM { background: #b89a5c; color: #2a1d10; border-color: #2a1d10; }
+.package-result-badge.badge-CUSTOM  { background: #c8741a; color: #f5ecd1; border-color: #a05a10; }
+
+/* ─── À-la-carte table ─── */
+#alacContent table {
+    border: 2px solid #2a1d10;
+}
+#alacContent td, #alacContent th {
+    border-right: 1px solid rgba(42, 29, 16, 0.15);
+}
+
+/* ─── Respect reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+    .marquee-content,
+    .cursor,
+    .stamp-badge,
+    .package-card,
+    .result-total-reveal,
+    #state-results { animation: none !important; }
+}
+
+/* ─── Mobile sticky submit ─── */
+@media (max-width: 639px) {
+    #state-form .flex.justify-center.pt-2.pb-4 {
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(to top, #f5ecd1 80%, transparent);
+        padding: 16px 0 20px;
+        margin: 0 -1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        z-index: 10;
+    }
+    #generateBtn {
+        width: 100%;
+    }
+}

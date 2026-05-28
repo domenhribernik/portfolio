@@ -1,7 +1,9 @@
+var _gtColor = (document.currentScript && document.currentScript.getAttribute('data-color')) || "#66aaff";
+
 window.gtranslateSettings = {
     "default_language": "en",
     "languages": ["en", "sl", "de", "es", "fr", "zh-CN"],
-    "globe_color": "#66aaff",
+    "globe_color": _gtColor,
     "wrapper_selector": ".gtranslate_wrapper",
     "flag_size": 24,
     "alt_flags": { "en": "usa" },
