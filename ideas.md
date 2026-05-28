@@ -21,6 +21,7 @@
 
 - Restyle every project with Tailwind CSS (needed for homepage, music, thesis)
 - Figure out how to seperate git repositories, to seperate the big projects, people would be interested in seeing
+- Go through controllers and refactor them
 
 ## Project Ideas
 - **ASCII art converter** — transform images to ASCII (lightest to darkest); already have a project, put it on the portfolio

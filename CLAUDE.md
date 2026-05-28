@@ -65,7 +65,9 @@ All media (images, video, audio, documents) and data files live in [assets/](ass
 
 ## Adding a New Project
 
-1. **Register the project** in [components/project-data.js](components/project-data.js) following the existing schema (`title`, `description`, `tech`, `links`, `iconClass`). Place the entry under the correct comment section (`Professional Projects`, `Academic Projects`, `Personal Projects`).
+1. **Register the project** in [components/project-data.js](components/project-data.js) following the existing schema (`title`, `description`, `links`, `iconClass`). Place the entry under the correct comment section (`Professional Projects`, `Academic Projects`, `Personal Projects`).
+
+   **Writing the description:** Write it so a person actually wants to read it. Lead with the problem it solves or what makes it interesting, not a list of features or tech. Use plain conversational sentences. Keep it to 1-3 sentences. No em dashes (`—`) anywhere — use commas, colons, or split into two sentences instead. No hyphenated compound adjectives if a single word or short phrase works just as well. Look at the existing entries for tone.
 2. **Add a `<project-card>` tag** to [index.html](index.html) inside the matching category's `.projects-grid` div. Pick a gradient that fits the project's theme. The `project` attribute must match the key used in `project-data.js`.
 3. **Create the project directory** under `views/` matching the desired URL path (e.g., `views/botaniq/`), containing `index.html`, `style.css`, and `script.js`. Import shared components (`main-navbar.js`, etc.) and `base-style.css` using `../../` relative paths (two levels up to reach the root).
 4. **If the project uses a database**, create an SQL model file at `app/models/<name>-model.sql` with the `CREATE TABLE` and seed `INSERT` statements. SQL is always executed manually via phpMyAdmin — never run SQL from code or migrations automatically. Create the corresponding controller at `app/controllers/<name>-controller.php` following the existing CRUD pattern.
@@ -79,6 +81,6 @@ Loaded via CDN — no local install needed:
 - Google Fonts
 - Devicons (tech stack icons)
 
-## License
+## Writing Style
 
-CC BY-NC-ND 4.0 — non-commercial use only, no derivatives.
+Avoid em dashes (`—`) everywhere in this codebase: in descriptions, comments, HTML content, and any other text. Use a comma, colon, or a new sentence instead.

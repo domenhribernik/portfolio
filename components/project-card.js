@@ -15,7 +15,7 @@ class ProjectCard extends HTMLElement {
       return;
     }
 
-    const badgeContent = data.badge && data.badge && data.badge.trim();
+    const badgeContent = data.badge && data.badge.trim();
     const badgeHtml = badgeContent ? `<div class="project-badge">${badgeContent}</div>` : '';
 
     const projectLinks = [];
@@ -67,9 +67,6 @@ class ProjectCard extends HTMLElement {
         <h4 class="project-title">${data.title}</h4>
         <p class="project-description">${data.description}</p>
         <div class="project-footer">
-          <div class="project-tech">
-            ${data.tech.map(t => `<span class="tech-tag">${t}</span>`).join('')}
-          </div>
           ${projectLinksHtml}
         </div>
       </div>
