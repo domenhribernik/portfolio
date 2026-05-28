@@ -14,7 +14,7 @@ The main entry point is `index.html` (root), which loads its page-specific logic
 
 All page directories live under [views/](views/), named to match their URL path (e.g., `/views/rocks` → [views/rocks/](views/rocks/), `/views/tarok` → [views/tarok/](views/tarok/)). Each directory is self-contained with its own `index.html`, `style.css`, and `script.js`. Global styles shared across all pages are in [base-style.css](base-style.css).
 
-Current project directories: `views/about`, `views/botaniq`, `views/homepage`, `views/iliana`, `views/ip`, `views/jeger`, `views/maze`, `views/music`, `views/on-this-day`, `views/presence`, `views/quizz`, `views/rocks`, `views/slovenia`, `views/sourdough`, `views/spy`, `views/tarok`, `views/thesis`, `views/workout`.
+Current project directories: `views/about`, `views/botaniq`, `views/homepage`, `views/iliana`, `views/ip`, `views/jeger`, `views/maze`, `views/music`, `views/on-this-day`, `views/presence`, `views/quizz`, `views/rocks`, `views/shopping`, `views/slovenia`, `views/sourdough`, `views/spy`, `views/tarok`, `views/thesis`, `views/workout`.
 
 Note: `views/presence` is an **unlisted private tool** — it is intentionally not registered in `components/project-data.js`, not linked from `index.html`, and not in the main navbar. Do not add it to any of those.
 

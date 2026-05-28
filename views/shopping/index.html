@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Shopping</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#211f1c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Shop">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+                },
+                colors: {
+                    ink:    '#211f1c',
+                    paper:  '#f8f7f4',
+                    muted:  '#9b978f',
+                    line:   '#e9e6e0',
+                    accent: '#d97706',
+                },
+            },
+        },
+    };
+    </script>
+</head>
+<body class="font-sans bg-paper text-ink h-dvh overflow-hidden m-0 p-0 flex flex-col">
+
+    <div id="notify-banner" class="hidden bg-ink text-paper shrink-0">
+        <div class="max-w-[720px] mx-auto px-4 py-2 flex items-center gap-3 text-sm">
+            <i class="fas fa-bell"></i>
+            <span class="flex-1">Get a ping when family adds something.</span>
+            <button id="notify-enable" class="px-3 py-1 rounded-full bg-accent text-paper font-medium">Enable</button>
+            <button id="notify-dismiss" aria-label="Dismiss" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-xmark"></i></button>
+        </div>
+    </div>
+
+    <header class="bg-paper border-b border-line shadow-sm shrink-0">
+        <div class="max-w-[720px] mx-auto px-4 py-3 flex items-center gap-3">
+            <a href="../../" class="text-ink hover:text-accent transition-colors inline-flex items-center gap-2 font-medium text-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span class="hidden sm:inline">back</span>
+            </a>
+            <h1 class="flex-1 text-center text-xl sm:text-2xl font-semibold tracking-tight">Shopping</h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+
+    <nav id="tabs" class="bg-paper border-b border-line shrink-0">
+        <div class="max-w-[720px] mx-auto pl-2">
+            <div id="tabs-row" class="flex gap-2 px-4 py-2 overflow-x-auto snap-x snap-mandatory no-scrollbar">
+                <!-- tabs injected here -->
+            </div>
+        </div>
+    </nav>
+
+    <section id="add-bar" class="bg-paper border-b border-line shrink-0">
+        <div class="max-w-[720px] mx-auto px-4 py-3 flex items-center gap-2">
+            <input
+                id="add-input"
+                type="text"
+                inputmode="text"
+                autocomplete="off"
+                enterkeyhint="done"
+                placeholder="Add item…"
+                class="flex-1 px-4 py-3 rounded-2xl border border-line bg-white text-ink text-base outline-none focus:border-accent focus:ring-2 focus:ring-amber-100 transition-colors min-w-0"
+            />
+            <button
+                id="add-button"
+                aria-label="Add item"
+                class="w-12 h-12 flex items-center justify-center rounded-full bg-accent text-white text-xl hover:opacity-90 active:scale-95 transition-all shrink-0"
+            >
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    </section>
+
+    <main id="main" class="flex-1 overflow-y-auto w-full max-w-[720px] mx-auto px-4 py-2 pb-24">
+        <ul id="items-active" class="divide-y divide-line"></ul>
+
+        <div id="bought-divider" class="hidden flex items-center justify-between gap-3 mt-6 mb-1 px-1">
+            <div class="flex items-center gap-2 text-sm text-muted">
+                <span class="h-px bg-line flex-1 w-10"></span>
+                <span id="bought-count">bought</span>
+            </div>
+            <button id="clear-bought" class="text-sm text-muted hover:text-ink underline underline-offset-2">Clear bought</button>
+        </div>
+
+        <ul id="items-checked" class="divide-y divide-line"></ul>
+
+        <div id="empty-items" class="hidden text-center text-muted text-sm py-12">
+            Nothing here yet. Add something above.
+        </div>
+
+        <div id="empty-collections" class="hidden flex flex-col items-center justify-center py-16 gap-4">
+            <i class="fas fa-cart-shopping text-4xl text-muted"></i>
+            <p class="text-muted text-center">No lists yet. Create your first one.</p>
+            <div class="flex gap-2 w-full max-w-xs">
+                <input
+                    id="first-list-input"
+                    type="text"
+                    placeholder="e.g. Groceries"
+                    enterkeyhint="done"
+                    class="flex-1 px-4 py-3 rounded-2xl border border-line bg-white text-ink outline-none focus:border-accent focus:ring-2 focus:ring-amber-100"
+                />
+                <button id="first-list-create" class="px-4 py-3 rounded-full bg-accent text-white font-medium hover:opacity-90 transition-opacity">Create</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-ink text-paper text-sm opacity-0 pointer-events-none transition-opacity z-40"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

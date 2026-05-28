@@ -1,0 +1,17 @@
+CREATE TABLE shopping_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    collection VARCHAR(100) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    checked TINYINT(1) NOT NULL DEFAULT 0,
+    added_by VARCHAR(64) DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_collection (collection),
+    INDEX idx_updated_at (updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE shopping_collections (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

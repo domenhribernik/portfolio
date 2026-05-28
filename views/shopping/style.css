@@ -1,0 +1,152 @@
+/* hide scrollbar on tab strip */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* prevent body pull-to-refresh fighting the polling refresh */
+html, body { overscroll-behavior-y: contain; }
+
+/* override base-style.css gradient so the warm off-white actually shows */
+body { background: #f8f7f4; }
+
+/* fix: ensure hidden overrides Tailwind flex/flex-col on these IDs */
+#bought-divider.hidden,
+#empty-collections.hidden { display: none !important; }
+
+/* tab chip */
+.tab-chip {
+    flex-shrink: 0;
+    padding: 0.45rem 0.9rem;
+    border-radius: 9999px;
+    border: 1px solid #e9e6e0;
+    background: #fff;
+    color: #211f1c;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    white-space: nowrap;
+    scroll-snap-align: start;
+    min-height: 36px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.tab-chip:hover { border-color: #211f1c; }
+.tab-chip.active {
+    background: #211f1c;
+    color: #fff;
+    border-color: #211f1c;
+}
+.tab-chip.add-tab {
+    color: #9b978f;
+    border-style: dashed;
+}
+.tab-chip.add-tab:hover { color: #211f1c; }
+
+/* tab inline-edit input */
+.tab-input {
+    flex-shrink: 0;
+    padding: 0.45rem 0.9rem;
+    border-radius: 9999px;
+    border: 1px solid #d97706;
+    background: #fff;
+    color: #211f1c;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    outline: none;
+    min-width: 8rem;
+}
+
+/* item row */
+.item-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.25rem;
+    min-height: 52px;
+    cursor: pointer;
+    user-select: none;
+}
+.item-checkbox {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #c8c4bc;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.item-row:not(.checked):hover .item-checkbox {
+    border-color: #211f1c;
+}
+.item-row.checked .item-checkbox {
+    background: #d97706;
+    border-color: #d97706;
+    color: #fff;
+}
+.item-name {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+    font-size: 1rem;
+    transition: color 0.15s;
+}
+.item-row.checked .item-name {
+    text-decoration: line-through;
+    color: #9b978f;
+}
+.item-delete {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c8c4bc;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    border-radius: 9999px;
+    transition: color 0.15s, background 0.15s;
+}
+.item-delete:hover { color: #211f1c; background: #f0ede8; }
+
+/* optimistic ghost state */
+.item-row.pending .item-name { color: #9b978f; }
+
+/* toast visible state */
+#toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* tiny entrance animation for new items */
+@keyframes shopping-item-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.item-row { animation: shopping-item-in 0.18s ease-out; }
+
+/* iOS safe area: pad body for the notch, pad main for the home indicator */
+@supports (padding: env(safe-area-inset-top)) {
+    body { padding-top: env(safe-area-inset-top); }
+}
+@supports (padding: env(safe-area-inset-bottom)) {
+    main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+}
+
+/* notify banner: float fixed below the notch, above the rest of the page */
+#notify-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+}
+@supports (top: env(safe-area-inset-top)) {
+    #notify-banner { top: env(safe-area-inset-top); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .item-row { animation: none; }
+    * { transition: none !important; }
+}
