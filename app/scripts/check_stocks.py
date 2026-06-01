@@ -16,7 +16,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 APP_DIR = SCRIPT_DIR.parent
 REPO_ROOT = APP_DIR.parent
 CACHE_DIR = APP_DIR / "cache"
-ENV_FILE = REPO_ROOT / ".env"
+ENV_FILE = APP_DIR / ".env"
 
 TICKERS_FILE = CACHE_DIR / "stocks.json"
 LAST_FILE = CACHE_DIR / "stocks-last.json"
