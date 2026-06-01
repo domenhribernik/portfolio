@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#0a0a0a">
     <title>Vrata</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 </head>
 <body class="min-h-[100dvh] bg-neutral-950 text-neutral-100 font-sans antialiased flex flex-col items-center justify-center p-4 sm:p-6"
       style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);">
@@ -42,36 +43,18 @@
         <!-- Action view -->
         <section id="actionView" class="hidden flex flex-col gap-4">
 
-            <!-- Camera placeholder -->
+            <!-- Camera feed -->
             <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
-                <div id="cameraSlot"
-                     class="relative w-full aspect-video bg-neutral-950 flex items-center justify-center text-neutral-600">
-                    <!-- future: <img>, <video>, or <iframe> goes here -->
-                    <div class="flex flex-col items-center gap-2 text-center px-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="1.5" class="w-10 h-10 sm:w-12 sm:h-12">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M6.75 7.5h7.5a2.25 2.25 0 0 1 2.25 2.25v4.5A2.25 2.25 0 0 1 14.25 16.5h-7.5A2.25 2.25 0 0 1 4.5 14.25v-4.5A2.25 2.25 0 0 1 6.75 7.5Z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="m16.5 10.5 3-1.5v6l-3-1.5"/>
-                        </svg>
-                        <span class="text-xs sm:text-sm">Camera feed</span>
-                    </div>
+                <div class="relative w-full aspect-video bg-neutral-950">
+                    <video
+                        id="cameraVideo"
+                        class="w-full h-full object-cover"
+                        autoplay
+                        muted
+                        playsinline></video>
                 </div>
-                <div class="border-t border-neutral-800 p-3 flex items-center justify-between gap-3">
-                    <span id="cameraStatus" class="text-xs text-neutral-500 truncate">Offline</span>
-                    <button
-                        id="refreshBtn"
-                        type="button"
-                        class="inline-flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed text-neutral-100 text-sm font-medium rounded-lg px-3 py-2 transition"
-                        aria-label="Refresh camera">
-                        <svg id="refreshIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M4.5 12a7.5 7.5 0 0 1 13-5.196V4.5m0 2.304h-2.304M19.5 12a7.5 7.5 0 0 1-13 5.196V19.5m0-2.304h2.304"/>
-                        </svg>
-                        <span>Refresh</span>
-                    </button>
+                <div class="border-t border-neutral-800 px-3 py-2">
+                    <span id="cameraStatus" class="text-xs text-neutral-500 truncate">Connecting…</span>
                 </div>
             </div>
             <br>
@@ -112,19 +95,20 @@
     const ENDPOINT = '../../app/proxys/vrata.php';
     const REQUEST_TIMEOUT_MS = 10000;
 
-    const keyView      = document.getElementById('keyView');
-    const actionView   = document.getElementById('actionView');
-    const keyForm      = document.getElementById('keyForm');
-    const keyInput     = document.getElementById('keyInput');
-    const openBtn      = document.getElementById('openBtn');
-    const openLabel    = document.getElementById('openLabel');
-    const forgetBtn    = document.getElementById('forgetBtn');
-    const statusMsg    = document.getElementById('statusMsg');
-    const refreshBtn   = document.getElementById('refreshBtn');
-    const refreshIcon  = document.getElementById('refreshIcon');
-    const cameraStatus = document.getElementById('cameraStatus');
+    const keyView       = document.getElementById('keyView');
+    const actionView    = document.getElementById('actionView');
+    const keyForm       = document.getElementById('keyForm');
+    const keyInput      = document.getElementById('keyInput');
+    const openBtn       = document.getElementById('openBtn');
+    const openLabel     = document.getElementById('openLabel');
+    const forgetBtn     = document.getElementById('forgetBtn');
+    const statusMsg     = document.getElementById('statusMsg');
+    const cameraStatus  = document.getElementById('cameraStatus');
+    const cameraVideo   = document.getElementById('cameraVideo');
 
     let inFlight = false;
+    let hls = null;
+    let streamStarted = false;
 
     const safeGetKey = () => {
         try { return localStorage.getItem(STORAGE_KEY); }
@@ -144,6 +128,87 @@
         if (which === 'key') {
             keyInput.value = '';
             setTimeout(() => keyInput.focus(), 0);
+            stopStream();
+        } else if (which === 'action' && !streamStarted) {
+            streamStarted = true;
+            startStream();
+        }
+    };
+
+    const setCameraStatus = (text) => {
+        if (cameraStatus) cameraStatus.textContent = text;
+    };
+
+    const fetchStreamUrl = async () => {
+        const key = safeGetKey();
+        if (!key) throw new Error('no_key');
+        const res = await fetch(ENDPOINT + '?action=stream&key=' + encodeURIComponent(key), {
+            method: 'GET',
+            credentials: 'omit',
+            cache: 'no-store',
+            redirect: 'error',
+            referrerPolicy: 'no-referrer',
+        });
+        if (res.status === 403) {
+            safeClearKey();
+            showView('key');
+            throw new Error('forbidden');
+        }
+        if (!res.ok) throw new Error('http_' + res.status);
+        const data = await res.json();
+        if (!data || !data.url) throw new Error('no_url');
+        return data.url;
+    };
+
+    const stopStream = () => {
+        if (hls) { try { hls.destroy(); } catch {} hls = null; }
+        try { cameraVideo.removeAttribute('src'); cameraVideo.load(); } catch {}
+        streamStarted = false;
+    };
+
+    let reconnectTimer = null;
+    const scheduleReconnect = (delayMs) => {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => startStream(), delayMs);
+    };
+
+    const startStream = async () => {
+        setCameraStatus('Connecting…');
+        let url;
+        try {
+            url = await fetchStreamUrl();
+        } catch (err) {
+            if (err.message === 'forbidden' || err.message === 'no_key') return;
+            setCameraStatus('Stream unavailable. Retrying…');
+            scheduleReconnect(5000);
+            return;
+        }
+
+        if (hls) { try { hls.destroy(); } catch {} hls = null; }
+
+        if (window.Hls && window.Hls.isSupported()) {
+            hls = new Hls({ liveDurationInfinity: true, lowLatencyMode: false });
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                setCameraStatus('Live');
+                cameraVideo.play().catch(() => {});
+            });
+            hls.on(Hls.Events.ERROR, (_evt, data) => {
+                if (!data.fatal) return;
+                setCameraStatus('Reconnecting…');
+                scheduleReconnect(1500);
+            });
+            hls.loadSource(url);
+            hls.attachMedia(cameraVideo);
+        } else if (cameraVideo.canPlayType('application/vnd.apple.mpegurl')) {
+            cameraVideo.src = url;
+            cameraVideo.addEventListener('loadedmetadata', () => setCameraStatus('Live'), { once: true });
+            cameraVideo.addEventListener('error', () => {
+                setCameraStatus('Reconnecting…');
+                scheduleReconnect(1500);
+            }, { once: true });
+            cameraVideo.play().catch(() => {});
+        } else {
+            setCameraStatus('HLS not supported in this browser.');
         }
     };
 
@@ -182,18 +247,6 @@
         safeClearKey();
         setStatus('', null);
         showView('key');
-    });
-
-    refreshBtn.addEventListener('click', () => {
-        // placeholder — wire up actual camera reload here later
-        refreshBtn.disabled = true;
-        refreshIcon.classList.add('animate-spin');
-        cameraStatus.textContent = 'Refreshing...';
-        setTimeout(() => {
-            refreshIcon.classList.remove('animate-spin');
-            refreshBtn.disabled = false;
-            cameraStatus.textContent = 'Offline';
-        }, 600);
     });
 
     openBtn.addEventListener('click', async () => {
