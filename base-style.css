@@ -5,8 +5,8 @@
 }
 
 :root {
-    --primary-color: #667eea;
-    --primary-hover: #5a67d8;
+    --primary-color: #d4451f;
+    --primary-hover: #b8371a;
     --secondary-color: #ffcd1c;
     --text-primary: #1f2937;
     --text-secondary: #6b7280;
@@ -17,7 +17,7 @@
     --bg-dark-about: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
     --bg-light: #f8fafc;
     --bg-card: #1e293b;
-    --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-gradient: linear-gradient(135deg, #1a202c 0%, #0f172a 100%);
     --border-radius: 16px;
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.25);
@@ -87,6 +87,10 @@ body {
     z-index: 1000;
     padding: 1rem 0;
     transition: var(--transition);
+}
+
+.navbar.scrolled {
+    background: rgba(15, 23, 42, 0.98);
 }
 
 .nav-container {
@@ -287,5 +291,221 @@ body {
 
     .section {
         padding: 6rem 0;
+    }
+}
+
+/* ============================================================
+   Editorial Gallery theme (light). Applied only to pages with
+   <body class="editorial"> (homepage + about). Remaps the shared
+   variables to light values so all variable-driven CSS (navbar,
+   section titles, footer, loading overlay, APOD) flips with it.
+   ============================================================ */
+body.editorial {
+    --paper: #f6f2ea;
+    --paper-2: #efe9dd;
+    --card: #fffdf8;
+    --ink: #1c1a17;
+    --stone: #6b6256;
+    --clay: #d4451f;
+    --clay-dk: #b8371a;
+    --pine: #2f5b53;
+    --hairline: rgba(28, 26, 23, 0.12);
+
+    --text-light: var(--ink);
+    --text-muted: var(--stone);
+    --text-muted-about: var(--stone);
+    --text-primary: var(--ink);
+    --bg-dark: var(--paper);
+    --bg-dark-about: var(--paper);
+    --bg-light: var(--ink);
+    --bg-card: var(--card);
+    --contact-card-bg: var(--card);
+    --contact-card-border: var(--hairline);
+    --contact-shadow: 0 10px 30px rgba(28, 26, 23, 0.06);
+    --shadow: 0 12px 30px rgba(28, 26, 23, 0.08);
+    --shadow-hover: 0 22px 45px rgba(28, 26, 23, 0.12);
+    --shadow-hover-alt: 0 12px 28px rgba(28, 26, 23, 0.1);
+    --border-radius: 4px;
+
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+
+/* Navbar */
+body.editorial .navbar {
+    background: rgba(246, 242, 234, 0.8);
+    border-bottom: 1px solid var(--hairline);
+}
+
+body.editorial .navbar.scrolled {
+    background: rgba(246, 242, 234, 0.95);
+}
+
+body.editorial .logo {
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+body.editorial .logo:hover {
+    color: var(--clay);
+}
+
+body.editorial .nav-link {
+    color: var(--stone);
+}
+
+body.editorial .nav-link:hover {
+    color: var(--ink);
+}
+
+body.editorial .mobile-menu-btn {
+    color: var(--ink);
+}
+
+/* Loading overlay */
+body.editorial .loading-overlay {
+    background: var(--paper);
+}
+
+body.editorial .loading-spinner {
+    border-color: var(--hairline);
+    border-top-color: var(--clay);
+}
+
+/* Section titles + footer */
+body.editorial .section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+body.editorial .footer {
+    background: var(--paper);
+    color: var(--stone);
+    border-top: 1px solid var(--hairline);
+}
+
+/* ---- Shared project cards (rendered by <project-card>/<projects-grid>) ---- */
+body.editorial .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+body.editorial .project-card {
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+body.editorial .project-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--clay);
+    box-shadow: var(--shadow);
+}
+
+body.editorial .project-image {
+    position: relative;
+    height: 150px;
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--hairline);
+    overflow: hidden;
+}
+
+body.editorial .project-image .project-image-background {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--clay);
+    font-size: 2.25rem;
+}
+
+body.editorial .project-image img,
+body.editorial .project-image video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+body.editorial .project-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    z-index: 2;
+}
+
+body.editorial .project-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding: 1.5rem;
+}
+
+body.editorial .project-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+}
+
+body.editorial .project-description {
+    color: var(--stone);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin-bottom: 1.25rem;
+}
+
+body.editorial .project-footer {
+    margin-top: auto;
+}
+
+body.editorial .project-links {
+    display: flex;
+    gap: 0.5rem 1.25rem;
+    flex-wrap: wrap;
+}
+
+body.editorial .project-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 0.85rem;
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--clay);
+    transition: color 0.25s ease;
+}
+
+body.editorial .project-link:hover {
+    color: var(--clay);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.editorial *,
+    body.editorial *::before,
+    body.editorial *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

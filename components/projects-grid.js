@@ -8,8 +8,8 @@ class ProjectsGrid extends HTMLElement {
       .filter(([, data]) => data.category === category)
       .reverse();
 
-    this.innerHTML = entries.map(([key, data]) =>
-      `<project-card class="project-card" project="${key}" gradient="${data.gradient}"></project-card>`
+    this.innerHTML = entries.map(([key]) =>
+      `<project-card class="project-card" project="${key}"></project-card>`
     ).join('');
   }
 }

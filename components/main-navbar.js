@@ -43,14 +43,11 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    //? Navbar background on scroll
+    //? Navbar background on scroll (theme-aware via .scrolled class)
     window.addEventListener('scroll', () => {
         const navbar = document.querySelector('.navbar');
-        if (window.scrollY > 100) {
-            navbar.style.background = 'rgba(15, 23, 42, 0.98)';
-        } else {
-            navbar.style.background = 'rgba(15, 23, 42, 0.95)';
-        }
+        if (!navbar) return;
+        navbar.classList.toggle('scrolled', window.scrollY > 100);
     });
 });
 

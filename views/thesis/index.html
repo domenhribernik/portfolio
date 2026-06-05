@@ -5,184 +5,287 @@
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Virtual Runner - Digital Twin Thesis Project by Domen Hribernik">
-    <title>Virtual Runner - Domen Hribernik</title>
+    <meta name="description"
+        content="Virtual Runner, a digital twin of a runner. BSc diploma thesis by Domen Hribernik built across eight FERI disciplines.">
+    <title>Virtual Runner / Diploma Thesis · Domen Hribernik</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
+    <link rel="stylesheet" type='text/css'
+        href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        cobalt: '#1f35e0',
+                        marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        serif: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="editorial bg-paper text-ink font-sans antialiased">
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
     </div>
 
     <main-navbar site="../../index.html"></main-navbar>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Virtual Runner</h1>
-            <h2>Digital Twin of a Runner</h2>
-            <div class="hero-visual">
-                <div class="project-icon">
-                    <i class="fas fa-running"></i>
-                </div>
+    <!-- ============================ HERO ============================ -->
+    <header class="vr-hero">
+        <div class="vr-grid" aria-hidden="true"></div>
+        <div class="vr-hero__inner">
+            <p class="vr-eyebrow"><span class="vr-eyebrow__dot" aria-hidden="true"></span>BSc Diploma Thesis &middot; University of Maribor, FERI</p>
+
+            <h1 class="vr-title" aria-label="Virtual Runner">
+                <span class="vr-tline" aria-hidden="true">
+                    <span class="ch" style="--i:0">V</span><span class="ch" style="--i:1">I</span><span class="ch" style="--i:2">R</span><span class="ch" style="--i:3">T</span><span class="ch" style="--i:4">U</span><span class="ch" style="--i:5">A</span><span class="ch" style="--i:6">L</span>
+                </span>
+                <span class="vr-tline" aria-hidden="true">
+                    <span class="ch" style="--i:7">R</span><span class="ch" style="--i:8">U</span><span class="ch" style="--i:9">N</span><span class="ch" style="--i:10">N</span><span class="ch" style="--i:11">E</span><span class="ch" style="--i:12">R</span><span class="ch dot" style="--i:13">.</span>
+                </span>
+            </h1>
+
+            <div class="vr-sub">
+                <span class="vr-sub__bar" aria-hidden="true"></span>
+                <p class="vr-sub__text">A digital twin of a runner. Eight university disciplines, one athlete, rebuilt in
+                    software: collect the movement, process it, give it a language, secure it, teach a machine to read it,
+                    show it, and finally play it.</p>
             </div>
-            <a href="#overview" class="cta-button">Explore Project</a>
+
+            <div class="vr-hero__foot">
+                <a href="#concept" class="vr-btn" data-scroll>Explore the project <i class="fas fa-arrow-down"></i></a>
+                <dl class="vr-stats">
+                    <div class="vr-stat"><dt>Disciplines</dt><dd>08</dd></div>
+                    <div class="vr-stat"><dt>Credits</dt><dd>48 <span>ECTS</span></dd></div>
+                    <div class="vr-stat"><dt>Technologies</dt><dd>08</dd></div>
+                    <div class="vr-stat"><dt>Twin</dt><dd>01</dd></div>
+                </dl>
+            </div>
         </div>
-    </section>
-    <!-- Project Overview -->
-    <section class="project-overview section" id="overview">
-        <div class="container">
-            <h2 class="section-title">Project Overview</h2>
-            <div class="overview-content">
-                <div class="overview-text">
-                    <p>The Virtual Runner project focuses on creating a comprehensive digital twin of a runner, integrating multiple cutting-edge technologies into a unified application. This thesis demonstrates the practical implementation of various computer science disciplines working together to solve real-world problems. </p>
+        <span class="vr-corner" aria-hidden="true">Maribor / 2024</span>
+    </header>
+
+    <!-- ============================ CONCEPT ============================ -->
+    <section class="vr-section" id="concept">
+        <div class="vr-wrap">
+            <div class="vr-secthead reveal">
+                <span class="vr-secthead__num">01</span>
+                <span class="vr-secthead__label">The concept</span>
+                <span class="vr-secthead__rule"></span>
+            </div>
+
+            <div class="vr-concept">
+                <div class="vr-concept__text reveal">
+                    <h2 class="vr-heading">One runner,<br>mirrored in code.</h2>
+                    <p>A digital twin is a living software copy of something real. Virtual Runner is exactly that for a
+                        person who runs: their motion, their data and their performance, captured from the phone in their
+                        pocket and rebuilt as a system you can watch, query and even play against.</p>
+                    <p>The twist is that it was never one program. The thesis stitches together eight separate courses
+                        from my degree into a single working pipeline, each course contributing the part it taught me to
+                        build.</p>
+                    <ul class="vr-stack">
+                        <li><i class="devicon-react-original"></i> React</li>
+                        <li><i class="devicon-nodejs-plain"></i> Node.js</li>
+                        <li><i class="devicon-mongodb-plain"></i> MongoDB</li>
+                        <li><i class="devicon-kotlin-plain"></i> Kotlin</li>
+                        <li><i class="devicon-python-plain"></i> Python</li>
+                        <li><i class="devicon-java-plain"></i> Java / libGDX</li>
+                    </ul>
                 </div>
-                <div class="overview-video">
+
+                <figure class="vr-concept__media reveal">
                     <video autoplay loop muted playsinline>
                         <source src="../../assets/video/run.mp4" type="video/mp4">
                     </video>
-                </div>
-                <div class="tech-list">
-                    <ul>
-                        <li>Web Application (React, Node.js, MongoDB)</li>
-                        <li>Desktop Data Processing (Kotlin)</li>
-                        <li>Mobile Data Collection (Kotlin)</li>
-                        <li>Custom Programming Language (Kotlin)</li>
-                        <li>Blockchain & MPI Application (Python)</li>
-                        <li>AI Pattern Recognition (Python)</li>
-                        <li>Video Game Development (libGDX - Java)</li>
-                        <li>CI/CD Pipeline Implementation</li>
-                    </ul>
-                </div>
+                    <figcaption>Captured run, replayed by the twin</figcaption>
+                </figure>
             </div>
         </div>
     </section>
 
-    <!-- Academic Subjects -->
-    <section class="subjects-section section" id="subjects">
-        <div class="container">
-            <h2 class="section-title">Accredited Curriculum</h2>
-            <div class="subjects-grid">
+    <!-- ============================ PIPELINE ============================ -->
+    <section class="vr-section vr-section--dark" id="pipeline">
+        <div class="vr-wrap">
+            <div class="vr-secthead reveal">
+                <span class="vr-secthead__num">02</span>
+                <span class="vr-secthead__label">How it fits together</span>
+                <span class="vr-secthead__rule"></span>
+            </div>
+            <h2 class="vr-heading vr-heading--invert reveal">From a footstep<br>to a playable twin.</h2>
 
-                <div class="subject-card">
-                    <div class="subject-card-inner">
-                        <div class="subject-card-front">
-                            <div class="subject-icon">
-                                <i class="fas fa-globe"></i>
-                            </div>
-                            <h3>Web Application Development</h3>
-                        </div>
-                        <div class="subject-card-back">
-                            <p>Developed the core web application using React, Node.js, and MongoDB to create a comprehensive platform for runner data visualization and management.</p>
-                        </div>
-                    </div>
-                </div>
+            <ol class="vr-flow reveal">
+                <li class="vr-flow__step"><span class="vr-flow__k">Collect</span><span class="vr-flow__v">Mobile sensors</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Process</span><span class="vr-flow__v">Desktop app</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Describe</span><span class="vr-flow__v">Custom language</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Secure</span><span class="vr-flow__v">Blockchain + MPI</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Understand</span><span class="vr-flow__v">Neural networks</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Show</span><span class="vr-flow__v">Web platform</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Play</span><span class="vr-flow__v">libGDX game</span></li>
+            </ol>
+            <p class="vr-flow__ops reveal"><span>Underneath it all</span> System administration: CI/CD, deployment and scripting keeping every stage alive.</p>
+        </div>
+    </section>
 
-                <div class="subject-card">
-                    <div class="subject-card-inner">
-                        <div class="subject-card-front">
-                            <div class="subject-icon">
-                                <i class="fas fa-server"></i>
-                            </div>
-                            <h3>System Administration</h3>
-                        </div>
-                        <div class="subject-card-back">
-                            <p>Implemented CI/CD pipelines and managed system deployment, ensuring scalable and maintainable infrastructure for the entire project ecosystem.</p>
-                        </div>
-                    </div>
-                </div>
+    <!-- ============================ CURRICULUM ============================ -->
+    <section class="vr-section" id="curriculum">
+        <div class="vr-wrap">
+            <div class="vr-secthead reveal">
+                <span class="vr-secthead__num">03</span>
+                <span class="vr-secthead__label">The accredited curriculum</span>
+                <span class="vr-secthead__rule"></span>
+            </div>
+            <h2 class="vr-heading reveal">Eight disciplines.</h2>
+            <p class="vr-lede reveal">Each card is a real FERI course, worth six credits, and the exact piece of Virtual
+                Runner it made possible.</p>
 
-                <div class="subject-card">
-                    <div class="subject-card-inner">
-                        <div class="subject-card-front">
-                            <div class="subject-icon">
-                                <i class="fas fa-cogs"></i>
-                            </div>
-                            <h3>Compiling Programming Languages</h3>
-                        </div>
-                        <div class="subject-card-back">
-                            <p>Created a custom domain-specific language for GeoJSON visualization, complete with lexer, parser, and interpreter components.</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="vr-disc-grid">
 
-                <div class="subject-card">
-                    <div class="subject-card-inner">
-                        <div class="subject-card-front">
-                            <div class="subject-icon">
-                                <i class="fas fa-code"></i>
-                            </div>
-                            <h3>Principles of Programming Languages</h3>
-                        </div>
-                        <div class="subject-card-back">
-                            <p>Applied fundamental programming language concepts in the design and implementation of the custom visualization language, focusing on syntax and semantics.</p>
-                        </div>
-                    </div>
-                </div>
+                <article class="vr-disc reveal">
+                    <header class="vr-disc__top">
+                        <span class="vr-disc__code">61U018</span>
+                        <span class="vr-disc__ects">6 ECTS</span>
+                    </header>
+                    <p class="vr-disc__sl">Spletno programiranje</p>
+                    <h3 class="vr-disc__en">Web Programming</h3>
+                    <p class="vr-disc__body">The hub of the whole twin. A full stack platform that visualizes runner data,
+                        manages athletes and ties every other component together.</p>
+                    <ul class="vr-disc__tags">
+                        <li>REST</li><li>React SPA</li><li>MongoDB</li><li>PWA</li>
+                    </ul>
+                </article>
 
-                <div class="subject-card">
-                    <div class="subject-card-inner">
-                        <div class="subject-card-front">
-                            <div class="subject-icon">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                            <h3>Computer Vision & Pattern Recognition</h3>
-                        </div>
-                        <div class="subject-card-back">
-                            <p>Developed AI algorithms for analyzing running patterns and performance metrics, utilizing machine learning techniques for data insights.</p>
-                        </div>
-                    </div>
-                </div>
+                <article class="vr-disc reveal">
+                    <header class="vr-disc__top">
+                        <span class="vr-disc__code">61U166</span>
+                        <span class="vr-disc__ects">6 ECTS</span>
+                    </header>
+                    <p class="vr-disc__sl">Principi programskih jezikov</p>
+                    <h3 class="vr-disc__en">Principles of Programming Languages</h3>
+                    <p class="vr-disc__body">A desktop application that ingests and cleans the raw runner data, built to put
+                        competing programming paradigms into practice.</p>
+                    <ul class="vr-disc__tags">
+                        <li>Kotlin</li><li>Jetpack Compose</li><li>Type systems</li>
+                    </ul>
+                </article>
 
-                <div class="subject-card">
-                    <div class="subject-card-inner">
-                        <div class="subject-card-front">
-                            <div class="subject-icon">
-                                <i class="fas fa-network-wired"></i>
-                            </div>
-                            <h3>Parallel & Distributed Computing</h3>
-                        </div>
-                        <div class="subject-card-back">
-                            <p>Implemented blockchain technology with MPI for secure, distributed data processing and validation across the runner ecosystem.</p>
-                        </div>
-                    </div>
-                </div>
+                <article class="vr-disc reveal">
+                    <header class="vr-disc__top">
+                        <span class="vr-disc__code">61U174</span>
+                        <span class="vr-disc__ects">6 ECTS</span>
+                    </header>
+                    <p class="vr-disc__sl">Platformno odvisen razvoj aplikacij</p>
+                    <h3 class="vr-disc__en">Platform-Based Development</h3>
+                    <p class="vr-disc__body">A mobile app that captures live movement from the phone's own sensors. GPS,
+                        accelerometer and compass become the raw signal feeding the twin.</p>
+                    <ul class="vr-disc__tags">
+                        <li>Android</li><li>Sensors</li><li>GPS</li><li>Kotlin</li>
+                    </ul>
+                </article>
 
-                <div class="subject-card">
-                    <div class="subject-card-inner">
-                        <div class="subject-card-front">
-                            <div class="subject-icon">
-                                <i class="fas fa-mobile-alt"></i>
-                            </div>
-                            <h3>Platform-Based Application Development</h3>
-                        </div>
-                        <div class="subject-card-back">
-                            <p>Built mobile and desktop applications using Kotlin for real-time data collection and processing, ensuring cross-platform compatibility.</p>
-                        </div>
-                    </div>
-                </div>
+                <article class="vr-disc reveal">
+                    <header class="vr-disc__top">
+                        <span class="vr-disc__code">61U021</span>
+                        <span class="vr-disc__ects">6 ECTS</span>
+                    </header>
+                    <p class="vr-disc__sl">Prevajanje programskih jezikov</p>
+                    <h3 class="vr-disc__en">Compiler Construction</h3>
+                    <p class="vr-disc__body">A small language with its own lexer, parser and interpreter for describing and
+                        drawing GeoJSON running routes.</p>
+                    <ul class="vr-disc__tags">
+                        <li>Lexer</li><li>LL / LR parsing</li><li>Interpreter</li>
+                    </ul>
+                </article>
 
-                <div class="subject-card">
-                    <div class="subject-card-inner">
-                        <div class="subject-card-front">
-                            <div class="subject-icon">
-                                <i class="fas fa-gamepad"></i>
-                            </div>
-                            <h3>Game Development</h3>
-                        </div>
-                        <div class="subject-card-back">
-                            <p>Created an interactive game component using libGDX and Java to gamify the running experience and provide engaging user interactions.</p>
-                        </div>
-                    </div>
-                </div>
+                <article class="vr-disc reveal">
+                    <header class="vr-disc__top">
+                        <span class="vr-disc__code">61U173</span>
+                        <span class="vr-disc__ects">6 ECTS</span>
+                    </header>
+                    <p class="vr-disc__sl">Paralelno in porazdeljeno računanje</p>
+                    <h3 class="vr-disc__en">Parallel &amp; Distributed Computing</h3>
+                    <p class="vr-disc__body">A blockchain secured with MPI spreads runner records across nodes and validates
+                        them with no single point of trust.</p>
+                    <ul class="vr-disc__tags">
+                        <li>MPI</li><li>Blockchain</li><li>Amdahl's law</li>
+                    </ul>
+                </article>
+
+                <article class="vr-disc reveal">
+                    <header class="vr-disc__top">
+                        <span class="vr-disc__code">61U037</span>
+                        <span class="vr-disc__ects">6 ECTS</span>
+                    </header>
+                    <p class="vr-disc__sl">Uvod v računalniški vid in razpoznavanje vzorcev</p>
+                    <h3 class="vr-disc__en">Computer Vision &amp; Pattern Recognition</h3>
+                    <p class="vr-disc__body">Neural networks read the collected data to recognize running form, fatigue and
+                        performance trends.</p>
+                    <ul class="vr-disc__tags">
+                        <li>Neural nets</li><li>Features</li><li>Classification</li>
+                    </ul>
+                </article>
+
+                <article class="vr-disc reveal">
+                    <header class="vr-disc__top">
+                        <span class="vr-disc__code">61U172</span>
+                        <span class="vr-disc__ects">6 ECTS</span>
+                    </header>
+                    <p class="vr-disc__sl">Razvoj računalniških iger</p>
+                    <h3 class="vr-disc__en">Game Development</h3>
+                    <p class="vr-disc__body">A libGDX game turns real runs into play. The athlete races against their own
+                        digital twin.</p>
+                    <ul class="vr-disc__tags">
+                        <li>libGDX</li><li>Java</li><li>Game loop</li><li>2D</li>
+                    </ul>
+                </article>
+
+                <article class="vr-disc reveal">
+                    <header class="vr-disc__top">
+                        <span class="vr-disc__code">61U023</span>
+                        <span class="vr-disc__ects">6 ECTS</span>
+                    </header>
+                    <p class="vr-disc__sl">Sistemska administracija</p>
+                    <h3 class="vr-disc__en">System Administration</h3>
+                    <p class="vr-disc__body">The plumbing. CI/CD pipelines, deployment and scripting that keep all eight
+                        pieces shipping and running.</p>
+                    <ul class="vr-disc__tags">
+                        <li>Bash</li><li>CI/CD</li><li>Deploy</li><li>Security</li>
+                    </ul>
+                </article>
 
             </div>
+        </div>
+    </section>
+
+    <!-- ============================ CLOSING ============================ -->
+    <section class="vr-section vr-section--close">
+        <div class="vr-wrap vr-close">
+            <p class="vr-close__eyebrow reveal">One thesis, eight worlds</p>
+            <h2 class="vr-close__title reveal">Forty-eight credits,<br>compiled into a runner.</h2>
+            <a href="../../index.html" class="vr-link reveal">Back to the portfolio <i class="fas fa-arrow-right"></i></a>
         </div>
     </section>
 
@@ -194,7 +297,7 @@
     </footer>
 
     <script type="module" src="../../components/main-navbar.js"></script>
-    <script src="../homepage/script.js"></script>
+    <script src="script.js"></script>
     <script src="../../components/tawk-chat.js"></script>
     <script src="../../components/gtranslate.js"></script>
 </body>

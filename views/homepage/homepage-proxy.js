@@ -38,7 +38,7 @@
                     <span class="stats-lang-info">${info.lines.toLocaleString()} lines · ${info.files} files</span>
                 </div>
                 <div class="stats-bar">
-                    <div class="stats-bar-fill" style="width: 0%; background: ${colors[lang] || '#667eea'}"></div>
+                    <div class="stats-bar-fill" style="width: 0%; background: ${colors[lang] || '#d4451f'}"></div>
                 </div>
             `;
             breakdownEl.appendChild(item);
@@ -94,7 +94,7 @@
     } catch (e) {
         spinner.hidden = true;
         body.hidden    = false;
-        body.innerHTML = `<p style="text-align:center;color:var(--error)">Unable to load picture.</p>`;
+        body.innerHTML = `<p style="text-align:center;color:var(--clay)">Unable to load picture.</p>`;
     }
 })();
 

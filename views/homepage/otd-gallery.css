@@ -1,56 +1,47 @@
-:root {
-    --bg: #283040;
-    --bg-card: rgba(255, 255, 255, 0.03);
-    --bg-card-hover: rgba(255, 255, 255, 0.06);
-    --border: rgba(255, 255, 255, 0.08);
-    --border-hover: rgba(255, 255, 255, 0.15);
-    --text: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-muted: rgba(255, 255, 255, 0.5);
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --radius-sm: 8px;
-    --radius: 16px;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+/* On This Day section: editorial light theme.
+   Custom properties are scoped to the section so they don't leak
+   into the global :root (the dark gallery vars used to). */
+#on-this-day-section {
+    --bg: #efe9dd;
+    --bg-card: #fffdf8;
+    --bg-card-hover: #ffffff;
+    --border: rgba(28, 26, 23, 0.12);
+    --border-hover: rgba(28, 26, 23, 0.28);
+    --text: #1c1a17;
+    --text-secondary: #6b6256;
+    --text-muted: rgba(28, 26, 23, 0.45);
+    --accent: #d4451f;
+    --accent-hover: #b8371a;
+    --radius-sm: 4px;
+    --radius: 6px;
+    --shadow: 0 4px 20px rgba(28, 26, 23, 0.08);
+    --shadow-lg: 0 10px 40px rgba(28, 26, 23, 0.12);
     --transition: all 0.2s ease;
+    /* The prev arrow + the gallery-container gap push the first card in from
+       the section edge. Expose that offset once so the heading can borrow it
+       and stay aligned with the cards, no matter what the arrow size is. */
+    --otd-arrow-gap: 16px;
+    --otd-gutter: calc(var(--gallery-nav-size, 48px) + var(--otd-arrow-gap));
+    background: var(--bg);
 }
 
-#on-this-day-section {
-    background: var(--bg);
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .featured-section {
     max-width: 1400px;
     margin: 0 auto;
-    padding-bottom: 60px;
+    padding: 60px 1.5rem 60px;
     animation: fadeInUp 0.6s ease 0.1s both;
-}
-
-.otd-header {
-    text-align: center;
-    padding: 60px 0 40px;
-    animation: fadeInUp 0.6s ease;
-}
-
-.otd-label {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    color: var(--accent);
-    margin-bottom: 12px;
-}
-
-.otd-title {
-    font-size: clamp(2.5rem, 8vw, 4.5rem);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    margin-bottom: 12px;
-    background: linear-gradient(135deg, #fff 0%, var(--accent-hover) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
 .featured-badge {
@@ -62,15 +53,10 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     padding: 8px 16px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
-    border: 1px solid rgba(99, 102, 241, 0.3);
+    background: rgba(212, 69, 31, 0.1);
+    border: 1px solid rgba(212, 69, 31, 0.3);
     border-radius: 100px;
-    color: var(--accent-hover);
-}
-
-/* Gallery Container Customization */
-.gallery-container {
-    /* Gap is set in base gallery.css, customize here if needed */
+    color: var(--accent);
 }
 
 .gallery-viewport {
@@ -91,15 +77,16 @@
 }
 
 .gallery-slide.active {
-    border-color: rgba(99, 102, 241, 0.3);
+    border-color: rgba(212, 69, 31, 0.4);
 }
+
 /* Gallery Slide Content */
 .gallery-image {
     width: 100%;
     height: 180px;
     overflow: hidden;
     position: relative;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    background: var(--bg);
 }
 
 .gallery-image-placeholder {
@@ -140,7 +127,7 @@
     padding: 4px 10px;
     background: var(--accent);
     border-radius: 100px;
-    color: white;
+    color: #fff;
 }
 
 .gallery-counter {
@@ -150,7 +137,8 @@
 }
 
 .gallery-title {
-    font-size: 1rem;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 1.05rem;
     font-weight: 600;
     line-height: 1.4;
     margin-bottom: 12px;
@@ -192,7 +180,7 @@
     gap: 6px;
     font-size: 13px;
     font-weight: 500;
-    color: var(--text);
+    color: #fff;
     text-decoration: none;
     padding: 10px 16px;
     background: var(--accent);
@@ -229,11 +217,6 @@
     box-shadow: var(--shadow-lg);
 }
 
-/* Gallery Dots Customization */
-.gallery-dots {
-    /* Base styles in gallery.css */
-}
-
 .gallery-dot {
     background: var(--text);
 }
@@ -242,11 +225,24 @@
     background: var(--accent);
 }
 
+/* Single source of truth for the arrow gap: the gallery container and the
+   heading gutter both read --otd-arrow-gap, so they can never drift apart. */
+#on-this-day-section .gallery-container {
+    gap: var(--otd-arrow-gap);
+}
+
+/* Indent the title + subtitle by one arrow + gap so their left edge lands on
+   the first card instead of the section edge. */
+.otd-head {
+    padding-left: var(--otd-gutter);
+    margin-bottom: 2.5rem;
+}
+
 .otd-view-more {
-    text-align: center;
-    font-size: 0.95rem;
+    font-size: 1.15rem;
+    font-family: 'IBM Plex Sans', sans-serif;
     color: var(--text-secondary);
-    margin: 0 0 20px;
+    margin: 0;
 }
 
 .otd-view-more a {
@@ -260,16 +256,26 @@
 }
 
 @media (max-width: 767px) {
+    /* Arrows are hidden and the carousel goes full-bleed, so drop the gutter
+       and gap: the heading sits flush at the section edge again. */
+    #on-this-day-section {
+        --otd-arrow-gap: 0px;
+        --otd-gutter: 0px;
+    }
+
     .gallery-slide:hover {
         transform: none;
         box-shadow: none;
     }
+
     .featured-badge {
         margin-left: 25px;
     }
+
     .gallery-slide.active {
-        border-color: rgba(99, 102, 241, 0.5);
+        border-color: rgba(212, 69, 31, 0.5);
     }
+
     .gallery-nav {
         display: none;
     }

@@ -18,9 +18,8 @@
 - **Add skills** - learn how to make skills and add as many as you can think of
 - Add webp to image service, and then also figure out the jpg edge case
 ## Refactoring
-
-- Restyle every project with Tailwind CSS (needed for homepage, music, thesis)
 - Figure out how to seperate git repositories, to seperate the big projects, people would be interested in seeing
+- Find github alternative
 - Go through controllers and refactor them
 
 ## Project Ideas

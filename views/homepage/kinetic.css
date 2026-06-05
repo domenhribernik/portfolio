@@ -1,0 +1,776 @@
+/* ============================================================
+   KINETIC TYPE MAXIMALIST
+   Layers a bold poster aesthetic over the warm "editorial" base.
+   Everything is scoped under `.kinetic` so it only affects the
+   homepage and never leaks into the rest of the site. Tailwind in
+   index.html handles layout/spacing; this file keeps what Tailwind
+   can't cleanly express: the hero animations, cursor blobs, the
+   running marquee, the poster grid, grain, and the punched-up
+   cards / section headers.
+   ============================================================ */
+
+.kinetic {
+    --cobalt: #1f35e0;
+    --cobalt-dk: #1226c0;
+    --marigold: #f2b705;
+    --grid-line: rgba(22, 20, 15, 0.11);
+    --hard: 6px 6px 0;
+}
+
+/* Display + label faces override the editorial Fraunces on this page */
+.kinetic .logo,
+.kinetic .section-title,
+.kinetic .project-title,
+.kinetic .otd-title,
+.kinetic .gallery-title,
+.kinetic .apod-main-title,
+.kinetic .apod-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+}
+
+.kinetic .otd-title {
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+}
+
+.kinetic .logo {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.kinetic-hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--paper);
+    isolation: isolate;
+}
+
+/* Poster grid: faint vertical rules every 1/6 of the width */
+.kinetic-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px);
+    /* Pixel-snap the column width so the 1px rules land on whole pixels and stay
+       crisp on hi-DPI screens (un-snapped calc(100%/6) anti-aliases into fuzzy
+       streaks). Fallback keeps sharp whole-px columns where round() is unsupported. */
+    background-size: 240px 100%;
+    background-size: round(calc(100% / 6), 1px) 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 80%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 80%, transparent);
+}
+
+/* Cursor-following blend blobs (positions driven by kinetic.js) */
+.kinetic-blob {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    width: 46vmax;
+    height: 46vmax;
+    border-radius: 50%;
+    filter: blur(64px);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    will-change: transform;
+    transform: translate(50vw, 38vh) translate(-50%, -50%);
+}
+
+.kinetic-blob--clay {
+    background: radial-gradient(circle at center, rgba(224, 67, 29, 0.85), rgba(224, 67, 29, 0) 60%);
+    opacity: 0.6;
+    animation: blobFloatA 16s ease-in-out infinite;
+}
+
+.kinetic-blob--cobalt {
+    background: radial-gradient(circle at center, rgba(31, 53, 224, 0.7), rgba(31, 53, 224, 0) 60%);
+    opacity: 0.5;
+    animation: blobFloatB 20s ease-in-out infinite;
+}
+
+/* Once JS takes over positioning, drop the idle float */
+.kinetic-hero.blobs-live .kinetic-blob {
+    animation: none;
+}
+
+@keyframes blobFloatA {
+    0%, 100% { transform: translate(36vw, 34vh) translate(-50%, -50%); }
+    50%      { transform: translate(60vw, 46vh) translate(-50%, -50%); }
+}
+
+@keyframes blobFloatB {
+    0%, 100% { transform: translate(66vw, 50vh) translate(-50%, -50%); }
+    50%      { transform: translate(44vw, 30vh) translate(-50%, -50%); }
+}
+
+/* Grain texture */
+.kinetic-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+.kinetic-hero__inner {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 8rem 1.5rem 6rem;
+}
+
+@media (min-width: 768px) {
+    .kinetic-hero__inner {
+        padding: 9rem 2.5rem 7rem;
+    }
+}
+
+/* Eyebrow */
+.kinetic-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-size: 0.7rem;
+    color: var(--clay);
+    margin-bottom: 1.6rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.1s forwards;
+}
+
+.kinetic-eyebrow::before {
+    content: '';
+    width: 0.55rem;
+    height: 0.55rem;
+    background: var(--cobalt);
+    animation: blink 1.4s steps(1) infinite;
+}
+
+@keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.15; }
+}
+
+/* The giant kinetic title */
+.kinetic-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.84;
+    letter-spacing: -0.035em;
+    font-size: clamp(3.4rem, 14vw, 13rem);
+    color: var(--ink);
+    margin: 0;
+}
+
+.kinetic-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.06em;
+}
+
+.kinetic-line .ch {
+    display: inline-block;
+    transform: translateY(118%) rotate(5deg);
+    opacity: 0;
+    animation: chRise 0.85s cubic-bezier(0.16, 0.84, 0.34, 1) both;
+    animation-delay: calc(var(--i) * 0.04s + 0.18s);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease;
+}
+
+.kinetic-line .ch:hover {
+    transform: translateY(-0.06em) rotate(-2deg);
+    color: var(--clay);
+}
+
+.kinetic-title .dot {
+    color: var(--cobalt);
+}
+
+@keyframes chRise {
+    to { transform: translateY(0) rotate(0); opacity: 1; }
+}
+
+/* Subtitle */
+.kinetic-sub {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.2rem;
+    max-width: 40rem;
+    margin-top: 2.4rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.7s forwards;
+}
+
+.kinetic-sub__bar {
+    flex-shrink: 0;
+    width: 2.6rem;
+    height: 3px;
+    margin-top: 0.7rem;
+    background: var(--clay);
+}
+
+.kinetic-sub__text {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: clamp(1.05rem, 2.4vw, 1.5rem);
+    line-height: 1.5;
+    color: rgba(28, 26, 23, 0.78);
+}
+
+/* CTAs */
+.kinetic-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.6rem;
+    margin-top: 2.6rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.85s forwards;
+}
+
+.kinetic-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.95rem 1.8rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 2px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    box-shadow: var(--hard) var(--cobalt);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.kinetic-btn:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--clay);
+    background: var(--clay);
+    border-color: var(--clay);
+}
+
+.kinetic-btn .fa-arrow-down {
+    transition: transform 0.2s ease;
+}
+
+.kinetic-btn:hover .fa-arrow-down {
+    transform: translateY(3px);
+}
+
+.kinetic-link {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 2px solid var(--clay);
+    padding-bottom: 0.25rem;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.kinetic-link:hover {
+    color: var(--cobalt);
+    border-color: var(--cobalt);
+}
+
+/* Corner vertical label */
+.kinetic-corner {
+    position: absolute;
+    z-index: 3;
+    bottom: 4.5rem;
+    right: 1.5rem;
+    writing-mode: vertical-rl;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(28, 26, 23, 0.45);
+}
+
+@media (max-width: 767px) {
+    .kinetic-corner { display: none; }
+}
+
+/* ============================================================
+   SECTION HEADERS (numbered, poster style)
+   ============================================================ */
+.kinetic-secthead {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    margin-bottom: 3rem;
+}
+
+.kinetic-secthead__num {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3.4rem);
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--ink);
+    transition: color 0.3s ease;
+}
+
+.kinetic-secthead:hover .kinetic-secthead__num {
+    color: var(--clay);
+    -webkit-text-stroke-color: var(--clay);
+}
+
+.kinetic-secthead__label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    font-size: 0.75rem;
+    color: var(--clay);
+    white-space: nowrap;
+}
+
+.kinetic-secthead__rule {
+    flex: 1;
+    height: 2px;
+    background: var(--ink);
+}
+
+/* Big headings */
+.kinetic h2.kinetic-heading {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+}
+
+.kinetic .category-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   PROJECT CARDS — editorial catalogue with a colour-flood hover.
+   Scoped with `body.kinetic ...` so they beat the base-style
+   `body.editorial .project-card` rules (same specificity, loaded
+   later) instead of silently losing to them (which is what made
+   the titles fall back to serif/Times New Roman).
+   Per-card accent cycles clay -> cobalt -> pine.
+   ============================================================ */
+body.kinetic .projects-grid {
+    counter-reset: proj;
+    gap: 1.25rem;
+}
+
+body.kinetic .project-card {
+    --acc: var(--clay);
+    position: relative;
+    counter-increment: proj;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--card);
+    border: 1.5px solid rgba(28, 26, 23, 0.16);
+    border-radius: 3px;
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+body.kinetic .project-card:nth-child(3n+1) { --acc: var(--clay); }
+body.kinetic .project-card:nth-child(3n+2) { --acc: var(--cobalt); }
+body.kinetic .project-card:nth-child(3n)   { --acc: var(--pine); }
+
+body.kinetic .project-card:hover {
+    transform: translate(-5px, -5px);
+    border-color: var(--ink);
+    box-shadow: 9px 9px 0 var(--acc);
+}
+
+/* Catalogue index, top-left (badge lives top-right) */
+body.kinetic .project-card::after {
+    content: counter(proj, decimal-leading-zero);
+    position: absolute;
+    top: 0.5rem;
+    left: 0.85rem;
+    z-index: 3;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.4px rgba(28, 26, 23, 0.32);
+    transition: color 0.25s ease, -webkit-text-stroke-color 0.25s ease;
+    pointer-events: none;
+}
+
+body.kinetic .project-card:hover::after {
+    color: var(--paper);
+    -webkit-text-stroke-color: var(--paper);
+}
+
+/* Icon panel + the rising colour flood */
+body.kinetic .project-image {
+    position: relative;
+    height: 156px;
+    background: var(--paper-2);
+    border-bottom: 1.5px solid rgba(28, 26, 23, 0.16);
+    overflow: hidden;
+    transition: border-color 0.22s ease;
+}
+
+body.kinetic .project-image::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--acc);
+    transform: translateY(101%);
+    transition: transform 0.36s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+body.kinetic .project-card:hover .project-image { border-color: var(--ink); }
+body.kinetic .project-card:hover .project-image::before { transform: translateY(0); }
+
+body.kinetic .project-image .project-image-background {
+    position: relative;
+    z-index: 2;
+    color: var(--ink);
+    font-size: 2.5rem;
+    transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease;
+}
+
+body.kinetic .project-card:hover .project-image-background {
+    color: var(--paper);
+    transform: scale(1.14) rotate(-5deg);
+}
+
+/* Badge: square mono tag */
+body.kinetic .project-badge {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 0;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em;
+    z-index: 3;
+}
+
+/* Content */
+body.kinetic .project-content {
+    padding: 1.4rem 1.5rem 1.6rem;
+}
+
+body.kinetic .project-content .project-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    font-size: 1.18rem;
+    line-height: 1.12;
+    color: var(--ink);
+    transition: color 0.25s ease;
+}
+
+body.kinetic .project-card:hover .project-content .project-title {
+    color: var(--acc);
+}
+
+body.kinetic .project-link {
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    border-bottom-width: 2px;
+    border-bottom-color: var(--acc);
+}
+
+body.kinetic .project-link:hover {
+    color: var(--acc);
+}
+
+/* ============================================================
+   CONTACT INFO CARDS — editorial filing cards.
+
+   The accent sweep lives in the card's OWN background gradient
+   (an oversized two-stop gradient slid via background-position),
+   NOT a stacked pseudo-element flood. A border always paints on
+   top of its own element's background, so the ink border is
+   structurally above the sweep at every frame: no seam, no
+   flicker, no border getting covered. A corner arrow springs out
+   diagonally and the whole card inverts to paper text on hover.
+   ============================================================ */
+.kinetic-info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .kinetic-info-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.kinetic-info {
+    --info-accent: var(--clay);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.75rem;
+    min-height: 188px;
+    padding: 1.6rem 1.7rem;
+    /* Gradient sized to 220% and parked at the right edge: only the
+       card colour shows at rest. Hover slides it to the left edge,
+       wiping the accent across on a slight diagonal. */
+    background-image: linear-gradient(105deg,
+        var(--info-accent) 0 46%,
+        var(--card) 54% 100%);
+    background-size: 220% 100%;
+    background-position: 100% 0;
+    background-repeat: no-repeat;
+    border: 2px solid var(--ink);
+    border-radius: 2px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: background-position 0.5s cubic-bezier(0.66, 0, 0.2, 1),
+                box-shadow 0.25s ease,
+                transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.kinetic-info:hover {
+    background-position: 0 0;
+    transform: translate(-3px, -3px);
+    box-shadow: 8px 8px 0 var(--ink);
+}
+
+/* Corner mark — springs out diagonally on hover */
+.kinetic-info::after {
+    content: '\2197'; /* ↗ */
+    position: absolute;
+    top: 1.05rem;
+    right: 1.2rem;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--info-accent);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+                color 0.25s ease;
+}
+
+.kinetic-info:hover::after {
+    transform: translate(3px, -3px);
+    color: var(--paper);
+}
+
+.kinetic-info__main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.kinetic-info__kicker {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.66rem;
+    color: var(--info-accent);
+    transition: color 0.25s ease;
+}
+
+.kinetic-info__value {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    word-break: break-word;
+    transition: color 0.25s ease;
+}
+
+.kinetic-info__value--sm {
+    font-size: clamp(0.92rem, 1.25vw, 1.08rem);
+    letter-spacing: -0.01em;
+}
+
+.kinetic-info__foot {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    padding-top: 0.85rem;
+    border-top: 1.5px solid currentColor;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--stone);
+    transition: color 0.25s ease, gap 0.25s ease;
+}
+
+.kinetic-info__foot i {
+    color: var(--info-accent);
+    transition: color 0.25s ease;
+}
+
+.kinetic-info:hover .kinetic-info__kicker,
+.kinetic-info:hover .kinetic-info__value,
+.kinetic-info:hover .kinetic-info__foot,
+.kinetic-info:hover .kinetic-info__foot i {
+    color: var(--paper);
+}
+
+.kinetic-info:hover .kinetic-info__foot {
+    gap: 0.85rem;
+}
+
+.kinetic .show-more-btn {
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.78rem;
+}
+
+/* Social buttons get the hard-shadow treatment */
+.kinetic .social-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--cobalt);
+}
+
+/* ============================================================
+   CUSTOM SCROLLBAR (homepage only — clay thumb on a paper track).
+   Scoped to <html> via :has() because the browser paints the
+   viewport scrollbar from the root element, not <body>; styling
+   body alone left the page on the default UA scrollbar. Literal hex
+   is used here (not the --clay/--paper-2 tokens) because those are
+   defined on body.editorial and do NOT cascade up to <html>.
+   ============================================================ */
+
+/* Standard properties — Firefox, and Safari 18.2+ */
+html:has(body.kinetic) {
+    scrollbar-width: thin;
+    scrollbar-color: #d4451f #efe9dd;
+}
+
+/* WebKit / Blink — Chrome, Edge, and Safari. Declaring an explicit
+   width also forces Safari off its auto-hiding overlay scrollbar and
+   onto an always-visible custom one (the usual "works everywhere but
+   Safari" gap). */
+html:has(body.kinetic)::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+
+html:has(body.kinetic)::-webkit-scrollbar-track {
+    background: #efe9dd;
+    border-left: 1px solid rgba(28, 26, 23, 0.08);
+}
+
+html:has(body.kinetic)::-webkit-scrollbar-thumb {
+    background: #d4451f;
+    border: 3px solid #efe9dd;
+    border-radius: 2px;
+}
+
+html:has(body.kinetic)::-webkit-scrollbar-thumb:hover,
+html:has(body.kinetic)::-webkit-scrollbar-thumb:active {
+    background: #b8371a;
+}
+
+html:has(body.kinetic)::-webkit-scrollbar-corner {
+    background: #efe9dd;
+}
+
+/* ============================================================
+   MOBILE COMPOSITION
+   Keep the projects two-up on phones so the list stays scannable
+   instead of collapsing into one tall, scroll-heavy column.
+   ============================================================ */
+@media (max-width: 640px) {
+    body.kinetic .projects-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem;
+    }
+
+    body.kinetic .project-image { height: 92px; }
+    body.kinetic .project-image .project-image-background { font-size: 1.6rem; }
+    body.kinetic .project-card::after { font-size: 1rem; top: 0.4rem; left: 0.6rem; }
+
+    body.kinetic .project-content { padding: 0.85rem 0.9rem 1rem; }
+    body.kinetic .project-content .project-title { font-size: 0.9rem; margin-bottom: 0.4rem; }
+
+    body.kinetic .project-description {
+        font-size: 0.78rem;
+        line-height: 1.45;
+        margin-bottom: 0.8rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    body.kinetic .project-link { font-size: 0.62rem; }
+
+    .kinetic-info {
+        min-height: 0;
+        gap: 1.4rem;
+        padding: 1.4rem 1.45rem;
+    }
+
+    body.kinetic .project-badge {
+        font-size: 0.52rem;
+        padding: 0.15rem 0.45rem;
+    }
+}
+
+/* ============================================================
+   SHARED KEYFRAMES + REDUCED MOTION
+   ============================================================ */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kinetic-line .ch,
+    .kinetic-eyebrow,
+    .kinetic-sub,
+    .kinetic-cta {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .kinetic-blob {
+        animation: none !important;
+    }
+
+    .kinetic-blob {
+        opacity: 0.32 !important;
+    }
+}

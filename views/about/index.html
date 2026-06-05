@@ -9,7 +9,9 @@
     <meta name="keywords" content="Domen Hribernik, about, developer, portfolio">
     <title>About - Domen Hribernik</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
     <link rel="stylesheet" href="../../base-style.css">
@@ -19,109 +21,153 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#667eea',
-                        'primary-hover': '#5a67d8',
-                        'text-light': 'rgba(255,255,255,0.9)',
-                        'text-muted': 'rgba(255,255,255,0.7)',
-                        'bg-dark': '#0f172a',
-                        'bg-card': '#1e293b',
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        cobalt: '#1f35e0',
+                        marigold: '#f2b705',
+                        // legacy aliases used across this page, remapped to editorial
+                        primary: '#d4451f',
+                        'primary-hover': '#b8371a',
+                        'text-light': '#1c1a17',
+                        'text-muted': '#6b6256',
+                        'bg-dark': '#f6f2ea',
+                        'bg-card': '#fffdf8',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        serif: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
                     },
                 }
             }
         }
     </script>
+    <link rel="stylesheet" href="../../views/homepage/kinetic.css">
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="editorial kinetic bg-paper text-ink font-sans antialiased">
     <main-navbar site="../../"></main-navbar>
 
     <!-- Hero -->
-    <section class="min-h-screen flex items-center pt-24 md:pt-0 bg-[linear-gradient(135deg,_#1a1f3a_0%,_#0f172a_50%,_#1a202c_100%)]">
-        <div class="container">
-            <div class="flex flex-col md:flex-row gap-8 md:gap-16 items-center justify-center text-center">
-                <div class="shrink-0">
-                    <div class="w-[200px] h-[200px] md:w-[280px] md:h-[280px] mx-auto rounded-full bg-[linear-gradient(135deg,_#667eea_0%,_#764ba2_100%)] flex items-center justify-center overflow-hidden border-[3px] border-white/10">
-                        <img src="../../assets/img/avatar.jpeg" alt="Portrait photo of Domen Hribernik" class="w-full h-full object-contain">
-                    </div>
+    <section id="home" class="kinetic-hero">
+        <div class="kinetic-grid" aria-hidden="true"></div>
+        <div class="kinetic-blob kinetic-blob--clay" aria-hidden="true"></div>
+        <div class="kinetic-blob kinetic-blob--cobalt" aria-hidden="true"></div>
+
+        <div class="kinetic-hero__inner">
+            <div class="grid md:grid-cols-[300px_1fr] gap-12 md:gap-20 items-center">
+                <div class="reveal flex flex-col items-center md:items-start gap-5">
+                    <figure class="about-portrait relative w-[240px] md:w-[300px] rounded-[2px]">
+                        <span class="absolute -inset-3 border border-clay/40 rounded-[2px]" aria-hidden="true"></span>
+                        <img src="../../assets/img/avatar.png" alt="Portrait photo of Domen Hribernik"
+                            class="relative w-full aspect-[4/5] object-cover rounded-[2px] grayscale-[20%] transition-all duration-500 hover:grayscale-0">
+                    </figure>
+                    <p class="about-caption">Celje, Slovenia / 2026</p>
                 </div>
-                <div class="max-w-[600px]">
-                    <h1 class="text-[2.2rem] md:text-5xl font-extrabold text-text-light mb-1">Domen Hribernik</h1>
-                    <p class="text-[1.3rem] text-primary font-medium mb-6">Full-Stack Developer</p>
-                    <p class="text-[1.1rem] text-text-muted leading-[1.8] mb-4">
-                        I'm a software developer based in Celje, Slovenia. I build professional applications for clients
-                        and contribute to open-source projects. I'm driven by curiosity and passionate about creating
-                        software that solves real problems.
-                    </p>
-                    <p class="text-[1.1rem] text-text-muted leading-[1.8] mb-4">
-                        With experience spanning WordPress, JavaScript, and C# development, I've delivered applications
-                        through internships, freelance projects, and now full-time work. I'm passionate about reliable
-                        solutions and AI-assisted development.
-                    </p>
+
+                <div>
+                    <p class="kinetic-eyebrow">Portfolio / About</p>
+
+                    <h1 class="kinetic-title notranslate" translate="no" aria-label="Domen Hribernik"
+                        style="font-size:clamp(2.6rem,8vw,6.5rem)">
+                        <span class="kinetic-line" aria-hidden="true">
+                            <span class="ch" style="--i:0">D</span><span class="ch" style="--i:1">O</span><span class="ch"
+                                style="--i:2">M</span><span class="ch" style="--i:3">E</span><span class="ch"
+                                style="--i:4">N</span>
+                        </span>
+                        <span class="kinetic-line" aria-hidden="true">
+                            <span class="ch" style="--i:5">H</span><span class="ch" style="--i:6">R</span><span class="ch"
+                                style="--i:7">I</span><span class="ch" style="--i:8">B</span><span class="ch"
+                                style="--i:9">E</span><span class="ch" style="--i:10">R</span><span class="ch"
+                                style="--i:11">N</span><span class="ch" style="--i:12">I</span><span class="ch"
+                                style="--i:13">K</span><span class="ch dot" style="--i:14">.</span>
+                        </span>
+                    </h1>
+
+                    <div class="kinetic-sub">
+                        <span class="kinetic-sub__bar" aria-hidden="true"></span>
+                        <p class="kinetic-sub__text">Software developer and maker based in Celje, Slovenia. I build
+                            production applications for clients and side projects for the joy of it, and I care as much
+                            about how something feels as whether it works.</p>
+                    </div>
+
+                    <div class="kinetic-cta">
+                        <a href="#path" class="kinetic-btn" data-magnetic>
+                            My path <i class="fas fa-arrow-down"></i>
+                        </a>
+                        <a href="#technologies" class="kinetic-link">View tech stack</a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Experience & Education -->
-    <section class="section bg-[linear-gradient(180deg,_#141c2e_0%,_#1a202c_100%)]" id="experience-education">
-        <div class="container">
-            <div class="flex flex-col md:flex-row gap-8 md:gap-12">
-                <div class="flex-1 min-w-0">
-                    <h2 class="section-title !text-[2rem]">Experience</h2>
-                    <div class="timeline">
-                        <div class="relative mb-8 last:mb-0">
-                            <div class="absolute -left-8 top-[0.3rem] w-[14px] h-[14px] rounded-full bg-primary border-[3px] border-bg-dark z-[1]"></div>
-                            <div class="group bg-bg-card p-5 rounded-2xl border border-white/10 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_0_1px_rgba(102,126,234,0.25),0_4px_16px_rgba(102,126,234,0.12)]">
-                                <span class="text-xs text-primary font-medium">Summers 2020, 2021, 2022, 2023</span>
-                                <h3 class="text-[1.1rem] text-text-light my-1">Summer Internships</h3>
-                                <p class="text-sm text-text-muted font-medium mb-2">Nova Vizija d.d.</p>
-                                <p class="text-sm text-white/60 leading-relaxed">Worked with WPF forms, Angular, ASP.NET, and SQL across multiple summer internships.</p>
+    <section id="path" class="bg-paper-2 py-24 md:py-32 border-y border-ink/10">
+        <div class="mx-auto max-w-[1200px] px-6 md:px-10">
+            <div class="kinetic-secthead reveal">
+                <span class="kinetic-secthead__num">01</span>
+                <span class="kinetic-secthead__label">Experience &amp; Education</span>
+                <span class="kinetic-secthead__rule"></span>
+            </div>
+            <h2 class="reveal kinetic-heading uppercase text-4xl md:text-6xl text-ink mb-12">The Path</h2>
+
+            <div class="grid md:grid-cols-2 gap-10 md:gap-16">
+                <div class="reveal">
+                    <h3 class="category-title text-2xl md:text-3xl text-ink mb-8 pb-3 border-b border-ink/15">Experience</h3>
+                    <div class="timeline timeline--clay">
+                        <div class="tl-item">
+                            <div class="tl-card">
+                                <span class="tl-date">Summers 2020, 2021, 2022, 2023</span>
+                                <h4 class="tl-role">Summer Internships</h4>
+                                <p class="tl-org">Nova Vizija d.d.</p>
+                                <p class="tl-desc">Worked with WPF forms, Angular, ASP.NET, and SQL across multiple summer internships.</p>
                             </div>
                         </div>
-
-                        <div class="relative mb-8 last:mb-0">
-                            <div class="absolute -left-8 top-[0.3rem] w-[14px] h-[14px] rounded-full bg-primary border-[3px] border-bg-dark z-[1]"></div>
-                            <div class="bg-bg-card p-5 rounded-2xl border border-white/10 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_0_1px_rgba(102,126,234,0.25),0_4px_16px_rgba(102,126,234,0.12)]">
-                                <span class="text-xs text-primary font-medium">March 2025 - August 2025</span>
-                                <h3 class="text-[1.1rem] text-text-light my-1">Internship</h3>
-                                <p class="text-sm text-text-muted font-medium mb-2">Cartridge World Cyprus</p>
-                                <p class="text-sm text-white/60 leading-relaxed">6-month internship working with WordPress, Elementor, SEO, Google Analytics, and Meta Pixel.</p>
+                        <div class="tl-item">
+                            <div class="tl-card">
+                                <span class="tl-date">March 2025 - August 2025</span>
+                                <h4 class="tl-role">Internship</h4>
+                                <p class="tl-org">Cartridge World Cyprus</p>
+                                <p class="tl-desc">6-month internship working with WordPress, Elementor, SEO, Google Analytics, and Meta Pixel.</p>
                             </div>
                         </div>
-
-                        <div class="relative mb-8 last:mb-0">
-                            <div class="absolute -left-8 top-[0.3rem] w-[14px] h-[14px] rounded-full bg-primary border-[3px] border-bg-dark z-[1]"></div>
-                            <div class="bg-bg-card p-5 rounded-2xl border border-white/10 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_0_1px_rgba(102,126,234,0.25),0_4px_16px_rgba(102,126,234,0.12)]">
-                                <span class="text-xs text-primary font-medium">October 2025 - Present</span>
-                                <h3 class="text-[1.1rem] text-text-light my-1">Junior Full-Stack Developer</h3>
-                                <p class="text-sm text-text-muted font-medium mb-2">Nova Vizija d.d.</p>
-                                <p class="text-sm text-white/60 leading-relaxed">First full-time position as a junior full-stack developer, working with ASP.NET, C#, WPF forms, and MSSQL on a clinical data application.</p>
+                        <div class="tl-item">
+                            <div class="tl-card">
+                                <span class="tl-date">October 2025 - Present</span>
+                                <h4 class="tl-role">Junior Full-Stack Developer</h4>
+                                <p class="tl-org">Nova Vizija d.d.</p>
+                                <p class="tl-desc">First full-time position as a junior full-stack developer, working with ASP.NET, C#, WPF forms, and MSSQL on a clinical data application.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex-1 min-w-0">
-                    <h2 class="section-title !text-[2rem]">Education</h2>
-                    <div class="timeline">
-                        <div class="relative mb-8 last:mb-0">
-                            <div class="absolute -left-8 top-[0.3rem] w-[14px] h-[14px] rounded-full bg-primary border-[3px] border-bg-dark z-[1]"></div>
-                            <div class="bg-bg-card p-5 rounded-2xl border border-white/10 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_0_1px_rgba(102,126,234,0.25),0_4px_16px_rgba(102,126,234,0.12)]">
-                                <span class="text-xs text-primary font-medium">2018 - 2021</span>
-                                <h3 class="text-[1.1rem] text-text-light my-1">Computer Technician</h3>
-                                <p class="text-sm text-text-muted font-medium mb-2">School Center Celje</p>
-                                <p class="text-sm text-white/60 leading-relaxed">Technical secondary school diploma (Tehnik Računalništva) — School for Chemistry, Electrical Engineering, and Computer Science</p>
+                <div class="reveal" style="transition-delay:.1s">
+                    <h3 class="category-title text-2xl md:text-3xl text-ink mb-8 pb-3 border-b border-ink/15">Education</h3>
+                    <div class="timeline timeline--cobalt">
+                        <div class="tl-item">
+                            <div class="tl-card">
+                                <span class="tl-date">2018 - 2021</span>
+                                <h4 class="tl-role">Computer Technician</h4>
+                                <p class="tl-org">School Center Celje</p>
+                                <p class="tl-desc">Technical secondary school diploma (Tehnik Računalništva), School for Chemistry, Electrical Engineering, and Computer Science.</p>
                             </div>
                         </div>
-
-                        <div class="relative mb-8 last:mb-0">
-                            <div class="absolute -left-8 top-[0.3rem] w-[14px] h-[14px] rounded-full bg-primary border-[3px] border-bg-dark z-[1]"></div>
-                            <div class="bg-bg-card p-5 rounded-2xl border border-white/10 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_0_1px_rgba(102,126,234,0.25),0_4px_16px_rgba(102,126,234,0.12)]">
-                                <span class="text-xs text-primary font-medium">2021 - 2025</span>
-                                <h3 class="text-[1.1rem] text-text-light my-1">Bachelor of Computer Science</h3>
-                                <p class="text-sm text-text-muted font-medium mb-2">University of Maribor</p>
-                                <p class="text-sm text-white/60 leading-relaxed">Faculty of Electrical Engineering and Computer Science. Thesis: <a href="../thesis/" class="text-primary font-medium no-underline hover:text-primary-hover hover:underline transition-colors">Virtual Runner</a> — a digital twin of a runner integrating web development (React, Node.js, MongoDB), mobile and desktop apps (Kotlin), a custom programming language, blockchain with MPI, AI pattern recognition, and game development (libGDX).</p>
+                        <div class="tl-item">
+                            <div class="tl-card">
+                                <span class="tl-date">2021 - 2025</span>
+                                <h4 class="tl-role">Bachelor of Computer Science</h4>
+                                <p class="tl-org">University of Maribor</p>
+                                <p class="tl-desc">Faculty of Electrical Engineering and Computer Science. Thesis: <a href="../thesis/">Virtual Runner</a>, a digital twin of a runner integrating web development (React, Node.js, MongoDB), mobile and desktop apps (Kotlin), a custom programming language, blockchain with MPI, AI pattern recognition, and game development (libGDX).</p>
                             </div>
                         </div>
                     </div>
@@ -131,132 +177,129 @@
     </section>
 
     <!-- Professional Projects -->
-    <section class="section bg-[#1a202c]" id="projects">
-        <div class="container">
-            <h2 class="section-title">Professional Projects</h2>
-            <projects-grid category="professional"></projects-grid>
+    <section id="projects" class="bg-paper py-24 md:py-36">
+        <div class="mx-auto max-w-[1200px] px-6 md:px-10">
+            <div class="kinetic-secthead reveal">
+                <span class="kinetic-secthead__num">02</span>
+                <span class="kinetic-secthead__label">Professional</span>
+                <span class="kinetic-secthead__rule"></span>
+            </div>
+            <h2 class="reveal kinetic-heading uppercase text-5xl md:text-7xl text-ink mb-12">Professional Work</h2>
+            <div class="project-category reveal">
+                <projects-grid category="professional"></projects-grid>
+            </div>
         </div>
     </section>
 
     <!-- Passion Projects -->
-    <section class="section bg-[linear-gradient(180deg,_#141c2e_0%,_#1a202c_100%)]" id="passion-projects">
-        <div class="container">
-            <h2 class="section-title">Passion Projects</h2>
-            <projects-grid category="passion"></projects-grid>
+    <section id="passion-projects" class="bg-paper-2 py-24 md:py-36 border-y border-ink/10">
+        <div class="mx-auto max-w-[1200px] px-6 md:px-10">
+            <div class="kinetic-secthead reveal">
+                <span class="kinetic-secthead__num">03</span>
+                <span class="kinetic-secthead__label">Passion</span>
+                <span class="kinetic-secthead__rule"></span>
+            </div>
+            <h2 class="reveal kinetic-heading uppercase text-5xl md:text-7xl text-ink mb-12">Passion Projects</h2>
+            <div class="project-category reveal">
+                <projects-grid category="passion"></projects-grid>
+            </div>
         </div>
     </section>
 
     <!-- Technologies -->
-    <section class="section bg-[linear-gradient(180deg,_#1a202c_0%,_#141c2e_100%)]" id="technologies">
-        <div class="container">
-            <div class="text-center">
-                <h2 class="section-title">Technologies</h2>
-                <div class="flex flex-wrap gap-4 md:gap-8 justify-center items-center max-w-[1000px] mx-auto">
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="HTML">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" alt="HTML technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="CSS">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" alt="CSS technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="SASS">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sass/sass-original.svg" alt="SASS technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="JavaScript">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-plain.svg" alt="JavaScript technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="PHP">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" alt="PHP technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="React">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="React technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Node">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" alt="Node technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="MongoDB">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg" alt="MongoDB technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="SQL">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/azuresqldatabase/azuresqldatabase-original.svg" alt="SQL technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Python">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Django">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110 flex items-center justify-center">
-                            <i class="devicon-django-plain"></i>
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech=".NET">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/dot-net/dot-net-original.svg" alt=".NET technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="C#">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/csharp/csharp-original.svg" alt="C# technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="C++">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg" alt="C++ technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Kotlin">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/kotlin/kotlin-original.svg" alt="Kotlin technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Android">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/android/android-plain.svg" alt="Android technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="WordPress">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110 flex items-center justify-center">
-                            <i class="devicon-wordpress-plain"></i>
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Git">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg" alt="Git technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Docker">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg" alt="Docker technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Linux">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg" alt="Linux technology icon" />
-                        </div>
-                    </div>
-                    <div class="tech-item group flex flex-col items-center p-4 md:p-6 bg-bg-card rounded-[25px] transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-white/10 min-w-[80px] md:min-w-[100px] relative hover:-translate-y-[5px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.25)]" data-tech="Vim">
-                        <div class="w-10 h-10 md:w-[50px] md:h-[50px] text-[40px] md:text-[50px] text-text-light transition-transform group-hover:scale-110">
-                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vim/vim-original.svg" alt="Vim technology icon" />
-                        </div>
-                    </div>
+    <section id="technologies" class="bg-paper py-24 md:py-32">
+        <div class="mx-auto max-w-[1100px] px-6 md:px-10">
+            <div class="kinetic-secthead reveal">
+                <span class="kinetic-secthead__num">04</span>
+                <span class="kinetic-secthead__label">Stack</span>
+                <span class="kinetic-secthead__rule"></span>
+            </div>
+            <h2 class="reveal kinetic-heading uppercase text-5xl md:text-7xl text-ink mb-12">Technologies</h2>
+
+            <div class="reveal tech-grid">
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" alt="HTML technology icon" /></div>
+                    <span class="tech-chip__label">HTML</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" alt="CSS technology icon" /></div>
+                    <span class="tech-chip__label">CSS</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sass/sass-original.svg" alt="SASS technology icon" /></div>
+                    <span class="tech-chip__label">SASS</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-plain.svg" alt="JavaScript technology icon" /></div>
+                    <span class="tech-chip__label">JavaScript</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" alt="PHP technology icon" /></div>
+                    <span class="tech-chip__label">PHP</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="React technology icon" /></div>
+                    <span class="tech-chip__label">React</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" alt="Node technology icon" /></div>
+                    <span class="tech-chip__label">Node</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg" alt="MongoDB technology icon" /></div>
+                    <span class="tech-chip__label">MongoDB</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/azuresqldatabase/azuresqldatabase-original.svg" alt="SQL technology icon" /></div>
+                    <span class="tech-chip__label">SQL</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python technology icon" /></div>
+                    <span class="tech-chip__label">Python</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><i class="devicon-django-plain"></i></div>
+                    <span class="tech-chip__label">Django</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/dot-net/dot-net-original.svg" alt=".NET technology icon" /></div>
+                    <span class="tech-chip__label">.NET</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/csharp/csharp-original.svg" alt="C# technology icon" /></div>
+                    <span class="tech-chip__label">C#</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/cplusplus/cplusplus-original.svg" alt="C++ technology icon" /></div>
+                    <span class="tech-chip__label">C++</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/kotlin/kotlin-original.svg" alt="Kotlin technology icon" /></div>
+                    <span class="tech-chip__label">Kotlin</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/android/android-plain.svg" alt="Android technology icon" /></div>
+                    <span class="tech-chip__label">Android</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><i class="devicon-wordpress-plain"></i></div>
+                    <span class="tech-chip__label">WordPress</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg" alt="Git technology icon" /></div>
+                    <span class="tech-chip__label">Git</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg" alt="Docker technology icon" /></div>
+                    <span class="tech-chip__label">Docker</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg" alt="Linux technology icon" /></div>
+                    <span class="tech-chip__label">Linux</span>
+                </div>
+                <div class="tech-chip">
+                    <div class="tech-chip__icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vim/vim-original.svg" alt="Vim technology icon" /></div>
+                    <span class="tech-chip__label">Vim</span>
                 </div>
             </div>
         </div>
@@ -272,9 +315,10 @@
     <script type="module" src="../../components/project-data.js"></script>
     <script type="module" src="../../components/project-card.js"></script>
     <script type="module" src="../../components/projects-grid.js"></script>
+    <script src="../../views/homepage/kinetic.js"></script>
+    <script src="script.js"></script>
     <script src="../../components/tawk-chat.js"></script>
     <script src="../../components/gtranslate.js"></script>
-    <script>document.getElementById('currentYear').textContent = new Date().getFullYear();</script>
 </body>
 
 </html>

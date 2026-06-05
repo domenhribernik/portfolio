@@ -1,0 +1,74 @@
+/* ============================================================
+   BOOK PEEL — scroll-driven page-flip between homepage sections.
+   All rules scoped under html.peel-on (added by peel.js on desktop).
+   Without that class the page is identical to the normal-flow fallback.
+   ============================================================ */
+
+html.peel-on .book {
+    position: relative;
+    /* height is set dynamically by peel.js */
+}
+
+html.peel-on .book__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Each leaf fills the stage; z-index set by JS so first leaf is topmost */
+html.peel-on .leaf {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* --peel runs 0 (at rest) to 1 (fully peeled away).
+       The leaf is a solid sheet that hinges near its bottom-left corner and
+       swings up and away like a turning page. NO fade — it stays fully opaque
+       the whole way; the big translateY carries it cleanly off the top by the
+       time --peel reaches 1, so it never sits half-faded on screen. */
+    transform-origin: 12% 100%;
+    transform:
+        translateY(calc(var(--peel, 0) * -118%))
+        rotate(calc(var(--peel, 0) * -16deg));
+}
+
+/* Bottom-edge "spine" shadow — gives each page a physical book-page feel.
+   Deepens as the page lifts, like a real sheet casting onto the one beneath. */
+html.peel-on .leaf::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 22%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.16), transparent);
+    opacity: calc(0.6 + var(--peel, 0) * 0.7);
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Inner content wrapper — JS translates this upward (--read-px) so tall
+   sections can be read before their peel phase begins */
+html.peel-on .leaf__inner {
+    transform: translateY(calc(var(--read-px, 0) * -1px));
+    will-change: transform;
+}
+
+/* Hero leaf: inner must be relatively positioned so its absolute
+   decorative children (blobs, grid) still reference the leaf itself */
+html.peel-on .leaf.kinetic-hero .leaf__inner {
+    position: relative;
+    width: 100%;
+}
+
+/* Neutralise the reveal-on-scroll animations inside the book.
+   The peel IS the page transition; individual element reveals would fight it. */
+html.peel-on .book .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+}

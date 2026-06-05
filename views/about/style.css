@@ -1,194 +1,280 @@
-/* Timeline vertical line — pseudo-element */
+/* ============================================================
+   About-page extras. Layout/colour come from Tailwind (index.html)
+   and the shared kinetic poster layer (views/homepage/kinetic.css,
+   scoped under body.kinetic). Project-card + section-header styles
+   live there. This file keeps only what those can't express: the
+   scroll-reveal, the editorial timeline, and the tech chips.
+   ============================================================ */
+
+/* ---- Scroll reveal (enabled by script.js adding .reveals-on) ---- */
+.reveals-on .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveals-on .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* ---- Show More button (created by script.js) ---- */
+.show-more-btn {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 1.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    padding-bottom: 3px;
+}
+
+.show-more-btn::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    background: var(--clay);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.show-more-btn:hover::after {
+    transform: scaleX(1);
+}
+
+/* ============================================================
+   PORTRAIT PLATE — framed editorial print with a hard offset shadow
+   ============================================================ */
+.about-portrait {
+    box-shadow: 12px 12px 0 var(--cobalt);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+}
+
+.about-portrait:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 16px 16px 0 var(--clay);
+}
+
+.about-caption {
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.66rem;
+    color: var(--stone);
+}
+
+/* ============================================================
+   TIMELINE — editorial filing cards on a hairline rail.
+   Per-column accent is set with --acc on the .timeline wrapper.
+   ============================================================ */
 .timeline {
+    --acc: var(--clay);
     position: relative;
     padding-left: 2rem;
 }
 
+/* Hairline rail */
 .timeline::before {
     content: '';
     position: absolute;
-    left: 6px;
-    top: 0;
-    bottom: 0;
+    left: 5px;
+    top: 0.5rem;
+    bottom: 0.5rem;
     width: 2px;
-    background: linear-gradient(180deg, rgba(102, 126, 234, 0.2), var(--primary-color), rgba(102, 126, 234, 0.2));
+    background: rgba(28, 26, 23, 0.16);
 }
 
-/* Tech-item hover tooltip — pseudo-element using attr() */
-.tech-item::before {
-    content: attr(data-tech);
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-card);
-    color: var(--text-light);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: var(--shadow);
-    z-index: 10;
-}
+.timeline--clay { --acc: var(--clay); }
+.timeline--cobalt { --acc: var(--cobalt); }
 
-.tech-item:hover::before {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Project cards — markup is emitted by <project-card> / <projects-grid> components */
-.projects-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 360px));
-    gap: 2rem;
-    justify-content: center;
-}
-
-.project-card {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
-    display: flex;
-    flex-direction: column;
-    transition: var(--transition);
+.tl-item {
     position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 1;
+    margin-bottom: 1.5rem;
 }
 
-.project-card::before {
+.tl-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Square node sitting on the rail (centred on the 2px line) */
+.tl-item::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
+    left: -2rem;
+    top: 0.55rem;
+    width: 12px;
+    height: 12px;
+    background: var(--acc);
+    border: 2px solid var(--paper);
     z-index: 1;
 }
 
-.project-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 25px rgba(19, 94, 255, 0.15),
-        0 0 0 2px var(--primary-color);
-}
-
-.project-card:hover::before {
-    left: 100%;
-}
-
-.project-card:not(:hover)::before {
-    transition: none;
-}
-
-.project-image {
+.tl-card {
     position: relative;
-    height: 200px;
-    background: var(--bg-gradient);
-    overflow: hidden;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 2px;
+    padding: 1.1rem 1.25rem 1.2rem;
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease;
 }
 
-.project-image .project-image-background {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #333;
-    font-size: 2rem;
+.tl-card:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 8px 8px 0 var(--acc);
 }
 
-.project-content {
+.tl-date {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.66rem;
+    color: var(--acc);
+    margin-bottom: 0.5rem;
+}
+
+.tl-role {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    font-size: 1.12rem;
+    line-height: 1.15;
+    color: var(--ink);
+    margin: 0 0 0.2rem;
+}
+
+.tl-org {
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.7rem;
+    color: var(--stone);
+    margin: 0 0 0.7rem;
+}
+
+.tl-desc {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--stone);
+    margin: 0;
+}
+
+.tl-desc a {
+    color: var(--clay);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1.5px solid var(--clay);
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tl-desc a:hover {
+    color: var(--cobalt);
+    border-color: var(--cobalt);
+}
+
+/* ============================================================
+   TECH CHIPS — sharp editorial tiles with a visible mono caption.
+   Accent cycles clay -> cobalt -> pine across the grid.
+   ============================================================ */
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.85rem;
+}
+
+.tech-chip {
+    --acc: var(--clay);
+    position: relative;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    padding: 1.5rem;
-}
-
-.project-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: var(--text-light);
-}
-
-.project-description {
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-}
-
-.project-footer {
-    margin-top: auto;
-}
-
-.project-tech {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 1rem 0;
-}
-
-.tech-tag {
-    background: var(--bg-light, #f8f9fa);
-    color: #666 !important;
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    border: 1px solid #e9ecef;
-}
-
-.project-links {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-top: 25px;
-}
-
-.project-link {
-    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: var(--primary-color);
-    font-weight: 500;
-    transition: var(--transition);
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--primary-color);
-    border-radius: 5px;
-    background: transparent;
+    gap: 0.75rem;
+    padding: 1.1rem 0.75rem 0.85rem;
+    background: var(--card);
+    border: 2px solid rgba(28, 26, 23, 0.15);
+    border-radius: 2px;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.project-link:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: translateY(-2px);
+.tech-chip:nth-child(3n+1) { --acc: var(--clay); }
+.tech-chip:nth-child(3n+2) { --acc: var(--cobalt); }
+.tech-chip:nth-child(3n)   { --acc: var(--pine); }
+
+.tech-chip:hover {
+    transform: translate(-3px, -3px);
+    border-color: var(--ink);
+    box-shadow: 6px 6px 0 var(--acc);
 }
 
-@media (max-width: 1024px) {
-    .projects-grid {
-        grid-template-columns: repeat(2, minmax(0, 360px));
-    }
+.tech-chip__icon {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--ink);
+    filter: grayscale(100%);
+    opacity: 0.85;
+    transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease;
 }
 
-@media (max-width: 768px) {
-    .projects-grid {
-        grid-template-columns: minmax(0, 360px);
+.tech-chip__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.tech-chip:hover .tech-chip__icon {
+    filter: none;
+    opacity: 1;
+    transform: scale(1.1);
+    color: var(--acc);
+}
+
+.tech-chip__label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.6rem;
+    color: var(--stone);
+    transition: color 0.25s ease;
+}
+
+.tech-chip:hover .tech-chip__label {
+    color: var(--ink);
+}
+
+@media (max-width: 640px) {
+    .tech-grid {
+        grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+        gap: 0.6rem;
     }
 
-    .project-links {
-        flex-direction: column;
-    }
-
-    .project-link {
-        text-align: center;
-        justify-content: center;
+    .tech-chip__icon {
+        width: 36px;
+        height: 36px;
+        font-size: 32px;
     }
 }

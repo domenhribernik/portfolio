@@ -15,12 +15,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-    //? Show More functionality for project categories
+    //? Show More functionality for project categories (collapse past 3 cards)
     const initShowMore = () => {
         const categories = document.querySelectorAll('.project-category');
 
         categories.forEach(category => {
-            // Skip if already initialized
             if (category.dataset.showMoreInitialized) return;
 
             const projects = category.querySelectorAll('.project-card');
@@ -37,19 +36,16 @@ window.addEventListener('DOMContentLoaded', () => {
                 const engSpan = document.createElement('span');
                 engSpan.className = 'lang-eng';
                 engSpan.textContent = 'Show More';
-
                 toggleBtn.appendChild(engSpan);
 
                 let expanded = false;
                 toggleBtn.addEventListener('click', () => {
                     expanded = !expanded;
-
                     projects.forEach((project, index) => {
                         if (index >= 3) {
                             project.style.display = expanded ? 'flex' : 'none';
                         }
                     });
-
                     engSpan.textContent = expanded ? 'Show Less' : 'Show More';
                 });
 
@@ -59,9 +55,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Wait for custom elements to be defined before initializing
     customElements.whenDefined('project-card').then(() => {
-        // Small delay to ensure all cards are rendered
         setTimeout(initShowMore, 100);
     });
 });

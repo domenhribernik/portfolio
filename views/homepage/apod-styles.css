@@ -1,204 +1,149 @@
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-.apod-section .container {
-    max-width: 100%;
-    width: 100%;
-    padding: 0 2rem;
-}
-
-.section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 3rem;
-    color: var(--text-light);
-    letter-spacing: -0.02em;
-}
-
-/* APOD Section Styles */
-.apod-section {
-    background: var(--bg-dark-about);
-    width: 100%;
-    padding-top: 3rem;
+@keyframes apod-spin {
+    to { transform: rotate(360deg); }
 }
 
 .apod-section .apod-spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid var(--primary-color);
-    border-right-color: transparent;
+    border: 3px solid var(--hairline, rgba(28, 26, 23, 0.12));
+    border-top-color: var(--clay, #d4451f);
     border-radius: 50%;
     animation: apod-spin 0.8s linear infinite;
-    margin: 4rem auto;
+    margin: 3rem auto;
 }
 
-@keyframes apod-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.apod-section .apod-main-title {
-    width: 100%;
-    margin-bottom: 3rem;
-}
-
+/*
+ * Layout: two fixed proportional columns on desktop so the picture never
+ * dictates the row width. The image column is held at ~45% regardless of the
+ * picture's aspect ratio (square, portrait, or panorama), leaving the text a
+ * comfortable ~55%. The image is bounded by its column width plus a sane
+ * max-height, so a square or portrait picture can no longer balloon and
+ * squeeze the text the way it did when sized off the viewport.
+ */
 .apod-section .apod-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 90%;
-    gap: 3rem;
-    margin: 0 auto;
+    --apod-image-col: 5fr;   /* image side */
+    --apod-text-col: 6fr;    /* text side  */
+    display: grid;
+    grid-template-columns: minmax(0, var(--apod-image-col)) minmax(0, var(--apod-text-col));
+    gap: 4rem;
+    align-items: start;
 }
 
 .apod-section .apod-media {
-    flex: 0 0 auto;
     margin: 0;
     padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    border-radius: var(--border-radius);
-    overflow: visible;
-    background: transparent;
+    /* Full-width block within the image column; the image inside is left
+       anchored. The offset clay frame lives on the <img> itself (outline)
+       so it hugs the picture's true rendered box for any aspect ratio,
+       including portraits that get clamped by max-height. */
 }
 
 .apod-section .apod-img {
-    max-width: calc(50vw - 4rem);
-    max-height: 90vh;
+    display: block;
     width: auto;
     height: auto;
-    display: block;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    max-width: 100%;     /* bounded by the image column, not the viewport */
+    max-height: 70vh;    /* keep tall / portrait pictures from running away */
+    border-radius: 2px;
+    box-shadow: 0 12px 40px rgba(28, 26, 23, 0.1);
+    outline: 1px solid rgba(212, 69, 31, 0.25); /* clay @ 25%, offset frame */
+    outline-offset: 6px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: box-shadow 0.35s ease, transform 0.35s ease;
     object-fit: contain;
 }
 
+.apod-section .apod-img:hover {
+    box-shadow: 0 20px 60px rgba(28, 26, 23, 0.16);
+    transform: translateY(-3px);
+}
+
 .apod-section .apod-text {
-    min-width: 300px;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    align-self: center;
 }
 
 .apod-section .apod-title {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: var(--text-light);
-    line-height: 1.3;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink, #1c1a17);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
     margin: 0;
 }
 
 .apod-section .apod-meta {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--hairline, rgba(28, 26, 23, 0.12));
 }
 
 .apod-section .apod-date {
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    font-weight: 500;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--stone, #6b6256);
     margin: 0;
 }
 
 .apod-section .apod-copyright {
-    font-size: 0.9rem;
-    color: var(--text-muted);
+    font-size: 0.85rem;
+    color: var(--stone, #6b6256);
     font-style: italic;
     margin: 0;
-    margin-top: 0.5rem;
 }
 
 .apod-section .apod-explain {
     font-size: 1rem;
-    line-height: 1.7;
-    color: var(--text-light);
+    line-height: 1.75;
+    color: var(--ink, #1c1a17);
     margin: 0;
 }
 
 .apod-section .apod-footer {
-    margin-top: 1rem;
-    padding-top: 0;
+    margin-top: 0.5rem;
 }
 
 .apod-section .apod-link {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--primary-color);
+    color: var(--ink, #1c1a17);
     text-decoration: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: var(--transition);
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--clay, #d4451f);
+    padding-bottom: 2px;
+    transition: color 0.25s ease;
 }
 
 .apod-section .apod-link:hover {
-    color: var(--primary-hover);
-    gap: 0.7rem;
+    color: var(--clay, #d4451f);
 }
 
 .apod-section .apod-link i {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
-/* Responsive Design */
+/* Tablet / narrow desktop: stack into a single column. */
 @media (max-width: 968px) {
     .apod-section .apod-content {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 2rem;
-    }
-
-    .apod-section .apod-media {
-        width: 100%;
-        justify-content: center;
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
     }
 
     .apod-section .apod-img {
-        max-width: 100%;
-        max-height: none;
-        width: auto;
-        height: auto;
-    }
-
-    .apod-section .apod-text {
-        min-width: 100%;
-    }
-
-    .apod-section .section-title {
-        font-size: 2rem;
-    }
-
-    .apod-section .apod-title {
-        font-size: 1.5rem;
+        max-height: 60vh;
+        margin-inline: auto; /* center when narrower than the column */
     }
 }
 
 @media (max-width: 768px) {
-    .apod-section .container {
-        padding: 0 1.5rem;
-    }
-
-    .apod-section.section {
-        padding: 3rem 0;
-    }
-
-    .apod-section .section-title {
-        font-size: 1.75rem;
-        margin-bottom: 2rem;
-    }
-
     .apod-section .apod-content {
         gap: 1.5rem;
     }
@@ -213,5 +158,10 @@
 
     .apod-section .apod-explain {
         font-size: 0.95rem;
+    }
+
+    /* On phones width is the binding constraint already, so let height run. */
+    .apod-section .apod-img {
+        max-height: none;
     }
 }

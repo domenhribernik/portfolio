@@ -10,215 +10,380 @@
     <meta name="keywords" content="Domen Hribernik, web development, portfolio">
     <title>Domen Hribernik</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        cobalt: '#1f35e0',
+                        marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        serif: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="base-style.css">
     <link rel="stylesheet" href="views/homepage/style.css">
+    <link rel="stylesheet" href="views/homepage/kinetic.css">
+    <link rel="stylesheet" href="views/homepage/loader.css">
     <link rel="stylesheet" href="views/homepage/apod-styles.css">
     <link rel="stylesheet" href="components/gallery.css">
     <link rel="stylesheet" href="views/homepage/otd-gallery.css">
+    <link rel="stylesheet" href="views/homepage/peel.css">
+
+    <!-- Arm the loader before first paint so the hero starts hidden (no flash).
+         Gated on JS: if loader.js never runs, the failsafe still reveals the page. -->
+    <script>
+        (function () {
+            var root = document.documentElement;
+            root.classList.add('preload');
+            window.__introFailsafe = setTimeout(function () {
+                root.classList.remove('preload');
+                root.classList.add('intro-done');
+            }, 9000);
+        })();
+    </script>
+    <!-- Without JS the loader can never hand off, so don't let it cover the page. -->
+    <noscript>
+        <style>.kn-loader { display: none !important; }</style>
+    </noscript>
 </head>
 
-<body>
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
+<body class="editorial kinetic bg-paper text-ink font-sans antialiased">
+    <div class="kn-loader" id="loadingOverlay" role="status" aria-live="polite" aria-label="Loading portfolio">
+        <div class="kn-loader__grid" aria-hidden="true"></div>
+
+        <div class="kn-loader__top">
+            <span class="kn-loader__tag"><span class="kn-loader__dot" aria-hidden="true"></span>Portfolio</span>
+            <span class="kn-loader__count" aria-hidden="true"><span id="knCount">00</span><span class="kn-loader__pct">%</span></span>
+        </div>
+
+        <div class="kn-loader__center">
+            <div class="kn-loader__name" style="--p:0%" aria-hidden="true">
+                <div class="kn-loader__name-layer kn-loader__name-layer--outline">
+                    <span class="kn-line">Domen</span>
+                    <span class="kn-line">Hribernik<i class="kn-dot">.</i></span>
+                </div>
+                <div class="kn-loader__name-layer kn-loader__name-layer--fill">
+                    <span class="kn-line">Domen</span>
+                    <span class="kn-line">Hribernik<i class="kn-dot">.</i></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="kn-loader__bottom">
+            <span class="kn-loader__status" id="knStatus" aria-hidden="true">Setting the type</span>
+            <span class="kn-loader__bar" aria-hidden="true"><span class="kn-loader__bar-fill" id="knBar"></span></span>
+            <span class="kn-loader__meta">Slovenia / 2026</span>
+        </div>
     </div>
 
     <main-navbar></main-navbar>
 
-    <!-- Hero Section -->
-    <section class="hero" id="home">
-        <div class="hero-content">
-            <h1>Domen Hribernik</h1>
-            <h2>Developer & Tech Enthusiast</h2>
-            <a href="#about" class="cta-button">About Me</a>
-        </div>
-    </section>
+    <!-- Book: sticky stage + stacked leaves. Footer stays in normal flow below. -->
+    <div class="book">
+        <div class="book__stage">
 
-    <!-- About Section -->
-    <section class="about section" id="about">
-        <div class="container">
-            <h2 class="about-title">About Me</h2>
-            <div class="about-grid">
-                <div class="about-avatar">
-                    <div class="avatar-placeholder">
-                        <img src="assets/img/avatar.jpeg" alt="Portrait photo of Domen Hribernik" class="avatar-image">
-                        <!-- <i class="fas fa-user-circle"></i> -->
-                    </div>
-                </div>
+            <!-- Hero Section -->
+            <section id="home" class="leaf kinetic-hero">
+                <div class="kinetic-grid" aria-hidden="true"></div>
+                <div class="kinetic-blob kinetic-blob--clay" aria-hidden="true"></div>
+                <div class="kinetic-blob kinetic-blob--cobalt" aria-hidden="true"></div>
 
-                <div class="about-description">
-                    <div>
-                        <h3>Hi, I'm Domen Hribernik,</h3>
-                        <p> a software developer based in Slovenia. I build professional applications for clients and
-                            contribute to open-source projects. I'm driven by curiosity and passionate about creating
-                            software that solves real problems. </p>
-                        <a href="views/about/" class="read-more-link">Read more <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <br><br><br>
-    </section>
+                <div class="leaf__inner">
+                    <div class="kinetic-hero__inner">
+                        <p class="kinetic-eyebrow">Software developer &amp; maker, Slovenia</p>
 
-    <!-- Code Stats Section -->
-    <section class="code-stats section" id="code-stats">
-        <div class="container">
-            <div class="stats-content" id="stats-content">
-                <p class="stats-context">In this project</p>
-                <div class="stats-total">
-                    <span class="stats-number" id="stats-total-number">—</span>
-                    <span class="stats-label">Lines of Code</span>
-                </div>
-                <div class="stats-breakdown" id="stats-breakdown"></div>
-            </div>
-        </div>
-        <br><br><br><br>
-    </section>
+                        <h1 class="kinetic-title notranslate" translate="no" aria-label="Domen Hribernik">
+                            <span class="kinetic-line" aria-hidden="true">
+                                <span class="ch" style="--i:0">D</span><span class="ch" style="--i:1">O</span><span class="ch"
+                                    style="--i:2">M</span><span class="ch" style="--i:3">E</span><span class="ch"
+                                    style="--i:4">N</span>
+                            </span>
+                            <span class="kinetic-line" aria-hidden="true">
+                                <span class="ch" style="--i:5">H</span><span class="ch" style="--i:6">R</span><span class="ch"
+                                    style="--i:7">I</span><span class="ch" style="--i:8">B</span><span class="ch"
+                                    style="--i:9">E</span><span class="ch" style="--i:10">R</span><span class="ch"
+                                    style="--i:11">N</span><span class="ch" style="--i:12">I</span><span class="ch"
+                                    style="--i:13">K</span><span class="ch dot" style="--i:14">.</span>
+                            </span>
+                        </h1>
 
-    <!-- Projects Section -->
-    <section class="projects section" id="projects">
-        <div class="container">
-            <h2 class="section-title">My Projects</h2>
-
-            <!-- Professional/Freelance Projects -->
-            <div class="project-category">
-                <h3 class="category-title">Professional & Freelance Work</h3>
-                <projects-grid category="professional"></projects-grid>
-            </div>
-
-            <!-- Academic Projects -->
-            <div class="project-category">
-                <h3 class="category-title">Academic Work & Research</h3>
-                <projects-grid category="academic"></projects-grid>
-            </div>
-
-            <!-- Personal/Passion Projects -->
-            <div class="project-category">
-                <h3 class="category-title">Passion Projects</h3>
-                <projects-grid category="passion"></projects-grid>
-            </div>
-        </div>
-    </section>
-
-    <!-- On this day -->
-    <section id="on-this-day-section">
-        <div class="featured-section">
-            <div class="otd-header">
-                <p class="otd-label">Wikipedia</p>
-                <h1 class="otd-title">On This Day</h1>
-            </div>
-            <p class="otd-view-more">View More That Happened <a
-                    href="views/on-this-day"><u>On
-                        This Day</u></a></p>
-            <div class="gallery-container">
-                <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
-                <div class="gallery-viewport">
-                    <div class="gallery-track" id="featured-track"></div>
-                </div>
-                <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next slide">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
-            </div>
-            <div class="gallery-dots" id="featured-dots"></div>
-        </div>
-    </section>
-
-    <!-- Apod section -->
-    <section class="apod-section section">
-        <div class="container">
-            <div class="apod-spinner" id="apod-spinner"></div>
-
-            <div class="apod-body" id="apod-body" hidden>
-                <h2 class="section-title apod-main-title">Astronomical Picture of the Day</h2>
-
-                <div class="apod-content">
-                    <figure class="apod-media">
-                        <img id="apod-img" class="apod-img" alt="">
-                    </figure>
-
-                    <div class="apod-text">
-                        <h3 class="apod-title" id="apod-title"></h3>
-                        <div class="apod-meta">
-                            <p class="apod-date" id="apod-date"></p>
+                        <div class="kinetic-sub">
+                            <span class="kinetic-sub__bar" aria-hidden="true"></span>
+                            <p class="kinetic-sub__text">I build software that works and that I'm proud to look at, from client
+                                applications to side projects I make for the joy of it.</p>
                         </div>
-                        <p class="apod-explain" id="apod-explain"></p>
-                        <p class="apod-copyright" id="apod-copy"></p>
-                        <div class="apod-footer">
-                            <a id="apod-link" href="https://apod.nasa.gov" target="_blank" rel="noopener"
-                                class="apod-link">
-                                View on NASA <i class="fas fa-external-link-alt"></i>
+
+                        <div class="kinetic-cta">
+                            <a href="#about" class="kinetic-btn" data-magnetic>
+                                About me <i class="fas fa-arrow-down"></i>
+                            </a>
+                            <a href="#projects" class="kinetic-link">See selected work</a>
+                        </div>
+                    </div>
+
+                    <span class="kinetic-corner" aria-hidden="true">Portfolio / 2026</span>
+                </div>
+            </section>
+
+            <!-- About Section -->
+            <section id="about" class="leaf bg-paper py-24 md:py-36">
+                <div class="leaf__inner">
+                    <div class="mx-auto max-w-[1200px] px-6 md:px-10">
+                        <div class="kinetic-secthead reveal">
+                            <span class="kinetic-secthead__num">01</span>
+                            <span class="kinetic-secthead__label">About</span>
+                            <span class="kinetic-secthead__rule"></span>
+                        </div>
+                        <div class="grid md:grid-cols-[300px_1fr] gap-12 md:gap-20 items-center">
+                            <figure class="reveal relative w-[240px] md:w-[300px] mx-auto md:mx-0">
+                                <span class="absolute -inset-3 border border-clay/40 rounded-[2px]" aria-hidden="true"></span>
+                                <img src="assets/img/avatar.png" alt="Portrait photo of Domen Hribernik"
+                                    class="relative w-full aspect-[4/5] object-cover rounded-[2px] grayscale-[20%] transition-all duration-500 hover:grayscale-0">
+                            </figure>
+                            <div class="reveal" style="transition-delay:.1s">
+                                <h2 class="kinetic-heading text-4xl md:text-5xl text-ink mb-6">Hi, I'm Domen.</h2>
+                                <p class="text-lg md:text-xl text-stone leading-relaxed max-w-2xl">I'm a software developer and
+                                    creative based in Slovenia. I build production applications for clients, contribute to
+                                    open source, and care as much about how something feels as whether it works. Curiosity drives
+                                    most of what I make.</p>
+                                <a href="views/about/"
+                                    class="read-more-link group inline-flex items-center gap-2 mt-8 text-ink font-medium border-b border-clay pb-1 transition-colors hover:text-clay">Read
+                                    more <i class="fas fa-arrow-right text-sm transition-transform group-hover:translate-x-1"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Code Stats Section -->
+            <section id="code-stats" class="leaf bg-paper-2 py-24 md:py-32 border-y border-ink/10">
+                <div class="leaf__inner">
+                    <div class="mx-auto max-w-[1200px] px-6 md:px-10">
+                        <div class="kinetic-secthead reveal">
+                            <span class="kinetic-secthead__num">02</span>
+                            <span class="kinetic-secthead__label">By the numbers</span>
+                            <span class="kinetic-secthead__rule"></span>
+                        </div>
+                        <div id="stats-content" class="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
+                            <div class="reveal">
+                                <p class="stats-context text-xs font-medium tracking-[0.25em] uppercase text-stone mb-3">In this
+                                    project</p>
+                                <div class="stats-total flex items-baseline gap-4 flex-wrap">
+                                    <span id="stats-total-number"
+                                        class="font-serif text-clay leading-none text-[clamp(3.5rem,10vw,7rem)]">…</span>
+                                    <span class="stats-label font-sans text-lg text-stone">lines of code</span>
+                                </div>
+                            </div>
+                            <div id="stats-breakdown" class="reveal stats-breakdown space-y-5" style="transition-delay:.1s"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects" class="leaf bg-paper py-24 md:py-36">
+                <div class="leaf__inner">
+                    <div class="mx-auto max-w-[1200px] px-6 md:px-10">
+                        <div class="kinetic-secthead reveal">
+                            <span class="kinetic-secthead__num">03</span>
+                            <span class="kinetic-secthead__label">Selected work</span>
+                            <span class="kinetic-secthead__rule"></span>
+                        </div>
+                        <h2 class="reveal kinetic-heading uppercase text-5xl md:text-8xl text-ink mb-16">Projects</h2>
+
+                        <!-- Professional/Freelance Projects -->
+                        <div class="project-category mb-20">
+                            <h3 class="category-title font-serif text-2xl md:text-3xl text-ink mb-8 pb-3 border-b border-ink/15">
+                                Professional &amp; Freelance Work</h3>
+                            <projects-grid category="professional"></projects-grid>
+                        </div>
+
+                        <!-- Academic Projects -->
+                        <div class="project-category mb-20">
+                            <h3 class="category-title font-serif text-2xl md:text-3xl text-ink mb-8 pb-3 border-b border-ink/15">
+                                Academic Work &amp; Research</h3>
+                            <projects-grid category="academic"></projects-grid>
+                        </div>
+
+                        <!-- Personal/Passion Projects -->
+                        <div class="project-category">
+                            <h3 class="category-title font-serif text-2xl md:text-3xl text-ink mb-8 pb-3 border-b border-ink/15">
+                                Passion Projects</h3>
+                            <projects-grid category="passion"></projects-grid>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- On this day -->
+            <section id="on-this-day-section" class="leaf bg-paper-2 border-y border-ink/10">
+                <div class="leaf__inner">
+                    <div class="featured-section">
+                        <div class="kinetic-secthead reveal">
+                            <span class="kinetic-secthead__num">04</span>
+                            <span class="kinetic-secthead__label">Wikipedia</span>
+                            <span class="kinetic-secthead__rule"></span>
+                        </div>
+                        <div class="otd-head">
+                            <h2 class="reveal kinetic-heading uppercase text-5xl md:text-7xl text-ink mb-3">On This Day</h2>
+                            <p class="otd-view-more">View more that happened <a href="views/on-this-day"><u>On This Day</u></a></p>
+                        </div>
+                        <div class="gallery-container">
+                            <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <div class="gallery-viewport">
+                                <div class="gallery-track" id="featured-track"></div>
+                            </div>
+                            <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next slide">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="gallery-dots" id="featured-dots"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- APOD section -->
+            <section class="leaf apod-section bg-paper py-24 md:py-32 border-b border-ink/10">
+                <div class="leaf__inner">
+                    <div class="mx-auto max-w-[1200px] px-6 md:px-10">
+                        <div class="kinetic-secthead reveal">
+                            <span class="kinetic-secthead__num">05</span>
+                            <span class="kinetic-secthead__label">NASA APOD</span>
+                            <span class="kinetic-secthead__rule"></span>
+                        </div>
+                        <div class="apod-spinner" id="apod-spinner"></div>
+
+                        <div class="apod-body" id="apod-body" hidden>
+                            <h2 class="reveal apod-main-title kinetic-heading text-4xl md:text-5xl text-ink mb-10">Astronomical Picture of the Day</h2>
+
+                            <div class="apod-content">
+                                <figure class="apod-media">
+                                    <img id="apod-img" class="apod-img" alt="">
+                                </figure>
+
+                                <div class="apod-text">
+                                    <h3 class="apod-title" id="apod-title"></h3>
+                                    <div class="apod-meta">
+                                        <p class="apod-date" id="apod-date"></p>
+                                    </div>
+                                    <p class="apod-explain" id="apod-explain"></p>
+                                    <p class="apod-copyright" id="apod-copy"></p>
+                                    <div class="apod-footer">
+                                        <a id="apod-link" href="https://apod.nasa.gov" target="_blank" rel="noopener"
+                                            class="apod-link">
+                                            View on NASA <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Section (last leaf — never peels; shares its screen with the footer) -->
+            <section id="contact" class="leaf bg-paper-2 border-t border-ink/10">
+                <div class="leaf__inner flex flex-col min-h-[100svh]">
+                    <div class="mx-auto max-w-[1200px] px-6 md:px-10 w-full pt-24 md:pt-32 pb-12">
+                        <div class="kinetic-secthead reveal">
+                            <span class="kinetic-secthead__num">06</span>
+                            <span class="kinetic-secthead__label">Contact</span>
+                            <span class="kinetic-secthead__rule"></span>
+                        </div>
+                        <h2 class="reveal kinetic-heading uppercase text-5xl md:text-8xl text-ink mb-16">Get in touch</h2>
+
+                        <div class="kinetic-info-grid">
+                            <a href="https://maps.google.com/?q=Celje,Slovenia" target="_blank" rel="noopener"
+                                class="reveal kinetic-info" style="--info-accent:var(--clay)">
+                                <span class="kinetic-info__main">
+                                    <span class="kinetic-info__kicker">Based in</span>
+                                    <span class="kinetic-info__value">Celje, Slovenia</span>
+                                </span>
+                                <span class="kinetic-info__foot">
+                                    <i class="fas fa-map-marker-alt"></i> View on map
+                                </span>
+                            </a>
+
+                            <a href="mailto:contact@domenhribernik.com" class="reveal kinetic-info"
+                                style="--info-accent:var(--cobalt);transition-delay:.08s">
+                                <span class="kinetic-info__main">
+                                    <span class="kinetic-info__kicker">Write to me</span>
+                                    <span class="kinetic-info__value kinetic-info__value--sm notranslate" translate="no">contact@domenhribernik.com</span>
+                                </span>
+                                <span class="kinetic-info__foot">
+                                    <i class="fas fa-envelope"></i> Send an email
+                                </span>
+                            </a>
+
+                            <a href="https://feri.um.si/en/" target="_blank" rel="noopener" class="reveal kinetic-info"
+                                style="--info-accent:var(--pine);transition-delay:.16s">
+                                <span class="kinetic-info__main">
+                                    <span class="kinetic-info__kicker">Studied</span>
+                                    <span class="kinetic-info__value">BSc Computer Science &amp; IT</span>
+                                </span>
+                                <span class="kinetic-info__foot">
+                                    <i class="fas fa-graduation-cap"></i> University of Maribor
+                                </span>
+                            </a>
+                        </div>
+
+                        <div class="reveal flex gap-4 mt-12">
+                            <a href="https://github.com/domenhribernik" target="_blank" aria-label="GitHub"
+                                class="social-btn w-12 h-12 inline-flex items-center justify-center rounded-none border-2 border-ink/80 text-ink transition-all hover:bg-ink hover:text-paper">
+                                <i class="fab fa-github"></i>
+                            </a>
+                            <a href="https://www.instagram.com/domen_hribernik/" target="_blank" aria-label="Instagram"
+                                class="social-btn w-12 h-12 inline-flex items-center justify-center rounded-none border-2 border-ink/80 text-ink transition-all hover:bg-ink hover:text-paper">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="https://www.linkedin.com/in/domen-hribernik-4081a121b/" target="_blank" aria-label="LinkedIn"
+                                class="social-btn w-12 h-12 inline-flex items-center justify-center rounded-none border-2 border-ink/80 text-ink transition-all hover:bg-ink hover:text-paper">
+                                <i class="fab fa-linkedin"></i>
                             </a>
                         </div>
                     </div>
+
+                    <!-- Footer rides at the bottom of the contact leaf (mt-auto) so the
+                         final page shows contact AND footer together, not contact full-bleed. -->
+                    <footer class="footer mt-auto">
+                        <div class="container">
+                            <p>Copyright &copy; Domen Hribernik <span id="currentYear"></span></p>
+                        </div>
+                    </footer>
                 </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <!-- Contact Section -->
-    <section class="contact section" id="contact">
-        <div class="container">
-            <h2 class="section-title">Get In Touch</h2>
-            <div class="contact-content">
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <h3 class="contact-title">Location</h3>
-                    <div class="contact-info">Celje, Slovenia</div>
-                </div>
-
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <h3 class="contact-title">Email</h3>
-                    <div class="contact-info">
-                        <a href="mailto:contact@domenhribernik.com">contact@domenhribernik.com</a>
-                    </div>
-                </div>
-
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                    <h3 class="contact-title">Education</h3>
-                    <div class="contact-info">
-                        <div>BSc in Computer Science and Information Technologies</div>
-                        <div><a href="https://feri.um.si/en/" target="_blank">University of Maribor</a></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="social-links">
-                <a href="https://github.com/domenhribernik" target="_blank" class="social-link">
-                    <i class="fab fa-github"></i>
-                </a>
-                <a href="https://www.instagram.com/domen_hribernik/" target="_blank" class="social-link">
-                    <i class="fab fa-instagram"></i>
-                </a>
-                <a href="https://www.linkedin.com/in/domen-hribernik-4081a121b/" target="_blank" class="social-link">
-                    <i class="fab fa-linkedin"></i>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>Copyright &copy; Domen Hribernik <span id="currentYear"></span></p>
-        </div>
-    </footer>
+        </div><!-- /.book__stage -->
+    </div><!-- /.book -->
 
     <script type="module" src="components/main-navbar.js"></script>
     <script type="module" src="components/project-data.js"></script>
@@ -227,6 +392,9 @@
     <script src="components/gallery.js"></script>
     <script src="views/homepage/homepage-proxy.js"></script>
     <script src="views/homepage/script.js"></script>
+    <script src="views/homepage/kinetic.js"></script>
+    <script src="views/homepage/loader.js"></script>
+    <script src="views/homepage/peel.js"></script>
     <script src="components/tawk-chat.js"></script>
     <script src="components/gtranslate.js"></script>
 </body>

@@ -7,7 +7,6 @@ class ProjectCard extends HTMLElement {
 
   render() {
     const key = this.getAttribute('project');
-    const gradient = this.getAttribute('gradient') || 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)';
     const data = projects[key];
 
     if (!data) {
@@ -59,7 +58,7 @@ class ProjectCard extends HTMLElement {
     this.innerHTML = `
       <div class="project-image">
         ${badgeHtml}
-        <div class="project-image-background" style="background: ${gradient};">
+        <div class="project-image-background">
           <i class="${data.iconClass}"></i>
         </div>
       </div>
