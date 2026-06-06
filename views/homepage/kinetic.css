@@ -18,7 +18,6 @@
 }
 
 /* Display + label faces override the editorial Fraunces on this page */
-.kinetic .logo,
 .kinetic .section-title,
 .kinetic .project-title,
 .kinetic .otd-title,
@@ -34,9 +33,24 @@
     letter-spacing: -0.02em;
 }
 
-.kinetic .logo {
-    font-weight: 800;
-    letter-spacing: -0.03em;
+/* Wordmark gets the poster treatment: cobalt hard-shadow on the monogram and
+   tighter mono name, tying it to the kinetic buttons and section heads. */
+.kinetic .logo:hover .logo__mark {
+    box-shadow: 3px 3px 0 var(--cobalt);
+}
+
+.kinetic .logo__name {
+    font-size: 1.05rem;
+    letter-spacing: 0;
+}
+
+/* Nav links speak the same mono-label grammar as the eyebrows and corner tags */
+.kinetic .nav-link {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.82rem;
 }
 
 /* ============================================================

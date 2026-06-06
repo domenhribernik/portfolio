@@ -11,6 +11,6 @@ window.gtranslateSettings = {
 };
 
 var s = document.createElement("script");
-s.src = "https://cdn.gtranslate.net/widgets/latest/globe.js";
+s.src = "https://cdn.gtranslate.net/widgets/latest/fn.js";
 s.defer = true;
 document.head.appendChild(s);

@@ -111,7 +111,7 @@
 
                 <div class="leaf__inner">
                     <div class="kinetic-hero__inner">
-                        <p class="kinetic-eyebrow">Software developer &amp; maker, Slovenia</p>
+                        <p class="kinetic-eyebrow">Full-stack developer, Slovenia</p>
 
                         <h1 class="kinetic-title notranslate" translate="no" aria-label="Domen Hribernik">
                             <span class="kinetic-line" aria-hidden="true">
@@ -130,8 +130,8 @@
 
                         <div class="kinetic-sub">
                             <span class="kinetic-sub__bar" aria-hidden="true"></span>
-                            <p class="kinetic-sub__text">I build software that works and that I'm proud to look at, from client
-                                applications to side projects I make for the joy of it.</p>
+                            <p class="kinetic-sub__text">I build production software for a living as well as for a hobby.
+                                This is my page, where I build everything and anything I can think of.</p>
                         </div>
 
                         <div class="kinetic-cta">
@@ -163,10 +163,10 @@
                             </figure>
                             <div class="reveal" style="transition-delay:.1s">
                                 <h2 class="kinetic-heading text-4xl md:text-5xl text-ink mb-6">Hi, I'm Domen.</h2>
-                                <p class="text-lg md:text-xl text-stone leading-relaxed max-w-2xl">I'm a software developer and
-                                    creative based in Slovenia. I build production applications for clients, contribute to
-                                    open source, and care as much about how something feels as whether it works. Curiosity drives
-                                    most of what I make.</p>
+                                <p class="text-lg md:text-xl text-stone leading-relaxed max-w-2xl">I'm a full-stack developer based
+                                    in Slovenia, building clinical data software at Nova Vizija. The rest of my time goes into the
+                                    side projects you'll find here, small tools and experiments I build because I can, and 
+                                    because I use them myself.</p>
                                 <a href="views/about/"
                                     class="read-more-link group inline-flex items-center gap-2 mt-8 text-ink font-medium border-b border-clay pb-1 transition-colors hover:text-clay">Read
                                     more <i class="fas fa-arrow-right text-sm transition-transform group-hover:translate-x-1"></i></a>
@@ -185,17 +185,29 @@
                             <span class="kinetic-secthead__label">By the numbers</span>
                             <span class="kinetic-secthead__rule"></span>
                         </div>
-                        <div id="stats-content" class="grid md:grid-cols-2 gap-12 md:gap-20 items-center">
-                            <div class="reveal">
-                                <p class="stats-context text-xs font-medium tracking-[0.25em] uppercase text-stone mb-3">In this
-                                    project</p>
-                                <div class="stats-total flex items-baseline gap-4 flex-wrap">
-                                    <span id="stats-total-number"
-                                        class="font-serif text-clay leading-none text-[clamp(3.5rem,10vw,7rem)]">…</span>
-                                    <span class="stats-label font-sans text-lg text-stone">lines of code</span>
+
+                        <div id="stats-content" class="stats-panel reveal">
+                            <div class="stats-top">
+                                <div class="stats-intro">
+                                    <h2 class="kinetic-heading text-4xl md:text-5xl text-ink mb-4">Built by hand,<br>line by
+                                        line.</h2>
+                                    <p class="stats-lede">Every page here is written from scratch, no templates and no page
+                                        builders. These numbers are counted live, straight from the source.</p>
+                                </div>
+                                <div class="stats-figure">
+                                    <div class="stats-tags">
+                                        <span class="stats-tag stats-tag--unit"><span class="stats-tag__spark">✦</span> lines
+                                            of code</span>
+                                        <span class="stats-tag"><span id="stats-total-files">—</span> files</span>
+                                        <span class="stats-tag">updated <span id="stats-updated">—</span></span>
+                                    </div>
+                                    <span id="stats-total-number" class="stats-figure__num">…</span>
                                 </div>
                             </div>
-                            <div id="stats-breakdown" class="reveal stats-breakdown space-y-5" style="transition-delay:.1s"></div>
+
+                            <div class="stats-comp-bar" id="stats-bar" aria-hidden="true"></div>
+
+                            <div class="stats-legend" id="stats-legend"></div>
                         </div>
                     </div>
                 </div>

@@ -549,8 +549,14 @@ body.editorial .logo {
     color: rgba(246, 242, 234, 0.62);
 }
 
+.vr-flow__notes {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.8rem;
+}
+
 .vr-flow__ops {
-    margin-top: 1.6rem;
+    margin: 0;
     font-size: 0.92rem;
     line-height: 1.6;
     color: rgba(246, 242, 234, 0.72);
@@ -663,15 +669,6 @@ body.editorial .logo {
     background: var(--ink);
     padding: 0.2rem 0.55rem;
     border-radius: 2px;
-}
-
-.vr-disc__ects {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--acc);
 }
 
 .vr-disc__sl {
@@ -814,16 +811,66 @@ body.editorial .logo {
    RESPONSIVE
    ============================================================ */
 @media (max-width: 640px) {
+    /* Tighter vertical rhythm on phones */
+    .vr-section { padding: 3.6rem 0; }
+    .vr-wrap { padding: 0 1.15rem; }
+
+    /* Hero: drop the CTA above a left-aligned stat block */
+    .vr-hero__inner { padding: 7.5rem 1.15rem 4rem; }
     .vr-hero__foot {
         flex-direction: column;
         align-items: flex-start;
-        gap: 2.2rem;
+        gap: 2rem;
+        margin-top: 2.2rem;
     }
-
-    .vr-stats { gap: 1.4rem 1.8rem; }
+    .vr-btn { width: 100%; justify-content: center; }
+    .vr-stats { gap: 1.3rem 1.6rem; }
     .vr-stat dd { font-size: 1.6rem; }
+    .vr-sub { gap: 0.9rem; margin-top: 1.8rem; }
 
+    /* Section headers: keep the numeral + label on one tidy line */
+    .vr-secthead { gap: 0.8rem; margin-bottom: 2rem; }
+    .vr-secthead__label { letter-spacing: 0.14em; font-size: 0.64rem; }
+
+    /* Pipeline: two even columns, lighter padding */
     .vr-flow { grid-template-columns: 1fr 1fr; }
+    .vr-flow__step { padding: 1.2rem 1rem 1.15rem; }
+    .vr-flow__k { font-size: 1rem; }
+
+    /* Curriculum: compact 2-up catalogue that survives small screens */
+    .vr-disc-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.7rem;
+        margin-top: 2rem;
+    }
+    .vr-disc {
+        padding: 1.5rem 0.95rem 1.05rem;
+        border-radius: 2px;
+    }
+    .vr-disc:hover {
+        transform: translate(-3px, -3px);
+        box-shadow: 6px 6px 0 var(--acc);
+    }
+    .vr-disc__top {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.8rem;
+    }
+    .vr-disc__code { font-size: 0.6rem; padding: 0.18rem 0.45rem; }
+    .vr-disc__sl { font-size: 0.62rem; line-height: 1.3; margin-bottom: 0.3rem; }
+    .vr-disc__en { font-size: 1.02rem; line-height: 1.08; margin-bottom: 0.7rem; }
+    .vr-disc__body { font-size: 0.8rem; line-height: 1.5; margin-bottom: 1rem; }
+    .vr-disc__tags { gap: 0.3rem; }
+    .vr-disc__tags li { font-size: 0.56rem; padding: 0.18rem 0.4rem; }
+    /* Shrink + tuck the giant index numeral so it never collides with text */
+    .vr-disc::after { font-size: 1.6rem; top: 0.7rem; right: 0.75rem; }
+}
+
+@media (max-width: 360px) {
+    /* Last-resort breathing room on the narrowest phones */
+    .vr-disc { padding: 1.3rem 0.8rem 0.95rem; }
+    .vr-disc__en { font-size: 0.94rem; }
+    .vr-disc::after { display: none; }
 }
 
 /* ============================================================

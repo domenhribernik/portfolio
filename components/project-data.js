@@ -158,5 +158,15 @@ export const projects = {
       visitSite: "views/sourdough",
     },
     iconClass: "fas fa-bread-slice",
+  },
+  blog: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)",
+    title: "Journal",
+    description: "A place to write down the occasional thought on building software and the projects on this site. Each entry is just a Markdown file in a folder, rendered straight in the browser with no build step.",
+    links: {
+      visitSite: "views/blog",
+    },
+    iconClass: "fas fa-pen-nib",
   }
 };

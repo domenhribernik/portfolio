@@ -71,16 +71,15 @@
 
             <div class="vr-sub">
                 <span class="vr-sub__bar" aria-hidden="true"></span>
-                <p class="vr-sub__text">A digital twin of a runner. Eight university disciplines, one athlete, rebuilt in
-                    software: collect the movement, process it, give it a language, secure it, teach a machine to read it,
-                    show it, and finally play it.</p>
+                <p class="vr-sub__text">A digital twin of a runner, built from real Strava data. Eight university courses,
+                    one athlete, rebuilt in software: pull the runs, give them their own language, teach a machine to
+                    read them, put them on a map, and turn them into a game.</p>
             </div>
 
             <div class="vr-hero__foot">
                 <a href="#concept" class="vr-btn" data-scroll>Explore the project <i class="fas fa-arrow-down"></i></a>
                 <dl class="vr-stats">
                     <div class="vr-stat"><dt>Disciplines</dt><dd>08</dd></div>
-                    <div class="vr-stat"><dt>Credits</dt><dd>48 <span>ECTS</span></dd></div>
                     <div class="vr-stat"><dt>Technologies</dt><dd>08</dd></div>
                     <div class="vr-stat"><dt>Twin</dt><dd>01</dd></div>
                 </dl>
@@ -101,19 +100,20 @@
             <div class="vr-concept">
                 <div class="vr-concept__text reveal">
                     <h2 class="vr-heading">One runner,<br>mirrored in code.</h2>
-                    <p>A digital twin is a living software copy of something real. Virtual Runner is exactly that for a
-                        person who runs: their motion, their data and their performance, captured from the phone in their
-                        pocket and rebuilt as a system you can watch, query and even play against.</p>
-                    <p>The twist is that it was never one program. The thesis stitches together eight separate courses
-                        from my degree into a single working pipeline, each course contributing the part it taught me to
-                        build.</p>
+                    <p>A digital twin is a living software copy of something real. Virtual Runner is that for a person who
+                        runs: every run pulled from Strava, then rebuilt as a system you can watch, query, race against
+                        and play.</p>
+                    <p>It was never one program. The thesis stitches eight separate courses from my degree into a single
+                        athlete, each course contributing the part it taught me to build.</p>
                     <ul class="vr-stack">
                         <li><i class="devicon-react-original"></i> React</li>
                         <li><i class="devicon-nodejs-plain"></i> Node.js</li>
                         <li><i class="devicon-mongodb-plain"></i> MongoDB</li>
                         <li><i class="devicon-kotlin-plain"></i> Kotlin</li>
+                        <li><i class="devicon-android-plain"></i> Android</li>
+                        <li><i class="devicon-java-plain"></i> Java</li>
                         <li><i class="devicon-python-plain"></i> Python</li>
-                        <li><i class="devicon-java-plain"></i> Java / libGDX</li>
+                        <li><i class="devicon-cplusplus-plain"></i> C++</li>
                     </ul>
                 </div>
 
@@ -135,18 +135,19 @@
                 <span class="vr-secthead__label">How it fits together</span>
                 <span class="vr-secthead__rule"></span>
             </div>
-            <h2 class="vr-heading vr-heading--invert reveal">From a footstep<br>to a playable twin.</h2>
+            <h2 class="vr-heading vr-heading--invert reveal">From a Strava run<br>to a playable twin.</h2>
 
             <ol class="vr-flow reveal">
-                <li class="vr-flow__step"><span class="vr-flow__k">Collect</span><span class="vr-flow__v">Mobile sensors</span></li>
-                <li class="vr-flow__step"><span class="vr-flow__k">Process</span><span class="vr-flow__v">Desktop app</span></li>
-                <li class="vr-flow__step"><span class="vr-flow__k">Describe</span><span class="vr-flow__v">Custom language</span></li>
-                <li class="vr-flow__step"><span class="vr-flow__k">Secure</span><span class="vr-flow__v">Blockchain + MPI</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Collect</span><span class="vr-flow__v">Strava + phone sensors</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Describe</span><span class="vr-flow__v">Custom route language</span></li>
                 <li class="vr-flow__step"><span class="vr-flow__k">Understand</span><span class="vr-flow__v">Neural networks</span></li>
-                <li class="vr-flow__step"><span class="vr-flow__k">Show</span><span class="vr-flow__v">Web platform</span></li>
+                <li class="vr-flow__step"><span class="vr-flow__k">Show</span><span class="vr-flow__v">React web platform</span></li>
                 <li class="vr-flow__step"><span class="vr-flow__k">Play</span><span class="vr-flow__v">libGDX game</span></li>
             </ol>
-            <p class="vr-flow__ops reveal"><span>Underneath it all</span> System administration: CI/CD, deployment and scripting keeping every stage alive.</p>
+            <div class="vr-flow__notes reveal">
+                <p class="vr-flow__ops"><span>Under it all</span> System administration keeps the stack alive: CI/CD, deployment and scripting.</p>
+                <p class="vr-flow__ops"><span>Parallel track</span> A standalone distributed-computing study: a blockchain validated with MPI, exploring how runner records could be stored tamper-proof across nodes.</p>
+            </div>
         </div>
     </section>
 
@@ -159,120 +160,104 @@
                 <span class="vr-secthead__rule"></span>
             </div>
             <h2 class="vr-heading reveal">Eight disciplines.</h2>
-            <p class="vr-lede reveal">Each card is a real FERI course, worth six credits, and the exact piece of Virtual
-                Runner it made possible.</p>
+            <p class="vr-lede reveal">Each card is a real FERI course, and the exact piece of Virtual Runner it made
+                possible.</p>
 
             <div class="vr-disc-grid">
 
                 <article class="vr-disc reveal">
                     <header class="vr-disc__top">
-                        <span class="vr-disc__code">61U018</span>
-                        <span class="vr-disc__ects">6 ECTS</span>
-                    </header>
+                        <span class="vr-disc__code">61U018</span>                    </header>
                     <p class="vr-disc__sl">Spletno programiranje</p>
                     <h3 class="vr-disc__en">Web Programming</h3>
-                    <p class="vr-disc__body">The hub of the whole twin. A full stack platform that visualizes runner data,
-                        manages athletes and ties every other component together.</p>
+                    <p class="vr-disc__body">The hub of the twin. A full-stack platform that visualizes your Strava runs,
+                        replays them on an interactive map and ties every other component together.</p>
                     <ul class="vr-disc__tags">
-                        <li>REST</li><li>React SPA</li><li>MongoDB</li><li>PWA</li>
+                        <li>React</li><li>Node.js</li><li>Express</li><li>MongoDB</li><li>REST</li><li>PWA</li>
                     </ul>
                 </article>
 
                 <article class="vr-disc reveal">
                     <header class="vr-disc__top">
-                        <span class="vr-disc__code">61U166</span>
-                        <span class="vr-disc__ects">6 ECTS</span>
-                    </header>
+                        <span class="vr-disc__code">61U166</span>                    </header>
                     <p class="vr-disc__sl">Principi programskih jezikov</p>
                     <h3 class="vr-disc__en">Principles of Programming Languages</h3>
-                    <p class="vr-disc__body">A desktop application that ingests and cleans the raw runner data, built to put
-                        competing programming paradigms into practice.</p>
+                    <p class="vr-disc__body">Where data enters the twin. A Kotlin app that pulls your runs straight from the
+                        Strava API, built to put competing language paradigms and type systems into practice.</p>
                     <ul class="vr-disc__tags">
-                        <li>Kotlin</li><li>Jetpack Compose</li><li>Type systems</li>
+                        <li>Kotlin</li><li>Jetpack Compose</li><li>Strava API</li><li>Type systems</li><li>OOP</li><li>Functional</li>
                     </ul>
                 </article>
 
                 <article class="vr-disc reveal">
                     <header class="vr-disc__top">
-                        <span class="vr-disc__code">61U174</span>
-                        <span class="vr-disc__ects">6 ECTS</span>
-                    </header>
+                        <span class="vr-disc__code">61U174</span>                    </header>
                     <p class="vr-disc__sl">Platformno odvisen razvoj aplikacij</p>
                     <h3 class="vr-disc__en">Platform-Based Development</h3>
-                    <p class="vr-disc__body">A mobile app that captures live movement from the phone's own sensors. GPS,
-                        accelerometer and compass become the raw signal feeding the twin.</p>
+                    <p class="vr-disc__body">A mobile app that captures live movement straight from the phone's sensors. GPS,
+                        accelerometer and compass become a raw signal the twin can record on its own.</p>
                     <ul class="vr-disc__tags">
-                        <li>Android</li><li>Sensors</li><li>GPS</li><li>Kotlin</li>
+                        <li>Android</li><li>Kotlin</li><li>GPS</li><li>Accelerometer</li><li>SQLite</li><li>MVP</li>
                     </ul>
                 </article>
 
                 <article class="vr-disc reveal">
                     <header class="vr-disc__top">
-                        <span class="vr-disc__code">61U021</span>
-                        <span class="vr-disc__ects">6 ECTS</span>
-                    </header>
+                        <span class="vr-disc__code">61U021</span>                    </header>
                     <p class="vr-disc__sl">Prevajanje programskih jezikov</p>
                     <h3 class="vr-disc__en">Compiler Construction</h3>
-                    <p class="vr-disc__body">A small language with its own lexer, parser and interpreter for describing and
-                        drawing GeoJSON running routes.</p>
+                    <p class="vr-disc__body">A small language with its own lexer, parser and interpreter for describing running
+                        routes and drawing them as GeoJSON on a map.</p>
                     <ul class="vr-disc__tags">
-                        <li>Lexer</li><li>LL / LR parsing</li><li>Interpreter</li>
+                        <li>Lexer</li><li>Regex / FSA</li><li>LL / LR parsing</li><li>Attribute grammars</li><li>Interpreter</li><li>GeoJSON</li>
                     </ul>
                 </article>
 
                 <article class="vr-disc reveal">
                     <header class="vr-disc__top">
-                        <span class="vr-disc__code">61U173</span>
-                        <span class="vr-disc__ects">6 ECTS</span>
-                    </header>
+                        <span class="vr-disc__code">61U173</span>                    </header>
                     <p class="vr-disc__sl">Paralelno in porazdeljeno računanje</p>
                     <h3 class="vr-disc__en">Parallel &amp; Distributed Computing</h3>
-                    <p class="vr-disc__body">A blockchain secured with MPI spreads runner records across nodes and validates
-                        them with no single point of trust.</p>
+                    <p class="vr-disc__body">A standalone study in distributed trust: a blockchain validated with MPI across
+                        nodes, a proof of how runner records could live tamper-proof with no single point of failure.</p>
                     <ul class="vr-disc__tags">
-                        <li>MPI</li><li>Blockchain</li><li>Amdahl's law</li>
+                        <li>MPI</li><li>OpenMP</li><li>Blockchain</li><li>C++</li><li>Amdahl's law</li>
                     </ul>
                 </article>
 
                 <article class="vr-disc reveal">
                     <header class="vr-disc__top">
-                        <span class="vr-disc__code">61U037</span>
-                        <span class="vr-disc__ects">6 ECTS</span>
-                    </header>
+                        <span class="vr-disc__code">61U037</span>                    </header>
                     <p class="vr-disc__sl">Uvod v računalniški vid in razpoznavanje vzorcev</p>
                     <h3 class="vr-disc__en">Computer Vision &amp; Pattern Recognition</h3>
-                    <p class="vr-disc__body">Neural networks read the collected data to recognize running form, fatigue and
-                        performance trends.</p>
+                    <p class="vr-disc__body">Neural networks trained on run metrics, pace, heart rate and cadence, to recognize
+                        running form, fatigue and performance trends.</p>
                     <ul class="vr-disc__tags">
-                        <li>Neural nets</li><li>Features</li><li>Classification</li>
+                        <li>Neural nets</li><li>MLP</li><li>Pattern recognition</li><li>Classification</li><li>Feature extraction</li>
                     </ul>
                 </article>
 
                 <article class="vr-disc reveal">
                     <header class="vr-disc__top">
-                        <span class="vr-disc__code">61U172</span>
-                        <span class="vr-disc__ects">6 ECTS</span>
-                    </header>
+                        <span class="vr-disc__code">61U172</span>                    </header>
                     <p class="vr-disc__sl">Razvoj računalniških iger</p>
                     <h3 class="vr-disc__en">Game Development</h3>
-                    <p class="vr-disc__body">A libGDX game turns real runs into play. The athlete races against their own
-                        digital twin.</p>
+                    <p class="vr-disc__body">A libGDX mobile game that turns real runs into multiplayer play: race your friends,
+                        and your own digital twin, across the routes you have logged.</p>
                     <ul class="vr-disc__tags">
-                        <li>libGDX</li><li>Java</li><li>Game loop</li><li>2D</li>
+                        <li>libGDX</li><li>Java</li><li>Game loop</li><li>2D</li><li>Multiplayer</li><li>Input handling</li>
                     </ul>
                 </article>
 
                 <article class="vr-disc reveal">
                     <header class="vr-disc__top">
-                        <span class="vr-disc__code">61U023</span>
-                        <span class="vr-disc__ects">6 ECTS</span>
-                    </header>
+                        <span class="vr-disc__code">61U023</span>                    </header>
                     <p class="vr-disc__sl">Sistemska administracija</p>
                     <h3 class="vr-disc__en">System Administration</h3>
-                    <p class="vr-disc__body">The plumbing. CI/CD pipelines, deployment and scripting that keep all eight
-                        pieces shipping and running.</p>
+                    <p class="vr-disc__body">The plumbing. CI/CD pipelines, deployment, Bash scripting and security keeping all
+                        the moving pieces shipping and online.</p>
                     <ul class="vr-disc__tags">
-                        <li>Bash</li><li>CI/CD</li><li>Deploy</li><li>Security</li>
+                        <li>Bash</li><li>CI/CD</li><li>Linux</li><li>Networking</li><li>Cryptography</li><li>Deploy</li>
                     </ul>
                 </article>
 
@@ -284,7 +269,7 @@
     <section class="vr-section vr-section--close">
         <div class="vr-wrap vr-close">
             <p class="vr-close__eyebrow reveal">One thesis, eight worlds</p>
-            <h2 class="vr-close__title reveal">Forty-eight credits,<br>compiled into a runner.</h2>
+            <h2 class="vr-close__title reveal">Eight courses,<br>compiled into a runner.</h2>
             <a href="../../index.html" class="vr-link reveal">Back to the portfolio <i class="fas fa-arrow-right"></i></a>
         </div>
     </section>

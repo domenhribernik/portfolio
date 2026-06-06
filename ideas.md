@@ -15,12 +15,12 @@
   - Google OAuth + account linking with classic accounts
 - **Make automatic commit** - git action - to my ftp
 - **Look into unit testing**, and add them before commit. And on actions as well? 
-- **Add skills** - learn how to make skills and add as many as you can think of
 - Add webp to image service, and then also figure out the jpg edge case
 ## Refactoring
 - Figure out how to seperate git repositories, to seperate the big projects, people would be interested in seeing
 - Find github alternative
 - Go through controllers and refactor them
+- Debug camera not working
 
 ## Project Ideas
 - **ASCII art converter** — transform images to ASCII (lightest to darkest); already have a project, put it on the portfolio
