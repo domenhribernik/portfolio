@@ -8,7 +8,7 @@ const config = {
         'c3RheXByZXNlbnQ=': 'Domen'
     },
     // Local midnight at the start of June 18, 2026.
-    unlockDate: new Date('2026-06-08T21:56:00').getTime(),
+    unlockDate: new Date('2026-06-18T00:00:00').getTime(),
 };
 
 // ?preview=1 force-unlocks the reveal so Domen can rehearse it before the day.

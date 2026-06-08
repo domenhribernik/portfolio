@@ -33,6 +33,12 @@
     padding: 0;
     cursor: default;
     animation: envFloat 5s ease-in-out infinite;
+    /* Pixel-align the stacked layers: promote to a GPU layer so the
+       gradient + clip-path edges below rasterize on the device pixel grid
+       instead of bleeding into discolored hairline seams on high-DPI / big
+       displays. See the "Pixel-alignment" note in the root CLAUDE.md. */
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 /* Body / back of the envelope */
@@ -42,6 +48,8 @@
     border-radius: 12px;
     background: linear-gradient(135deg, #ffd9e0, #ffc2cc);
     box-shadow: 0 14px 30px rgba(200, 120, 140, 0.28);
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 /* The folded letter that peeks out of the top when opened */
@@ -55,7 +63,8 @@
     border-radius: 5px 5px 0 0;
     box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.06);
     z-index: 2;
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0);
+    backface-visibility: hidden;
     transition: transform 0.6s ease 0.15s;
 }
 
@@ -67,6 +76,8 @@
     border-radius: 12px;
     background: linear-gradient(135deg, #ffc7d0, #ffb3c1);
     clip-path: polygon(0 30%, 50% 64%, 100% 30%, 100% 100%, 0 100%);
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 /* Top flap — closed by default, rotates up/back when opened */
@@ -81,7 +92,9 @@
     background: linear-gradient(135deg, #ffb8c5, #ff9fb0);
     clip-path: polygon(0 0, 100% 0, 50% 100%);
     transform-origin: top center;
-    transform: rotateX(0deg);
+    /* translateZ only (no backface-visibility): this flap rotates past 90deg
+       when opened, so its backface must stay visible. */
+    transform: rotateX(0deg) translateZ(0);
     transition: transform 0.6s ease, z-index 0s linear 0.3s;
 }
 
@@ -90,7 +103,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) translateZ(0);
+    backface-visibility: hidden;
     width: 46px;
     height: 46px;
     border-radius: 50%;
@@ -112,7 +126,7 @@
 }
 
 #mainApp.is-unlocked .envelope:hover {
-    transform: scale(1.03);
+    transform: scale(1.03) translateZ(0);
 }
 
 /* ---- Opened: flap swings open, letter rises, seal breaks away ---- */
@@ -122,7 +136,7 @@
 }
 
 #mainApp.is-opened .envelope-flap {
-    transform: rotateX(178deg);
+    transform: rotateX(178deg) translateZ(0);
     z-index: 1;
     transition: transform 0.6s ease, z-index 0s linear 0.3s;
 }
@@ -133,7 +147,7 @@
 
 #mainApp.is-opened .envelope-seal {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.4) rotate(-25deg);
+    transform: translate(-50%, -50%) scale(0.4) rotate(-25deg) translateZ(0);
 }
 
 /* Gentle shake when a still-locked envelope is tapped (JS toggles .shake) */
