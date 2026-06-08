@@ -1,0 +1,285 @@
+/* iliana/anniversary — only styles Tailwind can't cleanly express:
+ * the CSS-drawn envelope, the locked/unlocked/opened state machine,
+ * keyframes (float, glow, flap-open, heart fall, letter reveal), and
+ * a prefers-reduced-motion fallback. Mirrors the parent view's conventions. */
+
+/* App show/hide (toggled by JS adding/removing .show) — same as parent */
+.app {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.app.show {
+    display: block;
+    opacity: 1;
+}
+
+/* Login error — hidden by default, JS sets inline display */
+.error-message {
+    display: none;
+}
+
+/* ============================================================= *
+ *  Envelope                                                     *
+ * ============================================================= */
+
+.envelope {
+    position: relative;
+    width: 280px;
+    height: 188px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
+    animation: envFloat 5s ease-in-out infinite;
+}
+
+/* Body / back of the envelope */
+.envelope-back {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffd9e0, #ffc2cc);
+    box-shadow: 0 14px 30px rgba(200, 120, 140, 0.28);
+}
+
+/* The folded letter that peeks out of the top when opened */
+.envelope-letter-peek {
+    position: absolute;
+    left: 9%;
+    width: 82%;
+    top: 12%;
+    height: 88%;
+    background: #fffafb;
+    border-radius: 5px 5px 0 0;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.06);
+    z-index: 2;
+    transform: translateY(0);
+    transition: transform 0.6s ease 0.15s;
+}
+
+/* Front pocket — the V seam where the bottom flaps meet */
+.envelope-front {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffc7d0, #ffb3c1);
+    clip-path: polygon(0 30%, 50% 64%, 100% 30%, 100% 100%, 0 100%);
+}
+
+/* Top flap — closed by default, rotates up/back when opened */
+.envelope-flap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 64%;
+    z-index: 5;
+    border-radius: 12px 12px 0 0;
+    background: linear-gradient(135deg, #ffb8c5, #ff9fb0);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    transform-origin: top center;
+    transform: rotateX(0deg);
+    transition: transform 0.6s ease, z-index 0s linear 0.3s;
+}
+
+/* Heart wax seal on the flap tip */
+.envelope-seal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.05rem;
+    background: radial-gradient(circle at 35% 30%, #ff8298, #d9536b);
+    box-shadow: 0 3px 8px rgba(150, 40, 70, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ---- Unlocked: invite interaction ---- */
+#mainApp.is-unlocked .envelope {
+    cursor: pointer;
+    animation: envFloat 5s ease-in-out infinite, envGlow 2.4s ease-in-out infinite;
+}
+
+#mainApp.is-unlocked .envelope:hover {
+    transform: scale(1.03);
+}
+
+/* ---- Opened: flap swings open, letter rises, seal breaks away ---- */
+#mainApp.is-opened .envelope {
+    animation: none;
+    cursor: default;
+}
+
+#mainApp.is-opened .envelope-flap {
+    transform: rotateX(178deg);
+    z-index: 1;
+    transition: transform 0.6s ease, z-index 0s linear 0.3s;
+}
+
+#mainApp.is-opened .envelope-letter-peek {
+    transform: translateY(-46%);
+}
+
+#mainApp.is-opened .envelope-seal {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(-25deg);
+}
+
+/* Gentle shake when a still-locked envelope is tapped (JS toggles .shake) */
+.envelope.shake {
+    animation: envShake 0.5s ease;
+}
+
+/* ============================================================= *
+ *  State-driven visibility                                      *
+ * ============================================================= */
+
+/* Countdown: only while locked */
+#countdownWrap {
+    display: none;
+}
+
+#mainApp.is-locked #countdownWrap {
+    display: block;
+}
+
+/* "Tap to open" prompt: only while unlocked and not yet opened */
+.open-prompt {
+    display: none;
+    animation: softPulse 1.8s ease-in-out infinite;
+}
+
+#mainApp.is-unlocked .open-prompt {
+    display: block;
+}
+
+#mainApp.is-opened .open-prompt {
+    display: none;
+}
+
+/* Letter: hidden until opened */
+.letter {
+    display: none;
+}
+
+#mainApp.is-opened .letter {
+    display: block;
+    animation: fadeIn 0.5s ease both;
+}
+
+/* Per-block reveal — JS adds .reveal to each child in sequence */
+.letter-body > * {
+    opacity: 0;
+    transform: translateY(14px);
+}
+
+.letter-body > *.reveal {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.read-again {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+#mainApp.is-opened .read-again.show {
+    display: inline-block;
+}
+
+/* ============================================================= *
+ *  Falling hearts (JS injected into #heartField)               *
+ * ============================================================= */
+
+.falling-heart {
+    position: absolute;
+    top: -8vh;
+    color: var(--heart-color, #ff9fb0);
+    animation: heartFall var(--fall-duration, 6s) linear forwards;
+    will-change: transform, opacity;
+}
+
+/* ============================================================= *
+ *  Keyframes                                                    *
+ * ============================================================= */
+
+@keyframes envFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+}
+
+@keyframes envGlow {
+    0%, 100% { filter: drop-shadow(0 10px 18px rgba(255, 150, 170, 0.35)); }
+    50%      { filter: drop-shadow(0 10px 30px rgba(255, 110, 150, 0.7)); }
+}
+
+@keyframes envShake {
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-9px); }
+    40%      { transform: translateX(9px); }
+    60%      { transform: translateX(-6px); }
+    80%      { transform: translateX(6px); }
+}
+
+@keyframes softPulse {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes heartFall {
+    0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: var(--heart-opacity, 0.9); }
+    90%  { opacity: var(--heart-opacity, 0.9); }
+    100% { transform: translateY(118vh) translateX(var(--drift, 0px)) rotate(360deg); opacity: 0; }
+}
+
+/* ============================================================= *
+ *  Reduced motion: no float/glow/fall/typing, letter shown flat *
+ * ============================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .envelope,
+    #mainApp.is-unlocked .envelope {
+        animation: none;
+    }
+
+    .envelope-flap,
+    .envelope-letter-peek,
+    .envelope-seal {
+        transition: none;
+    }
+
+    .open-prompt {
+        animation: none;
+    }
+
+    .falling-heart {
+        display: none;
+    }
+
+    .letter-body > * {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}

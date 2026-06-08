@@ -49,6 +49,7 @@ function login() {
 
     if (config.passwords[encodedPassword]) {
         currentUser = config.passwords[encodedPassword];
+        sessionStorage.setItem('iliana_auth', currentUser);
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('mainApp').classList.add('show');
         document.getElementById('welcomeMessage').textContent =
@@ -64,6 +65,7 @@ function login() {
 
 function logout() {
     currentUser = null;
+    sessionStorage.removeItem('iliana_auth');
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('mainApp').classList.remove('show');
     document.getElementById('passwordInput').value = '';
