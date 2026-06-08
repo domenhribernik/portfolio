@@ -1,203 +1,328 @@
-let gameState = {
-    playerCount: 3,
-    currentLocation: '',
-    spyIndex: -1,
-    revealedCards: 0,
-    viewedCards: 0,
-    gameTimer: null,
-    timeRemaining: 0
-};
+/* ============================================================
+   SPY // CLASSIFIED  —  game logic
+   Pass-and-play deception game. 100% client-side, no backend.
+   State machine: boot -> setup -> brief -> round -> debrief
+   ============================================================ */
 
-const locations = [
-    'Airport', 'Bank', 'Beach', 'Casino', 'Circus', 'Embassy',
-    'Hospital', 'Hotel', 'Movie Theater', 'Museum', 'Restaurant',
-    'School', 'Space Station', 'Submarine', 'Supermarket', 'Theater',
-    'University', 'Zoo', 'Pirate Ship', 'Polar Station', 'Oil Rig',
-    'Carnival', 'Day Spa', 'Forest', 'Passenger Train', 'Art Gallery'
+// Everyday places (so a spy can plausibly bluff) plus a few wild ones.
+const LOCATIONS = [
+    // everyday
+    'Supermarket', 'Restaurant', 'Coffee Shop', 'Bank', 'Gas Station',
+    'Pharmacy', 'Public Library', 'Gym', 'Barbershop', "Dentist's Office",
+    'Hospital', 'School', 'University', 'Cinema', 'Shopping Mall',
+    'Hotel', 'Beach', 'City Park', 'Zoo', 'Museum',
+    'Art Gallery', 'Pub', 'Nightclub', 'Stadium', 'Airport',
+    'Train Station', 'Subway Station', 'City Bus', 'Wedding', 'Cathedral',
+    'Bakery', 'Bowling Alley', 'Theme Park', 'Aquarium', 'Car Wash',
+    'Police Station', 'Fire Station', 'Office Party', 'Farm', 'Campsite',
+    'Ski Resort', 'Casino', 'Cruise Ship',
+    // wild
+    'Space Station', 'Submarine', 'Pirate Ship', 'Polar Research Station',
+    'Oil Rig', 'Military Base', 'Circus', 'Embassy', 'Medieval Castle',
+    'Film Studio'
 ];
 
-function showPlayerSelection() {
-    document.getElementById('titleScreen').style.display = 'none';
-    document.getElementById('playerSelection').style.display = 'block';
-    updatePlayerCountDisplay();
+const MIN_PLAYERS = 3;
+const MAX_PLAYERS = 20;
+const LS_KEY = 'spy:lastSettings';
+
+const state = {
+    players: 5,
+    spies: 1,
+    location: '',
+    spyIndices: [],
+    revealIndex: 0,
+    revealShown: false,
+    timer: null,
+    timeRemaining: 0,
+    totalTime: 0,
+    isPaused: false,
+};
+
+/* ---------------- helpers ---------------- */
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const spyMax = (players) => Math.max(1, Math.floor(players / 2)); // never more than half
+const suggestedSpies = (players) => clamp(Math.round(players / 4), 1, spyMax(players));
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
+    $(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function scrollToTop() {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-}
-
-function changePlayerCount(change) {
-    const newCount = gameState.playerCount + change;
-    if (newCount >= 3 && newCount <= 20) {
-        gameState.playerCount = newCount;
-        updatePlayerCountDisplay();
-    }
-}
-
-function updatePlayerCountDisplay() {
-    document.getElementById('playerCountDisplay').textContent = gameState.playerCount;
-
-    // Update button states
-    document.getElementById('decreaseBtn').disabled = gameState.playerCount <= 3;
-    document.getElementById('increaseBtn').disabled = gameState.playerCount >= 20;
-}
-
-function setupRoles() {
-    // Hide player selection
-    document.getElementById('playerSelection').style.display = 'none';
-    document.getElementById('roleCards').style.display = 'block';
-
-    // Choose random location and spy
-    gameState.currentLocation = locations[Math.floor(Math.random() * locations.length)];
-    gameState.spyIndex = Math.floor(Math.random() * gameState.playerCount);
-    gameState.revealedCards = 0;
-    gameState.viewedCards = 0;
-
-    // Create player cards
-    const container = document.getElementById('playerCardsContainer');
-    container.innerHTML = '';
-
-    for (let i = 0; i < gameState.playerCount; i++) {
-        const card = document.createElement('div');
-        card.className = 'player-card';
-        card.innerHTML = `
-                    <div class="player-name">Player ${i + 1}</div>
-                    <div class="role-content" id="role-${i}">
-                        ${i === gameState.spyIndex ?
-                `<div class="role-title spy-role">🕵️ YOU ARE THE SPY!</div>
-                                <p>You don't know the location. Ask questions to figure it out without revealing yourself!</p>` :
-                `<div class="role-title location-role">🏛️ CITIZEN</div>
-                                <div class="location-name">${gameState.currentLocation}</div>
-                                <p>You know the location. Find the spy who doesn't!</p>`
-            }
-                    </div>
-                    <p id="reveal-text-${i}">👀 Tap to reveal your role</p>
-                    <button class="close-btn" onclick="closeRole(${i})">×</button>
-                `;
-
-        card.onclick = (e) => {
-            if (!e.target.classList.contains('close-btn')) {
-                revealRole(i);
-            }
-        };
-        container.appendChild(card);
-    }
-}
-
-function revealRole(playerIndex) {
-    const card = document.querySelector(`#playerCardsContainer .player-card:nth-child(${playerIndex + 1})`);
-    const roleContent = document.getElementById(`role-${playerIndex}`);
-    const revealText = document.getElementById(`reveal-text-${playerIndex}`);
-
-    if (!card.classList.contains('revealed') && !card.classList.contains('viewed')) {
-        roleContent.classList.add('visible');
-        revealText.style.display = 'none';
-        card.classList.add('revealed');
-        card.onclick = null;
-
-        gameState.revealedCards++;
-        gameState.viewedCards++;
-
-        // Check if all players have viewed their roles (not necessarily currently open)
-        if (gameState.viewedCards === gameState.playerCount) {
-            setTimeout(() => {
-                document.getElementById('startGameBtn').classList.remove('hidden');
-            }, 500);
+function loadSettings() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(LS_KEY));
+        if (saved && typeof saved === 'object') {
+            state.players = clamp(parseInt(saved.players, 10) || 5, MIN_PLAYERS, MAX_PLAYERS);
+            state.spies = clamp(parseInt(saved.spies, 10) || 1, 1, spyMax(state.players));
         }
+    } catch (e) { /* no-op: first run / blocked storage */ }
+}
+
+function saveSettings() {
+    try {
+        localStorage.setItem(LS_KEY, JSON.stringify({ players: state.players, spies: state.spies }));
+    } catch (e) { /* no-op */ }
+}
+
+/* ---------------- setup ---------------- */
+
+function renderSetup() {
+    $('playersValue').textContent = state.players;
+    $('spiesValue').textContent = state.spies;
+
+    $('playersMinus').disabled = state.players <= MIN_PLAYERS;
+    $('playersPlus').disabled = state.players >= MAX_PLAYERS;
+
+    const max = spyMax(state.players);
+    $('spiesMinus').disabled = state.spies <= 1;
+    $('spiesPlus').disabled = state.spies >= max;
+    $('spiesHint').textContent = `suggested: ${suggestedSpies(state.players)} · max: ${max}`;
+}
+
+function changePlayers(delta) {
+    state.players = clamp(state.players + delta, MIN_PLAYERS, MAX_PLAYERS);
+    state.spies = clamp(state.spies, 1, spyMax(state.players));
+    renderSetup();
+}
+
+function changeSpies(delta) {
+    state.spies = clamp(state.spies + delta, 1, spyMax(state.players));
+    renderSetup();
+}
+
+/* ---------------- role assignment ---------------- */
+
+function assignRoles() {
+    state.location = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
+
+    const idx = Array.from({ length: state.players }, (_, i) => i);
+    for (let i = idx.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [idx[i], idx[j]] = [idx[j], idx[i]];
+    }
+    state.spyIndices = idx.slice(0, state.spies).sort((a, b) => a - b);
+
+    state.revealIndex = 0;
+    state.revealShown = false;
+}
+
+/* ---------------- briefing / pass-around ---------------- */
+
+function startBriefing() {
+    assignRoles();
+    showScreen('briefScreen');
+    renderBriefCard();
+}
+
+function renderBriefCard() {
+    const i = state.revealIndex;
+    const isSpy = state.spyIndices.includes(i);
+    const spyWord = state.spies > 1 ? 'spies' : 'spy';
+
+    $('briefProgress').textContent = `PLAYER ${i + 1} / ${state.players}`;
+    $('briefAgent').textContent = `PLAYER ${i + 1}`;
+    $('briefAgentDone').textContent = `PLAYER ${i + 1}`;
+
+    const role = $('briefRole');
+    if (isSpy) {
+        role.className = 'role-spy';
+        role.innerHTML = `
+            <div class="role-title">YOU ARE A SPY</div>
+            <p class="role-flavor">You don't know the location. Work it out from what others say,
+                blend in, and don't get caught.</p>`;
+    } else {
+        role.className = 'role-citizen';
+        role.innerHTML = `
+            <p class="role-kicker">YOUR LOCATION</p>
+            <div class="role-location">${state.location}</div>
+            <p class="role-flavor">Prove you belong here. Smoke out the ${spyWord} who can't.</p>`;
+    }
+
+    const card = $('briefCard');
+    card.classList.remove('is-revealed', 'is-done');
+    state.revealShown = false;
+
+    const nextBtn = $('briefNextBtn');
+    nextBtn.classList.add('hidden');
+    nextBtn.textContent = (i === state.players - 1) ? '▶ START ROUND' : '▶ NEXT PLAYER';
+}
+
+function toggleBriefCard() {
+    const card = $('briefCard');
+    if (card.classList.contains('is-done')) return; // locked once hidden
+
+    if (!state.revealShown) {
+        state.revealShown = true;
+        card.classList.add('is-revealed');
+    } else {
+        // hide before allowing pass-on, so the next person can't peek
+        state.revealShown = false;
+        card.classList.remove('is-revealed');
+        card.classList.add('is-done');
+        $('briefNextBtn').classList.remove('hidden');
     }
 }
 
-function closeRole(playerIndex) {
-    const card = document.querySelector(`#playerCardsContainer .player-card:nth-child(${playerIndex + 1})`);
-    const roleContent = document.getElementById(`role-${playerIndex}`);
-    const revealText = document.getElementById(`reveal-text-${playerIndex}`);
-
-    if (card.classList.contains('revealed')) {
-        roleContent.classList.remove('visible');
-        revealText.style.display = 'block';
-        revealText.textContent = '🔒 Role already viewed';
-        revealText.style.opacity = '0.6';
-        card.classList.remove('revealed');
-        card.classList.add('viewed');
-        // Remove click functionality - card can't be opened again
-        card.onclick = null;
+function nextAgent() {
+    if (state.revealIndex < state.players - 1) {
+        state.revealIndex++;
+        renderBriefCard();
+    } else {
+        startRound();
     }
 }
 
-function startGame() {
-    document.getElementById('roleCards').style.display = 'none';
-    document.getElementById('gameScreen').style.display = 'block';
-    document.getElementById('gamePlayerCount').textContent = gameState.playerCount;
+/* ---------------- round / timer ---------------- */
 
-    // Start timer (1 minute per player)
-    gameState.timeRemaining = gameState.playerCount * 60;
+function startRound() {
+    showScreen('roundScreen');
+    $('roundAgentCount').textContent = state.players;
+    $('roundSpyCount').textContent = state.spies;
+
+    state.totalTime = state.players * 60;
+    state.timeRemaining = state.totalTime;
+    state.isPaused = false;
+
+    $('pauseBtn').textContent = '❚❚ PAUSE';
+    $('pauseNote').hidden = true;
+    $('timerDisplay').classList.remove('low', 'paused');
+    $('timerProgress').classList.remove('low');
+
     updateTimerDisplay();
+    updateTimerBar();
+    startTimerInterval();
+}
 
-    gameState.gameTimer = setInterval(() => {
-        gameState.timeRemaining--;
-        updateTimerDisplay();
-        updateTimerBar();
+function startTimerInterval() {
+    clearInterval(state.timer);
+    state.timer = setInterval(tick, 1000);
+}
 
-        if (gameState.timeRemaining <= 0) {
-            endGame();
-        }
-    }, 1000);
+function tick() {
+    state.timeRemaining--;
+    updateTimerDisplay();
+    updateTimerBar();
+    if (state.timeRemaining <= 0) endRound();
 }
 
 function updateTimerDisplay() {
-    const minutes = Math.floor(gameState.timeRemaining / 60);
-    const seconds = gameState.timeRemaining % 60;
-    const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    document.getElementById('timerDisplay').textContent = display;
-
-    // Add pulse effect when time is running low
-    if (gameState.timeRemaining <= 30) {
-        document.getElementById('timerDisplay').classList.add('pulse');
-        document.getElementById('timerDisplay').style.color = '#ef4444';
-    }
+    const m = Math.floor(state.timeRemaining / 60);
+    const s = state.timeRemaining % 60;
+    $('timerDisplay').textContent =
+        `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    const low = state.timeRemaining <= 30 && state.timeRemaining > 0 && !state.isPaused;
+    $('timerDisplay').classList.toggle('low', low);
 }
 
 function updateTimerBar() {
-    const totalTime = gameState.playerCount * 60;
-    const progress = ((totalTime - gameState.timeRemaining) / totalTime) * 100;
-    document.getElementById('timerProgress').style.width = progress + '%';
+    const pct = ((state.totalTime - state.timeRemaining) / state.totalTime) * 100;
+    $('timerProgress').style.width = `${pct}%`;
+    $('timerProgress').classList.toggle('low', state.timeRemaining <= 30);
 }
 
-function endGame() {
-    if (gameState.gameTimer) {
-        clearInterval(gameState.gameTimer);
-        gameState.gameTimer = null;
+function togglePause() {
+    if (state.isPaused) {
+        state.isPaused = false;
+        $('pauseBtn').textContent = '❚❚ PAUSE';
+        $('pauseNote').hidden = true;
+        $('timerDisplay').classList.remove('paused');
+        startTimerInterval();
+    } else {
+        state.isPaused = true;
+        clearInterval(state.timer);
+        $('pauseBtn').textContent = '▶ RESUME';
+        $('pauseNote').hidden = false;
+        $('timerDisplay').classList.add('paused');
+        $('timerDisplay').classList.remove('low');
     }
-
-    document.getElementById('gameScreen').style.display = 'none';
-    document.getElementById('gameOverScreen').classList.remove('hidden');
-    document.getElementById('gameOverScreen').style.display = 'block';
 }
 
-function restartGame() {
-    gameState = {
-        playerCount: 3,
-        currentLocation: '',
-        spyIndex: -1,
-        revealedCards: 0,
-        viewedCards: 0,
-        gameTimer: null,
-        timeRemaining: 0
-    };
-
-    // Reset UI
-    document.getElementById('gameOverScreen').style.display = 'none';
-    document.getElementById('titleScreen').style.display = 'block';
-
-    // Reset timer display
-    document.getElementById('timerDisplay').classList.remove('pulse');
-    document.getElementById('timerDisplay').style.color = '#06b6d4';
-    document.getElementById('timerProgress').style.width = '0%';
-
-    // Clear player cards
-    document.getElementById('playerCardsContainer').innerHTML = '';
-    document.getElementById('startGameBtn').classList.add('hidden');
+function endRound() {
+    clearInterval(state.timer);
+    state.timer = null;
+    state.isPaused = false;
+    showDebrief();
 }
+
+/* ---------------- debrief / end ---------------- */
+
+function showDebrief() {
+    showScreen('debriefScreen');
+    $('declassifyResult').classList.add('hidden');
+    $('declassifyBtn').classList.remove('hidden');
+    const spyWord = state.spies > 1 ? 'spies' : 'spy';
+    $('playAgainSub').textContent = `(${state.players} players · ${state.spies} ${spyWord})`;
+}
+
+function declassify() {
+    $('resultSpies').textContent =
+        state.spyIndices.map((i) => `PLAYER ${i + 1}`).join('  ·  ');
+    $('resultLocation').textContent = state.location;
+    $('declassifyResult').classList.remove('hidden');
+    $('declassifyBtn').classList.add('hidden');
+}
+
+/* ---------------- navigation ---------------- */
+
+function goToSetup() {
+    renderSetup();
+    showScreen('setupScreen');
+}
+
+function deploy() {
+    saveSettings();
+    startBriefing();
+}
+
+function playAgainSame() {
+    startBriefing(); // re-rolls location + spies, jumps straight to pass-around
+}
+
+function changeSettings() {
+    renderSetup();
+    showScreen('setupScreen');
+}
+
+function mainMenu() {
+    showScreen('bootScreen');
+}
+
+/* ---------------- wiring ---------------- */
+
+function init() {
+    loadSettings();
+    renderSetup();
+
+    $('initiateBtn').addEventListener('click', goToSetup);
+
+    $('playersMinus').addEventListener('click', () => changePlayers(-1));
+    $('playersPlus').addEventListener('click', () => changePlayers(1));
+    $('spiesMinus').addEventListener('click', () => changeSpies(-1));
+    $('spiesPlus').addEventListener('click', () => changeSpies(1));
+    $('deployBtn').addEventListener('click', deploy);
+    $('setupBackBtn').addEventListener('click', mainMenu);
+
+    const card = $('briefCard');
+    card.addEventListener('click', toggleBriefCard);
+    card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleBriefCard();
+        }
+    });
+    $('briefNextBtn').addEventListener('click', nextAgent);
+
+    $('pauseBtn').addEventListener('click', togglePause);
+    $('endRoundBtn').addEventListener('click', endRound);
+
+    $('declassifyBtn').addEventListener('click', declassify);
+    $('playAgainBtn').addEventListener('click', playAgainSame);
+    $('changeSettingsBtn').addEventListener('click', changeSettings);
+    $('mainMenuBtn').addEventListener('click', mainMenu);
+}
+
+document.addEventListener('DOMContentLoaded', init);

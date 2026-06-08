@@ -4,93 +4,176 @@
 <head>
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0b">
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&family=Special+Elite&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'spy-from': '#667eea',
-                        'spy-to': '#764ba2',
-                        'spy-gold': '#fbbf24',
-                        'spy-success-from': '#4ade80',
-                        'spy-success-to': '#22c55e',
-                        'spy-danger-from': '#ef4444',
-                        'spy-danger-to': '#dc2626',
-                        'spy-cyan': '#03dac6',
-                        'spy-cyan-hl': '#1ae5d1',
+                        bg: '#0a0a0b',
+                        panel: '#141416',
+                        'panel-2': '#1b1b1e',
+                        blood: '#c1121f',
+                        'blood-dark': '#7a0d16',
+                        'blood-glow': '#ff2a3a',
+                        ink: '#e8e6e3',
+                        muted: '#8a8680',
+                        amber: '#e0a82e',
+                    },
+                    fontFamily: {
+                        stencil: ['"Black Ops One"', 'sans-serif'],
+                        mono: ['"Share Tech Mono"', 'monospace'],
+                        type: ['"Special Elite"', 'monospace'],
                     },
                 }
             }
         }
     </script>
     <link rel="stylesheet" href="style.css">
-    <title>Spy Game</title>
+    <title>SPY // CLASSIFIED</title>
 </head>
 
-<body class="font-sans min-h-screen flex flex-col justify-center items-center text-white bg-gradient-to-br from-spy-from to-spy-to m-0">
-    <div class="max-w-[800px] w-full p-8 min-h-screen flex justify-center items-center">
-        <!-- Title Screen -->
-        <div class="screen text-center" id="titleScreen">
-            <h1 class="text-[4rem] font-bold mb-4 [text-shadow:2px_2px_4px_rgba(0,0,0,0.3)]">SPY</h1>
-            <p class="text-[1.2rem] mb-8 opacity-90">The Ultimate Deception Game</p>
-            <button class="px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" onclick="showPlayerSelection()">Start Game</button>
-        </div>
+<body>
+    <!-- Atmosphere overlays -->
+    <div class="crt" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
 
-        <!-- Player Selection -->
-        <div class="screen text-center" id="playerSelection">
-            <h2 class="text-[2rem] mb-8 [text-shadow:1px_1px_2px_rgba(0,0,0,0.3)]">Number of Players</h2>
-            <div class="flex items-center justify-center gap-4 my-8">
-                <button class="w-[60px] h-[60px] rounded-full text-white border-0 text-[2rem] font-bold cursor-pointer bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:scale-110 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" id="decreaseBtn" onclick="changePlayerCount(-1)">−</button>
-                <div class="text-5xl font-bold min-w-[100px] text-center [text-shadow:2px_2px_4px_rgba(0,0,0,0.3)]" id="playerCountDisplay">3</div>
-                <button class="w-[60px] h-[60px] rounded-full text-white border-0 text-[2rem] font-bold cursor-pointer bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:scale-110 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" id="increaseBtn" onclick="changePlayerCount(1)">+</button>
-            </div>
-            <p class="my-4 opacity-80">3+ players</p>
-            <button class="px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" onclick="setupRoles()">Start Setup</button>
-        </div>
+    <!-- Persistent chrome -->
+    <a class="exit-link" href="/"><i class="fas fa-chevron-left"></i> EXIT</a>
+    <div class="rec" aria-hidden="true"><span class="rec-dot"></span> REC</div>
 
-        <!-- Role Cards -->
-        <div class="screen text-center" id="roleCards">
-            <h2 class="text-[2rem] mb-8 [text-shadow:1px_1px_2px_rgba(0,0,0,0.3)]">Player Roles</h2>
-            <p class="mb-8">Click each card to reveal your role (keep it secret!)</p>
-            <div id="playerCardsContainer" class="grid gap-6 my-8 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]"></div>
-            <button class="hidden px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-success-from to-spy-success-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" id="startGameBtn" onclick="startGame()">Start Game</button>
-        </div>
+    <main class="stage">
 
-        <!-- Game Screen -->
-        <div class="screen text-center" id="gameScreen">
-            <h2 class="text-[2rem] mb-8 [text-shadow:1px_1px_2px_rgba(0,0,0,0.3)]">Game in Progress</h2>
-            <div class="bg-white/10 [backdrop-filter:blur(10px)] rounded-[15px] p-6 my-8 border border-white/20">
-                <p class="my-2 text-lg"><strong>Players:</strong> <span id="gamePlayerCount"></span></p>
-                <p class="mt-4 text-lg text-spy-gold">Find the spy among you!</p>
+        <!-- 1. BOOT / TITLE -->
+        <section class="screen active" id="bootScreen">
+            <div class="boot-log" aria-hidden="true">
+                <p>&gt; establishing secure channel...</p>
+                <p>&gt; encrypting payload... <span class="ok">OK</span></p>
+                <p>&gt; clearance level: <span class="redact">REDACTED</span></p>
+                <p>&gt; loading players... <span class="ok">READY</span></p>
             </div>
-            <div id="timerDisplay" class="text-5xl font-bold my-8 text-spy-gold [text-shadow:2px_2px_4px_rgba(0,0,0,0.3)]">05:00</div>
-            <div class="w-full h-2.5 bg-white/20 rounded my-4 overflow-hidden">
-                <div class="h-full bg-spy-gold w-0 [transition:width_1s_ease]" id="timerProgress"></div>
-            </div>
-            <button class="px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-danger-from to-spy-danger-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" onclick="endGame()">End Game Early</button>
-        </div>
+            <h1 class="wordmark glitch" data-text="SPY">SPY</h1>
+            <p class="subtitle">// THE GAME OF DECEPTION</p>
+            <button class="btn btn-primary" id="initiateBtn" type="button">&gt; NEW GAME</button>
+            <p class="fine-print">ONE DEVICE · PASS &amp; PLAY · 3+ PLAYERS</p>
+        </section>
 
-        <!-- Game Over Screen -->
-        <div class="screen hidden text-center" id="gameOverScreen">
-            <h1 class="text-[4rem] font-bold mb-4 [text-shadow:2px_2px_4px_rgba(0,0,0,0.3)]">Time's Up!</h1>
-            <h2 class="text-2xl">Did you find the spy?</h2>
-            <div class="bg-white/10 [backdrop-filter:blur(10px)] rounded-[15px] p-6 my-8 border border-white/20">
-                <p class="my-2 text-lg">Discuss and vote for who you think the spy was.</p>
-                <p class="mt-4 text-lg">If voted out, the spy has 1 try to guess the location. If guessed correctly he wins anyways.</p>
+        <!-- 2. SETUP -->
+        <section class="screen" id="setupScreen">
+            <div class="stamp stamp-tr">CLASSIFIED</div>
+            <h2 class="screen-title">GAME SETUP</h2>
+
+            <div class="field">
+                <label class="field-label">PLAYERS</label>
+                <div class="stepper">
+                    <button class="step-btn" id="playersMinus" type="button" aria-label="Fewer players">&minus;</button>
+                    <span class="step-value" id="playersValue">5</span>
+                    <button class="step-btn" id="playersPlus" type="button" aria-label="More players">+</button>
+                </div>
+                <p class="field-hint">3 to 20 players</p>
             </div>
-            <button class="px-8 py-4 text-lg rounded-full text-white border-0 cursor-pointer m-2 bg-gradient-to-r from-spy-from to-spy-to shadow-[0_4px_15px_rgba(0,0,0,0.2)] [transition:all_0.3s_ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.3)]" onclick="restartGame()">Play Again</button>
-        </div>
-    </div>
-    <footer class="w-full text-center bg-slate-900 text-white/70 py-8">
-        <a class="inline-flex items-center gap-2 text-spy-cyan no-underline font-medium [transition:all_0.3s_ease] hover:text-spy-cyan-hl hover:-translate-x-[5px]" href="/">
-            <i class="fas fa-arrow-left text-sm"></i>
-            Back to Portfolio
-        </a>
-    </footer>
+
+            <div class="field">
+                <label class="field-label">SPIES IN PLAY</label>
+                <div class="stepper">
+                    <button class="step-btn" id="spiesMinus" type="button" aria-label="Fewer spies">&minus;</button>
+                    <span class="step-value" id="spiesValue">1</span>
+                    <button class="step-btn" id="spiesPlus" type="button" aria-label="More spies">+</button>
+                </div>
+                <p class="field-hint" id="spiesHint">suggested: 1 · max: 3</p>
+            </div>
+
+            <button class="btn btn-primary" id="deployBtn" type="button">&gt; DEAL ROLES</button>
+            <button class="btn btn-ghost" id="setupBackBtn" type="button">&lt; BACK</button>
+        </section>
+
+        <!-- 3. BRIEFING / PASS-AROUND -->
+        <section class="screen" id="briefScreen">
+            <p class="hud-label" id="briefProgress">PLAYER 1 / 5</p>
+
+            <div class="brief-card" id="briefCard" role="button" tabindex="0"
+                aria-label="Tap to reveal or hide your secret role">
+                <!-- lock state -->
+                <div class="brief-lock">
+                    <p class="muted-line">PASS DEVICE TO</p>
+                    <h2 class="brief-agent" id="briefAgent">PLAYER 1</h2>
+                    <p class="tap-hint">[ TAP TO REVEAL ]</p>
+                </div>
+                <!-- revealed state (filled by JS) -->
+                <div class="brief-role">
+                    <div id="briefRole"></div>
+                    <p class="tap-hint">[ TAP TO HIDE ]</p>
+                </div>
+                <!-- done state -->
+                <div class="brief-done">
+                    <p class="muted-line">ROLE MEMORIZED</p>
+                    <h2 class="brief-agent" id="briefAgentDone">PLAYER 1</h2>
+                    <p class="tap-hint">↓ pass it on</p>
+                </div>
+            </div>
+
+            <button class="btn btn-primary hidden" id="briefNextBtn" type="button">▶ NEXT PLAYER</button>
+        </section>
+
+        <!-- 4. ROUND -->
+        <section class="screen" id="roundScreen">
+            <div class="stamp stamp-tr">LIVE</div>
+            <p class="hud-label">PLAYERS <span id="roundAgentCount"></span> · SPIES <span id="roundSpyCount"></span></p>
+            <h2 class="screen-title">FIND THE SPY</h2>
+
+            <div class="timer" id="timerDisplay">05:00</div>
+            <div class="timer-bar">
+                <div class="timer-bar-fill" id="timerProgress"></div>
+            </div>
+            <p class="muted-line" id="pauseNote" hidden>// SURVEILLANCE PAUSED</p>
+
+            <div class="btn-row">
+                <button class="btn" id="pauseBtn" type="button">❚❚ PAUSE</button>
+                <button class="btn btn-danger" id="endRoundBtn" type="button">■ END ROUND</button>
+            </div>
+        </section>
+
+        <!-- 5. DEBRIEF / END -->
+        <section class="screen" id="debriefScreen">
+            <div class="stamp stamp-tr">CASE CLOSED</div>
+            <h1 class="wordmark-sm glitch" data-text="TIME'S UP">TIME'S UP</h1>
+            <p class="debrief-text">
+                Discuss and vote out your suspect. If the accused is a spy, they get one guess at the
+                location to steal the win.
+            </p>
+
+            <div class="declassify">
+                <button class="btn" id="declassifyBtn" type="button">⊘ DECLASSIFY FILE</button>
+                <div class="declassify-result hidden" id="declassifyResult">
+                    <p class="muted-line">SPY DOSSIER</p>
+                    <p class="result-spies" id="resultSpies"></p>
+                    <p class="muted-line">LOCATION</p>
+                    <p class="result-location" id="resultLocation"></p>
+                </div>
+            </div>
+
+            <div class="btn-row col">
+                <button class="btn btn-primary" id="playAgainBtn" type="button">▶ PLAY AGAIN <span class="btn-sub"
+                        id="playAgainSub"></span></button>
+                <button class="btn btn-ghost" id="changeSettingsBtn" type="button">⚙ CHANGE SETTINGS</button>
+                <button class="btn btn-ghost" id="mainMenuBtn" type="button">⌂ MAIN MENU</button>
+            </div>
+        </section>
+
+    </main>
+
     <script src="script.js"></script>
 </body>
 
