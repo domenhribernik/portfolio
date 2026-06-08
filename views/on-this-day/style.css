@@ -1,114 +1,505 @@
-/* ========================================
-   On This Day — Project-Specific Styles
-   Tailwind handles layout/typography in index.html.
-   This file keeps:
-     - CSS variables (palette + gallery customization)
-     - @keyframes for fadeInUp / fadeIn / shimmer
-     - .loading-overlay.hidden state class (JS-toggled)
-     - JS-generated content (gallery slides, category items, skeletons, states)
-     - Custom scrollbar
-   ======================================== */
+/* ============================================================
+   ON THIS DAY — daily history almanac, set as a printed broadsheet.
+   Speaks the site's Kinetic / Editorial language (warm paper, ink,
+   clay + cobalt + pine accents, Bricolage display, Space Mono labels,
+   hard offset shadows, numbered section heads) but is fully
+   self-contained: everything is scoped under `.otd-*` and the JS
+   generated gallery / ledger classes are restyled here. Only
+   `<body class="editorial">` is borrowed, for the shared navbar /
+   footer / loader var remap.
 
-:root {
-    --bg-card: rgba(255, 255, 255, 0.03);
-    --bg-card-hover: rgba(255, 255, 255, 0.06);
-    --border: rgba(255, 255, 255, 0.08);
-    --border-hover: rgba(255, 255, 255, 0.15);
+   Tailwind in index.html handles the palette tokens + a little
+   layout; this file keeps what Tailwind can't cleanly express:
+   the masthead animations, grid + grain overlays, the numbered
+   section heads, the broadsheet gallery clippings and the three
+   ledgers (events / births / deaths).
+   ============================================================ */
 
-    --text: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-muted: rgba(255, 255, 255, 0.5);
-
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-
-    --events: #6366f1;
-    --births: #22c55e;
-    --deaths: #ef4444;
-
-    --radius-sm: 8px;
-    --radius: 16px;
-
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    --transition: all 0.2s ease;
-
-    /* Read by components/gallery.css */
-    --gallery-gap: 16px;
-    --gallery-slide-radius: var(--radius);
-    --gallery-nav-size: 48px;
+body.otd-page {
+    --cobalt: #1f35e0;
+    --cobalt-dk: #1226c0;
+    --marigold: #f2b705;
+    --grid-line: rgba(22, 20, 15, 0.10);
+    background: var(--paper);
 }
 
-/* Loading overlay fade-out (Tailwind's .hidden = display:none would skip the transition) */
+/* Poster display face for the navbar logo (this page doesn't load
+   Fraunces, which the base editorial logo rule asks for). */
+body.otd-page .logo {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/* Loading overlay fade-out (Tailwind .hidden = display:none skips the transition) */
 .loading-overlay.hidden {
     opacity: 0;
     visibility: hidden;
 }
 
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+/* Reusable grain overlay */
+.otd-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+/* ============================================================
+   MASTHEAD / HERO
+   ============================================================ */
+.otd-hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--paper);
+    isolation: isolate;
 }
 
-@keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+/* Poster grid: faint vertical rules every 1/6 of the width */
+.otd-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px);
+    background-size: 240px 100%;
+    background-size: round(calc(100% / 6), 1px) 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
 }
 
-/* ========================================
-   Custom scrollbar for category lists
-   ======================================== */
-.category-list::-webkit-scrollbar { width: 6px; }
-.category-list::-webkit-scrollbar-track { background: transparent; }
-.category-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.otd-hero__inner {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 8.5rem 1.5rem 5rem;
+}
 
-/* ========================================
-   Gallery slides (built by script.js)
-   ======================================== */
+@media (min-width: 768px) {
+    .otd-hero__inner {
+        padding: 10rem 2.5rem 6rem;
+    }
+}
+
+/* Newspaper dateline strip above the title */
+.otd-masthead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.8rem;
+    border-top: 2px solid var(--ink);
+    border-bottom: 1px solid rgba(28, 26, 23, 0.25);
+    padding-top: 0.7rem;
+    opacity: 0;
+    animation: otdFadeUp 0.7s ease 0.05s forwards;
+}
+
+.otd-masthead__brand {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    font-size: 0.7rem;
+    color: var(--ink);
+}
+
+.otd-masthead__edition {
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.66rem;
+    color: var(--stone);
+    text-align: right;
+}
+
+.otd-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.26em;
+    font-size: 0.68rem;
+    color: var(--clay);
+    margin-bottom: 1.4rem;
+    opacity: 0;
+    animation: otdFadeUp 0.7s ease 0.15s forwards;
+}
+
+.otd-eyebrow__dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    background: var(--cobalt);
+    animation: otdBlink 1.4s steps(1) infinite;
+}
+
+@keyframes otdBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.15; }
+}
+
+.otd-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.86;
+    letter-spacing: -0.035em;
+    font-size: clamp(2.6rem, 8.5vw, 7rem);
+    color: var(--ink);
+    margin: 0;
+}
+
+.otd-tline {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.06em;
+}
+
+.otd-sp {
+    display: inline-block;
+    width: 0.28em;
+}
+
+.otd-tline .ch {
+    display: inline-block;
+    transform: translateY(118%) rotate(5deg);
+    opacity: 0;
+    animation: otdChRise 0.85s cubic-bezier(0.16, 0.84, 0.34, 1) both;
+    animation-delay: calc(var(--i) * 0.04s + 0.2s);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease;
+}
+
+.otd-tline .ch:hover {
+    transform: translateY(-0.06em) rotate(-2deg);
+    color: var(--clay);
+}
+
+.otd-title .dot {
+    color: var(--cobalt);
+}
+
+@keyframes otdChRise {
+    to { transform: translateY(0) rotate(0); opacity: 1; }
+}
+
+.otd-sub {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.2rem;
+    max-width: 44rem;
+    margin-top: 2.2rem;
+    opacity: 0;
+    animation: otdFadeUp 0.8s ease 0.7s forwards;
+}
+
+.otd-sub__bar {
+    flex-shrink: 0;
+    width: 2.6rem;
+    height: 3px;
+    margin-top: 0.7rem;
+    background: var(--clay);
+}
+
+.otd-sub__text {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: clamp(1.02rem, 2.2vw, 1.35rem);
+    line-height: 1.5;
+    color: rgba(28, 26, 23, 0.78);
+}
+
+/* Big mono date readout — the changing centrepiece of the masthead */
+.otd-dateline {
+    margin-top: 1.6rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: clamp(0.95rem, 1.8vw, 1.25rem);
+    color: var(--ink);
+    opacity: 0;
+    animation: otdFadeUp 0.8s ease 0.78s forwards;
+}
+
+.otd-dateline::before {
+    content: '▸ ';
+    color: var(--clay);
+}
+
+.otd-hero__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 2.6rem;
+    opacity: 0;
+    animation: otdFadeUp 0.8s ease 0.9s forwards;
+}
+
+.otd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.95rem 1.8rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 2px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    box-shadow: 6px 6px 0 var(--cobalt);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.otd-btn:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--clay);
+    background: var(--clay);
+    border-color: var(--clay);
+}
+
+.otd-btn .fa-arrow-down {
+    transition: transform 0.2s ease;
+}
+
+.otd-btn:hover .fa-arrow-down {
+    transform: translateY(3px);
+}
+
+/* Hero stat strip — live counts per ledger */
+.otd-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 2.2rem;
+    margin: 0;
+}
+
+.otd-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--clay);
+}
+
+.otd-stat dt {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.6rem;
+    color: var(--stone);
+}
+
+.otd-stat dd {
+    margin: 0;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 1.9rem;
+    line-height: 1;
+    color: var(--ink);
+}
+
+.otd-corner {
+    position: absolute;
+    z-index: 3;
+    bottom: 4.5rem;
+    right: 1.5rem;
+    writing-mode: vertical-rl;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(28, 26, 23, 0.45);
+}
+
+@media (max-width: 900px) {
+    .otd-corner { display: none; }
+}
+
+/* ============================================================
+   SECTIONS + NUMBERED HEADERS
+   ============================================================ */
+.otd-section {
+    padding: 5.5rem 0;
+    background: var(--paper);
+}
+
+.otd-section--alt {
+    background: var(--paper-2);
+    border-top: 1px solid rgba(28, 26, 23, 0.1);
+    border-bottom: 1px solid rgba(28, 26, 23, 0.1);
+}
+
+.otd-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .otd-wrap { padding: 0 2.5rem; }
+    .otd-section { padding: 7rem 0; }
+}
+
+.otd-secthead {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    margin-bottom: 1.6rem;
+}
+
+.otd-secthead__num {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3.4rem);
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--ink);
+    transition: color 0.3s ease, -webkit-text-stroke-color 0.3s ease;
+}
+
+.otd-secthead:hover .otd-secthead__num {
+    color: var(--clay);
+    -webkit-text-stroke-color: var(--clay);
+}
+
+.otd-secthead__label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 0.72rem;
+    color: var(--clay);
+    white-space: nowrap;
+}
+
+.otd-secthead__rule {
+    flex: 1;
+    height: 2px;
+    background: var(--ink);
+}
+
+.otd-heading {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+    font-size: clamp(2.4rem, 6vw, 4.4rem);
+    color: var(--ink);
+    text-transform: uppercase;
+}
+
+.otd-lede {
+    max-width: 42rem;
+    margin-top: 1.1rem;
+    margin-bottom: 2.6rem;
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    line-height: 1.5;
+    color: var(--stone);
+}
+
+/* ============================================================
+   FEATURED GALLERY — broadsheet clippings
+   The component (gallery.css) handles layout/track; here we set its
+   vars and theme the slides script.js builds.
+   ============================================================ */
+.otd-gallery {
+    /* Leave --gallery-gap at the component defaults (16px desktop / 12px
+       mobile). gallery.js computes its slide-width + transform math from
+       those exact numbers, so overriding the CSS gap here desyncs the
+       carousel (most visibly on mobile). */
+    --gallery-slide-radius: 3px;
+    --gallery-nav-size: 52px;
+}
+
+/* Square editorial nav buttons with a hard ink shadow */
+.otd-gallery__nav {
+    border-radius: 0;
+    border: 2px solid var(--ink);
+    background: var(--card);
+    color: var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.otd-gallery__nav:hover {
+    transform: scale(1) translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+}
+
 .gallery-slide {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition: var(--transition);
+    background: var(--card);
+    border: 1.5px solid rgba(28, 26, 23, 0.16);
+    border-radius: 3px;
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
+/* Monochrome editorial lift: a hard ink offset shadow, no colour cycling */
 .gallery-slide:hover {
-    border-color: var(--border-hover);
-    box-shadow: var(--shadow);
+    transform: translate(-4px, -4px);
+    border-color: var(--ink);
+    box-shadow: 8px 8px 0 var(--ink);
 }
 
-.gallery-slide.active { border-color: rgba(99, 102, 241, 0.3); }
+.gallery-slide.active { border-color: var(--ink); }
 
 .gallery-image {
     width: 100%;
-    height: 180px;
+    height: 200px;
     overflow: hidden;
     position: relative;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    background: var(--paper-2);
+    border-bottom: 1.5px solid rgba(28, 26, 23, 0.16);
 }
+
+.gallery-slide:hover .gallery-image { border-color: var(--ink); }
 
 .gallery-image-placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
     font-size: 3rem;
+    color: rgba(28, 26, 23, 0.18);
 }
+
+.gallery-image-placeholder span { filter: grayscale(1); opacity: 0.5; }
 
 .gallery-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    filter: grayscale(35%) contrast(1.02);
+    transition: transform 0.6s ease, filter 0.4s ease;
 }
 
-.gallery-slide:hover .gallery-image img { transform: scale(1.05); }
+.gallery-slide:hover .gallery-image img {
+    transform: scale(1.05);
+    filter: grayscale(0%);
+}
 
 .gallery-content {
-    padding: 20px;
+    padding: 1.4rem 1.5rem 1.5rem;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -118,30 +509,45 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
 }
 
 .gallery-year {
-    font-size: 12px;
+    font-family: 'Space Mono', monospace;
     font-weight: 700;
-    padding: 4px 10px;
-    background: var(--accent);
-    border-radius: 100px;
-    color: white;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.55rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* Different (monochrome) hover signal: the year tag flips to an outline tag */
+.gallery-slide:hover .gallery-year {
+    background: var(--paper);
+    color: var(--ink);
 }
 
 .gallery-counter {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    color: var(--stone);
 }
 
 .gallery-title {
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.4;
-    margin-bottom: 12px;
-    color: var(--text);
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    font-size: 1.2rem;
+    line-height: 1.1;
+    margin-bottom: 0.7rem;
+    color: var(--ink);
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -150,9 +556,9 @@
 
 .gallery-extract {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(28, 26, 23, 0.74);
     line-height: 1.6;
-    margin-bottom: 16px;
+    margin-bottom: 1.3rem;
     display: -webkit-box;
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
@@ -160,181 +566,402 @@
     flex: 1;
 }
 
-.gallery-extract p { margin-bottom: 8px; }
+.gallery-extract p { margin-bottom: 0.5rem; }
 .gallery-extract p:last-child { margin-bottom: 0; }
-.gallery-extract a { color: var(--accent-hover); text-decoration: none; }
+.gallery-extract a { color: var(--clay-dk); text-decoration: underline; text-underline-offset: 2px; }
 
 .gallery-link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-    text-decoration: none;
-    padding: 10px 16px;
-    background: var(--accent);
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
+    gap: 0.5rem;
     align-self: flex-start;
     margin-top: auto;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 2px solid var(--clay);
+    padding-bottom: 0.25rem;
+    transition: color 0.2s ease, gap 0.2s ease;
 }
 
 .gallery-link:hover {
-    background: var(--accent-hover);
-    transform: translateX(4px);
+    color: var(--clay);
+    gap: 0.85rem;
 }
 
 .gallery-link svg { transition: transform 0.2s ease; }
 .gallery-link:hover svg { transform: translate(2px, -2px); }
 
-/* Active dot accent (gallery.css uses currentColor for the inactive state) */
-.gallery-dot.active { background: var(--accent); }
+/* Dots: clay active, ink-tinted idle */
+.otd-gallery .gallery-dot { color: var(--ink); }
+.gallery-dot.active { background: var(--clay); opacity: 1; }
 
-/* ========================================
-   Category items (built by script.js)
-   ======================================== */
-.category-item {
-    margin-bottom: 12px;
-    animation: fadeIn 0.3s ease;
+/* ============================================================
+   THE RECORD — a tabbed newspaper index (events / births / deaths).
+   One category at a time, typeset as flowing newspaper columns
+   instead of three cramped, separately-scrolling boxes.
+   ============================================================ */
+.otd-record { margin-top: 0.25rem; }
+
+/* Segmented editorial tab bar with a hard ink shadow */
+.otd-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 2.75rem;
+    box-shadow: 5px 5px 0 var(--ink);
 }
 
-.category-item:last-child { margin-bottom: 0; }
+.otd-tab {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding: 0.85rem 1.7rem;
+    background: var(--card);
+    color: var(--ink);
+    border: none;
+    border-right: 2px solid var(--ink);
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.8rem;
+    transition: background 0.2s ease, color 0.2s ease;
+}
 
-.category-item-link {
+.otd-tab:last-child { border-right: none; }
+.otd-tab:hover { background: var(--paper-2); }
+
+.otd-tab.is-active {
+    background: var(--ink);
+    color: var(--paper);
+}
+
+.otd-tab__count {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--clay);
+}
+
+.otd-tab.is-active .otd-tab__count { color: var(--marigold); }
+
+/* Panels: only the active one shows, laid out as newspaper columns
+   with a printed-page column rule between them. */
+.otd-panel { display: none; }
+
+.otd-panel.is-active {
+    display: block;
+    column-gap: 3rem;
+    column-rule: 1px solid rgba(28, 26, 23, 0.16);
+}
+
+@media (min-width: 768px) {
+    .otd-panel.is-active { column-count: 2; }
+}
+
+@media (min-width: 1100px) {
+    .otd-panel.is-active { column-count: 3; }
+}
+
+/* ============================================================
+   RECORD ENTRIES (built by script.js as .otd-entry)
+   A big marginal year figure, a hairline rule, then the headline
+   and one line of context. Pure type, no thumbnails.
+   ============================================================ */
+.otd-entry {
+    break-inside: avoid;
     display: flex;
-    gap: 14px;
-    padding: 14px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
+    gap: 0;
+    align-items: flex-start;
+    padding: 0.8rem 0.5rem;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.12);
     text-decoration: none;
     color: inherit;
-    transition: var(--transition);
+    transition: background 0.2s ease;
+    animation: otdFadeIn 0.3s ease;
 }
 
-.category-item-link:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border);
-}
+.otd-entry:hover { background: rgba(28, 26, 23, 0.05); }
 
-.category-item-image {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-sm);
-    object-fit: cover;
+.otd-entry__year {
     flex-shrink: 0;
+    min-width: 3.2rem;
+    padding-right: 0.9rem;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transition: color 0.2s ease;
 }
 
-.category-item-content { flex: 1; min-width: 0; }
+.otd-entry:hover .otd-entry__year { color: var(--clay); }
 
-.category-item-year {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 100px;
-    margin-bottom: 6px;
-    color: white;
-}
-
-.category-item-year.events { background: var(--events); }
-.category-item-year.births { background: var(--births); }
-.category-item-year.deaths { background: var(--deaths); }
-
-.category-item-text {
+.otd-entry__body {
+    flex: 1;
+    min-width: 0;
+    padding-left: 0.9rem;
+    border-left: 2px solid rgba(28, 26, 23, 0.12);
     font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    line-height: 1.55;
+    color: rgba(28, 26, 23, 0.72);
+    transition: border-color 0.2s ease;
 }
 
-.category-item-title {
-    color: var(--text);
-    font-weight: 600;
+.otd-entry:hover .otd-entry__body { border-left-color: var(--clay); }
+
+.otd-entry__title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
 }
 
-/* ========================================
-   Loading skeletons (built by script.js)
-   ======================================== */
+.otd-entry__desc::before { content: ' '; }
+
+/* ============================================================
+   LOADING SKELETONS (built by script.js)
+   ============================================================ */
 .loading-block {
-    background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+    background: linear-gradient(90deg, rgba(28,26,23,0.05) 25%, rgba(28,26,23,0.1) 50%, rgba(28,26,23,0.05) 75%);
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    animation: otdShimmer 1.5s infinite;
 }
 
-.gallery-slide.loading .gallery-image { height: 180px; }
+.gallery-slide.loading { box-shadow: none; transform: none; }
+.gallery-slide.loading .gallery-image { height: 200px; }
 
 .gallery-slide.loading .loading-line {
     height: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    background: rgba(28, 26, 23, 0.1);
+    border-radius: 2px;
     margin-bottom: 6px;
 }
 
 .gallery-slide.loading .loading-line.short {
     width: 50px;
     height: 16px;
-    border-radius: 100px;
+    border-radius: 2px;
     margin-bottom: 10px;
 }
 
-.category-item.loading .loading-block { background: rgba(255, 255, 255, 0.1); }
+.otd-entry.loading { pointer-events: none; }
+.otd-entry.loading .otd-entry__body { border-left-color: rgba(28, 26, 23, 0.08); }
 
-.category-item.loading .loading-line {
+.otd-entry.loading .loading-line {
+    display: block;
     height: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    margin-bottom: 6px;
+    background: rgba(28, 26, 23, 0.1);
+    border-radius: 2px;
+    margin-bottom: 7px;
 }
 
-.category-item.loading .loading-line.short {
-    width: 50px;
-    height: 16px;
-    border-radius: 100px;
-    margin-bottom: 8px;
+.otd-entry.loading .loading-line:last-child {
+    width: 65%;
+    margin-bottom: 0;
 }
 
-/* ========================================
-   Empty & error states (built by script.js)
-   ======================================== */
+/* ============================================================
+   EMPTY & ERROR STATES (built by script.js)
+   ============================================================ */
 .empty-state, .error-state {
     text-align: center;
-    padding: 48px 24px;
-    color: var(--text-muted);
+    padding: 3rem 1.5rem;
+    color: var(--stone);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
 }
 
 .error-state .error-icon {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
+    font-size: 2rem;
+    margin-bottom: 0.6rem;
     display: block;
+    filter: grayscale(1);
 }
 
-.error-state p, .empty-state p { font-size: 0.95rem; }
+/* ============================================================
+   COLOPHON / CLOSE
+   ============================================================ */
+.otd-section--close {
+    background: var(--paper-2);
+    text-align: center;
+}
 
-/* ========================================
-   Responsive overrides for JS-generated content
-   ======================================== */
+.otd-close {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.otd-close__eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    font-size: 0.7rem;
+    color: var(--clay);
+    margin-bottom: 1.2rem;
+}
+
+.otd-close__title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+    font-size: clamp(2.2rem, 6vw, 4.4rem);
+    color: var(--ink);
+    margin-bottom: 2rem;
+}
+
+.otd-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 2px solid var(--clay);
+    padding-bottom: 0.3rem;
+    transition: color 0.2s ease, border-color 0.2s ease, gap 0.2s ease;
+}
+
+.otd-link:hover {
+    color: var(--clay);
+    gap: 0.95rem;
+}
+
+/* ============================================================
+   SCROLL REVEAL (enabled by script.js adding .reveals-on)
+   ============================================================ */
+.reveals-on .reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* ============================================================
+   CUSTOM SCROLLBAR (clay thumb on a paper track)
+   ============================================================ */
+html:has(body.otd-page) {
+    scrollbar-width: thin;
+    scrollbar-color: #d4451f #efe9dd;
+}
+
+html:has(body.otd-page)::-webkit-scrollbar { width: 14px; height: 14px; }
+html:has(body.otd-page)::-webkit-scrollbar-track {
+    background: #efe9dd;
+    border-left: 1px solid rgba(28, 26, 23, 0.08);
+}
+html:has(body.otd-page)::-webkit-scrollbar-thumb {
+    background: #d4451f;
+    border: 3px solid #efe9dd;
+    border-radius: 2px;
+}
+html:has(body.otd-page)::-webkit-scrollbar-thumb:hover { background: #b8371a; }
+html:has(body.otd-page)::-webkit-scrollbar-corner { background: #efe9dd; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 @media (max-width: 991px) {
-    .gallery-image { height: 160px; }
-}
-
-@media (max-width: 767px) {
-    .gallery-slide:hover { transform: none; box-shadow: none; }
-    .gallery-slide.active { border-color: rgba(99, 102, 241, 0.5); }
-    .gallery-image { height: 220px; }
-    .gallery-content { padding: 16px; }
-    .gallery-title { font-size: 0.95rem; }
-    .gallery-extract { font-size: 0.85rem; -webkit-line-clamp: 3; }
-    .category-item-link { padding: 12px; gap: 12px; }
-    .category-item-image { width: 48px; height: 48px; }
-    .category-item-text { font-size: 0.85rem; }
-}
-
-@media (max-width: 380px) {
     .gallery-image { height: 180px; }
-    .category-item-image { width: 40px; height: 40px; }
+}
+
+@media (max-width: 640px) {
+    .otd-section { padding: 3.6rem 0; }
+    .otd-wrap { padding: 0 1.15rem; }
+
+    .otd-hero__inner { padding: 7.5rem 1.15rem 4rem; }
+    .otd-masthead { flex-wrap: wrap; gap: 0.3rem; }
+    .otd-hero__foot {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2rem;
+        margin-top: 2.2rem;
+    }
+    .otd-btn { width: 100%; justify-content: center; }
+    .otd-stats { gap: 1.3rem 1.6rem; }
+    .otd-stat dd { font-size: 1.6rem; }
+    .otd-sub { gap: 0.9rem; margin-top: 1.8rem; }
+
+    .otd-secthead { gap: 0.8rem; margin-bottom: 1.4rem; }
+    .otd-secthead__label { letter-spacing: 0.14em; font-size: 0.64rem; }
+
+    .gallery-image { height: 220px; }
+    .gallery-content { padding: 1.15rem; }
+    .gallery-title { font-size: 1.05rem; }
+    .gallery-slide:hover { transform: none; box-shadow: none; }
+
+    /* Tabs go full-width and split the row evenly on phones */
+    .otd-tabs {
+        display: flex;
+        width: 100%;
+        box-shadow: 3px 3px 0 var(--ink);
+        margin-bottom: 2rem;
+    }
+    .otd-tab {
+        flex: 1;
+        justify-content: center;
+        padding: 0.8rem 0.4rem;
+        letter-spacing: 0.06em;
+        font-size: 0.74rem;
+    }
+}
+
+/* ============================================================
+   SHARED KEYFRAMES + REDUCED MOTION
+   ============================================================ */
+@keyframes otdFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes otdFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes otdShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .otd-tline .ch,
+    .otd-eyebrow,
+    .otd-masthead,
+    .otd-sub,
+    .otd-dateline,
+    .otd-hero__foot {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .reveals-on .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }

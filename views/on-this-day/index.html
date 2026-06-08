@@ -5,11 +5,14 @@
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>On This Day - Wikipedia</title>
+    <meta name="description"
+        content="On This Day, a daily almanac of history. Every event, birth and death recorded on today's date, drawn from Wikipedia.">
+    <title>On This Day / The Almanac · Domen Hribernik</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="../../components/gallery.css">
@@ -19,19 +22,21 @@
             theme: {
                 extend: {
                     colors: {
-                        'otd-bg': '#0f0f1a',
-                        'otd-card': 'rgba(255, 255, 255, 0.03)',
-                        'otd-card-hover': 'rgba(255, 255, 255, 0.06)',
-                        'otd-border': 'rgba(255, 255, 255, 0.08)',
-                        'otd-border-hover': 'rgba(255, 255, 255, 0.15)',
-                        'otd-text-secondary': 'rgba(255, 255, 255, 0.7)',
-                        'otd-text-muted': 'rgba(255, 255, 255, 0.5)',
-                        'otd-accent': '#6366f1',
-                        'otd-accent-hover': '#818cf8',
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        cobalt: '#1f35e0',
+                        marigold: '#f2b705',
                     },
-                    boxShadow: {
-                        'otd': '0 4px 20px rgba(0, 0, 0, 0.3)',
-                        'otd-lg': '0 8px 40px rgba(0, 0, 0, 0.4)',
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
                     },
                 }
             }
@@ -40,104 +45,146 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="bg-otd-bg text-white antialiased min-h-screen mt-[60px] leading-[1.6] max-md:overflow-x-hidden">
-    <!-- Loading Overlay -->
-    <div class="loading-overlay fixed inset-0 bg-otd-bg flex items-center justify-center z-[1000] transition-[opacity,visibility] duration-300"
-         id="loading-overlay">
-        <div class="w-10 h-10 border-[3px] border-otd-border border-t-otd-accent rounded-full animate-spin"></div>
+<body class="editorial otd-page bg-paper text-ink font-sans antialiased">
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
     </div>
 
     <main-navbar site="../../"></main-navbar>
 
-    <!-- Main Content -->
-    <main class="max-w-[1400px] mx-auto px-5 pb-[60px] max-md:px-0 max-md:pb-10">
-        <!-- Header -->
-        <header class="text-center pt-[60px] pb-10 max-md:pt-10 max-md:px-4 max-md:pb-8">
-            <div class="animate-[fadeInUp_0.6s_ease]">
-                <p class="text-xs font-semibold uppercase tracking-[3px] text-otd-accent mb-3 max-md:text-[11px] max-md:tracking-[2px]">Wikipedia</p>
-                <h1 class="text-[clamp(2.5rem,8vw,4.5rem)] font-bold tracking-[-0.03em] mb-3 bg-gradient-to-br from-white to-otd-accent-hover bg-clip-text text-transparent">On This Day</h1>
-                <p class="text-[1.1rem] font-medium text-otd-text-secondary max-md:text-base" id="current-date"></p>
+    <!-- ============================ MASTHEAD / HERO ============================ -->
+    <header class="otd-hero">
+        <div class="otd-grid" aria-hidden="true"></div>
+        <div class="otd-hero__inner">
+            <div class="otd-masthead">
+                <span class="otd-masthead__brand">Wikipedia Almanac</span>
+                <span class="otd-masthead__edition" id="masthead-edition">Daily Edition</span>
             </div>
-        </header>
 
-        <!-- Featured Section (Gallery) -->
-        <section class="mb-[60px] max-md:mb-12 animate-[fadeInUp_0.6s_ease_0.1s_both]" id="featured-section">
-            <div class="flex items-center justify-between flex-wrap gap-3 mb-5 max-md:flex-col max-md:items-start max-md:mb-4 max-md:px-4">
-                <span class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[1px] px-4 py-2 rounded-full bg-gradient-to-br from-[rgba(99,102,241,0.2)] to-[rgba(168,85,247,0.2)] border border-[rgba(99,102,241,0.3)] text-otd-accent-hover ml-[60px] max-md:ml-[25px]">Featured Events</span>
+            <p class="otd-eyebrow"><span class="otd-eyebrow__dot" aria-hidden="true"></span>Today in history</p>
+
+            <h1 class="otd-title" aria-label="On This Day">
+                <span class="otd-tline" aria-hidden="true">
+                    <span class="ch" style="--i:0">O</span><span class="ch" style="--i:1">N</span><span class="otd-sp">&nbsp;</span><span class="ch" style="--i:2">T</span><span class="ch" style="--i:3">H</span><span class="ch" style="--i:4">I</span><span class="ch" style="--i:5">S</span>
+                </span>
+                <span class="otd-tline" aria-hidden="true">
+                    <span class="ch" style="--i:6">D</span><span class="ch" style="--i:7">A</span><span class="ch" style="--i:8">Y</span><span class="ch dot" style="--i:9">.</span>
+                </span>
+            </h1>
+
+            <div class="otd-sub">
+                <span class="otd-sub__bar" aria-hidden="true"></span>
+                <p class="otd-sub__text">A daily almanac of history. Every event, birth and death recorded on today's
+                    date, pulled live from Wikipedia and laid out like the morning paper.</p>
             </div>
-            <div class="gallery-container">
-                <button class="gallery-nav gallery-prev border border-otd-border bg-otd-card text-white shadow-otd hover:bg-otd-card-hover hover:border-otd-border-hover hover:shadow-otd-lg"
-                        id="gallery-prev" aria-label="Previous slide">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
-                <div class="gallery-viewport rounded-2xl max-md:rounded-lg">
-                    <div class="gallery-track" id="featured-track">
-                        <!-- Gallery slides will be loaded here -->
-                    </div>
-                </div>
-                <button class="gallery-nav gallery-next border border-otd-border bg-otd-card text-white shadow-otd hover:bg-otd-card-hover hover:border-otd-border-hover hover:shadow-otd-lg"
-                        id="gallery-next" aria-label="Next slide">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
+
+            <p class="otd-dateline" id="current-date">&nbsp;</p>
+
+            <div class="otd-hero__foot">
+                <a href="#almanac" class="otd-btn" data-scroll>Read the record <i class="fas fa-arrow-down"></i></a>
+                <dl class="otd-stats">
+                    <div class="otd-stat otd-stat--events"><dt>Events</dt><dd id="stat-events">—</dd></div>
+                    <div class="otd-stat otd-stat--births"><dt>Births</dt><dd id="stat-births">—</dd></div>
+                    <div class="otd-stat otd-stat--deaths"><dt>Deaths</dt><dd id="stat-deaths">—</dd></div>
+                </dl>
             </div>
-            <div class="gallery-dots" id="featured-dots"></div>
-        </section>
-
-        <!-- Categories Grid -->
-        <div class="grid grid-cols-1 min-[993px]:grid-cols-3 gap-6 max-md:gap-5 max-md:px-4 animate-[fadeInUp_0.6s_ease_0.2s_both]">
-            <!-- Events -->
-            <section class="bg-otd-card border border-otd-border rounded-2xl overflow-hidden">
-                <div class="flex items-center gap-3 px-6 py-5 bg-gradient-to-br from-[rgba(99,102,241,0.15)] to-[rgba(99,102,241,0.05)] border-b border-otd-border max-md:px-5 max-md:py-4">
-                    <span class="text-2xl max-md:text-[1.25rem]">📜</span>
-                    <h2 class="text-[1.1rem] font-semibold text-white max-md:text-base">Historical Events</h2>
-                </div>
-                <div class="category-list p-4 max-h-[600px] overflow-y-auto max-md:p-3 max-md:max-h-[500px]" id="events-container">
-                    <!-- Events will be loaded here -->
-                </div>
-            </section>
-
-            <!-- Births -->
-            <section class="bg-otd-card border border-otd-border rounded-2xl overflow-hidden">
-                <div class="flex items-center gap-3 px-6 py-5 bg-gradient-to-br from-[rgba(34,197,94,0.15)] to-[rgba(34,197,94,0.05)] border-b border-otd-border max-md:px-5 max-md:py-4">
-                    <span class="text-2xl max-md:text-[1.25rem]">👶</span>
-                    <h2 class="text-[1.1rem] font-semibold text-white max-md:text-base">Births</h2>
-                </div>
-                <div class="category-list p-4 max-h-[600px] overflow-y-auto max-md:p-3 max-md:max-h-[500px]" id="births-container">
-                    <!-- Births will be loaded here -->
-                </div>
-            </section>
-
-            <!-- Deaths -->
-            <section class="bg-otd-card border border-otd-border rounded-2xl overflow-hidden">
-                <div class="flex items-center gap-3 px-6 py-5 bg-gradient-to-br from-[rgba(239,68,68,0.15)] to-[rgba(239,68,68,0.05)] border-b border-otd-border max-md:px-5 max-md:py-4">
-                    <span class="text-2xl max-md:text-[1.25rem]">🕯️</span>
-                    <h2 class="text-[1.1rem] font-semibold text-white max-md:text-base">Deaths</h2>
-                </div>
-                <div class="category-list p-4 max-h-[600px] overflow-y-auto max-md:p-3 max-md:max-h-[500px]" id="deaths-container">
-                    <!-- Deaths will be loaded here -->
-                </div>
-            </section>
         </div>
-    </main>
+        <span class="otd-corner" id="hero-corner" aria-hidden="true">&nbsp;</span>
+    </header>
+
+    <!-- ============================ FEATURED ============================ -->
+    <section class="otd-section" id="featured">
+        <div class="otd-wrap">
+            <div class="otd-secthead reveal">
+                <span class="otd-secthead__num">01</span>
+                <span class="otd-secthead__label">Featured dispatches</span>
+                <span class="otd-secthead__rule"></span>
+            </div>
+            <h2 class="otd-heading reveal">The front page.</h2>
+            <p class="otd-lede reveal">The day's most notable moments, illustrated and dated.</p>
+
+            <div class="otd-gallery reveal" id="featured-section">
+                <div class="gallery-container">
+                    <button class="gallery-nav gallery-prev otd-gallery__nav" id="gallery-prev" aria-label="Previous slide">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="gallery-viewport">
+                        <div class="gallery-track" id="featured-track">
+                            <!-- Gallery slides injected by script.js -->
+                        </div>
+                    </div>
+                    <button class="gallery-nav gallery-next otd-gallery__nav" id="gallery-next" aria-label="Next slide">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                <div class="gallery-dots" id="featured-dots"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================ THE ALMANAC (ledgers) ============================ -->
+    <section class="otd-section otd-section--alt" id="almanac">
+        <div class="otd-wrap">
+            <div class="otd-secthead reveal">
+                <span class="otd-secthead__num">02</span>
+                <span class="otd-secthead__label">The record</span>
+                <span class="otd-secthead__rule"></span>
+            </div>
+            <h2 class="otd-heading reveal">The almanac.</h2>
+            <p class="otd-lede reveal">Everything else logged on this date, kept in three ledgers.</p>
+
+            <div class="otd-record reveal">
+                <div class="otd-tabs" role="tablist" aria-label="Record categories">
+                    <button class="otd-tab is-active" data-target="events" role="tab" aria-selected="true">
+                        <span class="otd-tab__name">Events</span>
+                        <span class="otd-tab__count" id="count-events">--</span>
+                    </button>
+                    <button class="otd-tab" data-target="births" role="tab" aria-selected="false">
+                        <span class="otd-tab__name">Births</span>
+                        <span class="otd-tab__count" id="count-births">--</span>
+                    </button>
+                    <button class="otd-tab" data-target="deaths" role="tab" aria-selected="false">
+                        <span class="otd-tab__name">Deaths</span>
+                        <span class="otd-tab__count" id="count-deaths">--</span>
+                    </button>
+                </div>
+
+                <div class="otd-panel is-active" id="events-container" data-panel="events" role="tabpanel"></div>
+                <div class="otd-panel" id="births-container" data-panel="births" role="tabpanel"></div>
+                <div class="otd-panel" id="deaths-container" data-panel="deaths" role="tabpanel"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================ COLOPHON ============================ -->
+    <section class="otd-section otd-section--close">
+        <div class="otd-wrap otd-close">
+            <p class="otd-close__eyebrow reveal">One date, the whole record</p>
+            <h2 class="otd-close__title reveal">Come back<br>tomorrow.</h2>
+            <a href="../../index.html" class="otd-link reveal">Back to the portfolio <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </section>
 
     <!-- Footer -->
-    <footer class="text-center py-10 px-5 border-t border-otd-border mt-5 max-md:px-4">
-        <p class="text-[0.9rem] text-otd-text-muted">Data provided by
-            <a class="text-otd-accent-hover font-medium no-underline hover:underline" href="https://www.wikipedia.org/" target="_blank">Wikipedia</a>
-        </p>
+    <footer class="footer">
+        <div class="container">
+            <p>Data from <a href="https://www.wikipedia.org/" target="_blank" rel="noopener">Wikipedia</a> &middot;
+                &copy; <span id="currentYear"></span> Domen Hribernik</p>
+        </div>
     </footer>
 
     <script type="module" src="../../components/main-navbar.js"></script>
     <script src="../../components/gallery.js"></script>
     <script src="script.js"></script>
-    <script>window.gtranslateSettings = { "default_language": "en", "languages": ["en", "sl", "de", "es", "fr", "zh-CN"], "globe_color": "#66aaff", "wrapper_selector": ".gtranslate_wrapper", "flag_size": 24, "globe_size": 40 }</script>
-    <script src="https://cdn.gtranslate.net/widgets/latest/globe.js" defer></script>
+    <script src="../../components/tawk-chat.js"></script>
+    <script src="../../components/gtranslate.js"></script>
 </body>
 
 </html>

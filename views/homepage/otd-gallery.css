@@ -12,8 +12,8 @@
     --text-muted: rgba(28, 26, 23, 0.45);
     --accent: #d4451f;
     --accent-hover: #b8371a;
-    --radius-sm: 4px;
-    --radius: 6px;
+    --radius-sm: 2px;
+    --radius: 3px;
     --shadow: 0 4px 20px rgba(28, 26, 23, 0.08);
     --shadow-lg: 0 10px 40px rgba(28, 26, 23, 0.12);
     --transition: all 0.2s ease;
@@ -63,30 +63,38 @@
     border-radius: var(--radius);
 }
 
-/* Gallery Slide Customization */
+/* Gallery slides — editorial broadsheet clippings, matched to the
+   On This Day page: square cards, hard ink offset shadow on hover (no
+   colour), grayscale photos that warm up, mono year tag that inverts. */
 .gallery-slide {
     background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition: var(--transition);
+    border: 1.5px solid rgba(28, 26, 23, 0.16);
+    border-radius: 3px;
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .gallery-slide:hover {
-    border-color: var(--border-hover);
-    box-shadow: var(--shadow);
+    transform: translate(-4px, -4px);
+    border-color: var(--text);
+    box-shadow: 8px 8px 0 var(--text);
 }
 
 .gallery-slide.active {
-    border-color: rgba(212, 69, 31, 0.4);
+    border-color: var(--text);
 }
 
 /* Gallery Slide Content */
 .gallery-image {
     width: 100%;
-    height: 180px;
+    height: 200px;
     overflow: hidden;
     position: relative;
     background: var(--bg);
+    border-bottom: 1.5px solid rgba(28, 26, 23, 0.16);
+}
+
+.gallery-slide:hover .gallery-image {
+    border-color: var(--text);
 }
 
 .gallery-image-placeholder {
@@ -94,21 +102,25 @@
     align-items: center;
     justify-content: center;
     font-size: 3rem;
+    filter: grayscale(1);
+    opacity: 0.4;
 }
 
 .gallery-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    filter: grayscale(35%) contrast(1.02);
+    transition: transform 0.6s ease, filter 0.4s ease;
 }
 
 .gallery-slide:hover .gallery-image img {
     transform: scale(1.05);
+    filter: grayscale(0%);
 }
 
 .gallery-content {
-    padding: 20px;
+    padding: 1.4rem 1.5rem 1.5rem;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -118,30 +130,43 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
 }
 
 .gallery-year {
-    font-size: 12px;
+    font-family: 'Space Mono', monospace;
     font-weight: 700;
-    padding: 4px 10px;
-    background: var(--accent);
-    border-radius: 100px;
-    color: #fff;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.55rem;
+    background: var(--text);
+    color: var(--bg-card);
+    border: 1.5px solid var(--text);
+    border-radius: 2px;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+
+.gallery-slide:hover .gallery-year {
+    background: var(--bg-card);
+    color: var(--text);
 }
 
 .gallery-counter {
-    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
     color: var(--text-muted);
-    font-weight: 500;
 }
 
 .gallery-title {
     font-family: 'Bricolage Grotesque', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    line-height: 1.4;
-    margin-bottom: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    font-size: 1.2rem;
+    line-height: 1.1;
+    margin-bottom: 0.7rem;
     color: var(--text);
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -153,7 +178,7 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
     line-height: 1.6;
-    margin-bottom: 16px;
+    margin-bottom: 1.3rem;
     display: -webkit-box;
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
@@ -162,7 +187,7 @@
 }
 
 .gallery-extract p {
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
 }
 
 .gallery-extract p:last-child {
@@ -171,28 +196,35 @@
 
 .gallery-extract a {
     color: var(--accent-hover);
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 .gallery-link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #fff;
-    text-decoration: none;
-    padding: 10px 16px;
-    background: var(--accent);
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
+    gap: 0.5rem;
     align-self: flex-start;
     margin-top: auto;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text);
+    text-decoration: none;
+    background: none;
+    padding: 0 0 0.25rem;
+    border-bottom: 2px solid var(--accent);
+    border-radius: 0;
+    transition: color 0.2s ease, gap 0.2s ease;
 }
 
 .gallery-link:hover {
-    background: var(--accent-hover);
-    transform: translateX(4px);
+    color: var(--accent);
+    background: none;
+    transform: none;
+    gap: 0.85rem;
 }
 
 .gallery-link svg {
@@ -203,18 +235,22 @@
     transform: translate(2px, -2px);
 }
 
-/* Gallery Navigation Customization */
+/* Gallery navigation — square editorial buttons with a hard ink shadow */
 .gallery-nav {
-    border: 1px solid var(--border);
+    border-radius: 0;
+    border: 2px solid var(--text);
     background: var(--bg-card);
     color: var(--text);
-    box-shadow: var(--shadow);
+    box-shadow: 4px 4px 0 var(--text);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .gallery-nav:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-hover);
-    box-shadow: var(--shadow-lg);
+    transform: translate(-2px, -2px);
+    background: var(--text);
+    border-color: var(--text);
+    color: var(--bg-card);
+    box-shadow: 6px 6px 0 var(--text);
 }
 
 .gallery-dot {

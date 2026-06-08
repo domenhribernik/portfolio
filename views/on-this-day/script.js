@@ -3,8 +3,56 @@
     const currentDateEl = document.getElementById('current-date');
 
     const today = new Date();
-    currentDateEl.textContent = today.toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+
+    //? Masthead dateline + colophon details
+    if (currentDateEl) {
+        currentDateEl.textContent = today.toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+
+    const editionEl = document.getElementById('masthead-edition');
+    if (editionEl) {
+        editionEl.textContent = `${today.toLocaleDateString('en-US', { weekday: 'long' })} Edition`;
+    }
+
+    //? Day-of-year readout for the hero corner tag ("Day 158 / 365")
+    const cornerEl = document.getElementById('hero-corner');
+    if (cornerEl) {
+        const startOfYear = new Date(today.getFullYear(), 0, 0);
+        const dayOfYear = Math.floor((today - startOfYear) / 86400000);
+        const isLeap = (y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0)(today.getFullYear());
+        cornerEl.textContent = `Day ${dayOfYear} / ${isLeap ? 366 : 365}`;
+    }
+
+    const yearEl = document.getElementById('currentYear');
+    if (yearEl) yearEl.textContent = today.getFullYear();
+
+    //? Scroll reveal (gate hidden state on JS so content stays visible if this never runs)
+    document.body.classList.add('reveals-on');
+    const revealObserver = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                obs.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    //? Record tabs: show one category (events / births / deaths) at a time
+    const recordTabs = document.querySelectorAll('.otd-tab');
+    const recordPanels = document.querySelectorAll('.otd-panel');
+    recordTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.target;
+            recordTabs.forEach(t => {
+                const on = t === tab;
+                t.classList.toggle('is-active', on);
+                t.setAttribute('aria-selected', String(on));
+            });
+            recordPanels.forEach(p => p.classList.toggle('is-active', p.dataset.panel === target));
+        });
     });
 
     const stripHtml = (html) => {
@@ -113,10 +161,7 @@
         return article;
     };
 
-    const createCategoryItem = (item, type) => {
-        const div = document.createElement('div');
-        div.className = 'category-item';
-
+    const createCategoryItem = (item) => {
         const patterns = [
             /^([^,]+),\s*(.+)$/, /^([^:]+):\s*(.+)$/, /^(.+?\([^)]+\))\s*,?\s*(.+)$/,
         ];
@@ -130,27 +175,21 @@
         if (!title) { title = text; }
 
         const year = item.year || '';
-        const imageUrl = getFirstImage(item.pages);
         const pageUrl = getFirstPageUrl(item.pages);
 
-        const imageHtml = imageUrl ? `<img src="${imageUrl}" alt="" class="category-item-image" loading="lazy">` : '';
-        const linkStart = pageUrl ? `<a href="${pageUrl}" target="_blank" rel="noopener" class="category-item-link">` : '';
-        const linkEnd = pageUrl ? '</a>' : '';
-        const textHtml = description
-            ? `<p class="category-item-text"><strong class="category-item-title">${title}</strong> ${description}</p>`
-            : `<p class="category-item-text"><strong class="category-item-title">${title}</strong></p>`;
+        // The whole entry is the link when a Wikipedia page exists
+        const el = document.createElement(pageUrl ? 'a' : 'div');
+        el.className = 'otd-entry';
+        if (pageUrl) { el.href = pageUrl; el.target = '_blank'; el.rel = 'noopener'; }
 
-        div.innerHTML = `
-            ${linkStart}
-            ${imageHtml}
-            <div class="category-item-content">
-                ${year ? `<span class="category-item-year ${type}">${year}</span>` : ''}
-                ${textHtml}
-            </div>
-            ${linkEnd}
+        const descHtml = description ? `<span class="otd-entry__desc">${description}</span>` : '';
+
+        el.innerHTML = `
+            <span class="otd-entry__year">${year || '—'}</span>
+            <span class="otd-entry__body"><span class="otd-entry__title">${title}</span>${descHtml}</span>
         `;
 
-        return div;
+        return el;
     };
 
     const createGalleryPlaceholder = () => {
@@ -169,13 +208,13 @@
 
     const createCategoryPlaceholder = () => {
         const div = document.createElement('div');
-        div.className = 'category-item loading';
+        div.className = 'otd-entry loading';
         div.innerHTML = `
-            <div class="loading-block category-item-image"></div>
-            <div class="category-item-content">
-                <div class="loading-line short"></div>
-                <div class="loading-line"></div>
-            </div>
+            <span class="otd-entry__year"><span class="loading-line" style="width: 2.2rem;"></span></span>
+            <span class="otd-entry__body">
+                <span class="loading-line"></span>
+                <span class="loading-line"></span>
+            </span>
         `;
         return div;
     };
@@ -240,7 +279,7 @@
         [eventsContainer, birthsContainer, deathsContainer].forEach(container => {
             if (container) {
                 container.innerHTML = '';
-                for (let i = 0; i < 5; i++) container.appendChild(createCategoryPlaceholder());
+                for (let i = 0; i < 8; i++) container.appendChild(createCategoryPlaceholder());
             }
         });
 
@@ -254,6 +293,18 @@
             populateCategory('events-container', data.events?.events, 'events');
             populateCategory('births-container', data.births?.births, 'births');
             populateCategory('deaths-container', data.deaths?.deaths, 'deaths');
+
+            //? Live counts for the hero stat strip + the record tabs
+            const setCount = (id, arr) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = String(arr?.length ?? 0).padStart(2, '0');
+            };
+            setCount('stat-events', data.events?.events);
+            setCount('stat-births', data.births?.births);
+            setCount('stat-deaths', data.deaths?.deaths);
+            setCount('count-events', data.events?.events);
+            setCount('count-births', data.births?.births);
+            setCount('count-deaths', data.deaths?.deaths);
         } catch (error) {
             console.error('Error:', error);
             loadingOverlay?.classList.add('hidden');

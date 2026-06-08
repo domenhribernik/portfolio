@@ -189,9 +189,16 @@
     text-transform: uppercase;
     line-height: 0.84;
     letter-spacing: -0.035em;
-    font-size: clamp(3.4rem, 14vw, 13rem);
+    font-size: clamp(2.5rem, 9vw, 6.5rem);
     color: var(--ink);
     margin: 0;
+}
+
+/* The oversized hero size is reserved for the homepage (the only hero
+   that carries the `.leaf` class). Subproject heroes use the smaller
+   base above. */
+.leaf.kinetic-hero .kinetic-title {
+    font-size: clamp(3.4rem, 14vw, 13rem);
 }
 
 .kinetic-line {
