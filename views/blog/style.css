@@ -1,0 +1,505 @@
+/* ============================================================
+   Blog styles.
+   Layout/colour come from Tailwind in the HTML and the editorial
+   base. This file keeps the category filter pills, the post cards,
+   the long-form prose typography, the reading-progress bar, and the
+   scroll reveal that Tailwind can't cleanly express.
+   ============================================================ */
+
+/* ---- Scroll reveal (mirrors the homepage) ---- */
+.reveals-on .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* ---- Hero tweaks ---- */
+.blog-hero {
+    min-height: 92svh;
+}
+
+.blog-hero__count {
+    margin-top: 2.4rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--stone);
+}
+
+.blog-hero__count::before {
+    content: '';
+    display: inline-block;
+    width: 26px;
+    height: 1px;
+    background: var(--clay);
+    vertical-align: middle;
+    margin-right: 0.8rem;
+}
+
+/* ============================================================
+   POST FILTERS  (category pills)
+   ============================================================ */
+.post-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 2.25rem;
+}
+
+.filter-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+
+.filter-pill:hover {
+    border-color: var(--ink);
+}
+
+.filter-pill.is-active {
+    background: var(--clay);
+    border-color: var(--clay);
+    color: var(--paper);
+}
+
+/* ============================================================
+   POST GRID  (concise cards)
+   ============================================================ */
+.post-grid {
+    margin-top: 2.25rem;
+}
+
+.post-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 1.6rem 1.5rem 1.4rem;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Clay rule that sweeps across the top edge on hover */
+.post-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--clay);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--clay);
+    box-shadow: 0 6px 20px rgba(28, 26, 23, 0.06);
+}
+
+.post-card:hover::before {
+    transform: scaleX(1);
+}
+
+.post-card__cat {
+    align-self: flex-start;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--clay);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 0.28rem 0.65rem;
+    margin-bottom: 1.1rem;
+}
+
+.post-card__title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--ink);
+    font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+    margin-bottom: 0.75rem;
+    transition: color 0.3s ease;
+}
+
+.post-card:hover .post-card__title {
+    color: var(--clay-dk);
+}
+
+.post-card__snippet {
+    color: var(--stone);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin-bottom: 1.4rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.post-card__meta {
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--stone);
+}
+
+.post-card__sep {
+    color: var(--clay);
+    opacity: 0.7;
+}
+
+/* Filter transition: matching cards fade up as they re-enter */
+.post-card.is-hidden {
+    display: none;
+}
+
+.post-card.is-filtering {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+/* ---- Empty / loading / error states ---- */
+.blog-state {
+    padding: 2.5rem 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--stone);
+}
+
+.blog-state--error {
+    color: var(--clay);
+}
+
+/* ============================================================
+   SINGLE POST
+   ============================================================ */
+.read-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1100;
+    width: 100%;
+    height: 3px;
+    background: var(--clay);
+    transform: scaleX(0);
+    transform-origin: left;
+    will-change: transform;
+}
+
+.post-shell {
+    display: block;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.post-shell.is-ready {
+    opacity: 1;
+}
+
+/* Failsafe: if JS never marks it ready, still show the article */
+.post-shell:not(.is-ready) {
+    animation: post-reveal 0s linear 6s forwards;
+}
+
+@keyframes post-reveal {
+    to { opacity: 1; }
+}
+
+.post-header {
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--hairline);
+    padding: 9rem 1.5rem 3.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.post-header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(90deg, var(--hairline) 0 1px, transparent 1px calc(100% / 6));
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.post-header__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.post-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--stone);
+    text-decoration: none;
+    transition: color 0.25s ease, gap 0.25s ease;
+}
+
+.post-back:hover {
+    color: var(--clay);
+    gap: 0.85rem;
+}
+
+.post-eyebrow {
+    margin-top: 2rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--clay);
+}
+
+.post-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    color: var(--ink);
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    margin: 0.9rem 0 1.5rem;
+}
+
+.post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    color: var(--stone);
+}
+
+.post-meta__sep {
+    color: var(--clay);
+    opacity: 0.7;
+}
+
+.post-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 5rem;
+}
+
+/* ============================================================
+   PROSE  (rendered markdown)
+   ============================================================ */
+.prose {
+    color: var(--ink);
+    font-size: 1.16rem;
+    line-height: 1.78;
+}
+
+.prose > * + * {
+    margin-top: 1.5rem;
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    color: var(--ink);
+    margin-top: 3rem;
+}
+
+.prose h2 {
+    font-size: clamp(1.6rem, 3.5vw, 2.1rem);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.prose h3 {
+    font-size: 1.4rem;
+}
+
+.prose h4 {
+    font-size: 1.15rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--stone);
+}
+
+/* Drop cap on the opening paragraph */
+.prose > p:first-of-type::first-letter {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    float: left;
+    font-size: 3.6rem;
+    line-height: 0.78;
+    padding: 0.2rem 0.35rem 0 0;
+    color: var(--clay);
+}
+
+.prose a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--clay);
+    transition: color 0.2s ease, background 0.2s ease;
+    padding-bottom: 1px;
+}
+
+.prose a:hover {
+    color: var(--clay);
+}
+
+.prose strong {
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.prose em {
+    font-style: italic;
+}
+
+.prose ul,
+.prose ol {
+    padding-left: 1.4rem;
+}
+
+.prose li {
+    margin-top: 0.5rem;
+}
+
+.prose ul li::marker {
+    color: var(--clay);
+}
+
+.prose ol li::marker {
+    color: var(--clay);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+}
+
+.prose blockquote {
+    border-left: 3px solid var(--clay);
+    padding: 0.3rem 0 0.3rem 1.5rem;
+    margin-left: 0;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 1.35rem;
+    line-height: 1.4;
+    font-style: italic;
+    color: var(--ink);
+}
+
+.prose code {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.88em;
+    background: var(--paper-2);
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    padding: 0.1rem 0.4rem;
+}
+
+.prose pre {
+    background: var(--ink);
+    color: #f6f2ea;
+    border-radius: 4px;
+    padding: 1.3rem 1.4rem;
+    overflow-x: auto;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.prose pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+}
+
+.prose hr {
+    border: none;
+    height: 1px;
+    background: var(--hairline);
+    margin: 3rem 0;
+}
+
+.prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid var(--hairline);
+}
+
+.prose table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.prose th,
+.prose td {
+    border: 1px solid var(--hairline);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+}
+
+.prose th {
+    background: var(--paper-2);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.post-footer {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--hairline);
+}
+
+.post-back--foot {
+    font-size: 0.8rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveals-on .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    .post-shell {
+        opacity: 1;
+    }
+}

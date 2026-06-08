@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Blog of Domen Hribernik: short writing on building software, side projects, and notes from Slovenia.">
+    <meta name="keywords" content="Domen Hribernik, blog, writing, software">
+    <title>Blog - Domen Hribernik</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea', 'paper-2': '#efe9dd', card: '#fffdf8',
+                        ink: '#1c1a17', stone: '#6b6256', clay: '#d4451f',
+                        'clay-dk': '#b8371a', pine: '#2f5b53', cobalt: '#1f35e0', marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        serif: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="../homepage/kinetic.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="editorial kinetic bg-paper text-ink font-sans antialiased">
+    <main-navbar site="../../"></main-navbar>
+
+    <!-- Hero -->
+    <section class="kinetic-hero blog-hero">
+        <div class="kinetic-grid" aria-hidden="true"></div>
+        <div class="kinetic-blob kinetic-blob--clay" aria-hidden="true"></div>
+        <div class="kinetic-blob kinetic-blob--cobalt" aria-hidden="true"></div>
+
+        <div class="kinetic-hero__inner">
+            <p class="kinetic-eyebrow">Writing / Domen Hribernik</p>
+
+            <h1 class="kinetic-title notranslate" translate="no" aria-label="Blog">
+                <span class="kinetic-line" aria-hidden="true">
+                    <span class="ch" style="--i:0">B</span><span class="ch" style="--i:1">L</span><span class="ch"
+                        style="--i:2">O</span><span class="ch" style="--i:3">G</span><span class="ch dot"
+                        style="--i:4">.</span>
+                </span>
+            </h1>
+
+            <div class="kinetic-sub">
+                <span class="kinetic-sub__bar" aria-hidden="true"></span>
+                <p class="kinetic-sub__text">Short pieces on building software, the side projects on this site, 
+                    and anything else I think is worth sharing.</p>
+            </div>
+
+            <p class="blog-hero__count"><span id="post-count">…</span></p>
+        </div>
+
+        <span class="kinetic-corner" aria-hidden="true">Blog / 2026</span>
+    </section>
+
+    <!-- Post index -->
+    <section class="blog-index bg-paper py-20 md:py-28">
+        <div class="mx-auto max-w-[1240px] px-6 md:px-10">
+            <div class="kinetic-secthead reveal">
+                <span class="kinetic-secthead__num">01</span>
+                <span class="kinetic-secthead__label">All writing</span>
+                <span class="kinetic-secthead__rule"></span>
+            </div>
+
+            <div id="post-filters" class="post-filters" role="tablist" aria-label="Filter by category"></div>
+
+            <div id="post-grid" class="post-grid grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <p class="blog-state">Loading entries…</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Copyright &copy; Domen Hribernik <span id="currentYear"></span></p>
+        </div>
+    </footer>
+
+    <script type="module" src="../../components/main-navbar.js"></script>
+    <script type="module" src="index.js"></script>
+    <script src="../../components/gtranslate.js"></script>
+</body>
+
+</html>
