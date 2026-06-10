@@ -33,6 +33,8 @@ Use the view's `style.css` only for things Tailwind can't cleanly express:
 
 Existing views written before this convention (e.g. `homepage`, `about`, `tarok`) still use a plain `style.css`. Don't migrate them as part of unrelated work; convert only when explicitly asked.
 
+**Pixel-alignment (discolored seams / "glitchy" edges on big or high-DPI displays).** Stacked, absolutely-positioned elements that use CSS gradients and/or `clip-path` (CSS-drawn art, color swatches, the iliana envelope) render thin discolored hairline seams when their anti-aliased edges land on fractional device pixels. The fix is to promote each layer onto its own GPU layer so it rasterizes on the device pixel grid: add `transform: translateZ(0)` (append it to any existing transform, e.g. `translate(-50%,-50%) translateZ(0)`, never replace) and `backface-visibility: hidden`. **Exception:** do NOT add `backface-visibility: hidden` to an element that rotates past 90° (e.g. a flap doing `rotateX(178deg)`) or its backface will vanish; use `translateZ(0)` alone there. Precedents: [views/ip/style.css](views/ip/style.css) (`.color-swatch`/`.legend-dot` under a `min-resolution: 192dpi` query) and [views/iliana/anniversary/style.css](views/iliana/anniversary/style.css) (the envelope layers).
+
 ### Frontend: Component System
 
 Reusable web components live in [components/](components/) and are imported as ES modules via `<script type="module">`:

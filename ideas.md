@@ -17,10 +17,11 @@
 - **Look into unit testing**, and add them before commit. And on actions as well? 
 - Add webp to image service, and then also figure out the jpg edge case
 ## Refactoring
-- Figure out how to seperate git repositories, to seperate the big projects, people would be interested in seeing
-- Find github alternative
 - Go through controllers and refactor them
 - Debug camera not working
+- Unify the homepage and views otd
+- Remove google analytics on localhost
+- Finish pricing project, fix ip logging in db
 
 ## Project Ideas
 - **ASCII art converter** — transform images to ASCII (lightest to darkest); already have a project, put it on the portfolio

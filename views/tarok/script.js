@@ -1,21 +1,103 @@
+// ===========================================================================
+// Tarok scorekeeper
+//
+// Single source of truth: `rounds`, an array of RAW per-round inputs. Scores and
+// radelci are never mutated incrementally; they are a pure function of `rounds`
+// via computeState(). That is what makes editing/deleting any round correct: we
+// just change `rounds` and replay. The replay order below is identical to the
+// old incremental addRound() so the scoring math is unchanged.
+// ===========================================================================
+
+const HIGH_GAMES = ['berac', 'solo_brez', 'barvni_valat', 'valat', 'klop'];
+const NO_PLAYER_GAMES = ['berac'];
+const STORAGE_KEY = 'tarok:game:v1';
+const API = '../../app/proxys/tarok.php';
+
 let playerCount = 4;
 let players = [];
-let scores = []; // Array of arrays: scores[playerIndex][round] = score
-let radelci = []; // Array to track radelci count per player (max 3)
-let roundHistory = []; // Track game type, radelc usage, etc. for each round
-let currentRound = 1;
-let gameEnded = false;
-let currentOutcome = 'win';
+let rounds = [];                 // raw: { gameType, playingPlayer, outcome, baseScores: [] }
+let gameId = null;
+let createdAt = null;
 
-// Game types that give radelci to all players
-const HIGH_GAMES = ['berac', 'solo_brez', 'barvni_valat', 'valat', 'klop'];
+let currentOutcome = 'win';      // outcome currently selected in the input form
+let editingGrid = false;         // true while inline-editing the score cells in the table
+let isSnapshot = false;          // true while viewing a read-only shared game
+let isShared = false;            // true once this game has been shared: changes auto-resync
 
-// Game types where no one is playing (everyone plays for themselves)
-const NO_PLAYER_GAMES = ['berac'];
+let state = { radelci: [], scores: [], meta: [] }; // recomputed view of `rounds`
 
-// Player count selection
+// ---------------------------------------------------------------------------
+// Pure scoring
+// ---------------------------------------------------------------------------
+function computeState(rounds, playerCount) {
+    let radelci = Array(playerCount).fill(0);
+    let scores = Array.from({ length: playerCount }, () => []);
+    let meta = [];
+
+    rounds.forEach(r => {
+        const isHighGame = HIGH_GAMES.includes(r.gameType);
+        const isNoPlayerGame = NO_PLAYER_GAMES.includes(r.gameType);
+
+        let finalScores = r.baseScores.slice();
+        let useRadelc = false;
+        let radelcConsumed = false;
+
+        // A player with a radelc available doubles their points this round.
+        if (!isNoPlayerGame && r.playingPlayer >= 0 && radelci[r.playingPlayer] > 0) {
+            useRadelc = true;
+            finalScores[r.playingPlayer] = finalScores[r.playingPlayer] * 2;
+            if (r.outcome === 'win') {
+                radelcConsumed = true; // a radelc is spent only on a win
+            }
+        }
+
+        // A lost game subtracts the points from everyone.
+        if (r.outcome === 'loss') {
+            finalScores = finalScores.map(s => -Math.abs(s));
+        }
+
+        finalScores.forEach((s, i) => scores[i].push(s));
+
+        // High games hand a radelc to every player (capped at 3)...
+        if (isHighGame) {
+            radelci = radelci.map(c => Math.min(c + 1, 3));
+        }
+        // ...and a used-and-won radelc is then consumed.
+        if (radelcConsumed) {
+            radelci[r.playingPlayer] = Math.max(radelci[r.playingPlayer] - 1, 0);
+        }
+
+        meta.push({
+            gameType: r.gameType,
+            playingPlayer: r.playingPlayer,
+            outcome: r.outcome,
+            useRadelc,
+            radelcConsumed,
+            isHighGame,
+            isNoPlayerGame
+        });
+    });
+
+    return { radelci, scores, meta };
+}
+
+function recompute() {
+    state = computeState(rounds, playerCount);
+}
+
+function render() {
+    recompute();
+    updateScoresTable();
+    updateRadelciDisplay();
+    updateRoundCounter();
+    updateControls();
+}
+
+// ---------------------------------------------------------------------------
+// Setup screen
+// ---------------------------------------------------------------------------
 document.querySelectorAll('.count-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
         document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         playerCount = parseInt(this.dataset.count);
@@ -26,7 +108,6 @@ document.querySelectorAll('.count-btn').forEach(btn => {
 function updatePlayerInputs() {
     const container = document.getElementById('playerInputs');
     container.innerHTML = '';
-
     for (let i = 0; i < playerCount; i++) {
         const input = document.createElement('input');
         input.type = 'text';
@@ -37,9 +118,22 @@ function updatePlayerInputs() {
     }
 }
 
+function syncCountButtons() {
+    document.querySelectorAll('.count-btn').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.count) === playerCount);
+    });
+}
+
+function prefillSetupNames() {
+    syncCountButtons();
+    updatePlayerInputs();
+    const inputs = document.querySelectorAll('.player-input');
+    players.forEach((name, i) => { if (inputs[i]) inputs[i].value = name; });
+}
+
 function startGame() {
     const inputs = document.querySelectorAll('.player-input');
-    players = [];
+    const entered = [];
 
     for (let i = 0; i < playerCount; i++) {
         const name = inputs[i].value.trim();
@@ -47,37 +141,51 @@ function startGame() {
             alert(`Vnesi ime za igralca ${i + 1}`);
             return;
         }
-        players.push(name);
+        entered.push(name);
     }
 
-    // Check for duplicate names
-    const uniqueNames = [...new Set(players)];
-    if (uniqueNames.length !== players.length) {
+    if (new Set(entered).size !== entered.length) {
         alert('Vsa imena morajo biti različna');
         return;
     }
 
-    initializeGame();
+    players = entered;
+    createdAt = Date.now();
+    gameId = makeGameId(players, createdAt);
+    rounds = [];
+    editingGrid = false;
+    currentOutcome = 'win';
+    isSnapshot = false;
+    isShared = false;
+
+    pingCleanup(); // a new game is being played: prune shared games older than 7 days
+    enterGameScreen();
+    persist();
 }
 
-function initializeGame() {
-    scores = players.map(() => []);
-    radelci = players.map(() => 0); // Initialize with 0 radelci
-    roundHistory = [];
-    currentRound = 1;
-    gameEnded = false;
-    currentOutcome = 'win';
-
-    setupGameScreen();
+// ---------------------------------------------------------------------------
+// Game screen plumbing
+// ---------------------------------------------------------------------------
+function enterGameScreen() {
+    setupPlayerSelector();
+    setupScoreInputs();
+    recompute();
     updateTableHeader();
+    selectOutcome(currentOutcome);
+    onGameTypeChange();
+    editingGrid = false;
+
+    document.getElementById('roundInputSection').classList.remove('hidden');
+    document.getElementById('gameControls').classList.remove('hidden');
+    document.getElementById('snapshotBanner').classList.add('hidden');
 
     document.getElementById('setupScreen').style.display = 'none';
     document.getElementById('gameScreen').style.display = 'block';
-    document.getElementById('winnerAnnouncement').style.display = 'none';
+
+    render();
 }
 
-function setupGameScreen() {
-    // Setup player selector
+function setupPlayerSelector() {
     const playerSelect = document.getElementById('playingPlayer');
     playerSelect.innerHTML = '';
     players.forEach((player, index) => {
@@ -86,66 +194,11 @@ function setupGameScreen() {
         option.textContent = player;
         playerSelect.appendChild(option);
     });
-
-    // Setup score inputs
-    setupScoreInputs();
-
-    // Reset outcome buttons
-    selectOutcome('win');
-
-    // Attach event listeners
-    document.getElementById('gameType').addEventListener('change', onGameTypeChange);
-
-    // Initial check for game type
-    onGameTypeChange();
-    updateScoresTable();
-}
-
-function updateTableHeader() {
-    // Setup table header with player names and radelci
-    const header = document.getElementById('tableHeader');
-    header.innerHTML = '<th>#</th>';
-    
-    players.forEach((player, index) => {
-        const th = document.createElement('th');
-        th.innerHTML = `
-            <div class="header-player">
-                <span class="header-player-name">${player}</span>
-                <span class="header-radelci" id="header-radelci-${index}">
-                    ${getRadelciStarsHTML(index)}
-                </span>
-            </div>
-        `;
-        header.appendChild(th);
-    });
-}
-
-function getRadelciStarsHTML(playerIndex) {
-    let html = '';
-    for (let i = 0; i < 3; i++) {
-        if (i < radelci[playerIndex]) {
-            html += '<span class="radelc-star">★</span>';
-        } else {
-            html += '<span class="radelc-star empty">☆</span>';
-        }
-    }
-    return html;
-}
-
-function updateRadelciDisplay() {
-    // Update radelci stars in table header
-    players.forEach((player, index) => {
-        const container = document.getElementById(`header-radelci-${index}`);
-        if (container) {
-            container.innerHTML = getRadelciStarsHTML(index);
-        }
-    });
 }
 
 function setupScoreInputs() {
     const container = document.getElementById('scoresGrid');
     container.innerHTML = '';
-
     players.forEach((player, index) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'score-input-wrapper';
@@ -168,61 +221,98 @@ function setupScoreInputs() {
     });
 }
 
+function updateTableHeader() {
+    const header = document.getElementById('tableHeader');
+    header.innerHTML = '<th>#</th>';
+    players.forEach((player, index) => {
+        const th = document.createElement('th');
+        th.innerHTML = `
+            <div class="header-player">
+                <span class="header-player-name">${escapeHtml(player)}</span>
+                <span class="header-radelci" id="header-radelci-${index}">
+                    ${getRadelciStarsHTML(index)}
+                </span>
+            </div>`;
+        header.appendChild(th);
+    });
+}
+
+function getRadelciStarsHTML(playerIndex) {
+    const count = state.radelci[playerIndex] || 0;
+    let html = '';
+    for (let i = 0; i < 3; i++) {
+        html += i < count
+            ? '<span class="radelc-star">★</span>'
+            : '<span class="radelc-star empty">☆</span>';
+    }
+    return html;
+}
+
+function updateRadelciDisplay() {
+    players.forEach((player, index) => {
+        const container = document.getElementById(`header-radelci-${index}`);
+        if (container) container.innerHTML = getRadelciStarsHTML(index);
+    });
+}
+
 function onGameTypeChange() {
     const gameType = document.getElementById('gameType').value;
     const playerSelectGroup = document.getElementById('playerSelectGroup');
-    const isNoPlayerGame = NO_PLAYER_GAMES.includes(gameType);
-
-    if (isNoPlayerGame) {
-        playerSelectGroup.style.display = 'none';
-    } else {
-        playerSelectGroup.style.display = 'block';
-    }
+    playerSelectGroup.style.display = NO_PLAYER_GAMES.includes(gameType) ? 'none' : 'block';
 }
 
 function selectOutcome(outcome) {
     currentOutcome = outcome;
-    document.querySelectorAll('.outcome-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    document.querySelectorAll('.outcome-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`[data-outcome="${outcome}"]`).classList.add('active');
 }
 
 function toggleScoringHelp() {
-    const content = document.getElementById('scoringHelpContent');
-    const arrow = document.getElementById('scoringHelpArrow');
-    
-    content.classList.toggle('open');
-    arrow.classList.toggle('open');
+    document.getElementById('scoringHelpContent').classList.toggle('open');
+    document.getElementById('scoringHelpArrow').classList.toggle('open');
 }
 
+// ---------------------------------------------------------------------------
+// Scores table
+// ---------------------------------------------------------------------------
 function updateScoresTable() {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = '';
 
-    // Add all completed rounds
-    const maxRounds = Math.max(...scores.map(s => s.length));
-    
-    for (let round = 0; round < maxRounds; round++) {
+    for (let round = 0; round < rounds.length; round++) {
         const row = document.createElement('tr');
 
         const roundCell = document.createElement('td');
+        roundCell.className = 'round-cell';
         roundCell.textContent = round + 1;
         row.appendChild(roundCell);
 
+        const meta = state.meta[round];
         players.forEach((player, playerIndex) => {
             const cell = document.createElement('td');
-            const score = scores[playerIndex][round];
+
+            if (editingGrid) {
+                // Inline edit: show the raw points originally entered for this
+                // player; win/loss and radelc are re-derived on save.
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'grid-edit-input';
+                input.id = `grid-${round}-${playerIndex}`;
+                input.value = rounds[round].baseScores[playerIndex] ?? 0;
+                input.inputMode = 'numeric';
+                cell.appendChild(input);
+                row.appendChild(cell);
+                return;
+            }
+
+            const score = state.scores[playerIndex][round];
             if (score !== undefined && score !== null) {
-                let displayText = score;
-                // Check if this round used radelc
-                const history = roundHistory[round];
-                if (history && history.useRadelc && history.playingPlayer === playerIndex) {
-                    cell.innerHTML = displayText + '<span class="radelc-indicator">★</span>';
-                } else if (history && history.isHighGame) {
-                    cell.innerHTML = displayText + '<span class="radelc-indicator">☆</span>';
+                if (meta && meta.useRadelc && meta.playingPlayer === playerIndex) {
+                    cell.innerHTML = `${score}<span class="radelc-indicator">★</span>`;
+                } else if (meta && meta.isHighGame) {
+                    cell.innerHTML = `${score}<span class="radelc-indicator">☆</span>`;
                 } else {
-                    cell.textContent = displayText;
+                    cell.textContent = score;
                 }
             } else {
                 cell.textContent = '-';
@@ -233,116 +323,349 @@ function updateScoresTable() {
         tbody.appendChild(row);
     }
 
-    // Add total row
     const totalRow = document.createElement('tr');
     totalRow.className = 'total-row';
-
     const totalLabel = document.createElement('td');
     totalLabel.innerHTML = '<strong>∑</strong>';
     totalRow.appendChild(totalLabel);
 
     players.forEach((player, playerIndex) => {
         const totalCell = document.createElement('td');
-        const total = scores[playerIndex].reduce((sum, score) => sum + (score || 0), 0);
-        totalCell.innerHTML = `<strong>${total}</strong>`;
+        const total = state.scores[playerIndex].reduce((sum, s) => sum + (s || 0), 0);
+        const cls = total > 0 ? 'total-pos' : (total < 0 ? 'total-neg' : '');
+        totalCell.innerHTML = `<strong class="${cls}">${total}</strong>`;
         totalRow.appendChild(totalCell);
     });
 
     tbody.appendChild(totalRow);
-
-    // Update round counter
-    document.getElementById('roundNumber').textContent = currentRound;
-    document.getElementById('currentRound').textContent = currentRound;
 }
 
-function addRound() {
-    if (gameEnded) return;
+function updateRoundCounter() {
+    const next = rounds.length + 1;
+    const chip = document.getElementById('roundNumber');
+    if (chip) chip.textContent = isSnapshot ? rounds.length : next;
 
-    const gameType = document.getElementById('gameType').value;
-    const playingPlayerSelect = document.getElementById('playingPlayer');
-    const playingPlayerIndex = playingPlayerSelect.value ? parseInt(playingPlayerSelect.value) : -1;
-    const isHighGame = HIGH_GAMES.includes(gameType);
-    const isNoPlayerGame = NO_PLAYER_GAMES.includes(gameType);
 
-    // Get scores from inputs
-    const roundScores = [];
-    for (let i = 0; i < playerCount; i++) {
-        const input = document.getElementById(`score-${i}`);
-        const value = parseInt(input.value) || 0;
-        roundScores.push(value);
+}
+
+// Toolbar button states. While the grid is being inline-edited, every other
+// action is disabled so nothing can mutate `rounds` out from under the edit.
+function updateControls() {
+    const noRounds = rounds.length === 0;
+    setDisabled('undoBtn', editingGrid || noRounds);
+    setDisabled('shareBtn', editingGrid);
+    setDisabled('newGameBtn', editingGrid);
+    setDisabled('submitRoundBtn', editingGrid);
+
+    const editBtn = document.getElementById('editBtn');
+    if (editBtn) {
+        editBtn.disabled = !editingGrid && noRounds;
+        editBtn.textContent = editingGrid ? '💾 Shrani' : '✎ Uredi';
+        editBtn.classList.toggle('editing', editingGrid);
     }
+}
 
-    // Start with base scores (no multipliers)
-    let finalScores = [...roundScores];
+function setDisabled(id, disabled) {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !!disabled;
+}
 
-    // Determine if radelc is used
-    let useRadelc = false;
-    let radelcConsumed = false;
+// ---------------------------------------------------------------------------
+// Add / edit / undo
+// ---------------------------------------------------------------------------
+function readRoundInputs() {
+    const gameType = document.getElementById('gameType').value;
+    const isNoPlayerGame = NO_PLAYER_GAMES.includes(gameType);
+    const sel = document.getElementById('playingPlayer');
+    const playingPlayer = (!isNoPlayerGame && sel.value !== '') ? parseInt(sel.value) : -1;
 
-    if (!isNoPlayerGame && playingPlayerIndex >= 0 && radelci[playingPlayerIndex] > 0) {
-        // Player has radelci - use one automatically
-        useRadelc = true;
-        // Only the playing player gets double points
-        finalScores[playingPlayerIndex] = finalScores[playingPlayerIndex] * 2;
+    const baseScores = [];
+    for (let i = 0; i < playerCount; i++) {
+        baseScores.push(parseInt(document.getElementById(`score-${i}`).value) || 0);
+    }
+    return { gameType, playingPlayer, outcome: currentOutcome, baseScores };
+}
 
-        // Radelc is consumed only if the player wins
-        if (currentOutcome === 'win') {
-            radelcConsumed = true;
+function submitRound() {
+    if (editingGrid) return;          // not while inline-editing the grid
+    rounds.push(readRoundInputs());
+    clearRoundInputs();
+    render();
+    persist();
+    syncShared();
+}
+
+// Inline grid editing. The Edit button toggles every score cell into a number
+// input pre-filled with the raw points originally entered (win/loss negation
+// and radelc doubling are re-applied automatically). Save writes the values
+// straight back into each round's baseScores and replays from there, so this
+// only ever corrects a mistyped number; the scoring logic is untouched.
+function toggleGridEdit() {
+    if (!editingGrid) {
+        if (rounds.length === 0) return;
+        editingGrid = true;
+        render();
+        document.getElementById('scoresTable').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        saveGridEdit();
+    }
+}
+
+function saveGridEdit() {
+    for (let round = 0; round < rounds.length; round++) {
+        for (let p = 0; p < playerCount; p++) {
+            const el = document.getElementById(`grid-${round}-${p}`);
+            if (el) rounds[round].baseScores[p] = parseInt(el.value) || 0;
         }
     }
+    editingGrid = false;
+    render();
+    persist();
+    syncShared();
+}
 
-    // Apply outcome (win/loss)
-    if (currentOutcome === 'loss') {
-        // Loss: all points are subtracted for all players
-        finalScores = finalScores.map(score => -Math.abs(score));
-    }
+function undoLastRound() {
+    if (rounds.length === 0 || editingGrid) return;
+    rounds.pop();
+    render();
+    persist();
+    syncShared();
+}
 
-    // Add scores to each player
-    players.forEach((player, index) => {
-        scores[index].push(finalScores[index]);
-    });
-
-    // Award radelci for high games (max 3 per player)
-    if (isHighGame) {
-        radelci = radelci.map(count => Math.min(count + 1, 3));
-    }
-
-    // Consume radelc if used and won
-    if (radelcConsumed) {
-        radelci[playingPlayerIndex] = Math.max(radelci[playingPlayerIndex] - 1, 0);
-    }
-
-    // Store round history
-    roundHistory.push({
-        gameType: gameType,
-        playingPlayer: playingPlayerIndex,
-        useRadelc: useRadelc,
-        radelcConsumed: radelcConsumed,
-        outcome: currentOutcome,
-        isHighGame: isHighGame,
-        isNoPlayerGame: isNoPlayerGame
-    });
-
-    currentRound++;
-
-    // Clear inputs
+function clearRoundInputs() {
     for (let i = 0; i < playerCount; i++) {
-        document.getElementById(`score-${i}`).value = '';
+        const el = document.getElementById(`score-${i}`);
+        if (el) el.value = '';
     }
-
-    updateRadelciDisplay();
-    updateScoresTable();
 }
 
 function newGame() {
-    document.getElementById('setupScreen').style.display = 'block';
-    document.getElementById('gameScreen').style.display = 'none';
+    rounds = [];
+    editingGrid = false;
+    gameId = null;
+    createdAt = null;
+    isSnapshot = false;
+    isShared = false;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
 
-    // Reset setup screen
-    document.querySelectorAll('.player-input').forEach((input, index) => {
-        input.value = players[index] || '';
-    });
+    document.getElementById('gameScreen').style.display = 'none';
+    document.getElementById('setupScreen').style.display = 'block';
+    prefillSetupNames();
 }
 
-// Initialize with 4 players
-updatePlayerInputs();
+// ---------------------------------------------------------------------------
+// Persistence
+// ---------------------------------------------------------------------------
+function gameObject() {
+    return { playerCount, players, rounds, gameId, createdAt, shared: isShared };
+}
+
+function persist() {
+    if (isSnapshot) return;
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(gameObject()));
+    } catch (e) { /* storage full or unavailable: ignore */ }
+}
+
+function loadFromStorage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const g = JSON.parse(raw);
+        if (!g || !Array.isArray(g.players) || !Array.isArray(g.rounds)) return null;
+        return g;
+    } catch (e) {
+        return null;
+    }
+}
+
+function restoreGame(g) {
+    playerCount = g.playerCount || g.players.length;
+    players = g.players;
+    rounds = g.rounds || [];
+    createdAt = g.createdAt || Date.now();
+    gameId = g.gameId || makeGameId(players, createdAt);
+    editingGrid = false;
+    isSnapshot = false;
+    isShared = !!g.shared;
+    enterGameScreen();
+}
+
+// ---------------------------------------------------------------------------
+// Share + shared snapshot
+// ---------------------------------------------------------------------------
+// cyrb53: tiny, fast, dependency-free string hash. Works in any context (no
+// secure-context requirement, unlike crypto.subtle), and base36 output matches
+// the server-side id sanitizer ([a-z0-9]).
+function cyrb53(str, seed = 0) {
+    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+}
+
+function makeGameId(players, createdAt) {
+    return cyrb53(players.join('|') + '|' + createdAt).toString(36);
+}
+
+async function shareGame() {
+    const btn = document.getElementById('shareBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+        const res = await fetch(`${API}?action=save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(gameObject())
+        });
+        if (!res.ok) throw new Error('save failed');
+        const data = await res.json();
+        const url = `${location.origin}${location.pathname}?game=${data.id}`;
+        await copyToClipboard(url);
+        isShared = true;
+        persist();
+        showToast('Povezava kopirana ✓ Posodobitve se delijo sproti');
+    } catch (e) {
+        showToast('Deljenje ni uspelo');
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+    }
+}
+
+// Once a game has been shared, push the latest state to the server on every
+// change so anyone viewing the link only needs to refresh. Fire-and-forget.
+function syncShared() {
+    if (!isShared || isSnapshot || !gameId) return;
+    try {
+        fetch(`${API}?action=save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(gameObject()),
+            keepalive: true
+        }).catch(() => {});
+    } catch (e) { /* ignore */ }
+}
+
+async function loadSharedGame(id) {
+    isSnapshot = true;
+    isShared = false;
+    editingGrid = false;
+    try {
+        const res = await fetch(`${API}?action=load&id=${encodeURIComponent(id)}`);
+        if (!res.ok) throw new Error('not found');
+        const g = await res.json();
+        if (!g || !Array.isArray(g.players) || !Array.isArray(g.rounds)) throw new Error('bad data');
+
+        playerCount = g.playerCount || g.players.length;
+        players = g.players;
+        rounds = g.rounds;
+        gameId = g.gameId || id;
+        renderSnapshot();
+    } catch (e) {
+        isSnapshot = false;
+        updatePlayerInputs();
+        document.getElementById('setupScreen').style.display = 'block';
+        document.getElementById('gameScreen').style.display = 'none';
+        showToast('Deljena igra ni bila najdena');
+    }
+}
+
+function renderSnapshot() {
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'block';
+    document.getElementById('roundInputSection').classList.add('hidden');
+    document.getElementById('gameControls').classList.add('hidden');
+
+    const banner = document.getElementById('snapshotBanner');
+    banner.classList.remove('hidden');
+    document.getElementById('snapshotPlayers').textContent = players.join(' · ');
+
+    updateTableHeader();
+    render();
+}
+
+// Snapshot's "start your own" navigates away from the share link, which lets the
+// normal init restore any local game in progress instead of clobbering it.
+function startOwnGame() {
+    window.location.href = window.location.pathname;
+}
+
+// ---------------------------------------------------------------------------
+// Small utilities
+// ---------------------------------------------------------------------------
+function pingCleanup() {
+    try {
+        fetch(`${API}?action=cleanup`, { method: 'GET', keepalive: true }).catch(() => {});
+    } catch (e) { /* ignore */ }
+}
+
+async function copyToClipboard(text) {
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return;
+        }
+    } catch (e) { /* fall through to legacy path */ }
+
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
+}
+
+let toastTimer = null;
+function showToast(msg) {
+    let el = document.getElementById('toast');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'toast';
+        document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ---------------------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------------------
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* ignored */ });
+}
+
+function init() {
+    const sharedId = new URLSearchParams(window.location.search).get('game');
+    if (sharedId) {
+        loadSharedGame(sharedId);
+        return;
+    }
+    const stored = loadFromStorage();
+    if (stored) {
+        restoreGame(stored);
+        return;
+    }
+    updatePlayerInputs();
+}
+
+init();

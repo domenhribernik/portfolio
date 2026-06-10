@@ -4,23 +4,43 @@
 <head>
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tarok Točkovanje</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#b5462a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tarok">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,wght@0,500;0,600;0,700;1,600&family=Silkscreen:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'tarok-primary': '#667eea',
-                        'tarok-secondary': '#ffcd1c',
-                        'tarok-win': '#22c55e',
-                        'tarok-loss': '#ef4444',
+                        paper: '#f3ead6',
+                        'paper-2': '#e9dcbf',
+                        ink: '#2a2118',
+                        'ink-soft': '#6b5d45',
+                        clay: '#b5462a',
+                        'clay-dark': '#963a22',
+                        win: '#3f7d3a',
+                        loss: '#b23b2e',
+                        gold: '#c79a1e',
+                        line: '#c7b994',
                     },
                     fontFamily: {
-                        inter: ['Inter', 'sans-serif'],
+                        pixel: ['Silkscreen', 'monospace'],
+                        mono: ['Space Mono', 'monospace'],
+                        body: ['"DM Sans"', 'sans-serif'],
+                        display: ['Fraunces', 'serif'],
                     },
                 }
             }
@@ -29,19 +49,24 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
-    <div class="max-w-[600px] mx-auto p-4 min-h-screen">
-        <!-- Setup Screen -->
-        <div id="setupScreen" class="text-center text-white/90 pt-8 max-[480px]:pt-4">
-            <h1 class="text-[1.75rem] mb-8 max-[480px]:text-2xl max-[480px]:mb-6 bg-gradient-to-br from-[#667eea] to-[#764ba2] bg-clip-text text-transparent">🃏 Tarok Točkovanje</h1>
+<body class="tarok font-body text-ink">
+    <div class="max-w-[640px] mx-auto p-4 min-h-screen">
 
-            <div class="player-setup">
-                <h2 class="text-base text-white/70 mb-4 uppercase tracking-[0.1em]">Število igralcev</h2>
-                <div class="flex gap-3 justify-center mb-6">
-                    <button class="count-btn flex-1 max-w-[140px] px-6 py-3 rounded-xl font-semibold cursor-pointer text-white bg-white/10 hover:bg-white/15 border-2 border-transparent transition-all duration-300 max-[480px]:px-4 max-[480px]:py-2.5 max-[480px]:text-sm" data-count="3">3 Igralci</button>
-                    <button class="count-btn active flex-1 max-w-[140px] px-6 py-3 rounded-xl font-semibold cursor-pointer text-white bg-white/10 hover:bg-white/15 border-2 border-transparent transition-all duration-300 max-[480px]:px-4 max-[480px]:py-2.5 max-[480px]:text-sm" data-count="4">4 Igralci</button>
+        <!-- ===================== Setup Screen ===================== -->
+        <div id="setupScreen" class="text-center pt-10 max-[480px]:pt-6">
+            <div class="title-block mb-8 max-[480px]:mb-6">
+                <h1 class="font-pixel text-clay text-3xl max-[480px]:text-2xl leading-none">🃏 TAROK</h1>
+                <p class="font-mono text-ink-soft text-xs tracking-[0.35em] uppercase mt-2">točkovanje</p>
+            </div>
+
+            <div class="panel p-6 text-left">
+                <h2 class="font-mono text-xs text-ink-soft mb-3 uppercase tracking-[0.15em]">Število igralcev</h2>
+                <div class="flex gap-3 mb-6">
+                    <button class="count-btn flex-1" data-count="3">3 igralci</button>
+                    <button class="count-btn active flex-1" data-count="4">4 igralci</button>
                 </div>
 
+                <h2 class="font-mono text-xs text-ink-soft mb-3 uppercase tracking-[0.15em]">Imena</h2>
                 <div id="playerInputs" class="flex flex-col gap-3 mb-6">
                     <input type="text" class="player-input" placeholder="Igralec 1" maxlength="15">
                     <input type="text" class="player-input" placeholder="Igralec 2" maxlength="15">
@@ -49,44 +74,32 @@
                     <input type="text" class="player-input" placeholder="Igralec 4" maxlength="15">
                 </div>
 
-                <button onclick="startGame()" class="w-full mt-2 px-8 py-4 rounded-xl font-semibold text-base text-white border-none cursor-pointer bg-gradient-to-br from-[#667eea] to-[#764ba2] hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(102,126,234,0.4)] active:translate-y-0 transition-all duration-300">Začni igro</button>
+                <button onclick="startGame()" class="t-btn t-btn--primary w-full">Začni igro</button>
             </div>
         </div>
 
-        <!-- Game Screen -->
-        <div id="gameScreen" class="hidden text-white/90 pb-8">
+        <!-- ===================== Game Screen ===================== -->
+        <div id="gameScreen" class="hidden pb-10">
+
             <!-- Header -->
-            <div class="flex justify-between items-center mb-4 py-2">
-                <h1 class="text-xl font-semibold text-white/90">🃏 Tarok</h1>
-                <div class="bg-tarok-primary text-white px-3 py-1.5 rounded-full text-[0.85rem] font-semibold">Runda <span id="roundNumber">1</span></div>
+            <div class="flex justify-between items-center mb-4 pt-2">
+                <h1 class="font-pixel text-clay text-xl">🃏 TAROK</h1>
+                <div class="round-chip font-mono">Runda <span id="roundNumber">1</span></div>
             </div>
 
-            <!-- Winner Announcement -->
-            <div id="winnerAnnouncement" class="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white p-6 rounded-2xl text-center mb-4" style="display: none;">
-                <h2 class="text-2xl mb-2">🎉 Konec igre!</h2>
-                <p id="winnerText"></p>
+            <!-- Shared snapshot banner (read-only mode) -->
+            <div id="snapshotBanner" class="snapshot-banner hidden mb-4">
+                <div>
+                    <div class="font-pixel text-clay text-sm mb-1">DELJENA IGRA</div>
+                    <div class="font-mono text-xs text-ink-soft" id="snapshotPlayers"></div>
+                </div>
+                <button onclick="startOwnGame()" class="t-btn t-btn--ghost whitespace-nowrap">Začni svojo igro</button>
             </div>
 
-            <!-- Scores Table with Radelci in Header -->
-            <div class="scores-table-container overflow-x-auto mb-4 rounded-xl bg-white/[0.03]">
-                <table class="scores-table" id="scoresTable">
-                    <thead>
-                        <tr id="tableHeader">
-                            <th>#</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Round Input Section -->
-            <div id="roundInputSection" class="bg-white/[0.03] rounded-2xl p-4 mb-4">
-                <div class="text-center mb-4 font-semibold text-base text-white/90">Runda <span id="currentRound">1</span></div>
-
-                <!-- Game Type Selection -->
+            <!-- Round Input -->
+            <div id="roundInputSection" class="panel p-4 mb-4">
                 <div class="mb-3">
-                    <label for="gameType" class="block mb-1.5 text-[0.8rem] text-white/70 uppercase tracking-[0.05em]">Tip igre</label>
+                    <label for="gameType" class="block mb-1.5 font-mono text-[0.7rem] text-ink-soft uppercase tracking-[0.1em]">Tip igre</label>
                     <select id="gameType" class="form-select" onchange="onGameTypeChange()">
                         <option value="tri" selected>Tri</option>
                         <option value="dva">Dva</option>
@@ -103,39 +116,36 @@
                     </select>
                 </div>
 
-                <!-- Player Selection -->
                 <div id="playerSelectGroup" class="mb-3">
-                    <label for="playingPlayer" class="block mb-1.5 text-[0.8rem] text-white/70 uppercase tracking-[0.05em]">Igralec</label>
+                    <label for="playingPlayer" class="block mb-1.5 font-mono text-[0.7rem] text-ink-soft uppercase tracking-[0.1em]">Igralec</label>
                     <select id="playingPlayer" class="form-select"></select>
                 </div>
 
-                <!-- Outcome Selection -->
                 <div class="mb-3">
-                    <label class="block mb-1.5 text-[0.8rem] text-white/70 uppercase tracking-[0.05em]">Izhod</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <button type="button" class="outcome-btn active px-3 py-3 rounded-[10px] border border-white/15 bg-white/5 text-white/90 text-[0.9rem] font-medium cursor-pointer hover:bg-white/10 transition-all duration-300" data-outcome="win"
-                            onclick="selectOutcome('win')">✓ Dobljen</button>
-                        <button type="button" class="outcome-btn px-3 py-3 rounded-[10px] border border-white/15 bg-white/5 text-white/90 text-[0.9rem] font-medium cursor-pointer hover:bg-white/10 transition-all duration-300" data-outcome="loss" onclick="selectOutcome('loss')">✗
-                            Izgubljen</button>
+                        <button type="button" class="outcome-btn active" data-outcome="win" onclick="selectOutcome('win')">✓ Dobljen</button>
+                        <button type="button" class="outcome-btn" data-outcome="loss" onclick="selectOutcome('loss')">✗ Izgubljen</button>
                     </div>
                 </div>
 
-                <div class="h-px bg-white/10 my-4"></div>
+                <div class="rule my-4"></div>
 
-                <!-- Score Inputs -->
-                <div id="scoresGrid" class="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2 mt-2 max-[480px]:grid-cols-2">
-                    <!-- Score inputs generated by JS -->
+                <div id="scoresGrid" class="grid grid-cols-[repeat(auto-fit,minmax(80px,1fr))] gap-2 mt-2 max-[480px]:grid-cols-2"></div>
+
+                <!-- Submit -->
+                <div class="mt-5">
+                    <button type="button" id="submitRoundBtn" onclick="submitRound()" class="t-btn t-btn--primary w-full">Dodaj rundo</button>
                 </div>
 
                 <!-- Collapsible Scoring Help -->
-                <div class="scoring-help mt-8 border border-white/15 rounded-[10px] overflow-hidden">
-                    <button type="button" onclick="toggleScoringHelp()" class="w-full px-4 py-3 bg-white/5 hover:bg-white/10 border-none text-white/90 text-[0.9rem] font-medium cursor-pointer flex justify-between items-center transition-all duration-300">
+                <div class="scoring-help mt-6">
+                    <button type="button" onclick="toggleScoringHelp()" class="scoring-help-toggle">
                         <span>Pomoč pri točkovanju</span>
-                        <span class="scoring-help-arrow text-[0.8rem]" id="scoringHelpArrow">▼</span>
+                        <span class="scoring-help-arrow" id="scoringHelpArrow">▼</span>
                     </button>
-                    <div class="scoring-help-content bg-white/[0.03]" id="scoringHelpContent">
-                        <div class="scoring-section px-4 py-3 border-b border-white/[0.08] last:border-b-0">
-                            <h4 class="text-[0.8rem] text-tarok-secondary mb-2 uppercase tracking-[0.05em]">Osnovne igre</h4>
+                    <div class="scoring-help-content" id="scoringHelpContent">
+                        <div class="scoring-section">
+                            <h4 class="font-mono text-[0.7rem] text-clay mb-2 uppercase tracking-[0.1em]">Osnovne igre</h4>
                             <table class="scoring-table">
                                 <tr><td>tri</td><td>10 + razlika</td></tr>
                                 <tr><td>dve</td><td>20 + razlika</td></tr>
@@ -150,8 +160,8 @@
                                 <tr><td>valat ⭐</td><td>500</td></tr>
                             </table>
                         </div>
-                        <div class="scoring-section px-4 py-3 border-b border-white/[0.08] last:border-b-0">
-                            <h4 class="text-[0.8rem] text-tarok-secondary mb-2 uppercase tracking-[0.05em]">Ostale realizacije in napovedi</h4>
+                        <div class="scoring-section">
+                            <h4 class="font-mono text-[0.7rem] text-clay mb-2 uppercase tracking-[0.1em]">Ostale realizacije in napovedi</h4>
                             <table class="scoring-table">
                                 <tr><td>kralji</td><td>10 (napovedani 20)</td></tr>
                                 <tr><td>trula</td><td>10 (napovedana 20)</td></tr>
@@ -163,10 +173,24 @@
                 </div>
             </div>
 
+            <!-- Scores Table (radelci live in the header) -->
+            <div class="panel overflow-x-auto mb-4">
+                <table class="scores-table" id="scoresTable">
+                    <thead>
+                        <tr id="tableHeader">
+                            <th>#</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
             <!-- Game Controls -->
-            <div class="grid grid-cols-[2fr_1fr] gap-3 max-[480px]:grid-cols-1">
-                <button onclick="addRound()" class="px-4 py-4 rounded-xl font-semibold text-base text-gray-800 bg-tarok-secondary border-none cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(255,205,28,0.3)] active:translate-y-0 transition-all duration-300">Dodaj rundo</button>
-                <button onclick="newGame()" class="px-4 py-4 rounded-xl font-semibold text-base text-white/90 bg-white/10 hover:bg-white/15 border border-white/20 cursor-pointer transition-all duration-300">Nova</button>
+            <div id="gameControls" class="grid grid-cols-4 gap-2 mb-4 max-[480px]:grid-cols-2">
+                <button id="editBtn" onclick="toggleGridEdit()" class="t-btn t-btn--ghost">✎ Uredi</button>
+                <button id="undoBtn" onclick="undoLastRound()" class="t-btn t-btn--ghost">↶ Razveljavi</button>
+                <button id="shareBtn" onclick="shareGame()" class="t-btn t-btn--gold"><i class="fa-solid fa-share-nodes"></i> Deli</button>
+                <button id="newGameBtn" onclick="newGame()" class="t-btn t-btn--ghost">Nova igra</button>
             </div>
         </div>
     </div>
