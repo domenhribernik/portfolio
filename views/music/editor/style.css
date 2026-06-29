@@ -1,0 +1,322 @@
+/* ===========================================================================
+   Chord & Lyrics editor — page-specific pieces on top of ../style.css:
+   the marker overlay on the timeline, the chord event list, the word grid
+   for anchoring, and the import dialog.
+   =========================================================================== */
+
+/* ---- Timeline + chord markers ------------------------------------------ */
+/* Same cassette language as the player: two reels flank the tape and spin
+   while it plays. */
+.editor-deck-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.editor-deck-row.is-playing .reel {
+    animation-play-state: running;
+}
+
+.editor-deck {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 3px solid var(--ink, #1c1a17);
+    background:
+        repeating-linear-gradient(90deg,
+            transparent 0 23px,
+            rgba(28, 26, 23, 0.05) 23px 25px),
+        var(--paper, #f6f2ea);
+    padding: 26px 0 0;
+    /* top padding leaves room for the marker flags above the wave */
+}
+
+@media (max-width: 600px) {
+    .editor-deck-row .reel {
+        display: none;
+    }
+}
+
+.editor-markers {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 2px solid var(--clay, #d4451f);
+    pointer-events: none;
+}
+
+.marker__flag {
+    position: absolute;
+    top: 0;
+    left: -2px;
+    transform: translateY(0);
+    padding: 1px 5px;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    color: var(--ink, #1c1a17);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.marker.is-selected {
+    border-left-color: var(--ink, #1c1a17);
+}
+
+.marker.is-selected .marker__flag {
+    background: var(--amber);
+}
+
+/* ---- Quick chord chips --------------------------------------------------- */
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.9rem;
+}
+
+.chip {
+    padding: 0.3rem 0.7rem;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--paper-2, #efe9dd);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.chip:hover {
+    background: var(--amber);
+    transform: translate(-1px, -1px);
+}
+
+/* ---- Next-chord suggestions ----------------------------------------------- */
+.suggest-block {
+    margin-top: 1rem;
+    padding: 0.7rem 0.8rem;
+    border: 2px dashed var(--pine, #2f5b53);
+    background: rgba(47, 91, 83, 0.06);
+}
+
+.suggest-block.hidden {
+    display: none;
+}
+
+.suggest-label {
+    margin: 0 0 0.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pine, #2f5b53);
+}
+
+.suggest-key {
+    text-transform: none;
+    letter-spacing: 0.04em;
+    color: var(--stone, #6b6256);
+}
+
+.suggest-block .chip-row {
+    margin-top: 0;
+}
+
+.chip--suggest {
+    background: var(--card, #fffdf8);
+    border-color: var(--pine, #2f5b53);
+    color: var(--ink, #1c1a17);
+}
+
+.chip--suggest:hover {
+    background: var(--pine, #2f5b53);
+    color: var(--paper, #f6f2ea);
+}
+
+.chip__degree {
+    font-weight: 400;
+    font-size: 0.66rem;
+    opacity: 0.7;
+}
+
+/* ---- Chord event list ---------------------------------------------------- */
+.chord-list {
+    margin-top: 1.1rem;
+    max-height: 360px;
+    overflow-y: auto;
+    border-top: 2px dashed var(--hairline, rgba(28, 26, 23, 0.12));
+    padding-top: 0.8rem;
+}
+
+.chord-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.35rem 0.5rem;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.chord-row:hover {
+    background: var(--paper-2, #efe9dd);
+}
+
+.chord-row.is-selected {
+    border-color: var(--ink, #1c1a17);
+    background: var(--paper-2, #efe9dd);
+    box-shadow: 2px 2px 0 var(--ink, #1c1a17);
+}
+
+.chord-row.is-now .chord-row__name {
+    background: var(--amber);
+    outline: 2px solid var(--ink, #1c1a17);
+}
+
+.chord-row__time {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--stone, #6b6256);
+    min-width: 4.6em;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+}
+
+.chord-row__time:hover {
+    color: var(--clay, #d4451f);
+    text-decoration: underline;
+}
+
+.chord-row__name {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 0 4px;
+}
+
+.chord-row__anchor {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--pine, #2f5b53);
+}
+
+.chord-row__tools {
+    margin-left: auto;
+    display: flex;
+    gap: 0.3rem;
+}
+
+.chord-row__tools .btn-mini {
+    padding: 0.15rem 0.45rem;
+    font-size: 0.68rem;
+}
+
+.btn-mini--danger:hover {
+    background: var(--clay, #d4451f);
+    color: var(--paper, #f6f2ea);
+}
+
+/* ---- Word grid (anchor mode) --------------------------------------------- */
+.word-grid {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 0.4rem 0.2rem;
+}
+
+.word-grid.hidden {
+    display: none;
+}
+
+.wg-line {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.45rem;
+    row-gap: 0.3rem;
+    margin-bottom: 0.45rem;
+}
+
+.wg-break {
+    height: 0.8rem;
+}
+
+.wg-word {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border: 2px solid transparent;
+    background: none;
+    padding: 0 3px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink, #1c1a17);
+}
+
+.wg-word:hover {
+    border-color: var(--ink, #1c1a17);
+    background: var(--paper-2, #efe9dd);
+}
+
+.wg-word__chord {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.2;
+    min-height: 1.1em;
+    color: var(--clay, #d4451f);
+    white-space: pre;
+}
+
+.wg-word.is-anchored {
+    border-color: var(--clay, #d4451f);
+}
+
+.wg-word.is-selected-anchor {
+    border-color: var(--ink, #1c1a17);
+    background: var(--amber);
+}
+
+/* ---- Import dialog -------------------------------------------------------- */
+.import-dialog {
+    width: min(620px, calc(100vw - 2rem));
+    border: 3px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    box-shadow: var(--shadow-ink);
+    padding: 1.4rem;
+}
+
+.import-dialog::backdrop {
+    background: rgba(28, 26, 23, 0.55);
+}
+
+.import-dialog__title {
+    margin: 0 0 0.6rem;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.import-dialog .field--area {
+    margin-top: 0.8rem;
+    font-size: 0.78rem;
+}
+
+.import-dialog code {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    background: var(--paper-2, #efe9dd);
+    padding: 0 4px;
+}

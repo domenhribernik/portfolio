@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="../../../components/google-analytics.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chord &amp; Lyrics Editor</title>
+    <link rel="icon" type="image/x-icon" href="../../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        cobalt: '#1f35e0',
+                        marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        serif: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="../../../base-style.css">
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="editorial bg-paper text-ink font-sans antialiased">
+    <main-navbar site="../../../"></main-navbar>
+
+    <main class="music-app">
+        <header class="music-header">
+            <p class="kicker">Chord Sync // Splice the Tape</p>
+            <h1 class="music-title">Chord &amp; Lyrics<br>Editor</h1>
+            <p class="music-subtitle">Paste lyrics, tap chords onto the timeline while the track plays, anchor them
+                to words, then save or export.</p>
+            <nav class="screen-nav" aria-label="Music screens">
+                <a href="../" class="screen-nav__link"><i class="fas fa-play"></i> Player</a>
+                <a href="./" class="screen-nav__link is-active"><i class="fas fa-pen-nib"></i> Editor</a>
+                <a href="../analysis/" class="screen-nav__link"><i class="fas fa-wave-square"></i> Analysis</a>
+            </nav>
+        </header>
+
+        <!-- "on the bench" ticker; text is driven by script.js -->
+        <div class="marquee" id="benchMarquee" data-playing="false">
+            <span class="marquee__tag"><i class="fas fa-circle"></i> On the Bench</span>
+            <div class="marquee__viewport">
+                <div class="marquee__rail">
+                    <span class="marquee__text" id="bmText1">Pick a track to start splicing the tape</span>
+                    <span class="marquee__text" id="bmText2" aria-hidden="true">Pick a track to start splicing the
+                        tape</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Track picker + save / import / export -->
+        <section class="panel">
+            <div class="panel__head">
+                <h2 class="panel__title"><span class="panel__step">1</span> Pick a track</h2>
+            </div>
+            <div class="panel__body">
+                <div class="flex flex-wrap items-center gap-3">
+                    <select id="trackSelect" class="field flex-1 min-w-[240px]">
+                        <option value="">Choose a backing track...</option>
+                    </select>
+                    <button id="importBtn" class="btn-flat" disabled><i class="fas fa-file-import"></i> Import</button>
+                    <button id="exportBtn" class="btn-flat" disabled><i class="fas fa-file-export"></i> Export</button>
+                    <button id="saveBtn" class="btn-flat btn-flat--accent" disabled><i class="fas fa-floppy-disk"></i>
+                        Save</button>
+                </div>
+                <p id="statusLine" class="status-line">Pick a track to start editing.</p>
+            </div>
+        </section>
+
+        <!-- Timeline -->
+        <section class="panel hidden" id="deckPanel">
+            <div class="panel__head">
+                <h2 class="panel__title"><span class="panel__step">2</span> Timeline</h2>
+                <span class="panel__hint">click the wave to move the playhead, click a flag to grab its chord</span>
+            </div>
+            <div class="panel__body">
+                <div class="editor-deck-row" id="deckRow">
+                    <span class="reel reel--left"></span>
+                    <div class="editor-deck">
+                        <div class="editor-markers" id="markers"></div>
+                        <div id="editorWaveform"></div>
+                    </div>
+                    <span class="reel reel--right"></span>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 mt-4">
+                    <button id="playBtn" class="btn-play" aria-label="Play / pause"><i class="fas fa-play"></i></button>
+                    <span class="time-readout"><span id="curTime">0:00.0</span> / <span id="totTime">0:00.0</span></span>
+                    <div class="nudge-group" role="group" aria-label="Nudge playhead">
+                        <button class="btn-mini" data-skip="-1">-1s</button>
+                        <button class="btn-mini" data-skip="-0.1">-0.1</button>
+                        <button class="btn-mini" data-skip="0.1">+0.1</button>
+                        <button class="btn-mini" data-skip="1">+1s</button>
+                    </div>
+                    <span class="panel__hint hidden sm:inline">space = play / pause, enter = tap chord</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chords + lyrics workbench -->
+        <div class="grid gap-8 lg:grid-cols-2 hidden" id="workPanel">
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title"><span class="panel__step">3</span> Chords</h2>
+                    <span class="panel__hint">tap while the tape rolls</span>
+                </div>
+                <div class="panel__body">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <input id="chordInput" class="field w-28" type="text" maxlength="16" placeholder="Am"
+                            aria-label="Chord name" />
+                        <button id="tapBtn" class="btn-flat btn-flat--accent"><i class="fas fa-hand-point-down"></i>
+                            Tap at playhead</button>
+                    </div>
+                    <div class="chip-row" id="quickChords"></div>
+                    <div class="suggest-block hidden" id="suggestBlock">
+                        <p class="suggest-label">next chord ideas <span class="suggest-key" id="keyGuess"></span></p>
+                        <div class="chip-row" id="suggestRow"></div>
+                    </div>
+                    <div class="chord-list" id="chordList">
+                        <p class="chordsheet__message">No chords yet. Play the track and tap chords as you hear them,
+                            or import a JSON file.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel__head">
+                    <h2 class="panel__title"><span class="panel__step">4</span> Lyrics</h2>
+                    <div class="tab-row" role="tablist">
+                        <button id="tabEdit" class="btn-mini is-active" role="tab">Edit</button>
+                        <button id="tabAnchor" class="btn-mini" role="tab">Anchor</button>
+                    </div>
+                </div>
+                <div class="panel__body">
+                    <textarea id="lyricsInput" class="field field--area" rows="14"
+                        placeholder="Paste the lyrics here, one line per sung line..."></textarea>
+                    <div class="word-grid hidden" id="wordGrid"></div>
+                    <p class="panel__hint mt-3" id="anchorHint">Switch to Anchor mode, select a chord on the left, then
+                        click the word it lands on.</p>
+                </div>
+            </section>
+        </div>
+
+        <footer class="music-footer">
+            <a class="back-link" href="../"><i class="fas fa-arrow-left"></i> Back to the Player</a>
+        </footer>
+    </main>
+
+    <dialog id="importDialog" class="import-dialog">
+        <h3 class="import-dialog__title">Import chords / lyrics</h3>
+        <p class="chordsheet__message">Paste a JSON array like <code>[{ "time": 12.4, "chord": "Am" }]</code>, or a
+            full export with <code>chords</code> and <code>lyrics</code> keys.</p>
+        <textarea id="importText" class="field field--area" rows="8" spellcheck="false"></textarea>
+        <div class="flex flex-wrap items-center gap-3 mt-3">
+            <label class="btn-flat" for="importFile"><i class="fas fa-folder-open"></i> From file</label>
+            <input id="importFile" type="file" accept=".json,application/json" class="hidden" />
+            <span class="flex-1"></span>
+            <button id="importCancel" class="btn-flat">Cancel</button>
+            <button id="importApply" class="btn-flat btn-flat--accent">Import</button>
+        </div>
+        <p id="importError" class="status-line status-line--error hidden"></p>
+    </dialog>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.6.3/wavesurfer.min.js"></script>
+    <script type="module" src="../../../components/main-navbar.js"></script>
+    <script src="../chord-card.js"></script>
+    <script src="script.js"></script>
+    <script src="../../../components/gtranslate.js"></script>
+</body>
+
+</html>

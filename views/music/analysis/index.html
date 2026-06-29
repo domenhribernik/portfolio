@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="../../../components/google-analytics.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Analysis</title>
+    <link rel="icon" type="image/x-icon" href="../../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        cobalt: '#1f35e0',
+                        marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        serif: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="../../../base-style.css">
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="editorial bg-paper text-ink font-sans antialiased">
+    <main-navbar site="../../../"></main-navbar>
+
+    <main class="music-app">
+        <header class="music-header">
+            <p class="kicker">Tape Lab // Feed the Machine</p>
+            <h1 class="music-title">Audio<br>Analysis</h1>
+            <p class="music-subtitle">Upload an MP3 and the lab figures out the tempo, key, chords and which scales
+                to solo with.</p>
+            <nav class="screen-nav" aria-label="Music screens">
+                <a href="../" class="screen-nav__link"><i class="fas fa-play"></i> Player</a>
+                <a href="../editor/" class="screen-nav__link"><i class="fas fa-pen-nib"></i> Editor</a>
+                <a href="./" class="screen-nav__link is-active"><i class="fas fa-wave-square"></i> Analysis</a>
+            </nav>
+        </header>
+
+        <!-- lab status ticker; text is driven by script.js -->
+        <div class="marquee" id="labMarquee" data-playing="false">
+            <span class="marquee__tag"><i class="fas fa-circle"></i> Lab Status</span>
+            <div class="marquee__viewport">
+                <div class="marquee__rail">
+                    <span class="marquee__text" id="lmText1">Drop an MP3 on the bench to get a full readout</span>
+                    <span class="marquee__text" id="lmText2" aria-hidden="true">Drop an MP3 on the bench to get a full
+                        readout</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload -->
+        <section class="panel">
+            <div class="panel__head">
+                <h2 class="panel__title"><span class="panel__step">1</span> Feed it a song</h2>
+                <span class="panel__hint">MP3 up to 30 MB or a mic recording; first 3 minutes are analyzed</span>
+            </div>
+            <div class="panel__body">
+                <div class="grid gap-4 md:grid-cols-[1fr_auto_1fr] items-stretch">
+                    <div class="dropzone" id="dropzone" tabindex="0" role="button"
+                        aria-label="Choose or drop an MP3 file">
+                        <i class="fas fa-compact-disc dropzone__icon"></i>
+                        <p class="dropzone__text">Drop an MP3 here or <span class="dropzone__browse">browse</span>
+                        </p>
+                    </div>
+                    <div class="upload-divider"><span>or</span></div>
+                    <div class="recorder" id="recorder">
+                        <i class="fas fa-microphone recorder__icon"></i>
+                        <p class="dropzone__text">Hold the mic up to the song, shazam style</p>
+                        <button id="recordBtn" class="btn-flat btn-flat--accent"><i class="fas fa-circle"></i>
+                            Record</button>
+                        <p class="recorder__timer hidden" id="recordTimer">0:00</p>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".mp3,audio/mpeg" class="hidden" />
+                <p class="dropzone__file dropzone__file--row hidden" id="fileLabel"></p>
+                <div class="flex flex-wrap items-center gap-4 mt-4">
+                    <button id="analyzeBtn" class="btn-flat btn-flat--accent" disabled>
+                        <i class="fas fa-flask"></i> Analyze
+                    </button>
+                    <label class="save-check">
+                        <input type="checkbox" id="saveCheck" checked />
+                        keep the result in the library
+                    </label>
+                </div>
+                <p id="uploadStatus" class="status-line hidden"></p>
+            </div>
+        </section>
+
+        <!-- Crunching state -->
+        <section class="panel hidden" id="loadingPanel">
+            <div class="panel__body analyzing">
+                <span class="reel reel--left"></span>
+                <div class="analyzing__middle">
+                    <p class="analyzing__text">Listening to the tape<span class="analyzing__dots"></span></p>
+                    <p class="chordsheet__message">tempo, key, chords, scales... a few seconds</p>
+                </div>
+                <span class="reel reel--right"></span>
+            </div>
+        </section>
+
+        <!-- Results -->
+        <section class="hidden" id="results">
+            <div class="results-title-row">
+                <h2 class="tape-label" id="resultsTitle">Results</h2>
+                <span class="panel__hint" id="savedNote"></span>
+            </div>
+
+            <div class="warnings hidden" id="warningsBox"></div>
+
+            <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" id="statGrid"></div>
+
+            <section class="panel mt-8 hidden" id="progressionPanel">
+                <div class="panel__head">
+                    <h2 class="panel__title"><span class="panel__step"><i class="fas fa-guitar"></i></span> Chord
+                        progression</h2>
+                    <span class="panel__hint">roman numerals are degrees in the detected key</span>
+                </div>
+                <div class="panel__body">
+                    <div class="prog-row" id="progRow"></div>
+                    <details class="timeline-details" id="timelineDetails">
+                        <summary>Full detected chord timeline</summary>
+                        <div class="timeline-list" id="timelineList"></div>
+                    </details>
+                </div>
+            </section>
+
+            <div class="grid gap-8 lg:grid-cols-2 mt-8">
+                <section class="panel hidden" id="scalesPanel">
+                    <div class="panel__head">
+                        <h2 class="panel__title"><span class="panel__step"><i class="fas fa-stairs"></i></span>
+                            Scales to use</h2>
+                    </div>
+                    <div class="panel__body" id="scalesBody"></div>
+                </section>
+
+                <section class="panel hidden" id="improvPanel">
+                    <div class="panel__head">
+                        <h2 class="panel__title"><span class="panel__step"><i class="fas fa-bolt"></i></span>
+                            Improvisation notes</h2>
+                    </div>
+                    <div class="panel__body" id="improvBody"></div>
+                </section>
+            </div>
+        </section>
+
+        <!-- Library of past runs -->
+        <section class="panel hidden" id="recentPanel">
+            <div class="panel__head">
+                <h2 class="panel__title"><span class="panel__step"><i class="fas fa-box-archive"></i></span> Library
+                </h2>
+                <span class="panel__hint">last 10 saved analyses</span>
+            </div>
+            <div class="panel__body">
+                <div id="recentList"></div>
+            </div>
+        </section>
+
+        <footer class="music-footer">
+            <a class="back-link" href="../"><i class="fas fa-arrow-left"></i> Back to the Player</a>
+        </footer>
+    </main>
+
+    <script type="module" src="../../../components/main-navbar.js"></script>
+    <script src="../chord-card.js"></script>
+    <script src="script.js"></script>
+    <script src="../../../components/gtranslate.js"></script>
+</body>
+
+</html>

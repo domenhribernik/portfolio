@@ -1,0 +1,501 @@
+/* ===========================================================================
+   Audio analysis screen — page-specific pieces on top of ../style.css:
+   the dropzone, the spinning-reel loading state, stat cards, progression
+   chips and the library list.
+   =========================================================================== */
+
+/* ---- Dropzone ------------------------------------------------------------ */
+.dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 2.2rem 1.5rem;
+    border: 3px dashed var(--ink, #1c1a17);
+    background: var(--paper, #f6f2ea);
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dropzone:hover,
+.dropzone:focus-visible,
+.dropzone.is-dragover {
+    background: var(--paper-2, #efe9dd);
+    border-color: var(--clay, #d4451f);
+    outline: none;
+}
+
+.dropzone__icon {
+    font-size: 2.2rem;
+    color: var(--stone, #6b6256);
+    transition: color 0.15s ease;
+}
+
+.dropzone:hover .dropzone__icon,
+.dropzone.is-dragover .dropzone__icon {
+    color: var(--clay, #d4451f);
+    animation: disc-spin 1.6s linear infinite;
+}
+
+@keyframes disc-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .dropzone__icon,
+    .analyzing__dots::after {
+        animation: none !important;
+    }
+}
+
+.dropzone__text {
+    margin: 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--stone, #6b6256);
+}
+
+.dropzone__browse {
+    color: var(--clay, #d4451f);
+    text-decoration: underline;
+}
+
+.dropzone__file {
+    margin: 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink, #1c1a17);
+    padding: 0.25rem 0.7rem;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--amber);
+}
+
+.dropzone__file--row {
+    margin-top: 1rem;
+    display: inline-block;
+}
+
+/* ---- Mic recorder ---------------------------------------------------------- */
+.upload-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-divider span {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--stone, #6b6256);
+    border: 2px solid var(--ink, #1c1a17);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--card, #fffdf8);
+}
+
+.recorder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 1.4rem 1.5rem;
+    border: 3px solid var(--ink, #1c1a17);
+    background: var(--paper, #f6f2ea);
+    text-align: center;
+}
+
+.recorder__icon {
+    font-size: 2.2rem;
+    color: var(--stone, #6b6256);
+}
+
+.recorder.is-recording {
+    border-color: var(--clay, #d4451f);
+    background: rgba(212, 69, 31, 0.06);
+}
+
+.recorder.is-recording .recorder__icon {
+    color: var(--clay, #d4451f);
+    animation: rec-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes rec-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.55;
+        transform: scale(1.12);
+    }
+}
+
+.recorder__timer {
+    margin: 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--clay, #d4451f);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .recorder.is-recording .recorder__icon {
+        animation: none !important;
+    }
+}
+
+.save-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--stone, #6b6256);
+    cursor: pointer;
+}
+
+.save-check input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--clay, #d4451f);
+}
+
+/* ---- Loading state (reuses the cassette reels from ../style.css) ---------- */
+.analyzing {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.analyzing .reel {
+    animation-play-state: running;
+}
+
+.analyzing__middle {
+    flex: 1;
+    text-align: center;
+}
+
+.analyzing__text {
+    margin: 0 0 0.3rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+/* the three dots type themselves out while the lab listens */
+.analyzing__dots::after {
+    content: "";
+    animation: lab-dots 1.2s steps(4) infinite;
+}
+
+@keyframes lab-dots {
+    0% {
+        content: "";
+    }
+
+    25% {
+        content: ".";
+    }
+
+    50% {
+        content: "..";
+    }
+
+    75% {
+        content: "...";
+    }
+}
+
+/* ---- Results ------------------------------------------------------------- */
+.results-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.6rem;
+}
+
+/* the uploaded file's name, set like a handwritten cassette spine label */
+.tape-label {
+    display: inline-block;
+    margin: 0;
+    max-width: 100%;
+    padding: 0.45rem 1.1rem;
+    border: 3px solid var(--ink, #1c1a17);
+    background: var(--ink, #1c1a17);
+    color: var(--paper, #f6f2ea);
+    box-shadow: var(--shadow-ink-sm);
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    font-weight: 800;
+    overflow-wrap: anywhere;
+    transform: rotate(-0.6deg);
+}
+
+.warnings {
+    border: 3px solid var(--clay, #d4451f);
+    background: var(--card, #fffdf8);
+    box-shadow: 4px 4px 0 var(--clay, #d4451f);
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1.6rem;
+}
+
+.warnings p {
+    margin: 0 0 0.3rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--clay-dk, #b8371a);
+}
+
+.warnings p:last-child {
+    margin-bottom: 0;
+}
+
+.stat-card {
+    position: relative;
+    border: 3px solid var(--ink, #1c1a17);
+    border-left-width: 10px;
+    background: var(--card, #fffdf8);
+    box-shadow: var(--shadow-ink-sm);
+    padding: 0.9rem 1rem;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.stat-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--ink, #1c1a17);
+}
+
+/* rotating accent spine, like a shelf of mixtapes */
+.stat-card:nth-child(4n+1) {
+    border-left-color: var(--clay, #d4451f);
+}
+
+.stat-card:nth-child(4n+2) {
+    border-left-color: var(--amber);
+}
+
+.stat-card:nth-child(4n+3) {
+    border-left-color: var(--pine, #2f5b53);
+}
+
+.stat-card:nth-child(4n+4) {
+    border-left-color: #1f35e0;
+}
+
+.stat-card--missing {
+    border-style: dashed;
+    border-left-color: var(--stone, #6b6256) !important;
+    box-shadow: none;
+}
+
+.stat-card--missing:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.stat-card__label {
+    margin: 0 0 0.4rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--stone, #6b6256);
+}
+
+.stat-card__value {
+    margin: 0;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 800;
+    line-height: 1.05;
+    color: var(--ink, #1c1a17);
+}
+
+.stat-card__note {
+    margin: 0.35rem 0 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--stone, #6b6256);
+}
+
+/* ---- Progression --------------------------------------------------------- */
+.prog-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.prog-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    min-width: 64px;
+    padding: 0.55rem 0.8rem;
+    border: 3px solid var(--ink, #1c1a17);
+    background: var(--amber);
+    box-shadow: var(--shadow-ink-sm);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.prog-chip:hover {
+    transform: translate(-2px, -2px) rotate(-1deg);
+    box-shadow: 5px 5px 0 var(--ink, #1c1a17);
+}
+
+.prog-chip--borrowed {
+    background: var(--card, #fffdf8);
+    border-style: dashed;
+}
+
+.prog-chip__name {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.prog-chip__degree {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--stone, #6b6256);
+}
+
+.prog-arrow {
+    font-family: 'Space Mono', monospace;
+    color: var(--stone, #6b6256);
+}
+
+.timeline-details {
+    margin-top: 1.2rem;
+}
+
+.timeline-details summary {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--stone, #6b6256);
+    cursor: pointer;
+}
+
+.timeline-list {
+    margin-top: 0.8rem;
+    max-height: 240px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.timeline-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--paper-2, #efe9dd);
+}
+
+.timeline-item--gap {
+    border-style: dashed;
+    color: var(--stone, #6b6256);
+}
+
+/* ---- Scales + improv ------------------------------------------------------ */
+.scale-primary {
+    margin: 0 0 0.8rem;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.scale-fit {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--pine, #2f5b53);
+}
+
+.scale-list,
+.improv-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.scale-list li,
+.improv-list li {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.92rem;
+    margin-bottom: 0.55rem;
+}
+
+.scale-list li::before {
+    content: "//";
+    font-family: 'Space Mono', monospace;
+    color: var(--clay, #d4451f);
+    font-size: 0.75rem;
+}
+
+.improv-list li::before {
+    content: "→";
+    font-family: 'Space Mono', monospace;
+    color: var(--pine, #2f5b53);
+}
+
+/* ---- Library --------------------------------------------------------------- */
+.recent-row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-bottom: 2px dashed var(--hairline, rgba(28, 26, 23, 0.12));
+    padding: 0.6rem 0.2rem;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.recent-row:hover {
+    background: var(--paper-2, #efe9dd);
+}
+
+.recent-row__name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.recent-row__meta {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--stone, #6b6256);
+    white-space: nowrap;
+}

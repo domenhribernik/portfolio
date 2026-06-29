@@ -18,7 +18,7 @@ Current project directories: `views/about`, `views/blog`, `views/botaniq`, `view
 
 Note: `views/presence`, `views/pricing`, `views/stocks`, `views/valentine`, and `views/vrata` are **unlisted private tools**. They are intentionally not registered in `components/project-data.js`, not linked from `index.html`, and not in the main navbar. Do not add them to any of those. (`views/vrata` is also a standalone PWA with its own `manifest.json` and service worker, backed by `app/proxys/vrata.php`.)
 
-A view directory may include its own `CLAUDE.md` for project-specific notes that don't belong in this root file (grid contracts, tricky invariants, file-map for a complex subtree, etc.). These are auto-loaded when working inside that directory. Existing per-view CLAUDE.md files: [views/maze/CLAUDE.md](views/maze/CLAUDE.md). When a view grows complex enough that re-deriving its conventions from the code wastes context, add a `CLAUDE.md` to that view rather than expanding this root file.
+A view directory may include its own `CLAUDE.md` for project-specific notes that don't belong in this root file (grid contracts, tricky invariants, file-map for a complex subtree, etc.). These are auto-loaded when working inside that directory. Existing per-view CLAUDE.md files: [views/maze/CLAUDE.md](views/maze/CLAUDE.md), [views/music/CLAUDE.md](views/music/CLAUDE.md). When a view grows complex enough that re-deriving its conventions from the code wastes context, add a `CLAUDE.md` to that view rather than expanding this root file.
 
 ### Frontend: Styling
 
@@ -58,14 +58,16 @@ The [app/](app/) directory contains the backend, structured as follows:
 - [app/models/](app/models/): SQL / data storage definitions
 - [app/controllers/](app/controllers/): CRUD operations for the database
 - [app/services/](app/services/): Higher-level functions that compose controllers; called by the frontend when logic is complex
-- [app/proxys/](app/proxys/): External API proxies (hide API keys from the client) and small server-side endpoints. Current: `apod-proxy.php` (NASA APOD), `otd-proxy.php` (On This Day), `stats-proxy.php` (codebase line/file counts, cached daily), `vrata.php` (backend for the private `vrata` tool).
+- [app/proxys/](app/proxys/): External API proxies (hide API keys from the client) and small server-side endpoints. Current: `apod-proxy.php` (NASA APOD), `otd-proxy.php` (On This Day), `stats-proxy.php` (codebase line/file counts, cached daily), `tabs-proxy.php` (Songsterr tab search for the music view; Songsterr has no CORS), `vrata.php` (backend for the private `vrata` tool).
 - [app/cache/](app/cache/): Cached responses from proxies and the Python scripts, to avoid redundant external fetches
 - [app/data/](app/data/): Static JSON data files (e.g., `rocks.json`)
 - [app/admin/](app/admin/): Internal HTML admin tools (image manager, upload test); not linked from the public site
-- [app/scripts/](app/scripts/): Standalone Python scripts, not invoked from PHP. `check_stocks.py` fetches quotes, logs to `app/cache/`, and sends a Telegram alert on moves >=2%; helpers are `yahoo.py` (quote fetch), `telegram.py` (Telegram client), and `notify.py`. Intended to run periodically (e.g. via cron).
+- [app/scripts/](app/scripts/): Standalone Python scripts. `check_stocks.py` fetches quotes, logs to `app/cache/`, and sends a Telegram alert on moves >=2%; helpers are `yahoo.py` (quote fetch), `telegram.py` (Telegram client), and `notify.py`; these run periodically (e.g. via cron), not from PHP. Exception: `analyze_audio.py` (MP3 musical analysis for the music view, numpy + ffmpeg) IS invoked from PHP by `music-controller.php` via `exec()`.
 - [app/vendor/](app/vendor/): Composer dependencies (phpdotenv for `.env` loading)
 
 When developing locally without XAMPP running, requests that go through PHP proxies/services will fail.
+
+**XAMPP `exec()` gotcha:** XAMPP's Apache exports `LD_LIBRARY_PATH=/opt/lampp/lib`, whose bundled (ancient) libstdc++ breaks system binaries launched from PHP (`ffmpeg` fails with `CXXABI`/`GLIBCXX` version errors). Any `exec()` of a system tool must strip it, e.g. `exec('env -u LD_LIBRARY_PATH ...')`. Precedent: `music-controller.php` (and `analyze_audio.py` strips it again before spawning ffmpeg).
 
 ### Assets
 

@@ -7,55 +7,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Guitar Backing Tracks</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&amp;display=swap" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        cobalt: '#1f35e0',
+                        marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        serif: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="style.css" />
 </head>
 
-<body>
+<body class="editorial bg-paper text-ink font-sans antialiased">
     <main-navbar site="../../"></main-navbar>
-    <div class="music-app">
-        <div class="music-header">
-            <h1 class="music-title">
-                <span><i class="fas fa-music"></i> Guitar Backing Tracks</span>
-            </h1>
-            <p class="music-subtitle">My personal collection of guitar tracks to jam with</p>
+
+    <main class="music-app">
+        <header class="music-header">
+            <p class="kicker">Backing Tracks // Press Play</p>
+            <h1 class="music-title">Guitar<br>Backing Tracks</h1>
+            <p class="music-subtitle">My personal collection of guitar tracks to jam with.</p>
+            <nav class="screen-nav" aria-label="Music screens">
+                <a href="./" class="screen-nav__link is-active"><i class="fas fa-play"></i> Player</a>
+                <a href="editor/" class="screen-nav__link"><i class="fas fa-pen-nib"></i> Editor</a>
+                <a href="analysis/" class="screen-nav__link"><i class="fas fa-wave-square"></i> Analysis</a>
+            </nav>
+        </header>
+
+        <!-- "now playing" ticker; text is driven by script.js -->
+        <div class="marquee" id="nowPlaying" data-playing="false">
+            <span class="marquee__tag"><i class="fas fa-circle"></i> Now Playing</span>
+            <div class="marquee__viewport">
+                <div class="marquee__rail">
+                    <span class="marquee__text" id="npText1">Press play on any track to start the tape</span>
+                    <span class="marquee__text" id="npText2" aria-hidden="true">Press play on any track to start the
+                        tape</span>
+                </div>
+            </div>
         </div>
+
         <div class="music-content">
-            <div class="music-categories">
-                <div class="category">
-                    <div class="category-header">
-                        <i class="fas fa-guitar"></i>
-                        <h2 class="category-title">Acoustic</h2>
-                    </div>
-                    <div class="category-tracks" id="acoustic-tracks"></div>
+            <section class="category">
+                <div class="category-header">
+                    <span class="category-icon"><i class="fas fa-guitar"></i></span>
+                    <h2 class="category-title">Acoustic</h2>
                 </div>
-                <div class="category">
-                    <div class="category-header">
-                        <i class="fas fa-bolt"></i>
-                        <h2 class="category-title">Electric</h2>
-                    </div>
-                    <div class="category-tracks" id="electric-tracks"></div>
+                <div class="category-tracks" id="acoustic-tracks"></div>
+            </section>
+
+            <section class="category">
+                <div class="category-header">
+                    <span class="category-icon"><i class="fas fa-bolt"></i></span>
+                    <h2 class="category-title">Electric</h2>
                 </div>
-            </div>
-            <div class="music-footer">
-                <p class="credits">
-                    Made with
-                    <i class="fas fa-heart"></i>
-                    for the love of music
-                </p>
-                <a class="back-link" href="/">
-                    <i class="fas fa-arrow-left"></i>
-                    Back to Portfolio
-                </a>
-            </div>
+                <div class="category-tracks" id="electric-tracks"></div>
+            </section>
         </div>
-    </div>
+
+        <footer class="music-footer">
+            <p class="credits">Made with <i class="fas fa-heart"></i> for the love of music</p>
+            <div class="socials">
+                <a href="https://github.com/domenhribernik" target="_blank" rel="noopener" aria-label="GitHub"><i
+                        class="fab fa-github"></i></a>
+                <a href="https://www.instagram.com/domen_hribernik/" target="_blank" rel="noopener"
+                    aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.linkedin.com/in/domen-hribernik-4081a121b/" target="_blank" rel="noopener"
+                    aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="mailto:contact@domenhribernik.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            </div>
+            <a class="back-link" href="../../"><i class="fas fa-arrow-left"></i> Back to Portfolio</a>
+        </footer>
+    </main>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/6.6.3/wavesurfer.min.js"></script>
     <script type="module" src="../../components/main-navbar.js"></script>
+    <script src="chord-card.js"></script>
     <script src="script.js"></script>
+    <script src="../../components/gtranslate.js"></script>
 </body>
 
 </html>
