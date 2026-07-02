@@ -6,18 +6,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   let tracks = { electric: [], acoustic: [] };
 
-  // "Now playing" marquee. Only one track ever plays at a time, so a single
-  // shared ticker is enough. The two spans are duplicated for a seamless loop.
-  const nowPlayingEl = document.getElementById('nowPlaying');
-  const npTexts = [document.getElementById('npText1'), document.getElementById('npText2')];
-  const NP_IDLE = 'Press play on any track to start the tape';
-
-  function setNowPlaying(name) {
-    if (!nowPlayingEl) return;
-    const text = name ? `♪  ${name}` : NP_IDLE;
-    npTexts.forEach(el => { if (el) el.textContent = text; });
-    nowPlayingEl.setAttribute('data-playing', name ? 'true' : 'false');
-  }
+  // Which tracks have a saved chord sheet. Knowing this up front lets the
+  // deck skip the per-track request (and its console-visible 404) for tracks
+  // without one. null = list unavailable, fall back to per-track fetches.
+  let syncIndex = null;
+  fetch(`${SYNC_API}?resource=sync`)
+    .then(response => (response.ok ? response.json() : Promise.reject()))
+    .then(rows => {
+      syncIndex = new Set(rows.map(row => row.track_key));
+    })
+    .catch(() => {
+      syncIndex = null;
+    });
 
   fetch('../../assets/music/tracks.json')
     .then(response => response.json())
@@ -126,6 +126,19 @@ document.addEventListener('DOMContentLoaded', function() {
     volumeContainer.appendChild(volumeIcon);
     volumeContainer.appendChild(volumeSlider);
 
+    // Practice speed: 50-100% playback rate; the MediaElement backend keeps
+    // the pitch, so slowed songs stay in tune for playing along
+    const rateGroup = document.createElement('div');
+    rateGroup.className = 'rate-group';
+    [0.5, 0.75, 0.9, 1].forEach(rate => {
+      const button = document.createElement('button');
+      button.className = 'btn-mini' + (rate === 1 ? ' is-active' : '');
+      button.dataset.rate = String(rate);
+      button.textContent = `${rate * 100}%`;
+      button.title = `Play at ${rate * 100}% speed`;
+      rateGroup.appendChild(button);
+    });
+
     // Track progress
     const trackProgress = document.createElement('div');
     trackProgress.className = 'track-progress';
@@ -152,6 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     playerControls.appendChild(playButton);
     playerControls.appendChild(volumeContainer);
+    playerControls.appendChild(rateGroup);
     playerControls.appendChild(trackProgress);
 
     // Songsterr tab link; href is filled in by the proxy on first deck open
@@ -208,9 +222,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const totalTimeSpan = trackPlayer.querySelector('.track-progress .total-time');
       const progressBar = trackPlayer.querySelector('.progress');
 
-      // Create wavesurfer instance for this track
+      // Create wavesurfer instance for this track. MediaElement backend so
+      // the practice speed control keeps the pitch (WebAudio rate would
+      // detune the song).
       const wavesurfer = WaveSurfer.create({
         container: waveformElement,
+        backend: 'MediaElement',
         waveColor: 'rgba(28, 26, 23, 0.22)',
         progressColor: '#d4451f',
         cursorColor: '#1c1a17',
@@ -232,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
         isLoading: false,
         trackKey: track.getAttribute('data-key'),
         trackName: track.querySelector('.track-name').textContent,
+        rate: 1,             // practice playback speed
         sync: null,          // rendered chord/lyrics refs once loaded
         syncState: 'idle',   // idle | loading | loaded | empty | error
         tabState: 'idle'
@@ -259,7 +277,6 @@ document.addEventListener('DOMContentLoaded', function() {
           wakeLock = null;
           playButton.querySelector('i').classList.replace('fa-pause', 'fa-play');
           track.classList.remove('is-playing');
-          setNowPlaying(null);
         } else {
           // Pause all other tracks first
           Object.keys(players).forEach(id => {
@@ -276,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
           requestWakeLock();
           playButton.querySelector('i').classList.replace('fa-play', 'fa-pause');
           track.classList.add('is-playing');
-          setNowPlaying(track.querySelector('.track-name').textContent);
         }
       });
 
@@ -287,8 +303,26 @@ document.addEventListener('DOMContentLoaded', function() {
         players[trackId].wavesurfer.setVolume(volume);
       });
 
+      // Practice speed buttons
+      trackPlayer.querySelectorAll('.rate-group .btn-mini').forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const rate = parseFloat(this.dataset.rate);
+          players[trackId].rate = rate;
+          if (players[trackId].isLoaded) wavesurfer.setPlaybackRate(rate);
+          this.closest('.rate-group').querySelectorAll('.btn-mini').forEach(b => {
+            b.classList.toggle('is-active', b === this);
+          });
+        });
+      });
+
       // Handle wavesurfer events
       wavesurfer.on('loading', function(percent) {
+        // With the MediaElement backend, 'loading' tracks the separate
+        // waveform download, which keeps firing after 'ready' (the media is
+        // playable long before the full file is fetched for drawing). Once
+        // ready, never fall back into the loading state.
+        if (players[trackId].isLoaded) return;
         console.log(`Loading track ${trackId}: ${percent}%`);
         loadingSpinner.classList.remove('hidden');
         players[trackId].isLoading = true;
@@ -307,6 +341,14 @@ document.addEventListener('DOMContentLoaded', function() {
         players[trackId].isLoaded = true;
         players[trackId].isLoading = false;
         loadingSpinner.classList.add('hidden');
+
+        // keep the pitch when slowed down; apply a rate picked while loading
+        const media = wavesurfer.backend && wavesurfer.backend.media;
+        if (media) {
+          media.preservesPitch = true;
+          media.webkitPreservesPitch = true;
+        }
+        wavesurfer.setPlaybackRate(players[trackId].rate);
 
         // Show the controls now that loading is complete
         const playerControls = trackPlayer.querySelector('.player-controls');
@@ -334,16 +376,17 @@ document.addEventListener('DOMContentLoaded', function() {
         wakeLock?.release();
         wakeLock = null;
         track.classList.remove('is-playing');
-        setNowPlaying(null);
         updateChordSync(trackId, 0);
       });
 
       // Error handling
       wavesurfer.on('error', function(err) {
         console.error(`WaveSurfer error for track ${trackId}:`, err);
+        // a waveform decode hiccup after the media is already playable
+        // isn't fatal: keep the controls, just miss the wave drawing
+        if (players[trackId].isLoaded) return;
         loadingSpinner.classList.add('hidden');
         players[trackId].isLoading = false;
-        players[trackId].isLoaded = false;
 
         // Show controls even on error
         const playerControls = trackPlayer.querySelector('.player-controls');
@@ -452,7 +495,6 @@ document.addEventListener('DOMContentLoaded', function() {
           wakeLock?.release();
           wakeLock = null;
           t.classList.remove('is-playing');
-          setNowPlaying(null);
         }
 
         t.classList.remove('active');
@@ -471,7 +513,6 @@ document.addEventListener('DOMContentLoaded', function() {
         wakeLock = null;
         track.querySelector('.btn-play i').classList.replace('fa-pause', 'fa-play');
         track.classList.remove('is-playing');
-        setNowPlaying(null);
       }
     } else {
       track.classList.add('active');
@@ -524,6 +565,13 @@ document.addEventListener('DOMContentLoaded', function() {
   function loadChordSheet(trackId) {
     const player = players[trackId];
     const sheet = player.element.querySelector('.chordsheet');
+
+    if (syncIndex && !syncIndex.has(player.trackKey)) {
+      player.syncState = 'empty';
+      renderChordSheetEmpty(player, sheet);
+      return;
+    }
+
     player.syncState = 'loading';
 
     fetch(`${SYNC_API}?resource=sync&track=${encodeURIComponent(player.trackKey)}`)
@@ -618,6 +666,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const eventEls = events.map(() => null);
     const eventFlat = events.map(() => -1); // event index -> flat word index
     const flatWords = [];                   // every rendered word, reading order
+    const flatByPos = {};                   // "line:word" -> flat word index
     const lines = (data.lyrics || '').replace(/\r/g, '').split('\n');
 
     lines.forEach((line, lineIndex) => {
@@ -661,6 +710,7 @@ document.addEventListener('DOMContentLoaded', function() {
         wordEl.appendChild(textEl);
         lineEl.appendChild(wordEl);
 
+        flatByPos[`${lineIndex}:${wordIndex}`] = flatWords.length;
         flatWords.push({ wordEl, lineEl });
       });
 
@@ -714,19 +764,61 @@ document.addEventListener('DOMContentLoaded', function() {
       body.appendChild(msg);
     }
 
-    // Sweep segments: between two consecutive anchored chords the word
-    // highlight advances linearly with playback time, karaoke style.
+    // Sweep anchors: every timestamped word position, from anchored chords
+    // plus the editor's explicit word syncs. Between two consecutive anchors
+    // the highlight interpolates linearly, karaoke style; the more word syncs
+    // exist, the less it has to guess.
+    const sweepAnchors = [];
+    events.forEach((event, i) => {
+      if (eventFlat[i] >= 0) sweepAnchors.push({ time: event.time, flat: eventFlat[i] });
+    });
+    (data.words || []).forEach(mark => {
+      if (typeof mark.time !== 'number') return;
+      const flat = flatByPos[`${mark.line}:${mark.word}`];
+      if (flat !== undefined) sweepAnchors.push({ time: mark.time, flat: flat });
+    });
+    sweepAnchors.sort((a, b) => a.time - b.time || a.flat - b.flat);
+
+    // times where singing stops: unanchored chord events (instrumental runs
+    // and explicit N.C. gaps)
+    const gapTimes = events.filter((e, i) => eventFlat[i] < 0).map(e => e.time);
+    const nextGapAfter = (t) => gapTimes.find(g => g > t);
+
+    // An anchor with no forward-moving successor (end of a line before an
+    // instrumental, a gap, or the end of the song) sweeps out the rest of
+    // its own line: towards the interrupting event's time when one exists,
+    // or at the song's average words-per-second pace for the final anchor.
+    // releases[k] marks when anchor k's highlight must be dropped.
     const segments = [];
-    for (let i = 0; i < events.length - 1; i++) {
-      if (eventFlat[i] >= 0 && eventFlat[i + 1] > eventFlat[i] && events[i + 1].time > events[i].time) {
-        segments.push({
-          start: events[i].time,
-          end: events[i + 1].time,
-          from: eventFlat[i],
-          to: eventFlat[i + 1]
-        });
+    const releases = {};
+    const lastWordOfLine = (flat) => {
+      let j = flat;
+      while (j + 1 < flatWords.length && flatWords[j + 1].lineEl === flatWords[flat].lineEl) j++;
+      return j;
+    };
+    let paceTime = 0;
+    let paceWords = 0;
+    sweepAnchors.forEach((anchor, k) => {
+      const next = sweepAnchors[k + 1];
+      const gapT = nextGapAfter(anchor.time);
+      if (next && next.flat > anchor.flat && next.time > anchor.time
+          && (gapT === undefined || gapT >= next.time)) {
+        segments.push({ start: anchor.time, end: next.time, from: anchor.flat, to: next.flat });
+        paceTime += next.time - anchor.time;
+        paceWords += next.flat - anchor.flat;
+      } else if (gapT !== undefined && gapT > anchor.time && (!next || gapT < next.time)) {
+        segments.push({ start: anchor.time, end: gapT, from: anchor.flat, to: lastWordOfLine(anchor.flat) + 1 });
+        releases[k] = gapT;
+      } else if (!next) {
+        const to = lastWordOfLine(anchor.flat) + 1;
+        const pace = paceWords > 0 ? paceTime / paceWords : 0.6;
+        const end = anchor.time + Math.max(1, (to - anchor.flat) * pace);
+        segments.push({ start: anchor.time, end: end, from: anchor.flat, to: to });
+        releases[k] = end;
       }
-    }
+      // otherwise the next anchor rewinds to an earlier word (a repeat) with
+      // no gap in between: no sweep, the highlight parks until it takes over
+    });
 
     sheet.appendChild(body);
 
@@ -736,6 +828,8 @@ document.addEventListener('DOMContentLoaded', function() {
       eventFlat: eventFlat,
       flatWords: flatWords,
       segments: segments,
+      anchors: sweepAnchors,
+      releases: releases,
       currentEl: current,
       nextEl: next,
       bodyEl: body,
@@ -811,9 +905,23 @@ document.addEventListener('DOMContentLoaded', function() {
         break;
       }
     }
-    if (target === -1 && sync.activeIndex >= 0 && sync.eventFlat[sync.activeIndex] >= 0) {
-      // not inside a sweep segment: park on the active chord's own word
-      target = sync.eventFlat[sync.activeIndex];
+    if (target === -1 && sync.anchors.length) {
+      // not inside a sweep segment: park on the latest anchor's word, but
+      // only until its release time passes (then the highlight drops)
+      let lo = 0, hi = sync.anchors.length - 1, k = -1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (sync.anchors[mid].time <= t) {
+          k = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      if (k >= 0) {
+        const release = sync.releases[k];
+        if (release === undefined || t < release) target = sync.anchors[k].flat;
+      }
     }
 
     if (target === sync.sweepIndex) return;

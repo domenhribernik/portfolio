@@ -20,6 +20,7 @@ require_once __DIR__ . '/../config/database.php';
 
 const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
 const MAX_CHORD_EVENTS = 500;
+const MAX_WORD_SYNCS   = 2000;
 const MAX_LYRICS_CHARS = 20000;
 
 $method   = $_SERVER['REQUEST_METHOD'];
@@ -94,10 +95,24 @@ function handleSync(string $method): void
 
 function formatSync(array $row): array
 {
+    // The chords column holds either a plain array of chord events (legacy
+    // rows) or an { events, words } envelope once word syncs were saved.
+    $decoded = json_decode($row['chords'] ?? '[]', true);
+    $chords  = [];
+    $words   = [];
+    if (is_array($decoded)) {
+        if (array_key_exists('events', $decoded)) {
+            $chords = is_array($decoded['events']) ? $decoded['events'] : [];
+            $words  = is_array($decoded['words'] ?? null) ? $decoded['words'] : [];
+        } else {
+            $chords = $decoded;
+        }
+    }
     return [
         'track_key'  => $row['track_key'],
         'lyrics'     => $row['lyrics'],
-        'chords'     => json_decode($row['chords'] ?? '[]', true) ?: [],
+        'chords'     => $chords,
+        'words'      => $words,
         'updated_at' => $row['updated_at'],
     ];
 }
@@ -160,11 +175,43 @@ function saveSync(): void
     }
     usort($clean, fn($a, $b) => $a['time'] <=> $b['time']);
 
+    // Word syncs: timestamps for individual lyric words (no chord attached),
+    // used by the player to interpolate the karaoke highlight precisely.
+    $words = $data['words'] ?? [];
+    if (is_string($words)) $words = json_decode($words, true);
+    if (!is_array($words)) sendError('words must be a JSON array', 400);
+    if (count($words) > MAX_WORD_SYNCS) {
+        sendError('Too many word syncs (max ' . MAX_WORD_SYNCS . ')', 400);
+    }
+
+    $cleanWords = [];
+    foreach ($words as $i => $mark) {
+        if (!is_array($mark)) sendError("Word sync #$i is not an object", 400);
+        $time = $mark['time'] ?? null;
+        if (!is_numeric($time) || (float) $time < 0) sendError("Word sync #$i has an invalid time", 400);
+        if (!isset($mark['line'], $mark['word'])
+            || !is_numeric($mark['line']) || (int) $mark['line'] < 0
+            || !is_numeric($mark['word']) || (int) $mark['word'] < 0) {
+            sendError("Word sync #$i has an invalid line/word anchor", 400);
+        }
+        $cleanWords[] = [
+            'time' => round((float) $time, 2),
+            'line' => (int) $mark['line'],
+            'word' => (int) $mark['word'],
+        ];
+    }
+    usort($cleanWords, fn($a, $b) => $a['time'] <=> $b['time']);
+
+    // Store a plain array while there are no word syncs (matches legacy rows);
+    // otherwise wrap both in an envelope. formatSync understands both shapes,
+    // so no schema migration is needed for the words feature.
+    $payload = $cleanWords ? ['events' => $clean, 'words' => $cleanWords] : $clean;
+
     $stmt = Database::write()->prepare(
         'INSERT INTO music_sync (track_key, lyrics, chords) VALUES (?, ?, ?)
          ON DUPLICATE KEY UPDATE lyrics = VALUES(lyrics), chords = VALUES(chords)'
     );
-    $stmt->execute([$track, $lyrics, json_encode($clean, JSON_UNESCAPED_UNICODE)]);
+    $stmt->execute([$track, $lyrics, json_encode($payload, JSON_UNESCAPED_UNICODE)]);
 
     getSync($track);
 }

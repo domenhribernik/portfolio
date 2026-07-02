@@ -61,18 +61,6 @@
             </nav>
         </header>
 
-        <!-- "on the bench" ticker; text is driven by script.js -->
-        <div class="marquee" id="benchMarquee" data-playing="false">
-            <span class="marquee__tag"><i class="fas fa-circle"></i> On the Bench</span>
-            <div class="marquee__viewport">
-                <div class="marquee__rail">
-                    <span class="marquee__text" id="bmText1">Pick a track to start splicing the tape</span>
-                    <span class="marquee__text" id="bmText2" aria-hidden="true">Pick a track to start splicing the
-                        tape</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Track picker + save / import / export -->
         <section class="panel">
             <div class="panel__head">
@@ -102,7 +90,9 @@
                 <div class="editor-deck-row" id="deckRow">
                     <span class="reel reel--left"></span>
                     <div class="editor-deck">
-                        <div class="editor-markers" id="markers"></div>
+                        <div class="editor-markers">
+                            <div class="editor-markers__rail" id="markers"></div>
+                        </div>
                         <div id="editorWaveform"></div>
                     </div>
                     <span class="reel reel--right"></span>
@@ -116,7 +106,21 @@
                         <button class="btn-mini" data-skip="0.1">+0.1</button>
                         <button class="btn-mini" data-skip="1">+1s</button>
                     </div>
-                    <span class="panel__hint hidden sm:inline">space = play / pause, enter = tap chord</span>
+                    <div class="zoom-group" role="group" aria-label="Timeline zoom">
+                        <button class="btn-mini" id="zoomOut" title="Zoom out" disabled><i
+                                class="fas fa-magnifying-glass-minus"></i></button>
+                        <span class="zoom-readout" id="zoomLevel">1x</span>
+                        <button class="btn-mini" id="zoomIn" title="Zoom in"><i
+                                class="fas fa-magnifying-glass-plus"></i></button>
+                    </div>
+                    <div class="rate-group" role="group" aria-label="Playback speed">
+                        <button class="btn-mini" data-rate="0.5" title="Play at 50% speed">50%</button>
+                        <button class="btn-mini" data-rate="0.75" title="Play at 75% speed">75%</button>
+                        <button class="btn-mini" data-rate="0.9" title="Play at 90% speed">90%</button>
+                        <button class="btn-mini is-active" data-rate="1" title="Play at full speed">100%</button>
+                    </div>
+                    <span class="panel__hint hidden sm:inline">space = play / pause, enter = tap chord (or word in
+                        Sync), 1-0 = quick chords</span>
                 </div>
             </div>
         </section>
@@ -153,11 +157,19 @@
                     <div class="tab-row" role="tablist">
                         <button id="tabEdit" class="btn-mini is-active" role="tab">Edit</button>
                         <button id="tabAnchor" class="btn-mini" role="tab">Anchor</button>
+                        <button id="tabSync" class="btn-mini" role="tab">Sync</button>
                     </div>
                 </div>
                 <div class="panel__body">
                     <textarea id="lyricsInput" class="field field--area" rows="14"
                         placeholder="Paste the lyrics here, one line per sung line..."></textarea>
+                    <div class="sync-tools hidden" id="syncTools">
+                        <button id="syncUndo" class="btn-mini" title="Remove the last word tap"><i
+                                class="fas fa-rotate-left"></i> Undo tap</button>
+                        <button id="syncClear" class="btn-mini btn-mini--danger" title="Remove all word syncs"><i
+                                class="fas fa-xmark"></i> Clear all</button>
+                        <span class="sync-count" id="syncCount"></span>
+                    </div>
                     <div class="word-grid hidden" id="wordGrid"></div>
                     <p class="panel__hint mt-3" id="anchorHint">Switch to Anchor mode, select a chord on the left, then
                         click the word it lands on.</p>
@@ -169,6 +181,16 @@
             <a class="back-link" href="../"><i class="fas fa-arrow-left"></i> Back to the Player</a>
         </footer>
     </main>
+
+    <!-- fixed transport: keeps play / seek reachable while the timeline is scrolled away -->
+    <div class="transport-bar hidden" id="transportBar" role="group" aria-label="Playback transport">
+        <button class="transport-bar__btn" id="barBack" title="Back 5 seconds" aria-label="Back 5 seconds"><i
+                class="fas fa-backward"></i></button>
+        <button class="transport-bar__btn transport-bar__btn--play" id="barPlay" title="Play / pause"
+            aria-label="Play or pause"><i class="fas fa-play"></i></button>
+        <button class="transport-bar__btn" id="barFwd" title="Forward 5 seconds" aria-label="Forward 5 seconds"><i
+                class="fas fa-forward"></i></button>
+    </div>
 
     <dialog id="importDialog" class="import-dialog">
         <h3 class="import-dialog__title">Import chords / lyrics</h3>

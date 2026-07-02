@@ -40,8 +40,41 @@
 .editor-markers {
     position: absolute;
     inset: 0;
+    overflow: hidden;
     pointer-events: none;
     z-index: 5;
+}
+
+/* When the timeline is zoomed, script.js widens this rail to the wave's full
+   scroll width and translates it to mirror the wave's horizontal scroll, so
+   the percentage-positioned markers stay glued to their spot on the wave. */
+.editor-markers__rail {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+}
+
+/* zoomed wave scrolls horizontally; keep its scrollbar in theme */
+#editorWaveform wave {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink, #1c1a17) var(--paper-2, #efe9dd);
+}
+
+.zoom-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.zoom-readout {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--stone, #6b6256);
+    min-width: 2em;
+    text-align: center;
 }
 
 .marker {
@@ -152,6 +185,8 @@
 
 /* ---- Chord event list ---------------------------------------------------- */
 .chord-list {
+    position: relative;
+    /* rows measure their offsetTop against the list for auto-scroll */
     margin-top: 1.1rem;
     max-height: 360px;
     overflow-y: auto;
@@ -287,6 +322,102 @@
 .wg-word.is-selected-anchor {
     border-color: var(--ink, #1c1a17);
     background: var(--amber);
+}
+
+/* ---- Word sync mode ------------------------------------------------------- */
+.sync-tools {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.sync-tools.hidden {
+    display: none;
+}
+
+.sync-count {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--stone, #6b6256);
+}
+
+.wg-word.is-synced {
+    border-color: var(--cobalt, #1f35e0);
+}
+
+.wg-word.is-synced .wg-word__chord {
+    color: var(--cobalt, #1f35e0);
+}
+
+/* the word the Enter key will stamp next */
+.wg-word.is-next-sync {
+    border-style: dashed;
+    border-color: var(--ink, #1c1a17);
+    background: var(--paper-2, #efe9dd);
+}
+
+/* ---- Docked transport bar --------------------------------------------------
+   The timeline scrolls out of view while tapping chords (especially on
+   phones), so play / seek stays docked to the bottom of the screen. It spans
+   the full width with an opaque background so it never overlaps content;
+   body.has-transport reserves its height under the page instead. */
+.transport-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    padding: 0.45rem 0.7rem;
+    padding-bottom: calc(0.45rem + env(safe-area-inset-bottom, 0px));
+    border-top: 3px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    z-index: 900;
+}
+
+.transport-bar.hidden {
+    display: none;
+}
+
+.transport-bar__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--paper, #f6f2ea);
+    color: var(--ink, #1c1a17);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.transport-bar__btn:hover {
+    background: var(--paper-2, #efe9dd);
+}
+
+.transport-bar__btn--play {
+    width: 52px;
+    height: 52px;
+    border-width: 3px;
+    border-radius: 50%;
+    background: var(--amber);
+}
+
+.transport-bar__btn--play.is-playing {
+    background: var(--rust);
+    color: var(--paper, #f6f2ea);
+}
+
+/* keep the footer reachable above the docked bar */
+body.has-transport .music-app {
+    padding-bottom: 8rem;
 }
 
 /* ---- Import dialog -------------------------------------------------------- */

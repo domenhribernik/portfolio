@@ -22,11 +22,22 @@ document.addEventListener('DOMContentLoaded', function() {
   const wordGrid    = document.getElementById('wordGrid');
   const tabEdit     = document.getElementById('tabEdit');
   const tabAnchor   = document.getElementById('tabAnchor');
+  const tabSync     = document.getElementById('tabSync');
   const anchorHint  = document.getElementById('anchorHint');
+  const syncTools   = document.getElementById('syncTools');
+  const syncUndo    = document.getElementById('syncUndo');
+  const syncClear   = document.getElementById('syncClear');
+  const syncCount   = document.getElementById('syncCount');
 
-  const benchMarquee = document.getElementById('benchMarquee');
-  const bmTexts = [document.getElementById('bmText1'), document.getElementById('bmText2')];
   const deckRow = document.getElementById('deckRow');
+  const zoomInBtn  = document.getElementById('zoomIn');
+  const zoomOutBtn = document.getElementById('zoomOut');
+  const zoomLevel  = document.getElementById('zoomLevel');
+
+  const transportBar = document.getElementById('transportBar');
+  const barPlayBtn   = document.getElementById('barPlay');
+  const barBackBtn   = document.getElementById('barBack');
+  const barFwdBtn    = document.getElementById('barFwd');
 
   const importDialog = document.getElementById('importDialog');
   const importText   = document.getElementById('importText');
@@ -37,11 +48,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   let trackKey = null;
   let chords = [];          // [{ time, chord, line?, word? }] always sorted by time
+  let words = [];           // word syncs [{ time, line, word }] sorted by time
   let selected = -1;        // index into chords
   let duration = 0;
   let isPlaying = false;
   let dirty = false;
   let audioReady = false;
+  let lyricsMode = 'edit';  // edit | anchor | sync
+  let syncHistory = [];     // stamped positions, newest last (for undo)
+  let syncNext = null;      // { line, word } the Enter key stamps next
 
   const wavesurfer = WaveSurfer.create({
     container: '#editorWaveform',
@@ -53,8 +68,10 @@ document.addEventListener('DOMContentLoaded', function() {
     cursorWidth: 2,
     height: 110,
     responsive: true,
-    hideScrollbar: true,
-    normalize: true
+    hideScrollbar: false,
+    normalize: true,
+    // MediaElement keeps the pitch when the practice speed slows the tape
+    backend: 'MediaElement'
   });
 
   // ---- Status / state helpers --------------------------------------------
@@ -70,25 +87,11 @@ document.addEventListener('DOMContentLoaded', function() {
     dirty = true;
     saveBtn.disabled = false;
     saveBtn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save *';
-    refreshMarquee();
   }
 
   function markClean() {
     dirty = false;
     saveBtn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save';
-    refreshMarquee();
-  }
-
-  function refreshMarquee() {
-    let text = 'Pick a track to start splicing the tape';
-    if (trackKey) {
-      const option = trackSelect.options[trackSelect.selectedIndex];
-      const name = option ? option.textContent : trackKey;
-      const bits = [`✎ ${name}`, `${chords.length} chord event${chords.length === 1 ? '' : 's'}`];
-      if (dirty) bits.push('unsaved changes');
-      text = bits.join('  //  ');
-    }
-    bmTexts.forEach(el => { if (el) el.textContent = text; });
   }
 
   function formatPrecise(seconds) {
@@ -138,8 +141,13 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function loadTrack(key) {
+    applyZoom(1); // reset the previous track's zoom before the new wave draws
+    setRate(1);
     trackKey = key;
     chords = [];
+    words = [];
+    syncHistory = [];
+    syncNext = null;
     selected = -1;
     audioReady = false;
     lyricsInput.value = '';
@@ -150,6 +158,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     deckPanel.classList.remove('hidden');
     workPanel.classList.remove('hidden');
+    transportBar.classList.remove('hidden');
+    document.body.classList.add('has-transport');
     setStatus('Loading audio...');
 
     if (isPlaying) togglePlay();
@@ -165,7 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data) {
           lyricsInput.value = data.lyrics || '';
           chords = (data.chords || []).slice().sort((a, b) => a.time - b.time);
-          setStatus(`Loaded saved sheet (${chords.length} chord events).`, 'ok');
+          words = (data.words || []).slice().sort((a, b) => a.time - b.time);
+          const bits = [`${chords.length} chord events`];
+          if (words.length) bits.push(`${words.length} word syncs`);
+          setStatus(`Loaded saved sheet (${bits.join(', ')}).`, 'ok');
         } else {
           setStatus('No saved sheet for this track yet. Fresh tape.');
         }
@@ -183,6 +196,13 @@ document.addEventListener('DOMContentLoaded', function() {
     audioReady = true;
     duration = wavesurfer.getDuration();
     totTimeEl.textContent = formatPrecise(duration);
+    // keep the pitch when the practice speed slows the tape
+    const media = wavesurfer.backend && wavesurfer.backend.media;
+    if (media) {
+      media.preservesPitch = true;
+      media.webkitPreservesPitch = true;
+    }
+    wavesurfer.setPlaybackRate(playbackRate);
     renderMarkers();
   });
 
@@ -191,12 +211,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   wavesurfer.on('finish', function() {
     isPlaying = false;
-    playBtn.querySelector('i').classList.replace('fa-pause', 'fa-play');
+    updatePlayButtons();
     setRolling(false);
   });
 
   function setRolling(rolling) {
-    benchMarquee.setAttribute('data-playing', rolling ? 'true' : 'false');
     deckRow.classList.toggle('is-playing', rolling);
   }
 
@@ -217,28 +236,101 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (now === lastNowIndex) return;
     lastNowIndex = now;
-    [...chordList.querySelectorAll('.chord-row')].forEach((row, i) => {
+    const rows = [...chordList.querySelectorAll('.chord-row')];
+    rows.forEach((row, i) => {
       row.classList.toggle('is-now', i === now);
     });
+
+    // keep the playing chord in view; hands off while the pointer is in the
+    // list so it doesn't fight a manual scroll
+    if (now >= 0 && rows[now] && !chordList.matches(':hover')) {
+      const row = rows[now];
+      const top = row.offsetTop - (chordList.clientHeight - row.offsetHeight) / 2;
+      chordList.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+  }
+
+  function updatePlayButtons() {
+    [playBtn, barPlayBtn].forEach(button => {
+      const icon = button.querySelector('i');
+      icon.classList.toggle('fa-play', !isPlaying);
+      icon.classList.toggle('fa-pause', isPlaying);
+    });
+    barPlayBtn.classList.toggle('is-playing', isPlaying);
   }
 
   function togglePlay() {
     if (!audioReady) return;
     isPlaying = !isPlaying;
     wavesurfer.playPause();
-    playBtn.querySelector('i').classList.replace(
-      isPlaying ? 'fa-play' : 'fa-pause',
-      isPlaying ? 'fa-pause' : 'fa-play'
-    );
+    updatePlayButtons();
     setRolling(isPlaying);
   }
 
   playBtn.addEventListener('click', togglePlay);
+  barPlayBtn.addEventListener('click', togglePlay);
+  barBackBtn.addEventListener('click', () => { if (audioReady) wavesurfer.skip(-5); });
+  barFwdBtn.addEventListener('click', () => { if (audioReady) wavesurfer.skip(5); });
 
   document.querySelectorAll('[data-skip]').forEach(button => {
     button.addEventListener('click', function() {
       if (audioReady) wavesurfer.skip(parseFloat(this.dataset.skip));
     });
+  });
+
+  // ---- Timeline zoom -------------------------------------------------------
+  // Zooming multiplies the wave's px-per-second so chord flags that sit close
+  // together on the timeline spread apart and become clickable. The wave then
+  // scrolls horizontally and the marker rail mirrors that scroll.
+
+  const ZOOM_MAX = 8;
+  let zoomFactor = 1;
+
+  function syncMarkerRail() {
+    const wrapper = wavesurfer.drawer && wavesurfer.drawer.wrapper;
+    if (!wrapper) return;
+    markersEl.style.width = zoomFactor > 1 ? wrapper.scrollWidth + 'px' : '';
+    markersEl.style.transform = zoomFactor > 1 ? `translateX(${-wrapper.scrollLeft}px)` : '';
+  }
+
+  function applyZoom(factor) {
+    zoomFactor = factor;
+    if (audioReady && duration) {
+      if (factor === 1) {
+        wavesurfer.zoom(0); // reset: fit the container, no scrolling
+      } else {
+        wavesurfer.zoom((wavesurfer.drawer.wrapper.clientWidth * factor) / duration);
+      }
+    }
+    zoomLevel.textContent = `${factor}x`;
+    zoomOutBtn.disabled = factor <= 1;
+    zoomInBtn.disabled = factor >= ZOOM_MAX;
+    syncMarkerRail();
+  }
+
+  zoomInBtn.addEventListener('click', () => applyZoom(Math.min(ZOOM_MAX, zoomFactor * 2)));
+  zoomOutBtn.addEventListener('click', () => applyZoom(Math.max(1, zoomFactor / 2)));
+  wavesurfer.drawer.wrapper.addEventListener('scroll', syncMarkerRail);
+
+  let resizeTimer = null;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(syncMarkerRail, 200);
+  });
+
+  // ---- Practice speed ------------------------------------------------------
+
+  const rateButtons = [...document.querySelectorAll('.rate-group .btn-mini')];
+  let playbackRate = 1;
+
+  function setRate(rate) {
+    playbackRate = rate;
+    rateButtons.forEach(b => b.classList.toggle('is-active', parseFloat(b.dataset.rate) === rate));
+    if (audioReady) wavesurfer.setPlaybackRate(rate);
+  }
+
+  rateButtons.forEach(button => {
+    button.addEventListener('click', () => setRate(parseFloat(button.dataset.rate)));
   });
 
   // ---- Chord events -----------------------------------------------------------
@@ -410,23 +502,59 @@ document.addEventListener('DOMContentLoaded', function() {
     markDirty();
   });
 
-  tabEdit.addEventListener('click', () => setAnchorMode(false));
-  tabAnchor.addEventListener('click', () => setAnchorMode(true));
+  tabEdit.addEventListener('click', () => setLyricsMode('edit'));
+  tabAnchor.addEventListener('click', () => setLyricsMode('anchor'));
+  tabSync.addEventListener('click', () => setLyricsMode('sync'));
 
-  function setAnchorMode(on) {
-    tabEdit.classList.toggle('is-active', !on);
-    tabAnchor.classList.toggle('is-active', on);
-    lyricsInput.classList.toggle('hidden', on);
-    wordGrid.classList.toggle('hidden', !on);
-    anchorHint.textContent = on
-      ? 'Select a chord on the left, then click the word it lands on. Click again to unanchor.'
-      : 'Switch to Anchor mode, select a chord on the left, then click the word it lands on.';
-    if (on) renderWordGrid();
+  const MODE_HINTS = {
+    edit: 'Switch to Anchor mode to pin chords to words, or Sync mode to time-stamp the words themselves.',
+    anchor: 'Select a chord on the left, then click the word it lands on. Click again to unanchor.',
+    sync: 'Play the tape and click each word as it is sung; Enter clicks the outlined word. '
+      + 'Click a stamped word again without moving the playhead to remove it. Slow the speed down if taps land late.'
+  };
+
+  function setLyricsMode(mode) {
+    lyricsMode = mode;
+    tabEdit.classList.toggle('is-active', mode === 'edit');
+    tabAnchor.classList.toggle('is-active', mode === 'anchor');
+    tabSync.classList.toggle('is-active', mode === 'sync');
+    lyricsInput.classList.toggle('hidden', mode !== 'edit');
+    wordGrid.classList.toggle('hidden', mode === 'edit');
+    syncTools.classList.toggle('hidden', mode !== 'sync');
+    anchorHint.textContent = MODE_HINTS[mode];
+    if (mode === 'sync') syncNext = wordAfterLastStamp();
+    if (mode !== 'edit') renderWordGrid();
+  }
+
+  // lyrics tokenized exactly like the player does it (lines / whitespace)
+  function lyricLines() {
+    return lyricsInput.value.replace(/\r/g, '').split('\n').map(l => l.split(/\s+/).filter(Boolean));
+  }
+
+  function nextWordAfter(pos) {
+    const lines = lyricLines();
+    let l = pos ? pos.line : 0;
+    let w = pos ? pos.word + 1 : 0;
+    while (l < lines.length) {
+      if (w < lines[l].length) return { line: l, word: w };
+      l++;
+      w = 0;
+    }
+    return null;
+  }
+
+  function wordAfterLastStamp() {
+    let last = null;
+    words.forEach(mark => {
+      if (!last || mark.line > last.line || (mark.line === last.line && mark.word > last.word)) last = mark;
+    });
+    return last ? nextWordAfter(last) : nextWordAfter(null);
   }
 
   function renderWordGrid() {
     if (wordGrid.classList.contains('hidden')) return;
     wordGrid.innerHTML = '';
+    syncCount.textContent = `${words.length} word sync${words.length === 1 ? '' : 's'}`;
 
     const lines = lyricsInput.value.replace(/\r/g, '').split('\n');
     if (!lines.some(l => l.trim())) {
@@ -443,10 +571,16 @@ document.addEventListener('DOMContentLoaded', function() {
         anchors[`${event.line}:${event.word}`] = index;
       }
     });
+    const wordTimes = {};
+    words.forEach(mark => {
+      wordTimes[`${mark.line}:${mark.word}`] = mark.time;
+    });
+
+    const syncMode = lyricsMode === 'sync';
 
     lines.forEach((line, lineIndex) => {
-      const words = line.split(/\s+/).filter(Boolean);
-      if (!words.length) {
+      const lineWords = line.split(/\s+/).filter(Boolean);
+      if (!lineWords.length) {
         const gap = document.createElement('div');
         gap.className = 'wg-break';
         wordGrid.appendChild(gap);
@@ -456,31 +590,89 @@ document.addEventListener('DOMContentLoaded', function() {
       const lineEl = document.createElement('div');
       lineEl.className = 'wg-line';
 
-      words.forEach((word, wordIndex) => {
+      lineWords.forEach((word, wordIndex) => {
         const key = `${lineIndex}:${wordIndex}`;
         const anchoredIndex = anchors[key];
+        const syncTime = wordTimes[key];
 
         const button = document.createElement('button');
-        button.className = 'wg-word'
-          + (anchoredIndex !== undefined ? ' is-anchored' : '')
-          + (anchoredIndex !== undefined && anchoredIndex === selected ? ' is-selected-anchor' : '');
+        button.className = 'wg-word';
+        if (!syncMode) {
+          if (anchoredIndex !== undefined) button.classList.add('is-anchored');
+          if (anchoredIndex !== undefined && anchoredIndex === selected) button.classList.add('is-selected-anchor');
+        } else {
+          if (syncTime !== undefined) button.classList.add('is-synced');
+          if (syncNext && syncNext.line === lineIndex && syncNext.word === wordIndex) {
+            button.classList.add('is-next-sync');
+          }
+        }
 
-        const chordLabel = document.createElement('span');
-        chordLabel.className = 'wg-word__chord';
-        chordLabel.textContent = anchoredIndex !== undefined ? chords[anchoredIndex].chord : ' ';
+        const label = document.createElement('span');
+        label.className = 'wg-word__chord';
+        label.textContent = syncMode
+          ? (syncTime !== undefined ? formatPrecise(syncTime) : ' ')
+          : (anchoredIndex !== undefined ? chords[anchoredIndex].chord : ' ');
 
         const text = document.createElement('span');
         text.textContent = word;
 
-        button.appendChild(chordLabel);
+        button.appendChild(label);
         button.appendChild(text);
-        button.addEventListener('click', () => anchorWord(lineIndex, wordIndex, anchoredIndex));
+        button.addEventListener('click', () => {
+          if (lyricsMode === 'sync') stampWord(lineIndex, wordIndex);
+          else anchorWord(lineIndex, wordIndex, anchoredIndex);
+        });
         lineEl.appendChild(button);
       });
 
       wordGrid.appendChild(lineEl);
     });
   }
+
+  // ---- Word sync stamping --------------------------------------------------
+
+  function stampWord(lineIndex, wordIndex) {
+    if (!audioReady) {
+      setStatus('Wait for the audio to load before syncing words.', 'error');
+      return;
+    }
+    const t = Math.round(wavesurfer.getCurrentTime() * 100) / 100;
+    const existing = words.find(w => w.line === lineIndex && w.word === wordIndex);
+    if (existing && existing.time === t) {
+      // second click without moving the playhead removes the stamp
+      words.splice(words.indexOf(existing), 1);
+      syncHistory = syncHistory.filter(h => !(h.line === lineIndex && h.word === wordIndex));
+      syncNext = { line: lineIndex, word: wordIndex };
+    } else {
+      if (existing) existing.time = t;
+      else words.push({ time: t, line: lineIndex, word: wordIndex });
+      syncHistory.push({ line: lineIndex, word: wordIndex });
+      syncNext = nextWordAfter({ line: lineIndex, word: wordIndex });
+    }
+    words.sort((a, b) => a.time - b.time);
+    markDirty();
+    renderWordGrid();
+  }
+
+  syncUndo.addEventListener('click', function() {
+    const last = syncHistory.pop();
+    if (!last) return;
+    const index = words.findIndex(w => w.line === last.line && w.word === last.word);
+    if (index >= 0) words.splice(index, 1);
+    syncNext = { line: last.line, word: last.word };
+    markDirty();
+    renderWordGrid();
+  });
+
+  syncClear.addEventListener('click', function() {
+    if (!words.length) return;
+    if (!confirm(`Remove all ${words.length} word syncs?`)) return;
+    words = [];
+    syncHistory = [];
+    syncNext = nextWordAfter(null);
+    markDirty();
+    renderWordGrid();
+  });
 
   function anchorWord(lineIndex, wordIndex, anchoredIndex) {
     if (selected < 0) {
@@ -513,7 +705,6 @@ document.addEventListener('DOMContentLoaded', function() {
     renderMarkers();
     renderWordGrid();
     renderSuggestions();
-    refreshMarquee();
   }
 
   // ---- Next-chord suggestions (local theory engine) -----------------------
@@ -611,13 +802,14 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch(API + '?resource=sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ track_key: trackKey, lyrics: lyricsInput.value, chords: chords })
+      body: JSON.stringify({ track_key: trackKey, lyrics: lyricsInput.value, chords: chords, words: words })
     })
       .then(r => r.json().then(body => ({ ok: r.ok, body })))
       .then(({ ok, body }) => {
         if (!ok) throw new Error(body.error || 'Save failed');
         markClean();
-        setStatus(`Saved (${body.chords.length} chord events).`, 'ok');
+        const savedWords = (body.words || []).length;
+        setStatus(`Saved (${body.chords.length} chord events${savedWords ? `, ${savedWords} word syncs` : ''}).`, 'ok');
       })
       .catch(error => {
         saveBtn.disabled = false;
@@ -627,7 +819,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   exportBtn.addEventListener('click', function() {
     if (!trackKey) return;
-    const payload = { track_key: trackKey, lyrics: lyricsInput.value, chords: chords };
+    const payload = { track_key: trackKey, lyrics: lyricsInput.value, chords: chords, words: words };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -689,10 +881,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!Array.isArray(parsed) && typeof parsed.lyrics === 'string' && parsed.lyrics.trim()) {
       lyricsInput.value = parsed.lyrics;
     }
+    let importedWords = 0;
+    if (!Array.isArray(parsed) && Array.isArray(parsed.words)) {
+      words = parsed.words
+        .filter(w => w && typeof w.time === 'number' && w.time >= 0
+          && Number.isInteger(w.line) && w.line >= 0
+          && Number.isInteger(w.word) && w.word >= 0)
+        .map(w => ({ time: Math.round(w.time * 100) / 100, line: w.line, word: w.word }))
+        .sort((a, b) => a.time - b.time);
+      syncHistory = [];
+      syncNext = wordAfterLastStamp();
+      importedWords = words.length;
+    }
     markDirty();
     renderAll();
     importDialog.close();
-    setStatus(`Imported ${clean.length} chord events.`, 'ok');
+    setStatus(`Imported ${clean.length} chord events${importedWords ? ` and ${importedWords} word syncs` : ''}.`, 'ok');
   });
 
   // ---- Keyboard ----------------------------------------------------------------
@@ -708,7 +912,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (e.code === 'Enter' && !typing) {
       e.preventDefault();
-      tapChord();
+      // in Sync mode Enter stamps the next word instead of tapping a chord
+      if (lyricsMode === 'sync' && trackKey) {
+        if (syncNext) stampWord(syncNext.line, syncNext.word);
+      } else {
+        tapChord();
+      }
+    }
+    // number keys tap the quick chord chips (1-9, 0 = tenth chip)
+    if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && /^Digit\d$/.test(e.code) && trackKey) {
+      const digit = Number(e.code.slice(5));
+      const chip = QUICK_CHORDS[digit === 0 ? 9 : digit - 1];
+      if (chip) {
+        e.preventDefault();
+        chordInput.value = chip;
+        tapChord(chip);
+      }
     }
   });
 

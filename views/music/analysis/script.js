@@ -25,16 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const recentPanel  = document.getElementById('recentPanel');
   const recentList   = document.getElementById('recentList');
 
-  const labMarquee = document.getElementById('labMarquee');
-  const lmTexts = [document.getElementById('lmText1'), document.getElementById('lmText2')];
-
   let selectedFile = null;
   let analyzing = false;
-
-  function setLabStatus(text, busy) {
-    lmTexts.forEach(el => { if (el) el.textContent = text; });
-    labMarquee.setAttribute('data-playing', busy ? 'true' : 'false');
-  }
 
   // ---- File selection -------------------------------------------------------
 
@@ -145,7 +137,6 @@ document.addEventListener('DOMContentLoaded', function() {
           recordTimer.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} / 1:30`;
         }, 250);
         recStopTimeout = setTimeout(stopRecording, REC_MAX_MS);
-        setLabStatus('recording from the mic...', true);
         uploadStatus.classList.add('hidden');
       })
       .catch(error => {
@@ -172,13 +163,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (seconds < 3 || blob.size < 2048) {
       showUploadStatus('That recording was too short. Give it at least a few seconds of the song.', 'error');
-      setLabStatus('Drop an MP3 on the bench to get a full readout', false);
       return;
     }
 
     const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
     setChosen(new File([blob], `mic-recording-${stamp}.${ext}`, { type }));
-    setLabStatus(`recorded ${seconds}s from the mic, ready to analyze`, false);
+    showUploadStatus(`Recorded ${seconds}s from the mic, ready to analyze.`, 'ok');
   }
 
   // ---- Analyze ----------------------------------------------------------------
@@ -194,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
     uploadStatus.classList.add('hidden');
     results.classList.add('hidden');
     loadingPanel.classList.remove('hidden');
-    setLabStatus(`analyzing: ${selectedFile.name}`, true);
 
     const form = new FormData();
     form.append('audio', selectedFile);
@@ -208,13 +197,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!ok) throw new Error(body.error || 'Analysis failed');
         renderResults(body.filename, body.result, body.saved);
         if (body.saved) loadRecent();
-        const key = body.result.key ? body.result.key.name : 'key unknown';
-        const bpm = body.result.tempo ? `${body.result.tempo.bpm} BPM` : 'tempo unknown';
-        setLabStatus(`♪ ${body.filename}  //  ${key}  //  ${bpm}`, false);
       })
       .catch(error => {
         showUploadStatus('Analysis failed: ' + error.message, 'error');
-        setLabStatus('Analysis failed. Try another tape.', false);
       })
       .finally(() => {
         analyzing = false;
