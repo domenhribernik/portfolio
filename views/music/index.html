@@ -49,8 +49,7 @@
 
     <main class="music-app">
         <header class="music-header">
-            <p class="kicker">Backing Tracks // Press Play</p>
-            <h1 class="music-title">Guitar<br>Backing Tracks</h1>
+            <h1 class="music-title">Guitar Backing Tracks</h1>
             <p class="music-subtitle">My personal collection of guitar tracks to jam with.</p>
             <nav class="screen-nav" aria-label="Music screens">
                 <a href="./" class="screen-nav__link is-active"><i class="fas fa-play"></i> Player</a>
@@ -60,34 +59,95 @@
         </header>
 
         <div class="music-content">
-            <section class="category">
-                <div class="category-header">
-                    <span class="category-icon"><i class="fas fa-guitar"></i></span>
-                    <h2 class="category-title">Acoustic</h2>
+            <!-- Now playing: the single persistent deck, hidden until a tape is picked -->
+            <section class="deck-panel hidden" id="deckPanel" aria-label="Now playing">
+                <div class="deck-head">
+                    <span class="deck-head__side" id="deckSide">AC</span>
+                    <div class="deck-head__titles">
+                        <span class="deck-head__title" id="deckTitle">No tape loaded</span>
+                        <span class="deck-head__artist" id="deckArtist"></span>
+                    </div>
+                    <span class="deck-head__time" id="deckTime"></span>
                 </div>
-                <div class="category-tracks" id="acoustic-tracks"></div>
+                <div class="deck-body">
+                    <div class="deck">
+                        <span class="reel reel--left"></span>
+                        <div class="waveform-container">
+                            <div class="waveform" id="waveform"></div>
+                            <div class="loading-spinner-music hidden" id="deckSpinner">
+                                <i class="fas fa-spinner fa-pulse"></i>
+                            </div>
+                        </div>
+                        <span class="reel reel--right"></span>
+                    </div>
+                    <div class="player-controls" id="playerControls">
+                        <button class="btn-play" id="btnPlay" aria-label="Play or pause">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="volume-container">
+                            <i class="fas fa-volume-up"></i>
+                            <input class="volume-slider" id="volumeSlider" type="range" min="0" max="100" value="100">
+                        </div>
+                        <div class="track-progress">
+                            <span class="current-time" id="currentTime">0:00</span>
+                            <div class="progress-bar" id="progressBar">
+                                <div class="progress" id="progress"></div>
+                            </div>
+                            <span class="total-time" id="totalTime">0:00</span>
+                        </div>
+                        <div class="rate-group" id="rateGroup"></div>
+                        <a class="btn-tab hidden" id="btnTab" target="_blank" rel="noopener">
+                            <i class="fas fa-guitar"></i> Tab
+                        </a>
+                    </div>
+                    <div class="chordsheet hidden" id="chordsheet"></div>
+                </div>
             </section>
 
-            <section class="category">
-                <div class="category-header">
-                    <span class="category-icon"><i class="fas fa-bolt"></i></span>
-                    <h2 class="category-title">Electric</h2>
+            <!-- Tape crate: search + filters + compact track list -->
+            <section class="finder" aria-label="Track finder">
+                <div class="finder__head">
+                    <span class="finder__label"><i class="fas fa-box-archive"></i> Tape Crate</span>
+                    <span class="finder__count" id="finderCount"></span>
                 </div>
-                <div class="category-tracks" id="electric-tracks"></div>
+                <div class="finder__search">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="search" id="searchInput" placeholder="Type a song or an artist..."
+                        autocomplete="off" spellcheck="false" aria-label="Search tracks">
+                    <span class="finder__key" aria-hidden="true">/</span>
+                </div>
+                <div class="finder__filters">
+                    <div class="filter-row" id="filterCategory">
+                        <span class="filter-row__label">Type</span>
+                        <button class="filter-chip is-active" data-value="">All</button>
+                        <button class="filter-chip" data-value="acoustic"><i class="fas fa-guitar"></i> Acoustic</button>
+                        <button class="filter-chip" data-value="electric"><i class="fas fa-bolt"></i> Electric</button>
+                    </div>
+                    <div class="filter-row" id="filterDuration">
+                        <span class="filter-row__label">Length</span>
+                        <button class="filter-chip is-active" data-value="">Any</button>
+                        <button class="filter-chip" data-value="short">Under 3:00</button>
+                        <button class="filter-chip" data-value="mid">3:00 to 4:30</button>
+                        <button class="filter-chip" data-value="long">Over 4:30</button>
+                    </div>
+                    <div class="filter-row">
+                        <span class="filter-row__label">Artist</span>
+                        <div class="artist-dd" id="artistDd">
+                            <button class="artist-dd__toggle" id="artistToggle" aria-haspopup="listbox"
+                                aria-expanded="false">
+                                <span id="artistToggleLabel">All artists</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="artist-dd__menu hidden" id="artistMenu" role="listbox"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="finder__results" id="results"></div>
+                <p class="finder__empty hidden" id="finderEmpty">Nothing on that shelf. Loosen the filters.</p>
             </section>
         </div>
 
         <footer class="music-footer">
-            <p class="credits">Made with <i class="fas fa-heart"></i> for the love of music</p>
-            <div class="socials">
-                <a href="https://github.com/domenhribernik" target="_blank" rel="noopener" aria-label="GitHub"><i
-                        class="fab fa-github"></i></a>
-                <a href="https://www.instagram.com/domen_hribernik/" target="_blank" rel="noopener"
-                    aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                <a href="https://www.linkedin.com/in/domen-hribernik-4081a121b/" target="_blank" rel="noopener"
-                    aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                <a href="mailto:contact@domenhribernik.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
-            </div>
             <a class="back-link" href="../../"><i class="fas fa-arrow-left"></i> Back to Portfolio</a>
         </footer>
     </main>

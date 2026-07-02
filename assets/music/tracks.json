@@ -2,157 +2,271 @@
   "electric": [
     {
       "name": "Blitzkrieg Bop - The Ramones",
-      "file": "Blitzkrieg Bop - The Ramones.mp3"
+      "file": "Blitzkrieg Bop - The Ramones.mp3",
+      "title": "Blitzkrieg Bop",
+      "artist": "The Ramones",
+      "duration": 134
     },
     {
       "name": "Fell in love with a girl - White Stripes",
-      "file": "Fell in love with a girl - White Stripes.mp3"
+      "file": "Fell in love with a girl - White Stripes.mp3",
+      "title": "Fell in love with a girl",
+      "artist": "White Stripes",
+      "duration": 115
     },
     {
       "name": "Figure it out - Royal Blood",
-      "file": "Figure it out -Royal Blood.mp3"
+      "file": "Figure it out -Royal Blood.mp3",
+      "title": "Figure it out",
+      "artist": "Royal Blood",
+      "duration": 185
     },
     {
       "name": "Hit Me With Your Best Shot - Pat Benatar",
-      "file": "Hit Me With Your Best Shot - Pat Benatar.mp3"
+      "file": "Hit Me With Your Best Shot - Pat Benatar.mp3",
+      "title": "Hit Me With Your Best Shot",
+      "artist": "Pat Benatar",
+      "duration": 194
     },
     {
       "name": "HoneyPie - Johnny Utah",
-      "file": "HoneyPie - Johnny Utah.mp3"
+      "file": "HoneyPie - Johnny Utah.mp3",
+      "title": "HoneyPie",
+      "artist": "Johnny Utah",
+      "duration": 137
     },
     {
       "name": "How you remind me - Nickelback",
-      "file": "How you remind me - Nickelback.mp3"
+      "file": "How you remind me - Nickelback.mp3",
+      "title": "How you remind me",
+      "artist": "Nickelback",
+      "duration": 231
     },
     {
       "name": "Jingle Bells - Rock Version - G Major",
-      "file": "Jingle Bells - Rock Version - G Major.mp3"
+      "file": "Jingle Bells - Rock Version - G Major.mp3",
+      "title": "Jingle Bells (Rock, G Major)",
+      "artist": "Traditional",
+      "duration": 142
     },
     {
       "name": "Killing in the name - Rage Against the Machine",
-      "file": "Killing in the name - Rage Against the Machine.mp3"
+      "file": "Killing in the name - Rage Against the Machine.mp3",
+      "title": "Killing in the name",
+      "artist": "Rage Against the Machine",
+      "duration": 316
     },
     {
       "name": "Little Monster - Royal Blood",
-      "file": "Little Monster - Royal Blood.mp3"
+      "file": "Little Monster - Royal Blood.mp3",
+      "title": "Little Monster",
+      "artist": "Royal Blood",
+      "duration": 223
     },
     {
       "name": "Pretty fly for a white guy - Offspring",
-      "file": "Pretty fly for a white guy - Offspring.mp3"
+      "file": "Pretty fly for a white guy - Offspring.mp3",
+      "title": "Pretty fly for a white guy",
+      "artist": "Offspring",
+      "duration": 194
     },
     {
       "name": "Seven Nation Army - White Stripes",
-      "file": "Seven Nation Army - White Stripes.mp3"
+      "file": "Seven Nation Army - White Stripes.mp3",
+      "title": "Seven Nation Army",
+      "artist": "White Stripes",
+      "duration": 248
     },
     {
       "name": "Thunderstorm - Masayoshi Takanaka",
-      "file": "Thunderstorm - Masayoshi Takanaka.mp3"
+      "file": "Thunderstorm - Masayoshi Takanaka.mp3",
+      "title": "Thunderstorm",
+      "artist": "Masayoshi Takanaka",
+      "duration": 196
     },
     {
       "name": "What's My Age Again - Blink 182",
-      "file": "What's My Age Again - Blink 182.mp3"
+      "file": "What's My Age Again - Blink 182.mp3",
+      "title": "What's My Age Again",
+      "artist": "Blink 182",
+      "duration": 153
     }
   ],
   "acoustic": [
     {
       "name": "A Horse With No Name - America",
-      "file": "A Horse With No Name - America.mp3"
+      "file": "A Horse With No Name - America.mp3",
+      "title": "A Horse With No Name",
+      "artist": "America",
+      "duration": 264
     },
     {
       "name": "Brown eyed girl - Van Morrison",
-      "file": "Brown eyed girl - Van Morrison.mp3"
+      "file": "Brown eyed girl - Van Morrison.mp3",
+      "title": "Brown eyed girl",
+      "artist": "Van Morrison",
+      "duration": 187
     },
     {
       "name": "Don't Look Back In Anger - Oasis",
-      "file": "Don't Look Back In Anger - Oasis.mp3"
+      "file": "Don't Look Back In Anger - Oasis.mp3",
+      "title": "Don't Look Back In Anger",
+      "artist": "Oasis",
+      "duration": 295
     },
     {
       "name": "Heaven - Bryan Adams",
-      "file": "Heaven - Bryan Adams.mp3"
+      "file": "Heaven - Bryan Adams.mp3",
+      "title": "Heaven",
+      "artist": "Bryan Adams",
+      "duration": 271
     },
     {
       "name": "Hey ya! - Outcast",
-      "file": "Hey ya! - Outcast.mp3"
+      "file": "Hey ya! - Outcast.mp3",
+      "title": "Hey ya!",
+      "artist": "Outcast",
+      "duration": 255
     },
     {
       "name": "House of the Rising Sun - The Animals",
-      "file": "House of the Rising Sun - The Animals.mp3"
+      "file": "House of the Rising Sun - The Animals.mp3",
+      "title": "House of the Rising Sun",
+      "artist": "The Animals",
+      "duration": 274
     },
     {
       "name": "Hurt - Johnny Cash",
-      "file": "Hurt - Johnny Cash.mp3"
+      "file": "Hurt - Johnny Cash.mp3",
+      "title": "Hurt",
+      "artist": "Johnny Cash",
+      "duration": 225
     },
     {
       "name": "Island In The Sun - Weezer",
-      "file": "Island In The Sun - Weezer.mp3"
+      "file": "Island In The Sun - Weezer.mp3",
+      "title": "Island In The Sun",
+      "artist": "Weezer",
+      "duration": 205
     },
     {
       "name": "Lahko sem srce - Tabu",
-      "file": "Lahko sem srce - Tabu.mp3"
+      "file": "Lahko sem srce - Tabu.mp3",
+      "title": "Lahko sem srce",
+      "artist": "Tabu",
+      "duration": 160
     },
     {
       "name": "Layla Unplugged - Eric Clapton",
-      "file": "Layla Unplugged - Eric Clapton.mp3"
+      "file": "Layla Unplugged - Eric Clapton.mp3",
+      "title": "Layla Unplugged",
+      "artist": "Eric Clapton",
+      "duration": 260
     },
     {
       "name": "People Are Toys To You - Joanna Sternberg",
-      "file": "People Are Toys To You - Joanna Sternberg.mp3"
+      "file": "People Are Toys To You - Joanna Sternberg.mp3",
+      "title": "People Are Toys To You",
+      "artist": "Joanna Sternberg",
+      "duration": 166
     },
     {
       "name": "Save tonight - Eagle Eye Cherry",
-      "file": "Save tonight - Eagle Eye Cherry.mp3"
+      "file": "Save tonight - Eagle Eye Cherry.mp3",
+      "title": "Save tonight",
+      "artist": "Eagle Eye Cherry",
+      "duration": 240
     },
     {
       "name": "Sun to Me - Zach Bryan",
-      "file": "Sun to Me - Zach Bryan.mp3"
+      "file": "Sun to Me - Zach Bryan.mp3",
+      "title": "Sun to Me",
+      "artist": "Zach Bryan",
+      "duration": 163
     },
     {
       "name": "To Be With You - Mr. Big",
-      "file": "To Be With You - Mr. Big.mp3"
+      "file": "To Be With You - Mr. Big.mp3",
+      "title": "To Be With You",
+      "artist": "Mr. Big",
+      "duration": 205
     },
     {
       "name": "Wish You Were Here - Pink Floyd",
-      "file": "Wish You Were Here - Pink Floyd.mp3"
+      "file": "Wish You Were Here - Pink Floyd.mp3",
+      "title": "Wish You Were Here",
+      "artist": "Pink Floyd",
+      "duration": 293
     },
     {
       "name": "YOSEMITE - Travis Scott",
-      "file": "YOSEMITE - Travis Scott.mp3"
+      "file": "YOSEMITE - Travis Scott.mp3",
+      "title": "YOSEMITE",
+      "artist": "Travis Scott",
+      "duration": 152
     },
     {
       "name": "Riptide - Vance Joy",
-      "file": "Riptide - Vance Joy.mp3"
+      "file": "Riptide - Vance Joy.mp3",
+      "title": "Riptide",
+      "artist": "Vance Joy",
+      "duration": 206
     },
     {
       "name": "Fast Car - Tracy Chapman",
-      "file": "Fast Car - Tracy Chapman.mp3"
+      "file": "Fast Car - Tracy Chapman.mp3",
+      "title": "Fast Car",
+      "artist": "Tracy Chapman",
+      "duration": 296
     },
     {
       "name": "Poljubljena - Tabu",
-      "file": "Poljubljena - Tabu.mp3"
+      "file": "Poljubljena - Tabu.mp3",
+      "title": "Poljubljena",
+      "artist": "Tabu",
+      "duration": 239
     },
     {
       "name": "Wonderwall - Oasis",
-      "file": "Wonderwall - Oasis.mp3"
+      "file": "Wonderwall - Oasis.mp3",
+      "title": "Wonderwall",
+      "artist": "Oasis",
+      "duration": 261
     },
     {
       "name": "Don't Dream It's Over - Crowded House",
-      "file": "Don't Dream It's Over - Crowded House.mp3"
+      "file": "Don't Dream It's Over - Crowded House.mp3",
+      "title": "Don't Dream It's Over",
+      "artist": "Crowded House",
+      "duration": 239
     },
     {
       "name": "Kiss me - Sixpence None The Richer",
-      "file": "Kiss me - Sixpeace none the richer.mp3"
+      "file": "Kiss me - Sixpeace none the richer.mp3",
+      "title": "Kiss me",
+      "artist": "Sixpence None The Richer",
+      "duration": 209
     },
     {
       "name": "Voda - Dan D",
-      "file": "Voda - Dan D.mp3"
+      "file": "Voda - Dan D.mp3",
+      "title": "Voda",
+      "artist": "Dan D",
+      "duration": 264
     },
     {
       "name": "Somebody That I Used to Know - Gotye",
-      "file": "Somebody That I Used to Know - Gotye.mp3"
+      "file": "Somebody That I Used to Know - Gotye.mp3",
+      "title": "Somebody That I Used to Know",
+      "artist": "Gotye",
+      "duration": 245
     },
     {
       "name": "Slow Cheetah - RHCP",
-      "file": "Slow Cheetah - RHCP.mp3"
+      "file": "Slow Cheetah - RHCP.mp3",
+      "title": "Slow Cheetah",
+      "artist": "RHCP",
+      "duration": 320
     }
   ]
 }

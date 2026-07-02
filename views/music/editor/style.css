@@ -266,6 +266,8 @@
 
 /* ---- Word grid (anchor mode) --------------------------------------------- */
 .word-grid {
+    position: relative;
+    /* words measure their offsetTop against the grid for auto-scroll */
     max-height: 360px;
     overflow-y: auto;
     padding: 0.4rem 0.2rem;

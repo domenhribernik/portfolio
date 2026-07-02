@@ -627,6 +627,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       wordGrid.appendChild(lineEl);
     });
+
+    // keep the word the next tap lands on centered, so a whole song can be
+    // synced without ever touching the scrollbar
+    if (syncMode) {
+      const nextEl = wordGrid.querySelector('.wg-word.is-next-sync');
+      if (nextEl) {
+        const top = nextEl.offsetTop - (wordGrid.clientHeight - nextEl.offsetHeight) / 2;
+        wordGrid.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+    }
   }
 
   // ---- Word sync stamping --------------------------------------------------

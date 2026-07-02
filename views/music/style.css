@@ -4,6 +4,9 @@
    clay) + the Tailwind config in index.html. This file carries the retro
    detailing Tailwind can't express: hard-shadow cards, the cassette reels,
    range-input theming, and JS state classes.
+
+   The player is a jukebox: one persistent .deck-panel on top and the
+   .finder "tape crate" (search + filters + compact list) below it.
    =========================================================================== */
 
 :root {
@@ -11,8 +14,8 @@
     /* signature accent (marigold) */
     --rust: #d4451f;
     /* "peaking" / playing accent (clay) */
-    --shadow-ink: 5px 5px 0 var(--ink, #1c1a17);
-    --shadow-ink-sm: 3px 3px 0 var(--ink, #1c1a17);
+    --shadow-ink: 3px 3px 0 var(--ink, #1c1a17);
+    --shadow-ink-sm: 2px 2px 0 var(--ink, #1c1a17);
 }
 
 *,
@@ -34,23 +37,17 @@
     margin-bottom: 2.5rem;
 }
 
-.kicker {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--clay, #d4451f);
-    margin-bottom: 0.85rem;
-}
-
+/* single line; the clamp is tuned so the longest title ("Guitar Backing
+   Tracks") still fits a small phone without wrapping */
 .music-title {
     font-family: 'Bricolage Grotesque', sans-serif;
     font-weight: 800;
-    font-size: clamp(2.5rem, 7vw, 4.5rem);
-    line-height: 0.95;
+    font-size: clamp(1.6rem, 7vw, 3.8rem);
+    line-height: 1;
     letter-spacing: -0.02em;
     color: var(--ink, #1c1a17);
     margin: 0 0 1rem;
+    white-space: nowrap;
 }
 
 .music-subtitle {
@@ -87,7 +84,7 @@
 
 .screen-nav__link:hover {
     transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0 var(--ink, #1c1a17);
+    box-shadow: 4px 4px 0 var(--ink, #1c1a17);
 }
 
 .screen-nav__link.is-active {
@@ -99,144 +96,98 @@
     font-size: 0.75rem;
 }
 
-/* ---- Categories (cassette label + tracklist) --------------------------- */
 .music-content {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 2rem;
 }
 
-.category-header {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    padding: 0.9rem 1.1rem;
+/* ---- Now playing deck --------------------------------------------------- */
+.deck-panel {
     border: 3px solid var(--ink, #1c1a17);
-    background: var(--amber);
+    background: var(--paper, #f6f2ea);
     box-shadow: var(--shadow-ink);
 }
 
-/* ruled "cassette label" lines on the right of the header */
-.category-header::after {
-    content: "";
-    position: absolute;
-    right: 1.1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 84px;
-    height: 56%;
-    background: repeating-linear-gradient(var(--ink, #1c1a17) 0 2px, transparent 2px 8px);
-    opacity: 0.45;
-}
-
-.category-icon {
-    flex: 0 0 auto;
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 3px solid var(--ink, #1c1a17);
-    border-radius: 50%;
-    background: var(--card, #fffdf8);
-    color: var(--ink, #1c1a17);
-    font-size: 1.1rem;
-}
-
-.category-title {
-    margin: 0;
-    font-family: 'Bricolage Grotesque', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--ink, #1c1a17);
-}
-
-.category-tracks {
-    padding-top: 1.25rem;
-}
-
-/* ---- Track row --------------------------------------------------------- */
-.track {
-    margin-bottom: 1rem;
-    border: 3px solid var(--ink, #1c1a17);
-    background: var(--card, #fffdf8);
-    box-shadow: var(--shadow-ink-sm);
-    transition: box-shadow 0.12s ease;
-}
-
-.track:last-child {
-    margin-bottom: 0;
-}
-
-.track.active {
-    box-shadow: 6px 6px 0 var(--rust);
-}
-
-.track-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.9rem 1.1rem;
-    cursor: pointer;
-}
-
-.track-name {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-weight: 600;
-    font-size: 1.05rem;
-    text-transform: capitalize;
-    color: var(--ink, #1c1a17);
-}
-
-.track-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-}
-
-.track-duration {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--stone, #6b6256);
-}
-
-.track-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border: 2px solid var(--ink, #1c1a17);
-    background: var(--paper, #f6f2ea);
-    color: var(--ink, #1c1a17);
-    transition: background 0.2s ease;
-}
-
-.track.active .track-toggle {
-    background: var(--amber);
-}
-
-.track-toggle i {
-    font-size: 0.8rem;
-    transition: transform 0.3s ease;
-}
-
-.track.active .track-toggle i {
-    transform: rotate(180deg);
-}
-
-/* ---- Player (expanded "deck") ------------------------------------------ */
-.track-player {
-    padding: 1.3rem 1.1rem 1.4rem;
-    border-top: 3px dashed var(--ink, #1c1a17);
-    background: var(--paper, #f6f2ea);
-}
-
-.track-player.hidden,
+/* JS state class; also covers the editor / analysis screens */
 .hidden {
     display: none;
+}
+
+.deck-panel.hidden {
+    display: none;
+}
+
+.deck-head {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 3px solid var(--ink, #1c1a17);
+    background: var(--amber);
+    transition: background 0.25s ease;
+}
+
+/* the head strip flips to "recording red" while the tape rolls */
+.deck-panel.is-playing .deck-head {
+    background: var(--rust);
+}
+
+.deck-panel.is-playing .deck-head__title,
+.deck-panel.is-playing .deck-head__artist,
+.deck-panel.is-playing .deck-head__time {
+    color: var(--paper, #f6f2ea);
+}
+
+.deck-head__side {
+    flex: 0 0 auto;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    padding: 0.1rem 0.4rem;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    color: var(--ink, #1c1a17);
+}
+
+.deck-head__side--electric {
+    background: var(--cobalt, #1f35e0);
+    color: var(--paper, #f6f2ea);
+}
+
+.deck-head__titles {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.deck-head__title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 1.15rem;
+    line-height: 1.1;
+    color: var(--ink, #1c1a17);
+}
+
+.deck-head__artist {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--ink, #1c1a17);
+    opacity: 0.75;
+}
+
+.deck-head__time {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink, #1c1a17);
+}
+
+.deck-body {
+    padding: 1.2rem 1.1rem 1.3rem;
 }
 
 .deck {
@@ -283,7 +234,7 @@
     transform: translate(-50%, -50%);
 }
 
-.track.is-playing .reel {
+.deck-panel.is-playing .reel {
     animation-play-state: running;
 }
 
@@ -350,7 +301,7 @@
 
 .btn-play:hover {
     transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 var(--ink, #1c1a17);
+    box-shadow: 3px 3px 0 var(--ink, #1c1a17);
 }
 
 .btn-play:active {
@@ -362,7 +313,7 @@
     font-size: 1rem;
 }
 
-.track.is-playing .btn-play {
+.deck-panel.is-playing .btn-play {
     background: var(--rust);
     color: var(--paper, #f6f2ea);
 }
@@ -436,7 +387,7 @@
     cursor: pointer;
 }
 
-/* practice playback speed (player rows and the editor transport row) */
+/* practice playback speed (player deck and the editor transport row) */
 .rate-group {
     display: inline-flex;
     align-items: center;
@@ -474,6 +425,393 @@
     width: 0%;
     background: var(--rust);
     transition: width 0.1s linear;
+}
+
+/* ---- Finder ("tape crate": search + filters + list) --------------------- */
+.finder {
+    border: 3px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    box-shadow: var(--shadow-ink);
+}
+
+.finder__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    border-bottom: 3px solid var(--ink, #1c1a17);
+    background: var(--amber);
+}
+
+.finder__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink, #1c1a17);
+}
+
+.finder__count {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink, #1c1a17);
+    opacity: 0.75;
+}
+
+.finder__search {
+    position: relative;
+    border-bottom: 3px solid var(--ink, #1c1a17);
+}
+
+.finder__search > i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: var(--stone, #6b6256);
+    pointer-events: none;
+}
+
+.finder__search input {
+    width: 100%;
+    padding: 0.8rem 3rem 0.8rem 2.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--ink, #1c1a17);
+    background: var(--paper, #f6f2ea);
+    border: none;
+    outline: none;
+}
+
+.finder__search input:focus {
+    background: var(--card, #fffdf8);
+}
+
+.finder__search input::placeholder {
+    color: var(--stone, #6b6256);
+    opacity: 0.7;
+}
+
+/* keyboard hint: "/" focuses the search box */
+.finder__key {
+    position: absolute;
+    right: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--stone, #6b6256);
+    border: 2px solid var(--stone, #6b6256);
+    padding: 0 0.4rem;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.finder__filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.8rem 1rem;
+    border-bottom: 3px solid var(--ink, #1c1a17);
+    background: var(--paper-2, #efe9dd);
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.filter-row__label {
+    flex: 0 0 3.4rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--stone, #6b6256);
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    color: var(--ink, #1c1a17);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.filter-chip i {
+    font-size: 0.6rem;
+}
+
+.filter-chip:hover {
+    background: var(--paper, #f6f2ea);
+}
+
+.filter-chip:active {
+    transform: translate(1px, 1px);
+}
+
+.filter-chip.is-active {
+    background: var(--amber);
+}
+
+/* ---- Artist dropdown ---------------------------------------------------- */
+.artist-dd {
+    position: relative;
+    display: inline-block;
+}
+
+.artist-dd__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 170px;
+    justify-content: space-between;
+    padding: 0.25rem 0.6rem;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    color: var(--ink, #1c1a17);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.artist-dd__toggle:hover {
+    background: var(--paper, #f6f2ea);
+}
+
+.artist-dd__toggle.is-filtering {
+    background: var(--amber);
+}
+
+.artist-dd__toggle i {
+    font-size: 0.6rem;
+    transition: transform 0.15s ease;
+}
+
+.artist-dd__toggle[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.artist-dd__menu {
+    position: absolute;
+    z-index: 60;
+    top: calc(100% + 5px);
+    left: 0;
+    min-width: 250px;
+    max-height: 260px;
+    overflow-y: auto;
+    border: 3px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    box-shadow: var(--shadow-ink);
+}
+
+.artist-dd__menu.hidden {
+    display: none;
+}
+
+.artist-dd__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    width: 100%;
+    padding: 0.42rem 0.7rem;
+    border: none;
+    border-bottom: 1px dashed rgba(28, 26, 23, 0.18);
+    background: transparent;
+    color: var(--ink, #1c1a17);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.artist-dd__item:last-child {
+    border-bottom: none;
+}
+
+.artist-dd__item:hover {
+    background: var(--paper-2, #efe9dd);
+}
+
+.artist-dd__item.is-active {
+    background: var(--amber);
+}
+
+.artist-dd__count {
+    color: var(--stone, #6b6256);
+    font-size: 0.64rem;
+}
+
+/* ---- Results list (compact tape rows) ----------------------------------- */
+.finder__results {
+    max-height: 23rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink, #1c1a17) var(--paper-2, #efe9dd);
+}
+
+.finder__results::-webkit-scrollbar {
+    width: 10px;
+}
+
+.finder__results::-webkit-scrollbar-track {
+    background: var(--paper-2, #efe9dd);
+}
+
+.finder__results::-webkit-scrollbar-thumb {
+    background: var(--ink, #1c1a17);
+    border: 2px solid var(--paper-2, #efe9dd);
+}
+
+.tape {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-bottom: 2px solid rgba(28, 26, 23, 0.1);
+    background: var(--card, #fffdf8);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tape:last-child {
+    border-bottom: none;
+}
+
+.tape:hover {
+    background: var(--paper, #f6f2ea);
+    box-shadow: inset 4px 0 0 var(--amber);
+}
+
+.tape.is-current {
+    background: var(--paper-2, #efe9dd);
+    box-shadow: inset 4px 0 0 var(--rust);
+}
+
+.tape__side {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    padding: 0.06rem 0.32rem;
+    border: 2px solid var(--ink, #1c1a17);
+    background: var(--amber);
+    color: var(--ink, #1c1a17);
+}
+
+.tape__side--electric {
+    background: var(--cobalt, #1f35e0);
+    color: var(--paper, #f6f2ea);
+}
+
+.tape__title {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--ink, #1c1a17);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tape__artist {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--stone, #6b6256);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.tape__time {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--stone, #6b6256);
+}
+
+/* tiny equalizer: visible on the loaded row, bounces while playing */
+.tape__eq {
+    display: none;
+    align-items: flex-end;
+    gap: 2px;
+    width: 16px;
+    height: 13px;
+}
+
+.tape.is-current .tape__eq {
+    display: flex;
+}
+
+.tape__eq span {
+    flex: 1;
+    height: 100%;
+    background: var(--rust);
+    transform: scaleY(0.3);
+    transform-origin: bottom;
+    animation: eq-bounce 0.9s ease-in-out infinite;
+    animation-play-state: paused;
+}
+
+.tape__eq span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.tape__eq span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.tape.is-playing .tape__eq span {
+    animation-play-state: running;
+}
+
+@keyframes eq-bounce {
+
+    0%,
+    100% {
+        transform: scaleY(0.3);
+    }
+
+    50% {
+        transform: scaleY(1);
+    }
+}
+
+.finder__empty {
+    margin: 0;
+    padding: 1.1rem 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--stone, #6b6256);
+}
+
+.finder__empty.hidden {
+    display: none;
 }
 
 /* ---- Chordsheet (synced chords + lyrics under the deck) ----------------- */
@@ -850,7 +1188,7 @@
 
 .btn-flat:hover:not(:disabled) {
     transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0 var(--ink, #1c1a17);
+    box-shadow: 4px 4px 0 var(--ink, #1c1a17);
 }
 
 .btn-flat:active:not(:disabled) {
@@ -919,42 +1257,6 @@
     text-align: center;
 }
 
-.credits {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--stone, #6b6256);
-}
-
-.credits i {
-    color: var(--rust);
-    margin: 0 0.15rem;
-}
-
-.socials {
-    display: flex;
-    gap: 0.75rem;
-}
-
-.socials a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border: 3px solid var(--ink, #1c1a17);
-    background: var(--card, #fffdf8);
-    color: var(--ink, #1c1a17);
-    box-shadow: var(--shadow-ink-sm);
-    text-decoration: none;
-    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease;
-}
-
-.socials a:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0 var(--ink, #1c1a17);
-    background: var(--amber);
-}
-
 .back-link {
     display: inline-flex;
     align-items: center;
@@ -981,10 +1283,6 @@
         padding: 6rem 1rem 3rem;
     }
 
-    .category-header::after {
-        display: none;
-    }
-
     .reel {
         width: 38px;
         height: 38px;
@@ -999,6 +1297,47 @@
     /* the chip's own 2px border is enough of a ring on small screens */
     .cs-chord--inst.is-active {
         outline: none;
+    }
+}
+
+@media (max-width: 640px) {
+
+    /* tape rows: artist drops under the title, time stays on the right */
+    .tape {
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
+        grid-template-areas:
+            "side title time eq"
+            "side artist time eq";
+        row-gap: 0.1rem;
+    }
+
+    .tape__side {
+        grid-area: side;
+    }
+
+    .tape__title {
+        grid-area: title;
+    }
+
+    .tape__artist {
+        grid-area: artist;
+        max-width: none;
+    }
+
+    .tape__time {
+        grid-area: time;
+    }
+
+    .tape__eq {
+        grid-area: eq;
+    }
+
+    .filter-row__label {
+        flex-basis: 100%;
+    }
+
+    .finder__key {
+        display: none;
     }
 }
 
@@ -1023,6 +1362,10 @@
     .track-progress {
         width: 100%;
     }
+
+    .deck-head__title {
+        font-size: 1rem;
+    }
 }
 
 /* ---- Reduced motion ---------------------------------------------------- */
@@ -1032,11 +1375,15 @@
         animation: none !important;
     }
 
-    .track,
+    .tape__eq span {
+        animation: none !important;
+        transform: scaleY(0.7);
+    }
+
     .btn-play,
-    .socials a,
     .back-link,
-    .track-toggle i {
+    .tape,
+    .filter-chip {
         transition: none !important;
     }
 }

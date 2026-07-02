@@ -1,10 +1,59 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const players = {};
   const SYNC_API = '../../app/controllers/music-controller.php';
   const TABS_API = '../../app/proxys/tabs-proxy.php';
   const GAP_CHORDS = ['', 'N.C.', 'NC', '-'];
 
-  let tracks = { electric: [], acoustic: [] };
+  // Length filter buckets, in seconds
+  const DURATION_BUCKETS = {
+    short: d => d < 180,
+    mid: d => d >= 180 && d <= 270,
+    long: d => d > 270
+  };
+
+  // ---- DOM ----------------------------------------------------------------
+  const deckPanel = document.getElementById('deckPanel');
+  const deckSide = document.getElementById('deckSide');
+  const deckTitle = document.getElementById('deckTitle');
+  const deckArtist = document.getElementById('deckArtist');
+  const deckTime = document.getElementById('deckTime');
+  const deckSpinner = document.getElementById('deckSpinner');
+  const playerControls = document.getElementById('playerControls');
+  const btnPlay = document.getElementById('btnPlay');
+  const btnTab = document.getElementById('btnTab');
+  const volumeSlider = document.getElementById('volumeSlider');
+  const rateGroup = document.getElementById('rateGroup');
+  const currentTimeEl = document.getElementById('currentTime');
+  const totalTimeEl = document.getElementById('totalTime');
+  const progressBar = document.getElementById('progressBar');
+  const progressEl = document.getElementById('progress');
+  const chordsheetEl = document.getElementById('chordsheet');
+  const searchInput = document.getElementById('searchInput');
+  const resultsEl = document.getElementById('results');
+  const finderCount = document.getElementById('finderCount');
+  const finderEmpty = document.getElementById('finderEmpty');
+  const artistDd = document.getElementById('artistDd');
+  const artistToggle = document.getElementById('artistToggle');
+  const artistToggleLabel = document.getElementById('artistToggleLabel');
+  const artistMenu = document.getElementById('artistMenu');
+
+  // ---- State ----------------------------------------------------------------
+  let allTracks = []; // flat list: {key, src, category, title, artist, name, duration}
+  const filters = { query: '', category: '', duration: '', artist: '' };
+
+  // The one deck. Mirrors the old per-track player object so the chordsheet
+  // rendering + sweep logic below carries over unchanged.
+  const deck = {
+    wavesurfer: null,
+    track: null,        // the selected entry from allTracks
+    isLoaded: false,
+    isPlaying: false,
+    isLoading: false,
+    rate: 1,            // practice speed, kept across track switches
+    sync: null          // rendered chord/lyrics refs once loaded
+  };
+
+  const syncCache = {}; // track key -> sheet data | 'empty' (errors are not cached)
+  const tabCache = {};  // track key -> {found, url, ...} | 'error'
 
   // Which tracks have a saved chord sheet. Knowing this up front lets the
   // deck skip the per-track request (and its console-visible 404) for tracks
@@ -22,518 +71,429 @@ document.addEventListener('DOMContentLoaded', function() {
   fetch('../../assets/music/tracks.json')
     .then(response => response.json())
     .then(data => {
-      tracks = data;
-      createTrackElements(); // Call this after tracks are loaded
-    })
-    .catch(error => console.error('Error loading tracks:', error));
-
-  function createTrackElements() {
-    const electricContainer = document.getElementById('electric-tracks');
-    const acousticContainer = document.getElementById('acoustic-tracks');
-
-    tracks.electric.forEach((track, index) => {
-      const trackElement = createTrackElement(track, 'electric', index);
-      electricContainer.appendChild(trackElement);
-    });
-
-    tracks.acoustic.forEach((track, index) => {
-      const trackElement = createTrackElement(track, 'acoustic', index);
-      acousticContainer.appendChild(trackElement);
-    });
-
-    initializeEventListeners();
-  }
-
-  function createTrackElement(track, category, index) {
-    const trackId = `${category}-${index}`;
-    const trackSrc = `../../assets/music/${category}/${track.file}`;
-
-    // Create track container
-    const trackDiv = document.createElement('div');
-    trackDiv.className = 'track';
-    trackDiv.setAttribute('data-src', trackSrc);
-    trackDiv.setAttribute('data-id', trackId);
-    trackDiv.setAttribute('data-key', `${category}/${track.file}`);
-
-    // Create track info section
-    const trackInfo = document.createElement('div');
-    trackInfo.className = 'track-info';
-
-    const trackName = document.createElement('div');
-    trackName.className = 'track-name';
-    trackName.textContent = track.name;
-
-    const trackControls = document.createElement('div');
-    trackControls.className = 'track-controls';
-
-    const trackDuration = document.createElement('span');
-    trackDuration.className = 'track-duration';
-    trackDuration.textContent = '0:00';
-
-    const trackToggle = document.createElement('span');
-    trackToggle.className = 'track-toggle';
-    trackToggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
-
-    trackControls.appendChild(trackDuration);
-    trackControls.appendChild(trackToggle);
-
-    trackInfo.appendChild(trackName);
-    trackInfo.appendChild(trackControls);
-
-    // Create track player section
-    const trackPlayer = document.createElement('div');
-    trackPlayer.className = 'track-player hidden';
-
-    // Create waveform container which will hold both waveform and loading spinner
-    const waveformContainer = document.createElement('div');
-    waveformContainer.className = 'waveform-container';
-
-    const waveform = document.createElement('div');
-    waveform.className = 'waveform';
-    waveform.id = `waveform-${trackId}`;
-
-    // Create loading spinner inside waveform container
-    const loadingSpinner = document.createElement('div');
-    loadingSpinner.className = 'loading-spinner-music hidden';
-    loadingSpinner.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
-
-    // Add waveform and loading spinner to the container
-    waveformContainer.appendChild(waveform);
-    waveformContainer.appendChild(loadingSpinner);
-
-    const playerControls = document.createElement('div');
-    playerControls.className = 'player-controls';
-
-    // Play button
-    const playButton = document.createElement('button');
-    playButton.className = 'btn-play';
-    playButton.innerHTML = '<i class="fas fa-play"></i>';
-
-    // Volume container
-    const volumeContainer = document.createElement('div');
-    volumeContainer.className = 'volume-container';
-
-    const volumeIcon = document.createElement('i');
-    volumeIcon.className = 'fas fa-volume-up';
-
-    const volumeSlider = document.createElement('input');
-    volumeSlider.className = 'volume-slider';
-    volumeSlider.type = 'range';
-    volumeSlider.min = '0';
-    volumeSlider.max = '100';
-    volumeSlider.value = '100';
-
-    volumeContainer.appendChild(volumeIcon);
-    volumeContainer.appendChild(volumeSlider);
-
-    // Practice speed: 50-100% playback rate; the MediaElement backend keeps
-    // the pitch, so slowed songs stay in tune for playing along
-    const rateGroup = document.createElement('div');
-    rateGroup.className = 'rate-group';
-    [0.5, 0.75, 0.9, 1].forEach(rate => {
-      const button = document.createElement('button');
-      button.className = 'btn-mini' + (rate === 1 ? ' is-active' : '');
-      button.dataset.rate = String(rate);
-      button.textContent = `${rate * 100}%`;
-      button.title = `Play at ${rate * 100}% speed`;
-      rateGroup.appendChild(button);
-    });
-
-    // Track progress
-    const trackProgress = document.createElement('div');
-    trackProgress.className = 'track-progress';
-
-    const currentTime = document.createElement('span');
-    currentTime.className = 'current-time';
-    currentTime.textContent = '0:00';
-
-    const progressBar = document.createElement('div');
-    progressBar.className = 'progress-bar';
-
-    const progress = document.createElement('div');
-    progress.className = 'progress';
-
-    const totalTime = document.createElement('span');
-    totalTime.className = 'total-time';
-    totalTime.textContent = '0:00';
-
-    progressBar.appendChild(progress);
-
-    trackProgress.appendChild(currentTime);
-    trackProgress.appendChild(progressBar);
-    trackProgress.appendChild(totalTime);
-
-    playerControls.appendChild(playButton);
-    playerControls.appendChild(volumeContainer);
-    playerControls.appendChild(rateGroup);
-    playerControls.appendChild(trackProgress);
-
-    // Songsterr tab link; href is filled in by the proxy on first deck open
-    const tabLink = document.createElement('a');
-    tabLink.className = 'btn-tab hidden';
-    tabLink.target = '_blank';
-    tabLink.rel = 'noopener';
-    tabLink.innerHTML = '<i class="fas fa-guitar"></i> Tab';
-    tabLink.addEventListener('click', e => e.stopPropagation());
-    playerControls.appendChild(tabLink);
-
-    // Cassette "deck": two reels flank the waveform and spin while playing.
-    const deck = document.createElement('div');
-    deck.className = 'deck';
-
-    const reelLeft = document.createElement('span');
-    reelLeft.className = 'reel reel--left';
-    const reelRight = document.createElement('span');
-    reelRight.className = 'reel reel--right';
-
-    deck.appendChild(reelLeft);
-    deck.appendChild(waveformContainer);
-    deck.appendChild(reelRight);
-
-    // Add deck and controls to track player
-    trackPlayer.appendChild(deck);
-    trackPlayer.appendChild(playerControls);
-
-    // Chords + lyrics songbook; filled from the DB the first time the deck opens
-    const chordSheet = document.createElement('div');
-    chordSheet.className = 'chordsheet hidden';
-    trackPlayer.appendChild(chordSheet);
-
-    trackDiv.appendChild(trackInfo);
-    trackDiv.appendChild(trackPlayer);
-
-    return trackDiv;
-  }
-
-  function initializeEventListeners() {
-    const tracks = document.querySelectorAll('.track');
-
-    // Initialize each track
-    tracks.forEach(track => {
-      const trackId = track.getAttribute('data-id');
-      const trackSrc = track.getAttribute('data-src');
-      const trackInfo = track.querySelector('.track-info');
-      const trackPlayer = track.querySelector('.track-player');
-      const waveformElement = trackPlayer.querySelector('.waveform');
-      const loadingSpinner = trackPlayer.querySelector('.loading-spinner-music');
-      const playButton = trackPlayer.querySelector('.btn-play');
-      const volumeSlider = trackPlayer.querySelector('.volume-slider');
-      const currentTimeSpan = trackPlayer.querySelector('.current-time');
-      const totalTimeSpan = trackPlayer.querySelector('.track-progress .total-time');
-      const progressBar = trackPlayer.querySelector('.progress');
-
-      // Create wavesurfer instance for this track. MediaElement backend so
-      // the practice speed control keeps the pitch (WebAudio rate would
-      // detune the song).
-      const wavesurfer = WaveSurfer.create({
-        container: waveformElement,
-        backend: 'MediaElement',
-        waveColor: 'rgba(28, 26, 23, 0.22)',
-        progressColor: '#d4451f',
-        cursorColor: '#1c1a17',
-        barWidth: 2,
-        barRadius: 2,
-        cursorWidth: 0,
-        height: 90,
-        responsive: true,
-        hideScrollbar: true,
-        normalize: true
-      });
-
-      // Store player reference
-      players[trackId] = {
-        element: track,
-        wavesurfer: wavesurfer,
-        isLoaded: false,
-        isPlaying: false,
-        isLoading: false,
-        trackKey: track.getAttribute('data-key'),
-        trackName: track.querySelector('.track-name').textContent,
-        rate: 1,             // practice playback speed
-        sync: null,          // rendered chord/lyrics refs once loaded
-        syncState: 'idle',   // idle | loading | loaded | empty | error
-        tabState: 'idle'
-      };
-
-      // Add click event to track info to toggle player
-      trackInfo.addEventListener('click', function() {
-        togglePlayer(trackId, trackSrc);
-      });
-
-      // Add play button functionality
-      playButton.addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent the click from bubbling to track-info
-        const player = players[trackId];
-
-        // If still loading, ignore the click
-        if (player.isLoading) {
-          return;
-        }
-
-        if (player.isPlaying) {
-          player.wavesurfer.pause();
-          player.isPlaying = false;
-          wakeLock?.release();
-          wakeLock = null;
-          playButton.querySelector('i').classList.replace('fa-pause', 'fa-play');
-          track.classList.remove('is-playing');
-        } else {
-          // Pause all other tracks first
-          Object.keys(players).forEach(id => {
-            if (id !== trackId && players[id].isPlaying) {
-              players[id].wavesurfer.pause();
-              players[id].isPlaying = false;
-              players[id].element.classList.remove('is-playing');
-              players[id].element.querySelector('.btn-play i').classList.replace('fa-pause', 'fa-play');
-            }
-          });
-
-          player.wavesurfer.play();
-          player.isPlaying = true;
-          requestWakeLock();
-          playButton.querySelector('i').classList.replace('fa-play', 'fa-pause');
-          track.classList.add('is-playing');
-        }
-      });
-
-      // Add volume control
-      volumeSlider.addEventListener('input', function(e) {
-        e.stopPropagation(); // Prevent the click from bubbling
-        const volume = parseFloat(this.value) / 100;
-        players[trackId].wavesurfer.setVolume(volume);
-      });
-
-      // Practice speed buttons
-      trackPlayer.querySelectorAll('.rate-group .btn-mini').forEach(button => {
-        button.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const rate = parseFloat(this.dataset.rate);
-          players[trackId].rate = rate;
-          if (players[trackId].isLoaded) wavesurfer.setPlaybackRate(rate);
-          this.closest('.rate-group').querySelectorAll('.btn-mini').forEach(b => {
-            b.classList.toggle('is-active', b === this);
+      ['acoustic', 'electric'].forEach(category => {
+        (data[category] || []).forEach(track => {
+          allTracks.push({
+            key: `${category}/${track.file}`,
+            src: `../../assets/music/${category}/${track.file}`,
+            category: category,
+            title: track.title || track.name,
+            artist: track.artist || '',
+            name: track.name,
+            duration: track.duration || 0
           });
         });
       });
+      allTracks.sort((a, b) => a.title.localeCompare(b.title));
+      buildArtistMenu();
+      applyFilters();
+    })
+    .catch(error => console.error('Error loading tracks:', error));
 
-      // Handle wavesurfer events
-      wavesurfer.on('loading', function(percent) {
-        // With the MediaElement backend, 'loading' tracks the separate
-        // waveform download, which keeps firing after 'ready' (the media is
-        // playable long before the full file is fetched for drawing). Once
-        // ready, never fall back into the loading state.
-        if (players[trackId].isLoaded) return;
-        console.log(`Loading track ${trackId}: ${percent}%`);
-        loadingSpinner.classList.remove('hidden');
-        players[trackId].isLoading = true;
+  // ---- Finder: search + filters --------------------------------------------
 
-        // Hide the player controls during loading
-        const playerControls = trackPlayer.querySelector('.player-controls');
-        playerControls.classList.add('loading');
-      });
+  function normalize(text) {
+    return (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
 
-      // Then update the 'ready' event handler:
-      wavesurfer.on('ready', function() {
-        console.log(`Track ${trackId} is ready`);
-        const duration = wavesurfer.getDuration();
-        totalTimeSpan.textContent = formatTime(duration);
-        track.querySelector('.track-duration').textContent = formatTime(duration);
-        players[trackId].isLoaded = true;
-        players[trackId].isLoading = false;
-        loadingSpinner.classList.add('hidden');
-
-        // keep the pitch when slowed down; apply a rate picked while loading
-        const media = wavesurfer.backend && wavesurfer.backend.media;
-        if (media) {
-          media.preservesPitch = true;
-          media.webkitPreservesPitch = true;
-        }
-        wavesurfer.setPlaybackRate(players[trackId].rate);
-
-        // Show the controls now that loading is complete
-        const playerControls = trackPlayer.querySelector('.player-controls');
-        playerControls.classList.remove('loading');
-      });
-
-      wavesurfer.on('audioprocess', function() {
-        const currentTime = wavesurfer.getCurrentTime();
-        currentTimeSpan.textContent = formatTime(currentTime);
-
-        // Update progress bar
-        const progress = (currentTime / wavesurfer.getDuration()) * 100;
-        progressBar.style.width = `${progress}%`;
-
-        updateChordSync(trackId, currentTime);
-      });
-
-      wavesurfer.on('seek', function() {
-        updateChordSync(trackId, wavesurfer.getCurrentTime());
-      });
-
-      wavesurfer.on('finish', function() {
-        playButton.querySelector('i').classList.replace('fa-pause', 'fa-play');
-        players[trackId].isPlaying = false;
-        wakeLock?.release();
-        wakeLock = null;
-        track.classList.remove('is-playing');
-        updateChordSync(trackId, 0);
-      });
-
-      // Error handling
-      wavesurfer.on('error', function(err) {
-        console.error(`WaveSurfer error for track ${trackId}:`, err);
-        // a waveform decode hiccup after the media is already playable
-        // isn't fatal: keep the controls, just miss the wave drawing
-        if (players[trackId].isLoaded) return;
-        loadingSpinner.classList.add('hidden');
-        players[trackId].isLoading = false;
-
-        // Show controls even on error
-        const playerControls = trackPlayer.querySelector('.player-controls');
-        playerControls.classList.remove('loading');
-
-        alert('Error loading audio: ' + err);
-      });
-
-      // Click on progress bar to seek
-      trackPlayer.querySelector('.progress-bar').addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent the click from bubbling
-
-        if (players[trackId].isLoading) {
-          return; // Don't allow seeking while loading
-        }
-
-        const rect = this.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const seekPercentage = x / rect.width;
-
-        wavesurfer.seekTo(seekPercentage);
-      });
-    });
-
-    // For better UX, implement key controls when a track is active
-    document.addEventListener('keydown', function(e) {
-      // Find the active track
-      const activeTrack = document.querySelector('.track.active');
-      if (!activeTrack) return;
-
-      const trackId = activeTrack.getAttribute('data-id');
-      const player = players[trackId];
-
-      // If track is loading, ignore keyboard controls
-      if (player.isLoading) {
-        return;
-      }
-
-      // Space bar to play/pause
-      if (e.code === 'Space') {
-        e.preventDefault();
-        activeTrack.querySelector('.btn-play').click();
-      }
-
-      // Arrow left/right for seek
-      if (e.code === 'ArrowLeft' && player.isLoaded) {
-        const currentTime = player.wavesurfer.getCurrentTime();
-        player.wavesurfer.seekTo((Math.max(0, currentTime - 5)) / player.wavesurfer.getDuration());
-      }
-
-      if (e.code === 'ArrowRight' && player.isLoaded) {
-        const currentTime = player.wavesurfer.getCurrentTime();
-        player.wavesurfer.seekTo((Math.min(player.wavesurfer.getDuration(), currentTime + 5)) / player.wavesurfer.getDuration());
-      }
-
-      // Arrow up/down for volume
-      if (e.code === 'ArrowUp' && player.isLoaded) {
-        const volumeSlider = activeTrack.querySelector('.volume-slider');
-        const newVolume = Math.min(100, parseInt(volumeSlider.value) + 5);
-        volumeSlider.value = newVolume;
-        player.wavesurfer.setVolume(newVolume / 100);
-      }
-
-      if (e.code === 'ArrowDown' && player.isLoaded) {
-        const volumeSlider = activeTrack.querySelector('.volume-slider');
-        const newVolume = Math.max(0, parseInt(volumeSlider.value) - 5);
-        volumeSlider.value = newVolume;
-        player.wavesurfer.setVolume(newVolume / 100);
-      }
+  function filteredTracks() {
+    const query = normalize(filters.query).trim();
+    return allTracks.filter(track => {
+      if (filters.category && track.category !== filters.category) return false;
+      if (filters.artist && track.artist !== filters.artist) return false;
+      if (filters.duration && !DURATION_BUCKETS[filters.duration](track.duration)) return false;
+      if (query && !normalize(`${track.title} ${track.artist} ${track.name}`).includes(query)) return false;
+      return true;
     });
   }
+
+  function applyFilters() {
+    const matches = filteredTracks();
+    resultsEl.innerHTML = '';
+
+    matches.forEach(track => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'tape';
+      row.dataset.key = track.key;
+
+      const side = document.createElement('span');
+      side.className = `tape__side tape__side--${track.category}`;
+      side.textContent = track.category === 'acoustic' ? 'AC' : 'EL';
+      side.title = track.category;
+
+      const title = document.createElement('span');
+      title.className = 'tape__title';
+      title.textContent = track.title;
+
+      const artist = document.createElement('span');
+      artist.className = 'tape__artist';
+      artist.textContent = track.artist;
+
+      const time = document.createElement('span');
+      time.className = 'tape__time';
+      time.textContent = formatTime(track.duration);
+
+      const eq = document.createElement('span');
+      eq.className = 'tape__eq';
+      eq.innerHTML = '<span></span><span></span><span></span>';
+
+      row.appendChild(side);
+      row.appendChild(title);
+      row.appendChild(artist);
+      row.appendChild(time);
+      row.appendChild(eq);
+      resultsEl.appendChild(row);
+    });
+
+    finderCount.textContent = `${matches.length} / ${allTracks.length} tapes`;
+    finderEmpty.classList.toggle('hidden', matches.length > 0);
+    refreshRowStates();
+  }
+
+  function refreshRowStates() {
+    resultsEl.querySelectorAll('.tape').forEach(row => {
+      const isCurrent = !!deck.track && row.dataset.key === deck.track.key;
+      row.classList.toggle('is-current', isCurrent);
+      row.classList.toggle('is-playing', isCurrent && deck.isPlaying);
+    });
+  }
+
+  resultsEl.addEventListener('click', function(e) {
+    const row = e.target.closest('.tape');
+    if (!row) return;
+    const track = allTracks.find(t => t.key === row.dataset.key);
+    if (track) selectTrack(track);
+  });
+
+  searchInput.addEventListener('input', function() {
+    filters.query = this.value;
+    applyFilters();
+  });
+
+  function bindChipRow(container, filterName) {
+    container.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        filters[filterName] = this.dataset.value;
+        container.querySelectorAll('.filter-chip').forEach(c => {
+          c.classList.toggle('is-active', c === this);
+        });
+        applyFilters();
+      });
+    });
+  }
+  bindChipRow(document.getElementById('filterCategory'), 'category');
+  bindChipRow(document.getElementById('filterDuration'), 'duration');
+
+  // ---- Artist dropdown ------------------------------------------------------
+
+  function buildArtistMenu() {
+    const counts = {};
+    allTracks.forEach(track => {
+      if (track.artist) counts[track.artist] = (counts[track.artist] || 0) + 1;
+    });
+    const artists = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+
+    artistMenu.innerHTML = '';
+    const addItem = (value, label, count) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'artist-dd__item' + (filters.artist === value ? ' is-active' : '');
+      item.dataset.value = value;
+      item.setAttribute('role', 'option');
+      item.innerHTML = `<span>${label}</span><span class="artist-dd__count">${count}</span>`;
+      item.addEventListener('click', function() {
+        filters.artist = this.dataset.value;
+        artistToggleLabel.textContent = this.dataset.value || 'All artists';
+        artistToggle.classList.toggle('is-filtering', !!this.dataset.value);
+        artistMenu.querySelectorAll('.artist-dd__item').forEach(i => {
+          i.classList.toggle('is-active', i === this);
+        });
+        closeArtistMenu();
+        applyFilters();
+      });
+      artistMenu.appendChild(item);
+    };
+
+    addItem('', 'All artists', allTracks.length);
+    artists.forEach(artist => addItem(artist, artist, counts[artist]));
+  }
+
+  function closeArtistMenu() {
+    artistMenu.classList.add('hidden');
+    artistToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  artistToggle.addEventListener('click', function() {
+    const open = artistMenu.classList.toggle('hidden');
+    artistToggle.setAttribute('aria-expanded', String(!open));
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!artistDd.contains(e.target)) closeArtistMenu();
+  });
+
+  // ---- The deck -------------------------------------------------------------
+
+  // MediaElement backend so the practice speed control keeps the pitch
+  // (WebAudio rate would detune the song).
+  deck.wavesurfer = WaveSurfer.create({
+    container: document.getElementById('waveform'),
+    backend: 'MediaElement',
+    waveColor: 'rgba(28, 26, 23, 0.22)',
+    progressColor: '#d4451f',
+    cursorColor: '#1c1a17',
+    barWidth: 2,
+    barRadius: 2,
+    cursorWidth: 0,
+    height: 90,
+    responsive: true,
+    hideScrollbar: true,
+    normalize: true
+  });
+
+  // Practice speed: 50-100% playback rate
+  [0.5, 0.75, 0.9, 1].forEach(rate => {
+    const button = document.createElement('button');
+    button.className = 'btn-mini' + (rate === 1 ? ' is-active' : '');
+    button.dataset.rate = String(rate);
+    button.textContent = `${rate * 100}%`;
+    button.title = `Play at ${rate * 100}% speed`;
+    button.addEventListener('click', function() {
+      deck.rate = parseFloat(this.dataset.rate);
+      if (deck.isLoaded) deck.wavesurfer.setPlaybackRate(deck.rate);
+      rateGroup.querySelectorAll('.btn-mini').forEach(b => {
+        b.classList.toggle('is-active', b === this);
+      });
+    });
+    rateGroup.appendChild(button);
+  });
+
+  function setPlayingUI(playing) {
+    deck.isPlaying = playing;
+    btnPlay.querySelector('i').className = playing ? 'fas fa-pause' : 'fas fa-play';
+    deckPanel.classList.toggle('is-playing', playing);
+    if (!playing) {
+      wakeLock?.release();
+      wakeLock = null;
+    }
+    refreshRowStates();
+  }
+
+  function selectTrack(track) {
+    if (deck.track && deck.track.key === track.key) {
+      scrollToDeck();
+      return;
+    }
+
+    if (deck.isPlaying) {
+      deck.wavesurfer.pause();
+      setPlayingUI(false);
+    }
+
+    deck.track = track;
+    deck.isLoaded = false;
+    deck.isLoading = true;
+    deck.sync = null;
+
+    deckSide.textContent = track.category === 'acoustic' ? 'AC' : 'EL';
+    deckSide.className = `deck-head__side deck-head__side--${track.category}`;
+    deckTitle.textContent = track.title;
+    deckArtist.textContent = track.artist;
+    deckTime.textContent = formatTime(track.duration);
+    currentTimeEl.textContent = '0:00';
+    totalTimeEl.textContent = formatTime(track.duration);
+    progressEl.style.width = '0%';
+    btnTab.classList.add('hidden');
+
+    chordsheetEl.classList.add('hidden');
+    chordsheetEl.classList.remove('chordsheet--empty');
+    chordsheetEl.innerHTML = '';
+
+    deckPanel.classList.remove('hidden');
+    deckSpinner.classList.remove('hidden');
+    playerControls.classList.add('loading');
+
+    loadChordSheet(track);
+    loadTabLink(track);
+
+    console.log(`Loading track from ${track.src}`);
+    deck.wavesurfer.load(track.src);
+
+    refreshRowStates();
+    scrollToDeck();
+  }
+
+  function scrollToDeck() {
+    const top = deckPanel.getBoundingClientRect().top + window.scrollY - 96;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+
+  btnPlay.addEventListener('click', function() {
+    if (deck.isLoading || !deck.track) return;
+    if (deck.isPlaying) {
+      deck.wavesurfer.pause();
+      setPlayingUI(false);
+    } else {
+      deck.wavesurfer.play();
+      setPlayingUI(true);
+      requestWakeLock();
+    }
+  });
+
+  volumeSlider.addEventListener('input', function() {
+    deck.wavesurfer.setVolume(parseFloat(this.value) / 100);
+  });
+
+  progressBar.addEventListener('click', function(e) {
+    if (deck.isLoading || !deck.isLoaded) return;
+    const rect = this.getBoundingClientRect();
+    deck.wavesurfer.seekTo((e.clientX - rect.left) / rect.width);
+  });
+
+  // ---- Wavesurfer events ------------------------------------------------------
+
+  deck.wavesurfer.on('loading', function(percent) {
+    // With the MediaElement backend, 'loading' tracks the separate waveform
+    // download, which keeps firing after 'ready' (the media is playable long
+    // before the full file is fetched for drawing). Once ready, never fall
+    // back into the loading state.
+    if (deck.isLoaded) return;
+    deckSpinner.classList.remove('hidden');
+    deck.isLoading = true;
+    playerControls.classList.add('loading');
+  });
+
+  deck.wavesurfer.on('ready', function() {
+    const duration = deck.wavesurfer.getDuration();
+    totalTimeEl.textContent = formatTime(duration);
+    deckTime.textContent = formatTime(duration);
+    deck.isLoaded = true;
+    deck.isLoading = false;
+    deckSpinner.classList.add('hidden');
+
+    // keep the pitch when slowed down; apply a rate picked while loading
+    const media = deck.wavesurfer.backend && deck.wavesurfer.backend.media;
+    if (media) {
+      media.preservesPitch = true;
+      media.webkitPreservesPitch = true;
+    }
+    deck.wavesurfer.setPlaybackRate(deck.rate);
+
+    playerControls.classList.remove('loading');
+  });
+
+  deck.wavesurfer.on('audioprocess', function() {
+    const currentTime = deck.wavesurfer.getCurrentTime();
+    currentTimeEl.textContent = formatTime(currentTime);
+    progressEl.style.width = `${(currentTime / deck.wavesurfer.getDuration()) * 100}%`;
+    updateChordSync(currentTime);
+  });
+
+  deck.wavesurfer.on('seek', function() {
+    updateChordSync(deck.wavesurfer.getCurrentTime());
+  });
+
+  deck.wavesurfer.on('finish', function() {
+    setPlayingUI(false);
+    updateChordSync(0);
+  });
+
+  deck.wavesurfer.on('error', function(err) {
+    console.error('WaveSurfer error:', err);
+    // a waveform decode hiccup after the media is already playable isn't
+    // fatal: keep the controls, just miss the wave drawing
+    if (deck.isLoaded) return;
+    deckSpinner.classList.add('hidden');
+    deck.isLoading = false;
+    playerControls.classList.remove('loading');
+    alert('Error loading audio: ' + err);
+  });
+
+  // ---- Keyboard controls ------------------------------------------------------
+
+  document.addEventListener('keydown', function(e) {
+    const tag = (e.target.tagName || '').toLowerCase();
+    const typing = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+    // "/" jumps to the search box from anywhere
+    if (e.key === '/' && !typing) {
+      e.preventDefault();
+      searchInput.focus();
+      return;
+    }
+    if (typing) {
+      if (e.key === 'Escape') e.target.blur();
+      return;
+    }
+
+    if (!deck.track || deck.isLoading) return;
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      btnPlay.click();
+    }
+
+    if (e.code === 'ArrowLeft' && deck.isLoaded) {
+      const t = deck.wavesurfer.getCurrentTime();
+      deck.wavesurfer.seekTo(Math.max(0, t - 5) / deck.wavesurfer.getDuration());
+    }
+
+    if (e.code === 'ArrowRight' && deck.isLoaded) {
+      const t = deck.wavesurfer.getCurrentTime();
+      deck.wavesurfer.seekTo(Math.min(deck.wavesurfer.getDuration(), t + 5) / deck.wavesurfer.getDuration());
+    }
+
+    if (e.code === 'ArrowUp' && deck.isLoaded) {
+      e.preventDefault();
+      volumeSlider.value = Math.min(100, parseInt(volumeSlider.value) + 5);
+      deck.wavesurfer.setVolume(volumeSlider.value / 100);
+    }
+
+    if (e.code === 'ArrowDown' && deck.isLoaded) {
+      e.preventDefault();
+      volumeSlider.value = Math.max(0, parseInt(volumeSlider.value) - 5);
+      deck.wavesurfer.setVolume(volumeSlider.value / 100);
+    }
+  });
 
   let wakeLock = null;
 
   async function requestWakeLock() {
-      try {
-          wakeLock = await navigator.wakeLock.request('screen');
-          console.log('Wake Lock is active');
-
-          wakeLock.addEventListener('release', () => {
-              console.log('Wake Lock was released');
-          });
-      } catch (err) {
-          console.error(`${err.name}, ${err.message}`);
-      }
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+    } catch (err) {
+      console.error(`${err.name}, ${err.message}`);
+    }
   }
 
-  function togglePlayer(trackId, src) {
-    const player = players[trackId];
-    const track = player.element;
-    const trackPlayer = track.querySelector('.track-player');
-    const loadingSpinner = trackPlayer.querySelector('.loading-spinner-music');
+  // ---- Songsterr tab link -----------------------------------------------------
 
-    const isOpen = !trackPlayer.classList.contains('hidden');
+  function showTabLink(track, data) {
+    if (!data.found || !deck.track || deck.track.key !== track.key) return;
+    btnTab.href = data.url;
+    btnTab.title = `Guitar tab on Songsterr: ${data.artist} - ${data.title}`;
+    btnTab.classList.remove('hidden');
+  }
 
-    // Close all other tracks first
-    document.querySelectorAll('.track').forEach(t => {
-      if (t !== track) {
-        const tId = t.getAttribute('data-id');
-        const p = players[tId];
-
-        if (p && p.isPlaying) {
-          p.wavesurfer.pause();
-          p.isPlaying = false;
-          t.querySelector('.btn-play i').classList.replace('fa-pause', 'fa-play');
-          wakeLock?.release();
-          wakeLock = null;
-          t.classList.remove('is-playing');
-        }
-
-        t.classList.remove('active');
-        t.querySelector('.track-player').classList.add('hidden');
-      }
-    });
-
-    if (isOpen) {
-      track.classList.remove('active');
-      trackPlayer.classList.add('hidden');
-
-      if (player.isPlaying) {
-        player.wavesurfer.pause();
-        player.isPlaying = false;
-        wakeLock?.release();
-        wakeLock = null;
-        track.querySelector('.btn-play i').classList.replace('fa-pause', 'fa-play');
-        track.classList.remove('is-playing');
-      }
-    } else {
-      track.classList.add('active');
-      trackPlayer.classList.remove('hidden');
-
-      if (player.syncState === 'idle') {
-        loadChordSheet(trackId);
-      }
-      if (player.tabState === 'idle') {
-        loadTabLink(trackId);
-      }
-
-      if (!player.isLoaded) {
-        // Show loading spinner before loading starts
-        loadingSpinner.classList.remove('hidden');
-        player.isLoading = true;
-        trackPlayer.querySelector('.player-controls').classList.add('loading');
-        console.log(`Loading track ${trackId} from ${src}`);
-        player.wavesurfer.load(src);
-      }
+  function loadTabLink(track) {
+    const cached = tabCache[track.key];
+    if (cached && cached !== 'error') {
+      showTabLink(track, cached);
+      return;
     }
+    if (cached === 'error') return;
+
+    const query = track.name.replace(/\s+-\s+/g, ' ');
+    fetch(`${TABS_API}?q=${encodeURIComponent(query)}`)
+      .then(response => (response.ok ? response.json() : Promise.reject()))
+      .then(data => {
+        tabCache[track.key] = data;
+        showTabLink(track, data);
+      })
+      .catch(() => {
+        tabCache[track.key] = 'error'; // quietly: a missing tab button is fine
+      });
   }
 
   // ---- Chords + lyrics songbook -----------------------------------------
@@ -542,43 +502,28 @@ document.addEventListener('DOMContentLoaded', function() {
     return GAP_CHORDS.includes((name || '').trim());
   }
 
-  function loadTabLink(trackId) {
-    const player = players[trackId];
-    player.tabState = 'loading';
-    const query = player.trackName.replace(/\s+-\s+/g, ' ');
-
-    fetch(`${TABS_API}?q=${encodeURIComponent(query)}`)
-      .then(response => (response.ok ? response.json() : Promise.reject()))
-      .then(data => {
-        player.tabState = 'done';
-        if (!data.found) return;
-        const link = player.element.querySelector('.btn-tab');
-        link.href = data.url;
-        link.title = `Guitar tab on Songsterr: ${data.artist} - ${data.title}`;
-        link.classList.remove('hidden');
-      })
-      .catch(() => {
-        player.tabState = 'error'; // quietly: a missing tab button is fine
-      });
-  }
-
-  function loadChordSheet(trackId) {
-    const player = players[trackId];
-    const sheet = player.element.querySelector('.chordsheet');
-
-    if (syncIndex && !syncIndex.has(player.trackKey)) {
-      player.syncState = 'empty';
-      renderChordSheetEmpty(player, sheet);
+  function loadChordSheet(track) {
+    const cached = syncCache[track.key];
+    if (cached === 'empty') {
+      renderChordSheetEmpty(track);
+      return;
+    }
+    if (cached) {
+      renderChordSheet(chordsheetEl, cached);
       return;
     }
 
-    player.syncState = 'loading';
+    if (syncIndex && !syncIndex.has(track.key)) {
+      syncCache[track.key] = 'empty';
+      renderChordSheetEmpty(track);
+      return;
+    }
 
-    fetch(`${SYNC_API}?resource=sync&track=${encodeURIComponent(player.trackKey)}`)
+    fetch(`${SYNC_API}?resource=sync&track=${encodeURIComponent(track.key)}`)
       .then(response => {
         if (response.status === 404) {
-          player.syncState = 'empty';
-          renderChordSheetEmpty(player, sheet);
+          syncCache[track.key] = 'empty';
+          if (deck.track && deck.track.key === track.key) renderChordSheetEmpty(track);
           return null;
         }
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -586,26 +531,26 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(data => {
         if (!data) return;
-        player.syncState = 'loaded';
-        renderChordSheet(player, sheet, data);
+        syncCache[track.key] = data;
+        if (deck.track && deck.track.key === track.key) renderChordSheet(chordsheetEl, data);
       })
       .catch(error => {
-        console.error(`Error loading chords for ${player.trackKey}:`, error);
-        player.syncState = 'error';
-        sheet.classList.remove('hidden');
-        sheet.innerHTML = '';
-        sheet.classList.add('chordsheet--empty');
+        console.error(`Error loading chords for ${track.key}:`, error);
+        if (!deck.track || deck.track.key !== track.key) return;
+        chordsheetEl.classList.remove('hidden');
+        chordsheetEl.innerHTML = '';
+        chordsheetEl.classList.add('chordsheet--empty');
         const msg = document.createElement('p');
         msg.className = 'chordsheet__message';
         msg.textContent = 'Chords and lyrics are unavailable right now (backend offline).';
-        sheet.appendChild(msg);
+        chordsheetEl.appendChild(msg);
       });
   }
 
-  function renderChordSheetEmpty(player, sheet) {
-    sheet.classList.remove('hidden');
-    sheet.classList.add('chordsheet--empty');
-    sheet.innerHTML = '';
+  function renderChordSheetEmpty(track) {
+    chordsheetEl.classList.remove('hidden');
+    chordsheetEl.classList.add('chordsheet--empty');
+    chordsheetEl.innerHTML = '';
 
     const msg = document.createElement('p');
     msg.className = 'chordsheet__message';
@@ -613,14 +558,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const link = document.createElement('a');
     link.className = 'chordsheet__link';
-    link.href = `editor/?track=${encodeURIComponent(player.trackKey)}`;
+    link.href = `editor/?track=${encodeURIComponent(track.key)}`;
     link.innerHTML = '<i class="fas fa-pen-nib"></i> Add them in the editor';
 
-    sheet.appendChild(msg);
-    sheet.appendChild(link);
+    chordsheetEl.appendChild(msg);
+    chordsheetEl.appendChild(link);
   }
 
-  function renderChordSheet(player, sheet, data) {
+  function renderChordSheet(sheet, data) {
     sheet.classList.remove('hidden', 'chordsheet--empty');
     sheet.innerHTML = '';
 
@@ -699,7 +644,7 @@ document.addEventListener('DOMContentLoaded', function() {
           eventFlat[eventIndex] = flatWords.length;
         } else {
           chordEl.classList.add('cs-chord--blank');
-          chordEl.textContent = ' ';
+          chordEl.textContent = ' ';
         }
 
         const textEl = document.createElement('span');
@@ -764,19 +709,23 @@ document.addEventListener('DOMContentLoaded', function() {
       body.appendChild(msg);
     }
 
-    // Sweep anchors: every timestamped word position, from anchored chords
-    // plus the editor's explicit word syncs. Between two consecutive anchors
-    // the highlight interpolates linearly, karaoke style; the more word syncs
-    // exist, the less it has to guess.
-    const sweepAnchors = [];
-    events.forEach((event, i) => {
-      if (eventFlat[i] >= 0) sweepAnchors.push({ time: event.time, flat: eventFlat[i] });
-    });
+    // Sweep anchors: the timestamped word positions the highlight moves
+    // between. When the editor's word-for-word syncs exist they are the
+    // ground truth and drive the highlight alone (chords still render above
+    // the words and feed the chord badge, but their times no longer steer
+    // the sweep). Only a track without word syncs falls back to the anchored
+    // chord events, interpolating between them karaoke style.
+    const wordAnchors = [];
     (data.words || []).forEach(mark => {
       if (typeof mark.time !== 'number') return;
       const flat = flatByPos[`${mark.line}:${mark.word}`];
-      if (flat !== undefined) sweepAnchors.push({ time: mark.time, flat: flat });
+      if (flat !== undefined) wordAnchors.push({ time: mark.time, flat: flat });
     });
+    const chordAnchors = [];
+    events.forEach((event, i) => {
+      if (eventFlat[i] >= 0) chordAnchors.push({ time: event.time, flat: eventFlat[i] });
+    });
+    const sweepAnchors = wordAnchors.length ? wordAnchors : chordAnchors;
     sweepAnchors.sort((a, b) => a.time - b.time || a.flat - b.flat);
 
     // times where singing stops: unanchored chord events (instrumental runs
@@ -822,7 +771,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     sheet.appendChild(body);
 
-    player.sync = {
+    deck.sync = {
       events: events,
       eventEls: eventEls,
       eventFlat: eventFlat,
@@ -854,8 +803,8 @@ document.addEventListener('DOMContentLoaded', function() {
     return found;
   }
 
-  function updateChordSync(trackId, currentTime) {
-    const sync = players[trackId]?.sync;
+  function updateChordSync(currentTime) {
+    const sync = deck.sync;
     if (!sync || !sync.events.length) return;
 
     const index = findActiveChord(sync.events, currentTime);
@@ -941,7 +890,4 @@ document.addEventListener('DOMContentLoaded', function() {
     seconds = seconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
-
-  // Don't duplicate this call
-  // createTrackElements();
 });
