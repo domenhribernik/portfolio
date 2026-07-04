@@ -4,31 +4,31 @@
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Source IP Locator</title>
+    <title>The IP Atlas · Multi-Source IP Locator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'neon-green': '#00ff41',
-                        'neon-cyan': '#00f0ff',
-                        'neon-red': '#ff0040',
-                        'neon-yellow': '#f0ff00',
-                        'term-bg': '#050508',
-                        'term-panel': '#0a0a0f',
-                        'term-card': '#0f0f14',
-                        'term-deep': '#08080c',
-                        'term-text': '#e0e0e0',
-                        'term-muted': '#6b7280',
-                        'term-border': '#1f2937',
-                        'term-border-hl': '#374151',
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        claydk: '#b8371a',
+                        pine: '#2f5b53',
                     },
                     fontFamily: {
-                        jb: ['"JetBrains Mono"', 'monospace'],
-                        share: ['"Share Tech Mono"', 'monospace'],
+                        display: ['Fraunces', 'Georgia', 'serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.14)',
                     },
                 }
             }
@@ -36,91 +36,137 @@
     </script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="font-jb bg-term-bg min-h-screen text-term-text relative overflow-x-hidden leading-normal p-[clamp(10px,3vw,20px)]">
-    <div class="max-w-[1200px] mx-auto relative z-[1] w-full">
-        <header class="text-center mb-[clamp(20px,4vw,30px)] relative px-2.5">
-            <h1 class="text-[clamp(1.5rem,6vw,3rem)]">Multi-Source IP Locator</h1>
-            <p class="subtitle text-term-muted text-[clamp(0.75rem,2vw,0.9rem)] mt-2.5 tracking-[2px] uppercase break-words">7 Free APIs • Auto-Failover • No API Keys Needed</p>
+<body class="font-sans bg-paper text-ink min-h-screen leading-relaxed">
+
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+
+        <!-- Masthead -->
+        <header class="reveal reveal-1 relative border-b-2 border-ink pb-6 sm:pb-8 mb-6 sm:mb-8">
+            <div class="flex items-center justify-between mb-5">
+                <a id="back-link" href="../../" class="shrink-0 whitespace-nowrap text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Back">&larr; back</a>
+                <span class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone text-right">Plate No. 4 &middot; Network Cartography</span>
+            </div>
+            <div class="flex items-end justify-between gap-6">
+                <div>
+                    <h1 class="font-display font-semibold text-[clamp(2.4rem,7vw,4.5rem)] leading-[1.02] tracking-tight">The IP Atlas</h1>
+                    <p class="mt-3 max-w-[52ch] text-stone text-[clamp(0.95rem,2vw,1.05rem)]">
+                        One address, <span id="sourceCount">ten</span> opinions. Every source below is asked where an IP lives,
+                        and every answer is drawn on the same map: see where they agree, and where they drift.
+                    </p>
+                </div>
+                <!-- Rotating stamp ornament -->
+                <svg class="stamp-ornament hidden md:block shrink-0 w-28 h-28 -mb-2 text-clay" viewBox="0 0 100 100" aria-hidden="true">
+                    <defs>
+                        <path id="stampCircle" d="M 50,50 m -36,0 a 36,36 0 1,1 72,0 a 36,36 0 1,1 -72,0" />
+                    </defs>
+                    <circle cx="50" cy="50" r="47" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" />
+                    <circle cx="50" cy="50" r="26" fill="none" stroke="currentColor" stroke-width="1" />
+                    <line x1="50" y1="30" x2="50" y2="70" stroke="currentColor" stroke-width="1" />
+                    <line x1="30" y1="50" x2="70" y2="50" stroke="currentColor" stroke-width="1" />
+                    <text font-family="'Space Mono', monospace" font-size="8.5" letter-spacing="2.5" fill="currentColor">
+                        <textPath href="#stampCircle">FREE SOURCES · NO API KEYS · IP ATLAS ·</textPath>
+                    </text>
+                </svg>
+            </div>
         </header>
 
-        <div class="api-status flex gap-2 flex-wrap justify-center mb-5 p-[15px] bg-term-deep rounded-lg relative border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)]" id="apiStatus">
-            <span class="api-badge" id="badge-ipapi"      onclick="focusBadge('ipapi')">ipapi.co</span>
-            <span class="api-badge" id="badge-ipwho"      onclick="focusBadge('ipwho')">ipwho.org</span>
-            <span class="api-badge" id="badge-ip-api"     onclick="focusBadge('ip-api')">ip-api.com</span>
-            <span class="api-badge" id="badge-freeipapi"  onclick="focusBadge('freeipapi')">freeipapi.com</span>
-            <span class="api-badge" id="badge-hackertarget" onclick="focusBadge('hackertarget')">hackertarget</span>
-            <span class="api-badge" id="badge-ip2location" onclick="focusBadge('ip2location')">ip2location.io</span>
-            <span class="api-badge" id="badge-ipinfo"     onclick="focusBadge('ipinfo')">ipinfo.io</span>
-        </div>
+        <!-- Lookup form -->
+        <section class="reveal reveal-2 bg-card border border-hairline rounded-[3px] shadow-[0_10px_30px_rgba(28,26,23,0.06)] p-4 sm:p-5 mb-5">
+            <label for="ipInput" class="block font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone mb-2">Look up an address</label>
+            <div class="flex flex-wrap gap-2.5">
+                <input type="text" id="ipInput" placeholder="8.8.8.8 &middot; or leave blank for your own"
+                    class="flex-[1_1_240px] min-w-0 font-mono text-[16px] text-ink bg-paper border border-hairline rounded-[3px] px-4 py-3 placeholder:text-stone/60 focus:outline-none focus:border-clay focus:ring-1 focus:ring-clay/40 transition caret-clay">
+                <button id="searchBtn" class="btn-press flex-[1_1_100px] font-mono font-bold text-sm uppercase tracking-widest bg-clay text-paper border border-clay rounded-[3px] px-5 py-3 hover:bg-claydk hover:border-claydk transition disabled:opacity-40 disabled:cursor-not-allowed">Locate</button>
+                <button id="myIpBtn" class="btn-press flex-[1_1_100px] font-mono font-bold text-sm uppercase tracking-widest bg-transparent text-ink border border-ink/60 rounded-[3px] px-5 py-3 hover:bg-ink hover:text-paper transition disabled:opacity-40 disabled:cursor-not-allowed">My IP</button>
+                <button id="compareBtn" class="btn-press flex-[1_1_130px] font-mono font-bold text-sm uppercase tracking-widest bg-transparent text-pine border border-pine rounded-[3px] px-5 py-3 hover:bg-pine hover:text-paper transition disabled:opacity-40 disabled:cursor-not-allowed">Compare all</button>
+            </div>
+        </section>
 
-        <div class="search-box bg-term-deep p-[clamp(15px,3vw,20px)] rounded-lg mb-5 flex gap-2.5 flex-wrap relative items-stretch border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)]">
-            <input type="text" id="ipInput" placeholder="Enter IP address (e.g., 8.8.8.8) or leave empty for your IP">
-            <button onclick="lookupIP()" id="searchBtn">Lookup</button>
-            <button onclick="getMyIP()" class="my-ip-btn" id="myIpBtn">My IP</button>
-            <button onclick="toggleCompare()" class="toggle-compare" id="compareBtn">Compare</button>
-        </div>
+        <!-- Notices -->
+        <div class="notice hidden mb-5 rounded-[3px] border border-clay bg-clay/10 text-claydk px-4 py-3 font-mono text-sm" id="errorMsg" role="alert"></div>
+        <div class="notice hidden mb-5 rounded-[3px] border border-pine bg-pine/10 text-pine px-4 py-3 font-mono text-sm" id="successMsg" role="status"></div>
 
-        <div class="error" id="errorMsg"></div>
-        <div class="success-notice" id="successMsg"></div>
+        <!-- Source ledger -->
+        <section class="reveal reveal-3 mb-6">
+            <div class="flex items-baseline gap-3 mb-3">
+                <h2 class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone whitespace-nowrap">The sources</h2>
+                <div class="flex-1 border-b border-dotted border-ink/25"></div>
+                <span class="font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone/70 whitespace-nowrap">consulted in order</span>
+            </div>
+            <div class="flex flex-wrap gap-2" id="sourceLedger"></div>
+        </section>
 
-        <div class="grid grid-cols-1 min-[600px]:grid-cols-[1fr_1.5fr] min-[900px]:grid-cols-[1fr_2fr] gap-5">
-            <div class="info-card bg-term-deep p-[clamp(15px,3vw,25px)] rounded-lg h-fit relative overflow-hidden border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)] max-[450px]:order-2" id="infoCard">
-                <div class="loading text-center p-[clamp(30px,5vw,40px)] text-neon-green" id="loading">
-                    <div class="spinner"></div>
-                    <p>Trying multiple sources...</p>
+        <!-- Record + map plate -->
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(320px,2fr)_3fr] gap-5 items-stretch">
+
+            <!-- Field record -->
+            <section class="reveal reveal-4 bg-card border border-hairline rounded-[3px] shadow-[0_10px_30px_rgba(28,26,23,0.06)] p-5 sm:p-6 relative max-lg:order-2">
+                <div class="flex items-start justify-between gap-3 border-b border-hairline pb-3 mb-2">
+                    <h2 class="font-display italic font-medium text-xl">Field record</h2>
+                    <span class="stamp hidden font-mono text-[0.62rem] font-bold uppercase tracking-[0.12em] text-clay border-[1.5px] border-clay rounded-[2px] px-2 py-1 whitespace-nowrap" id="sourceTag"></span>
                 </div>
-                <div id="infoContent">
-                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
-                        <div class="flex flex-col">
-                            <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">IP Address</div>
-                            <span class="source-tag inline-block bg-neon-cyan/15 text-neon-cyan py-0.5 px-2 rounded text-[clamp(0.6rem,1.5vw,0.65rem)] w-[90px] mt-[5px] ml-2 border border-neon-cyan font-share align-middle" id="sourceTag" style="display: none;"></span>
+
+                <div class="loading hidden py-10 text-center" id="loading">
+                    <div class="compass-spinner mx-auto mb-4"></div>
+                    <p class="font-display italic text-stone">Consulting the sources&hellip;</p>
+                </div>
+
+                <dl id="infoContent">
+                    <div class="record-row"><dt>IP address</dt><span class="leader"></span><dd id="ip" class="text-clay">&ndash;</dd></div>
+                    <div class="record-row"><dt>Country</dt><span class="leader"></span><dd><span id="flag"></span> <span id="country">&ndash;</span></dd></div>
+                    <div class="record-row"><dt>Region</dt><span class="leader"></span><dd id="region">&ndash;</dd></div>
+                    <div class="record-row"><dt>City</dt><span class="leader"></span><dd id="city">&ndash;</dd></div>
+                    <div class="record-row flex-col !items-start">
+                        <div class="flex items-baseline w-full"><dt>Coordinates</dt><span class="leader"></span><dd id="coords">&ndash;</dd></div>
+                        <div class="w-full text-right font-mono text-[0.7rem] text-stone/80 mt-0.5" id="dms"></div>
+                    </div>
+                    <div class="record-row"><dt>ISP / Org.</dt><span class="leader"></span><dd id="org">&ndash;</dd></div>
+                    <div class="record-row"><dt>Timezone</dt><span class="leader"></span><dd id="timezone">&ndash;</dd></div>
+                </dl>
+            </section>
+
+            <!-- Map plate -->
+            <section class="reveal reveal-5 max-lg:order-1">
+                <figure class="h-full flex flex-col m-0">
+                    <div class="plate relative flex-1 min-h-[320px] sm:min-h-[420px] bg-card border border-ink/40 rounded-[3px] p-2 shadow-[0_10px_30px_rgba(28,26,23,0.06)]">
+                        <div id="map" class="w-full h-full min-h-[300px] sm:min-h-[400px] rounded-[2px]"></div>
+                        <div class="legend hidden absolute z-[1000] bottom-5 left-5 bg-card/95 backdrop-blur-[3px] border border-hairline rounded-[3px] px-3.5 py-3 max-w-[min(220px,75%)] shadow-[0_8px_24px_rgba(28,26,23,0.14)]" id="mapLegend">
+                            <h3 class="font-mono text-[0.62rem] font-bold tracking-[0.2em] uppercase text-stone border-b border-hairline pb-1.5 mb-2">Sources plotted</h3>
+                            <div id="legendItems"></div>
                         </div>
-                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="ip">-</div>
                     </div>
-                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
-                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">Country</div>
-                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]"><span id="flag" class="mr-2 text-[clamp(1rem,3vw,1.2rem)] [filter:drop-shadow(0_0_5px_rgba(255,255,255,0.3))]">🏳️</span> <span id="country">-</span></div>
-                    </div>
-                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
-                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">Region</div>
-                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="region">-</div>
-                    </div>
-                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
-                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">City</div>
-                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="city">-</div>
-                    </div>
-                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
-                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">Coordinates</div>
-                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="coords">-</div>
-                    </div>
-                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
-                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">ISP / Org.</div>
-                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="org">-</div>
-                    </div>
-                    <div class="flex justify-between items-start gap-2.5 flex-wrap min-[600px]:flex-nowrap py-3 border-b border-term-border last:border-b-0">
-                        <div class="info-label text-[clamp(0.8rem,3vw,1rem)] text-term-muted uppercase tracking-[1px] font-share shrink-0 leading-[1.4]">Timezone</div>
-                        <div class="text-[clamp(0.85rem,2.5vw,1rem)] text-neon-cyan font-bold font-jb text-right break-all flex-1 min-w-0 leading-[1.4]" id="timezone">-</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="map-container bg-term-deep p-[clamp(15px,3vw,20px)] rounded-lg h-full min-h-[300px] relative border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)] max-[450px]:order-1">
-                <div id="map"></div>
-                <div class="map-legend bg-term-deep rounded-lg py-3 px-4 border border-term-border border-t-term-border-hl border-l-term-border-hl absolute z-[1000] max-w-[min(200px,80%)] bottom-[clamp(25px,5vw,32px)] left-[clamp(15px,3vw,32px)] backdrop-blur-[5px] shadow-[0_4px_20px_rgba(0,0,0,0.8)]" id="mapLegend">
-                    <h4 class="text-xs font-bold text-neon-green uppercase tracking-[0.5px] mb-2.5 border-b border-term-border pb-2">API Sources</h4>
-                    <div id="legendItems"></div>
-                </div>
-            </div>
+                    <figcaption class="flex items-baseline gap-3 mt-2.5 px-1">
+                        <span class="font-mono text-[0.7rem] text-stone whitespace-nowrap" id="figCaption">Fig. 1 &middot; Awaiting first reading</span>
+                        <div class="flex-1 border-b border-dotted border-ink/20"></div>
+                        <span class="font-mono text-[0.7rem] text-stone/70 whitespace-nowrap">N &uarr;</span>
+                    </figcaption>
+                </figure>
+            </section>
         </div>
 
-        <div class="compare-mode hidden mt-5 bg-term-deep p-[clamp(15px,3vw,20px)] rounded-lg border border-term-border border-t-term-border-hl border-l-term-border-hl shadow-[0_4px_20px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.05)]" id="compareSection">
-            <h3 class="text-neon-yellow font-jb mb-2.5 uppercase tracking-[2px] text-[clamp(1rem,3vw,1.2rem)]">API Comparison Mode</h3>
-            <p class="text-[#666] mb-[15px] text-[clamp(0.85rem,2vw,1rem)]">See how different APIs locate the same IP — all results are plotted on the map above</p>
-            <div class="grid grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[15px] mt-[15px]" id="compareGrid"></div>
-        </div>
+        <!-- Comparison ledger -->
+        <section class="hidden mt-8" id="compareSection">
+            <div class="flex items-baseline gap-3 mb-1.5">
+                <h2 class="font-display italic font-medium text-2xl whitespace-nowrap">Side by side</h2>
+                <div class="flex-1 border-b border-dotted border-ink/25"></div>
+            </div>
+            <p class="text-stone text-sm max-w-[70ch] mb-2">
+                The same address according to each source. Disagreement is normal: most providers place an
+                IP near the ISP's regional hub, not at your door.
+            </p>
+            <p class="hidden font-display italic text-pine text-[1.05rem] mb-4" id="spreadNote"></p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-4" id="compareGrid"></div>
+        </section>
+
+        <!-- Colophon -->
+        <footer class="reveal reveal-6 mt-10 pt-4 border-t border-hairline flex flex-wrap gap-x-6 gap-y-1 justify-between">
+            <p class="font-mono text-[0.7rem] text-stone/80">All sources are free tiers, queried straight from your browser. No keys, nothing stored.</p>
+            <p class="font-mono text-[0.7rem] text-stone/60">Tiles &copy; CARTO &middot; Data &copy; OpenStreetMap</p>
+        </footer>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../components/back-link.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

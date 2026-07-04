@@ -1,544 +1,349 @@
-:root {
-    --bg-primary: #050508;
-    --bg-card: #0f0f14;
-    --bg-terminal: #08080c;
-    --neon-green: #00ff41;
-    --neon-cyan: #00f0ff;
-    --neon-red: #ff0040;
-    --neon-yellow: #f0ff00;
-    --text-secondary: #6b7280;
-    --border-color: #1f2937;
-    --border-highlight: #374151;
-    --glow-green: 0 0 20px rgba(0, 255, 65, 0.4);
-    --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.4);
+/* ============================================================
+   The IP Atlas: editorial cartography theme.
+   Layout and most styling live in Tailwind classes (index.html).
+   This file holds only what Tailwind can't cleanly express:
+   keyframes, pseudo-element decoration, JS-generated markup
+   (chips, markers, legend), Leaflet overrides, media queries.
+   ============================================================ */
+
+/* ---- Page-load reveal ---- */
+.reveal {
+    opacity: 0;
+    animation: rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+.reveal-1 { animation-delay: 0.05s; }
+.reveal-2 { animation-delay: 0.14s; }
+.reveal-3 { animation-delay: 0.23s; }
+.reveal-4 { animation-delay: 0.32s; }
+.reveal-5 { animation-delay: 0.41s; }
+.reveal-6 { animation-delay: 0.55s; }
 
-/* Scanline overlay */
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(0deg,
-        rgba(0, 0, 0, 0.2),
-        rgba(0, 0, 0, 0.2) 1px,
-        transparent 1px,
-        transparent 2px);
-    pointer-events: none;
-    z-index: 1000;
-    opacity: 0.8;
+@keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-/* CRT flicker */
-body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 255, 65, 0.03);
-    pointer-events: none;
-    z-index: 999;
-    animation: flicker 0.15s infinite;
+/* ---- Masthead stamp ornament ---- */
+.stamp-ornament {
+    animation: rotate-slow 45s linear infinite;
+    transform-origin: 50% 50%;
 }
 
-@keyframes flicker {
-    0% { opacity: 0.03; }
-    50% { opacity: 0.06; }
-    100% { opacity: 0.03; }
+@keyframes rotate-slow {
+    to { transform: rotate(360deg); }
 }
 
-/* Glitch header */
-h1 {
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: clamp(-1px, -0.5vw, -2px);
-    color: var(--neon-green);
-    text-shadow:
-        0 0 10px var(--neon-green),
-        0 0 20px var(--neon-green),
-        0 0 40px var(--neon-green);
+/* ---- Compass spinner (loading state) ---- */
+.compass-spinner {
+    width: 46px;
+    height: 46px;
+    border: 1.5px solid rgba(28, 26, 23, 0.25);
+    border-radius: 50%;
     position: relative;
-    animation: glitch 3s infinite;
-    word-break: break-word;
-    line-height: 1.1;
 }
 
-h1::before,
-h1::after {
-    content: attr(data-text);
+.compass-spinner::before {
+    content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 17px;
+    margin: -17px 0 0 -1px;
+    background: #d4451f;
+    border-radius: 1px;
+    transform-origin: 50% 100%;
+    animation: needle 1.1s cubic-bezier(0.65, 0.05, 0.36, 1) infinite;
 }
 
-h1::before {
-    left: 2px;
-    text-shadow: -2px 0 var(--neon-red);
-    clip: rect(44px, 450px, 56px, 0);
-    animation: glitch-anim 5s infinite linear alternate-reverse;
-}
-
-h1::after {
-    left: -2px;
-    text-shadow: -2px 0 var(--neon-cyan);
-    clip: rect(44px, 450px, 56px, 0);
-    animation: glitch-anim2 5s infinite linear alternate-reverse;
-}
-
-@keyframes glitch {
-    0%, 90%, 100% { transform: translate(0); }
-    92% { transform: translate(-2px, 2px); }
-    94% { transform: translate(2px, -2px); }
-    96% { transform: translate(-2px, -2px); }
-    98% { transform: translate(2px, 2px); }
-}
-
-@keyframes glitch-anim {
-    0% { clip: rect(31px, 9999px, 94px, 0); }
-    20% { clip: rect(54px, 9999px, 96px, 0); }
-    40% { clip: rect(70px, 9999px, 99px, 0); }
-    60% { clip: rect(3px, 9999px, 63px, 0); }
-    80% { clip: rect(37px, 9999px, 95px, 0); }
-    100% { clip: rect(68px, 9999px, 39px, 0); }
-}
-
-@keyframes glitch-anim2 {
-    0% { clip: rect(65px, 9999px, 99px, 0); }
-    20% { clip: rect(93px, 9999px, 4px, 0); }
-    40% { clip: rect(26px, 9999px, 100px, 0); }
-    60% { clip: rect(11px, 9999px, 14px, 0); }
-    80% { clip: rect(63px, 9999px, 46px, 0); }
-    100% { clip: rect(23px, 9999px, 79px, 0); }
-}
-
-.subtitle::before {
-    content: "> ";
-    color: var(--neon-green);
-}
-
-/* Terminal prompt label above api-status box */
-.api-status::before {
-    content: "root@kali:~# ./check_apis.sh";
-    display: block;
+.compass-spinner::after {
+    content: "";
     position: absolute;
-    top: -10px;
-    left: 10px;
-    background: var(--bg-primary);
-    padding: 0 10px;
-    color: var(--neon-green);
-    font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px;
+    background: #1c1a17;
+    border-radius: 50%;
+}
+
+@keyframes needle {
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Field record rows (dt / leader / dd need descendant styling) ---- */
+.record-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.08);
+}
+
+.record-row:last-child { border-bottom: none; }
+
+.record-row dt {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: #6b6256;
     white-space: nowrap;
 }
 
-/* API badges */
-.api-badge {
-    background: #0a0a0f;
-    color: var(--text-secondary);
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: clamp(0.7rem, 1.5vw, 0.75rem);
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    font-family: 'Share Tech Mono', monospace;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
+.record-row .leader {
+    flex: 1;
+    min-width: 1.5rem;
+    border-bottom: 1px dotted rgba(28, 26, 23, 0.3);
+    transform: translateY(-3px);
+}
+
+.record-row dd {
+    margin: 0;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(0.82rem, 1.8vw, 0.92rem);
+    text-align: right;
+    word-break: break-word;
+    min-width: 0;
+}
+
+/* ---- Source ledger chips (markup generated by JS) ---- */
+.src-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.45rem 0.7rem;
+    background: #fffdf8;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    border-radius: 2px;
+    color: #6b6256;
     cursor: pointer;
-    min-height: 44px;
+    user-select: none;
+    transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease, transform 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.src-chip:hover { border-color: rgba(28, 26, 23, 0.45); color: #1c1a17; }
+.src-chip:active { transform: translateY(1px); }
+
+.src-chip .num { font-size: 0.6rem; color: rgba(107, 98, 86, 0.55); }
+.src-chip .glyph { font-weight: 700; min-width: 1ch; }
+
+.src-chip.querying {
+    border-color: #1c1a17;
+    color: #1c1a17;
+    animation: chirp 0.9s ease infinite;
+}
+
+.src-chip.ok {
+    border-color: #2f5b53;
+    color: #2f5b53;
+    background: rgba(47, 91, 83, 0.07);
+}
+
+.src-chip.ok .num { color: rgba(47, 91, 83, 0.6); }
+
+.src-chip.failed {
+    border-color: rgba(212, 69, 31, 0.55);
+    color: #b8371a;
+    background: rgba(212, 69, 31, 0.05);
+}
+
+.src-chip.failed .name { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+@keyframes chirp {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(28, 26, 23, 0.14); }
+    50%      { box-shadow: 0 0 0 4px rgba(28, 26, 23, 0.07); }
+}
+
+/* ---- "via source" rubber stamp ---- */
+.stamp { transform: rotate(-3deg); }
+
+.stamp.stamped { animation: stamp-in 0.4s cubic-bezier(0.2, 1.4, 0.4, 1); }
+
+@keyframes stamp-in {
+    from { transform: rotate(-9deg) scale(1.7); opacity: 0; }
+    to   { transform: rotate(-3deg) scale(1); opacity: 1; }
+}
+
+/* ---- Map plate ---- */
+/* Inner frame line drawn over the map edge, like an atlas plate border */
+.plate::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(28, 26, 23, 0.35);
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 500;
+}
+
+/* Blend tiles into the paper palette (tiles only, not markers) */
+#map .leaflet-tile-pane {
+    filter: sepia(0.22) saturate(0.85) contrast(1.02);
+}
+
+/* ---- Markers (markup generated by JS) ---- */
+.atlas-marker {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #fffdf8;
+    color: #fffdf8;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.62rem;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 1 1 auto;
-    min-width: 100px;
-    max-width: 150px;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 2px 6px rgba(28, 26, 23, 0.35);
 }
 
-.api-badge::before {
-    content: "[ ] ";
-    color: var(--text-secondary);
+.atlas-marker--sm {
+    width: 20px;
+    height: 20px;
+    font-size: 0.56rem;
     flex-shrink: 0;
 }
 
-.api-badge.active {
-    background: rgba(0, 255, 65, 0.15);
-    color: var(--neon-green);
-    border-color: var(--neon-green);
-    box-shadow: var(--glow-green);
-    text-shadow: 0 0 5px var(--neon-green);
-}
+.atlas-pin { position: relative; width: 20px; height: 20px; }
 
-.api-badge.active::before {
-    content: "[✓] ";
-    color: var(--neon-green);
-}
-
-.api-badge.failed {
-    background: rgba(255, 0, 64, 0.15);
-    color: var(--neon-red);
-    border-color: var(--neon-red);
-    opacity: 0.8;
-}
-
-.api-badge.failed::before {
-    content: "[✗] ";
-    color: var(--neon-red);
-}
-
-/* Terminal prompt prefix inside search box */
-.search-box::before {
-    content: "root@kali:~# ";
-    color: var(--neon-green);
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-input[type="text"] {
-    flex: 1 1 100%;
-    min-width: 0;
-    padding: 12px 15px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    border-radius: 4px;
-    font-size: 16px;
-    color: var(--neon-cyan);
-    font-family: 'JetBrains Mono', monospace;
-    transition: all 0.3s;
-    caret-color: var(--neon-green);
-    -webkit-appearance: none;
-}
-
-input[type="text"]::placeholder {
-    color: var(--text-secondary);
-    opacity: 0.5;
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-}
-
-input[type="text"]:focus {
-    outline: none;
-    border-color: var(--neon-green);
-    box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
-}
-
-/* Hacker buttons with sweep effect */
-button {
-    padding: 12px 20px;
-    background: transparent;
-    color: var(--neon-green);
-    border: 1px solid var(--neon-green);
-    border-radius: 4px;
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-    cursor: pointer;
-    transition: all 0.3s;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    position: relative;
-    overflow: hidden;
-    min-height: 44px;
-    flex: 1 1 calc(33.333% - 7px);
-    min-width: 80px;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-
-button::before {
-    content: "";
+.atlas-pin .dot {
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
-    transition: left 0.5s;
+    inset: 3px;
+    background: #d4451f;
+    border: 2px solid #fffdf8;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(28, 26, 23, 0.4);
 }
 
-button:hover:not(:disabled)::before,
-button:active:not(:disabled)::before {
-    left: 100%;
+.atlas-pin .ring {
+    position: absolute;
+    inset: 0;
+    border: 2px solid #d4451f;
+    border-radius: 50%;
+    animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
-button:hover:not(:disabled),
-button:active:not(:disabled) {
-    background: rgba(0, 255, 65, 0.15);
-    box-shadow: var(--glow-green);
-    text-shadow: 0 0 5px var(--neon-green);
+@keyframes ping {
+    0%        { transform: scale(0.7); opacity: 0.9; }
+    75%, 100% { transform: scale(2.1); opacity: 0; }
 }
 
-button:disabled {
-    border-color: var(--text-secondary);
-    color: var(--text-secondary);
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-.my-ip-btn {
-    color: var(--neon-cyan);
-    border-color: var(--neon-cyan);
-}
-
-.my-ip-btn:hover:not(:disabled),
-.my-ip-btn:active:not(:disabled) {
-    background: rgba(0, 240, 255, 0.15);
-    box-shadow: var(--glow-cyan);
-    text-shadow: 0 0 5px var(--neon-cyan);
-}
-
-.toggle-compare {
-    color: var(--neon-yellow);
-    border-color: var(--neon-yellow);
-}
-
-.toggle-compare:hover:not(:disabled),
-.toggle-compare:active:not(:disabled) {
-    background: rgba(240, 255, 0, 0.15);
-    box-shadow: 0 0 15px rgba(240, 255, 0, 0.4);
-    text-shadow: 0 0 5px var(--neon-yellow);
-}
-
-/* Terminal label inside info card */
-.info-card::before {
-    content: "cat /proc/net/ip_info";
-    display: block;
-    color: var(--text-secondary);
-    font-size: clamp(0.75rem, 1.5vw, 0.8rem);
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    word-break: break-all;
-}
-
-.info-label::before {
-    content: "# ";
-    color: var(--neon-cyan);
-}
-
-/* Map */
-#map {
-    width: 100%;
-    height: 100%;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    filter: grayscale(30%) contrast(1.1);
-    min-height: 250px;
-}
-
-/* Map legend visibility (toggled by JS) */
-.map-legend { display: none; }
-.map-legend.visible { display: block; }
-
+/* ---- Legend entries (markup generated by JS) ---- */
 .legend-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    line-height: 1.2;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: #6b6256;
+    margin-bottom: 5px;
+    line-height: 1.3;
 }
+
+.legend-item:last-child { margin-bottom: 0; }
 
 .legend-dot {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    border: 2px solid rgba(0, 0, 0, 0.3);
-    box-shadow: 0 0 5px currentColor;
-}
-
-.legend-item.failed {
-    opacity: 0.4;
-    text-decoration: line-through;
-}
-
-/* Loading state (toggled by JS) */
-.loading { display: none; }
-.loading.active { display: block; }
-
-.spinner {
-    width: clamp(30px, 8vw, 40px);
-    height: clamp(30px, 8vw, 40px);
-    border: 2px solid var(--border-color);
-    border-top: 2px solid var(--neon-green);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 15px;
-    box-shadow: 0 0 15px var(--neon-green);
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Error / success messages (toggled by JS) */
-.error {
-    background: rgba(255, 0, 64, 0.15);
-    color: var(--neon-red);
-    padding: 15px;
-    border-radius: 4px;
-    margin-top: 10px;
-    display: none;
-    border: 1px solid var(--neon-red);
-    font-family: 'Share Tech Mono', monospace;
-    position: relative;
-    padding-left: clamp(60px, 15vw, 70px);
-    font-size: clamp(0.85rem, 2vw, 1rem);
-    word-break: break-word;
-}
-
-.error::before {
-    content: "[ERROR]";
-    position: absolute;
-    left: 10px;
-    font-weight: bold;
-    font-size: clamp(0.7rem, 1.5vw, 0.8rem);
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.error.active {
-    display: block;
-    animation: glitch 0.3s;
-}
-
-.success-notice {
-    background: rgba(0, 255, 65, 0.15);
-    color: var(--neon-green);
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
-    font-size: clamp(0.85rem, 2vw, 0.9rem);
-    display: none;
-    border: 1px solid var(--neon-green);
-    font-family: 'Share Tech Mono', monospace;
-    word-break: break-word;
-}
-
-.success-notice.active {
-    display: block;
-}
-
-/* Compare section */
-.compare-mode h3::before {
-    content: "$ ";
-    color: var(--text-secondary);
-}
-
-.compare-card {
-    background: var(--bg-card);
-    padding: 15px;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-highlight);
-    border-left: 3px solid var(--neon-cyan);
-    overflow: hidden;
-}
-
-.compare-card h4 {
-    margin-bottom: 10px;
-    color: var(--neon-cyan);
-    font-size: clamp(0.85rem, 2vw, 0.9rem);
-    font-family: 'Share Tech Mono', monospace;
-    text-transform: uppercase;
-    word-break: break-all;
-}
-
-.compare-card p {
-    font-size: clamp(0.75rem, 2vw, 0.8rem);
-    color: var(--text-secondary);
-    margin: 5px 0;
-    font-family: 'JetBrains Mono', monospace;
-    word-break: break-all;
-}
-
-.compare-card .color-swatch {
-    display: inline-block;
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    margin-right: 5px;
-    vertical-align: middle;
-    box-shadow: 0 0 5px currentColor;
     flex-shrink: 0;
+    border: 1.5px solid #fffdf8;
+    box-shadow: 0 0 0 1px rgba(28, 26, 23, 0.15);
 }
 
-.hidden { display: none; }
+.legend-item.failed { opacity: 0.45; }
+.legend-item.failed .lname { text-decoration: line-through; }
 
-/* ==================== SMALL MOBILE (<= 450px) ==================== */
-@media (max-width: 450px) {
-    .api-badge { max-width: none; }
+/* ---- Compare toggle active state ---- */
+#compareBtn.compare-active {
+    background: #2f5b53;
+    color: #f6f2ea;
+}
 
-    /* Swap inline terminal prompt for one anchored above the search box */
-    .search-box::before { display: none; }
-    .search-box { padding-top: 25px; }
-    .search-box::after {
-        content: "root@kali:~#";
-        position: absolute;
-        top: 5px;
-        left: 15px;
-        color: var(--neon-green);
-        font-size: 0.75rem;
+/* ---- Buttons ---- */
+.btn-press:active:not(:disabled) { transform: translateY(1px); }
+
+/* ---- Leaflet overrides to match the paper theme ---- */
+.leaflet-popup-content-wrapper {
+    background: #fffdf8;
+    color: #1c1a17;
+    border: 1px solid rgba(28, 26, 23, 0.2);
+    border-radius: 3px;
+    box-shadow: 0 10px 24px rgba(28, 26, 23, 0.18);
+}
+
+.leaflet-popup-content {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: 10px 14px;
+}
+
+.leaflet-popup-tip {
+    background: #fffdf8;
+    box-shadow: 0 2px 6px rgba(28, 26, 23, 0.15);
+}
+
+.leaflet-container a.leaflet-popup-close-button { color: #6b6256; }
+
+.leaflet-bar a {
+    background: #fffdf8;
+    color: #1c1a17;
+    border-bottom-color: rgba(28, 26, 23, 0.14);
+}
+
+.leaflet-bar a:hover { background: #efe9dd; }
+
+.leaflet-control-attribution {
+    background: rgba(255, 253, 248, 0.85);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: #6b6256;
+}
+
+/* ---- Pixel alignment on high-DPI displays (see root CLAUDE.md) ---- */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .legend-dot,
+    .atlas-marker {
+        transform: translateZ(0);
+        backface-visibility: hidden;
     }
-
-    /* Disable heavy effects on small screens */
-    body::after { display: none; }
-    h1 { animation: none; }
-    h1::before,
-    h1::after { display: none; }
 }
 
+/* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-    body::after { animation: none; }
-    .spinner {
+
+    .reveal { opacity: 1; }
+    .stamp-ornament { animation: none; }
+    .atlas-pin .ring { display: none; }
+
+    .compass-spinner::before {
         animation: none;
-        border-top-color: var(--neon-green);
-        border-right-color: var(--neon-green);
-        border-bottom-color: var(--neon-green);
+        transform: rotate(45deg);
     }
 }
 
-@media (max-height: 500px) and (orientation: landscape) {
-    .map-container { height: 250px; min-height: 200px; }
-    #map { min-height: 150px; }
-    h1 { font-size: 1.5rem; }
-    .subtitle { display: none; }
-}
-
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .legend-dot,
-    .color-swatch { transform: translateZ(0); }
-}
-
-@media (prefers-color-scheme: dark) {
-    :root { color-scheme: dark; }
-}
-
+/* ---- Print ---- */
 @media print {
-    body { background: white; color: black; padding: 0; }
-    body::before,
-    body::after { display: none; }
-    .api-status,
-    .search-box,
-    .compare-mode {
-        break-inside: avoid;
-        border: 1px solid #ccc;
-        box-shadow: none;
-    }
-    h1 { color: black; text-shadow: none; }
+    body { background: white; }
+
+    .stamp-ornament,
+    .legend,
+    button { display: none !important; }
+
+    .plate,
+    section { box-shadow: none !important; }
 }
