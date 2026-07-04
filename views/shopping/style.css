@@ -10,7 +10,8 @@ body { background: #f8f7f4; }
 
 /* fix: ensure hidden overrides Tailwind flex/flex-col on these IDs */
 #bought-divider.hidden,
-#empty-collections.hidden { display: none !important; }
+#empty-collections.hidden,
+#gate.hidden { display: none !important; }
 
 /* tab chip */
 .tab-chip {
@@ -134,19 +135,18 @@ body { background: #f8f7f4; }
     main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
 }
 
-/* notify banner: float fixed below the notch, above the rest of the page */
-#notify-banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
+/* access sheet: slide up from the bottom, clear the home indicator */
+@keyframes sheet-in {
+    from { transform: translateY(24px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
 }
-@supports (top: env(safe-area-inset-top)) {
-    #notify-banner { top: env(safe-area-inset-top); }
+#access-sheet:not(.hidden) { animation: sheet-in 0.22s ease-out; }
+@supports (padding: env(safe-area-inset-bottom)) {
+    #access-sheet { padding-bottom: env(safe-area-inset-bottom); }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .item-row { animation: none; }
+    #access-sheet:not(.hidden) { animation: none; }
     * { transition: none !important; }
 }

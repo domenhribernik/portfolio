@@ -39,23 +39,16 @@
 </head>
 <body class="font-sans bg-paper text-ink h-dvh overflow-hidden m-0 p-0 flex flex-col">
 
-    <div id="notify-banner" class="hidden bg-ink text-paper shrink-0">
-        <div class="max-w-[720px] mx-auto px-4 py-2 flex items-center gap-3 text-sm">
-            <i class="fas fa-bell"></i>
-            <span class="flex-1">Get a ping when family adds something.</span>
-            <button id="notify-enable" class="px-3 py-1 rounded-full bg-accent text-paper font-medium">Enable</button>
-            <button id="notify-dismiss" aria-label="Dismiss" class="w-8 h-8 flex items-center justify-center"><i class="fas fa-xmark"></i></button>
-        </div>
-    </div>
-
     <header class="bg-paper border-b border-line shadow-sm shrink-0">
         <div class="max-w-[720px] mx-auto px-4 py-3 flex items-center gap-3">
-            <a href="../../" class="text-ink hover:text-accent transition-colors inline-flex items-center gap-2 font-medium text-sm">
+            <a id="back-link" href="../../" class="text-ink hover:text-accent transition-colors inline-flex items-center gap-2 font-medium text-sm">
                 <i class="fas fa-arrow-left"></i>
-                <span class="hidden sm:inline">back</span>
             </a>
             <h1 class="flex-1 text-center text-xl sm:text-2xl font-semibold tracking-tight">Shopping</h1>
-            <div class="w-10"></div>
+            <button id="manage-access" aria-label="Manage list access" title="Who can see this list"
+                class="invisible w-10 h-10 flex items-center justify-center rounded-full text-muted hover:text-ink hover:bg-line/60 transition-colors">
+                <i class="fas fa-user-lock"></i>
+            </button>
         </div>
     </header>
 
@@ -105,6 +98,12 @@
             Nothing here yet. Add something above.
         </div>
 
+        <div id="gate" class="hidden flex flex-col items-center justify-center py-16 gap-4 text-center">
+            <i id="gate-icon" class="fas fa-user-lock text-4xl text-muted"></i>
+            <p id="gate-message" class="text-muted max-w-xs"></p>
+            <a id="gate-link" href="#" class="hidden px-5 py-3 rounded-full bg-accent text-white font-medium hover:opacity-90 transition-opacity">Sign in</a>
+        </div>
+
         <div id="empty-collections" class="hidden flex flex-col items-center justify-center py-16 gap-4">
             <i class="fas fa-cart-shopping text-4xl text-muted"></i>
             <p class="text-muted text-center">No lists yet. Create your first one.</p>
@@ -121,8 +120,34 @@
         </div>
     </main>
 
-    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-ink text-paper text-sm opacity-0 pointer-events-none transition-opacity z-40"></div>
+    <!-- admin-only: per-collection access management -->
+    <div id="access-backdrop" class="hidden fixed inset-0 bg-ink/40 z-40"></div>
+    <section id="access-sheet" class="hidden fixed bottom-0 left-0 right-0 z-50 max-w-[720px] mx-auto bg-paper rounded-t-2xl shadow-2xl">
+        <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-line">
+            <h2 class="text-lg font-semibold">Who can see this list</h2>
+            <button id="access-close" aria-label="Close" class="w-10 h-10 flex items-center justify-center rounded-full text-muted hover:text-ink">
+                <i class="fas fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="px-5 py-3 border-b border-line">
+            <label for="access-collection" class="block text-xs uppercase tracking-wide text-muted mb-1">Collection</label>
+            <select id="access-collection"
+                class="w-full px-4 py-3 rounded-2xl border border-line bg-white text-ink text-base outline-none focus:border-accent"></select>
+        </div>
+        <ul id="access-users" class="divide-y divide-line max-h-[45vh] overflow-y-auto px-5"></ul>
+        <div class="px-5 pt-3 pb-5 flex flex-col gap-3 border-t border-line">
+            <button id="access-delete"
+                class="w-full px-4 py-3 rounded-2xl border border-red-200 text-red-600 font-medium flex items-center justify-center gap-2 hover:bg-red-50 disabled:opacity-50 transition-colors">
+                <i class="fas fa-trash-can"></i>
+                <span>Delete this list</span>
+            </button>
+            <p class="text-xs text-muted text-center">Admins always see every list.</p>
+        </div>
+    </section>
 
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-ink text-paper text-sm opacity-0 pointer-events-none transition-opacity z-[60]"></div>
+
+    <script src="../../components/back-link.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

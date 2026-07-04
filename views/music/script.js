@@ -591,6 +591,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const next = document.createElement('span');
     next.className = 'chordsheet__next';
     next.textContent = events.length ? `next: ${events[0].chord}` : '';
+    next.setAttribute('data-chord-anchor', '');
+    next.title = 'Show the chord diagram';
+    next.addEventListener('click', function() {
+      const name = this.textContent.replace(/^next:\s*/, '');
+      if (name && !isGapChord(name)) ChordCard.show(name, this);
+    });
 
     head.appendChild(label);
     head.appendChild(current);

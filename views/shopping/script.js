@@ -2,10 +2,9 @@
     'use strict';
 
     const API = '../../app/controllers/shopping-controller.php';
+    const AUTH_API = '../../app/controllers/auth-controller.php';
     const POLL_INTERVAL_MS = 2000;
     const COLLECTIONS_POLL_INTERVAL_MS = 5000;
-    const UUID_KEY = 'shopping.uuid';
-    const NOTIFY_DISMISSED_KEY = 'shopping.notifyDismissed';
 
     // ----- audio -----
     let audioCtx = null;
@@ -39,7 +38,8 @@
 
     // ----- state -----
     const state = {
-        myUuid: '',
+        user: null,
+        isAdmin: false,
         collections: [],
         activeCollection: null,
         itemsByCollection: Object.create(null),
@@ -67,24 +67,22 @@
         emptyCollections: $('empty-collections'),
         firstListInput: $('first-list-input'),
         firstListCreate: $('first-list-create'),
-        notifyBanner: $('notify-banner'),
-        notifyEnable: $('notify-enable'),
-        notifyDismiss: $('notify-dismiss'),
+        gate: $('gate'),
+        gateIcon: $('gate-icon'),
+        gateMessage: $('gate-message'),
+        gateLink: $('gate-link'),
+        manageAccess: $('manage-access'),
+        accessBackdrop: $('access-backdrop'),
+        accessSheet: $('access-sheet'),
+        accessClose: $('access-close'),
+        accessCollection: $('access-collection'),
+        accessUsers: $('access-users'),
+        accessDelete: $('access-delete'),
         toast: $('toast'),
         main: $('main'),
     };
 
     // ----- utils -----
-    function getUuid() {
-        let v = localStorage.getItem(UUID_KEY);
-        if (!v) {
-            v = (crypto.randomUUID && crypto.randomUUID()) ||
-                (Date.now().toString(36) + Math.random().toString(36).slice(2));
-            localStorage.setItem(UUID_KEY, v);
-        }
-        return v;
-    }
-
     function tempId() {
         const r = (crypto.randomUUID && crypto.randomUUID()) || (Math.random().toString(36).slice(2));
         return 'tmp-' + r;
@@ -102,7 +100,11 @@
     async function api(url, options = {}) {
         const res = await fetch(url, options);
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+        if (!res.ok) {
+            const err = new Error(data.error || `Request failed (${res.status})`);
+            err.status = res.status;
+            throw err;
+        }
         return data;
     }
 
@@ -124,8 +126,8 @@
                 (since ? `&since=${encodeURIComponent(since)}` : '');
             return api(url);
         },
-        add: (collection, name, addedBy) =>
-            api(API, jsonPost({ collection, name, added_by: addedBy })),
+        add: (collection, name) =>
+            api(API, jsonPost({ collection, name })),
         registerCollection: (name) =>
             api(`${API}?collection_register=1`, jsonPost({ name })),
         setChecked: (id, checked) =>
@@ -133,6 +135,15 @@
         remove: (id) => api(`${API}?id=${id}`, { method: 'DELETE' }),
         clearBought: (collection) =>
             api(`${API}?collection=${encodeURIComponent(collection)}&checked=1`, { method: 'DELETE' }),
+        me: () => api(`${AUTH_API}?action=me`),
+        accessList: (collection) =>
+            api(`${API}?access=1&collection=${encodeURIComponent(collection)}`),
+        accessGrant: (collection, userId) =>
+            api(`${API}?access=1`, jsonPost({ collection, user_id: userId })),
+        accessRevoke: (collection, userId) =>
+            api(`${API}?access=1&collection=${encodeURIComponent(collection)}&user_id=${userId}`, { method: 'DELETE' }),
+        deleteCollection: (collection) =>
+            api(`${API}?collection_delete=1&collection=${encodeURIComponent(collection)}`, { method: 'DELETE' }),
     };
 
     // ----- collection / tab management -----
@@ -287,7 +298,7 @@
             collection,
             name,
             checked: 0,
-            added_by: state.myUuid,
+            added_by: state.user && (state.user.display_name || state.user.email),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
         };
@@ -297,7 +308,7 @@
         renderItems();
 
         try {
-            const res = await ShoppingAPI.add(collection, name, state.myUuid);
+            const res = await ShoppingAPI.add(collection, name);
             const real = res.item;
             // swap temp for real in the local list
             const list = state.itemsByCollection[collection];
@@ -392,23 +403,6 @@
         return out;
     }
 
-    function detectAndNotifyAdds(prev, next) {
-        if (!('Notification' in window) || Notification.permission !== 'granted') return;
-        const prevIds = new Set((prev || []).map((x) => x.id));
-        for (const item of next) {
-            if (isPending(item.id)) continue;
-            if (prevIds.has(item.id)) continue;
-            if (item.added_by && item.added_by === state.myUuid) continue;
-            try {
-                new Notification(`🛒 Added to ${item.collection}`, {
-                    body: item.name,
-                    tag: 'shopping-' + item.id,
-                    icon: 'icon-192.png',
-                });
-            } catch { /* ignored */ }
-        }
-    }
-
     async function refreshItems(force = false) {
         const collection = state.activeCollection;
         if (!collection) return;
@@ -416,18 +410,15 @@
         let res;
         try {
             res = await ShoppingAPI.items(collection, since);
-        } catch {
+        } catch (err) {
+            if (err.status === 401) showGate('signed-out');
             return; // silent on network blips
         }
         if (res.changed === false) {
             state.versionByCollection[collection] = res.version;
             return;
         }
-        const prev = state.itemsByCollection[collection] || [];
         const merged = mergeWithPending(res.items);
-        // notifications only when this collection is the active one
-        // (still, the function is safe across collections)
-        detectAndNotifyAdds(prev, merged);
         state.versionByCollection[collection] = res.version;
         state.itemsByCollection[collection] = merged;
         if (collection === state.activeCollection) renderItems();
@@ -437,7 +428,8 @@
         let res;
         try {
             res = await ShoppingAPI.collections();
-        } catch {
+        } catch (err) {
+            if (err.status === 401) showGate('signed-out');
             return;
         }
         const next = res.collections || [];
@@ -478,14 +470,183 @@
         state.collectionsPollTimer = null;
     }
 
-    // ----- notifications banner -----
-    function maybeShowNotifyBanner() {
-        if (!('Notification' in window)) return;
-        if (Notification.permission !== 'default') return;
-        if (localStorage.getItem(NOTIFY_DISMISSED_KEY) === '1') return;
-        els.notifyBanner.classList.remove('hidden');
+    // ----- auth gate -----
+    // Full-screen stop state: 'signed-out' (no session) or 'no-access'
+    // (signed in, but no role in the shopping project yet).
+    function showGate(kind) {
+        stopPolling();
+        state.activeCollection = null;
+        els.tabs.classList.add('hidden');
+        els.addBar.classList.add('hidden');
+        els.emptyCollections.classList.add('hidden');
+        els.emptyItems.classList.add('hidden');
+        els.boughtDivider.classList.add('hidden');
+        els.itemsActive.innerHTML = '';
+        els.itemsChecked.innerHTML = '';
+        if (kind === 'signed-out') {
+            els.gateIcon.className = 'fas fa-user-lock text-4xl text-muted';
+            els.gateMessage.textContent = 'Sign in to see your lists.';
+            els.gateLink.href = '../account/?redirect=' + encodeURIComponent(location.pathname);
+            els.gateLink.classList.remove('hidden');
+        } else {
+            els.gateIcon.className = 'fas fa-lock text-4xl text-muted';
+            els.gateMessage.textContent = 'This account has no access to the shopping lists yet. Ask Domen to let you in.';
+            els.gateLink.classList.add('hidden');
+        }
+        els.gate.classList.remove('hidden');
     }
-    function hideNotifyBanner() { els.notifyBanner.classList.add('hidden'); }
+
+    // ----- access management (admin only) -----
+    function openAccessSheet() {
+        const names = [...state.collections];
+        if (state.activeCollection && !names.includes(state.activeCollection)) {
+            names.push(state.activeCollection);
+        }
+        if (!names.length) {
+            toast('Create a list first');
+            return;
+        }
+        els.accessCollection.innerHTML = '';
+        for (const name of names) {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            els.accessCollection.appendChild(opt);
+        }
+        if (state.activeCollection) els.accessCollection.value = state.activeCollection;
+        els.accessBackdrop.classList.remove('hidden');
+        els.accessSheet.classList.remove('hidden');
+        loadAccessUsers();
+    }
+
+    function closeAccessSheet() {
+        els.accessBackdrop.classList.add('hidden');
+        els.accessSheet.classList.add('hidden');
+    }
+
+    async function loadAccessUsers() {
+        const collection = els.accessCollection.value;
+        els.accessUsers.innerHTML = '<li class="py-4 text-sm text-muted">Loading…</li>';
+        let res;
+        try {
+            res = await ShoppingAPI.accessList(collection);
+        } catch (err) {
+            els.accessUsers.innerHTML = '<li class="py-4 text-sm text-muted">Could not load users.</li>';
+            toast('Failed to load access: ' + err.message);
+            return;
+        }
+        // ignore stale responses if the select changed meanwhile
+        if (els.accessCollection.value !== collection) return;
+        els.accessUsers.innerHTML = '';
+        for (const user of res.users) {
+            els.accessUsers.appendChild(renderAccessUser(user, collection));
+        }
+    }
+
+    async function deleteCollectionFromSheet() {
+        const collection = els.accessCollection.value;
+        if (!collection) return;
+        if (!window.confirm(`Delete "${collection}" and all its items? This cannot be undone.`)) return;
+
+        els.accessDelete.disabled = true;
+        try {
+            await ShoppingAPI.deleteCollection(collection);
+        } catch (err) {
+            toast('Failed to delete: ' + err.message);
+            return;
+        } finally {
+            els.accessDelete.disabled = false;
+        }
+        toast(`Deleted "${collection}"`);
+
+        // purge local state
+        state.collections = state.collections.filter((n) => n !== collection);
+        delete state.itemsByCollection[collection];
+        delete state.versionByCollection[collection];
+        for (const [tid, temp] of state.pendingAdds) {
+            if (temp.collection === collection) state.pendingAdds.delete(tid);
+        }
+
+        if (state.activeCollection === collection) {
+            state.activeCollection = null;
+            if (state.collections.length) {
+                setActiveCollection(state.collections[0]);
+            } else {
+                history.replaceState(null, '', location.pathname + location.search);
+                els.addInput.placeholder = 'Add item…';
+                renderTabs();
+                renderItems();
+            }
+        } else {
+            renderTabs();
+        }
+
+        // refresh the sheet against the surviving lists, or close it
+        if (state.collections.length || state.activeCollection) {
+            openAccessSheet();
+        } else {
+            closeAccessSheet();
+        }
+    }
+
+    function renderAccessUser(user, collection) {
+        const li = document.createElement('li');
+        li.className = 'flex items-center gap-3 py-3';
+
+        const avatar = document.createElement('span');
+        avatar.className = 'w-9 h-9 rounded-full bg-line text-muted flex items-center justify-center shrink-0 overflow-hidden font-medium';
+        if (user.avatar_url) {
+            const img = document.createElement('img');
+            img.src = user.avatar_url;
+            img.alt = '';
+            img.referrerPolicy = 'no-referrer';
+            img.className = 'w-full h-full object-cover';
+            avatar.appendChild(img);
+        } else {
+            avatar.textContent = (user.display_name || user.email).charAt(0).toUpperCase();
+        }
+
+        const info = document.createElement('span');
+        info.className = 'flex-1 min-w-0';
+        const name = document.createElement('span');
+        name.className = 'block truncate font-medium';
+        name.textContent = user.display_name || user.email;
+        const email = document.createElement('span');
+        email.className = 'block truncate text-xs text-muted';
+        email.textContent = user.email;
+        info.append(name, email);
+
+        li.append(avatar, info);
+
+        if (user.is_admin) {
+            const badge = document.createElement('span');
+            badge.className = 'text-xs text-muted uppercase tracking-wide shrink-0';
+            badge.textContent = 'admin';
+            li.appendChild(badge);
+            return li;
+        }
+
+        const toggle = document.createElement('input');
+        toggle.type = 'checkbox';
+        toggle.checked = user.granted;
+        toggle.className = 'w-5 h-5 accent-accent shrink-0 cursor-pointer';
+        toggle.setAttribute('aria-label', `Access for ${user.display_name || user.email}`);
+        toggle.addEventListener('change', async () => {
+            const granted = toggle.checked;
+            toggle.disabled = true;
+            try {
+                if (granted) await ShoppingAPI.accessGrant(collection, user.id);
+                else await ShoppingAPI.accessRevoke(collection, user.id);
+            } catch (err) {
+                toggle.checked = !granted;
+                toast('Failed to update access: ' + err.message);
+            } finally {
+                toggle.disabled = false;
+            }
+        });
+        li.appendChild(toggle);
+        return li;
+    }
 
     // ----- wiring -----
     function submitAdd() {
@@ -503,15 +664,15 @@
         });
         els.clearBought.addEventListener('click', clearBought);
 
-        els.notifyEnable.addEventListener('click', async () => {
-            try {
-                await Notification.requestPermission();
-            } catch { /* ignored */ }
-            hideNotifyBanner();
-        });
-        els.notifyDismiss.addEventListener('click', () => {
-            localStorage.setItem(NOTIFY_DISMISSED_KEY, '1');
-            hideNotifyBanner();
+        els.manageAccess.addEventListener('click', openAccessSheet);
+        els.accessClose.addEventListener('click', closeAccessSheet);
+        els.accessBackdrop.addEventListener('click', closeAccessSheet);
+        els.accessCollection.addEventListener('change', loadAccessUsers);
+        els.accessDelete.addEventListener('click', deleteCollectionFromSheet);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !els.accessSheet.classList.contains('hidden')) {
+                closeAccessSheet();
+            }
         });
 
         els.firstListCreate.addEventListener('click', () => {
@@ -557,16 +718,29 @@
 
     // ----- boot -----
     async function boot() {
-        state.myUuid = getUuid();
         registerServiceWorker();
         wire();
-        maybeShowNotifyBanner();
+
+        // who is asking? gates everything else
+        let me = null;
+        try {
+            me = await ShoppingAPI.me();
+        } catch { /* treated as signed out below */ }
+        if (!me || !me.user) {
+            showGate('signed-out');
+            return;
+        }
+        state.user = me.user;
+        state.isAdmin = !!me.user.is_admin;
+        if (state.isAdmin) els.manageAccess.classList.remove('invisible');
 
         // initial load
         try {
             const res = await ShoppingAPI.collections();
             state.collections = res.collections || [];
-        } catch {
+        } catch (err) {
+            if (err.status === 401) { showGate('signed-out'); return; }
+            if (err.status === 403) { showGate('no-access'); return; }
             state.collections = [];
         }
 
