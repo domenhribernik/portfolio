@@ -728,9 +728,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const sweepAnchors = wordAnchors.length ? wordAnchors : chordAnchors;
     sweepAnchors.sort((a, b) => a.time - b.time || a.flat - b.flat);
 
-    // times where singing stops: unanchored chord events (instrumental runs
-    // and explicit N.C. gaps)
-    const gapTimes = events.filter((e, i) => eventFlat[i] < 0).map(e => e.time);
+    // times where singing stops. With word sync as the ground truth, only an
+    // explicit N.C.-style gap chord counts: treating every merely-unanchored
+    // chord as a gap (the old behavior) meant a track that had been word-synced
+    // but never chord-anchored would have its highlight cut out almost
+    // everywhere, since none of its chords carried a word anchor yet. Without
+    // word sync (the chord-anchor-only fallback below) an unanchored chord is
+    // still read as an instrumental interruption, same as before.
+    const wordSyncDriven = wordAnchors.length > 0;
+    const gapTimes = events
+      .filter((e, i) => isGapChord(e.chord) || (!wordSyncDriven && eventFlat[i] < 0))
+      .map(e => e.time);
     const nextGapAfter = (t) => gapTimes.find(g => g > t);
 
     // An anchor with no forward-moving successor (end of a line before an
@@ -805,27 +813,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function updateChordSync(currentTime) {
     const sync = deck.sync;
-    if (!sync || !sync.events.length) return;
+    if (!sync) return;
 
-    const index = findActiveChord(sync.events, currentTime);
-    if (index !== sync.activeIndex) {
-      if (sync.activeIndex >= 0 && sync.eventEls[sync.activeIndex]) {
-        sync.eventEls[sync.activeIndex].chordEl.classList.remove('is-active');
-      }
-      sync.activeIndex = index;
+    // Chord badge + active-chord highlight only apply when chords exist. A
+    // word-synced track with zero chords still needs its karaoke sweep, so the
+    // sweep below runs unconditionally (this block used to guard the whole
+    // function, which killed the highlight on lyrics-only tracks).
+    if (sync.events.length) {
+      const index = findActiveChord(sync.events, currentTime);
+      if (index !== sync.activeIndex) {
+        if (sync.activeIndex >= 0 && sync.eventEls[sync.activeIndex]) {
+          sync.eventEls[sync.activeIndex].chordEl.classList.remove('is-active');
+        }
+        sync.activeIndex = index;
 
-      const event = index >= 0 ? sync.events[index] : null;
-      const nextEvent = sync.events[index + 1] || null;
+        const event = index >= 0 ? sync.events[index] : null;
+        const nextEvent = sync.events[index + 1] || null;
 
-      // a gap (no chord assigned, or an explicit N.C.) reads as a rest
-      sync.currentEl.textContent = event && !isGapChord(event.chord) ? event.chord : '—';
-      sync.nextEl.textContent = nextEvent ? `next: ${nextEvent.chord}` : '';
+        // a gap (no chord assigned, or an explicit N.C.) reads as a rest
+        sync.currentEl.textContent = event && !isGapChord(event.chord) ? event.chord : '—';
+        sync.nextEl.textContent = nextEvent ? `next: ${nextEvent.chord}` : '';
 
-      if (event && sync.eventEls[index]) {
-        sync.eventEls[index].chordEl.classList.add('is-active');
-        // instrumental rows have no words to sweep through; scroll to them here
-        if (sync.eventFlat[index] < 0) {
-          scrollToLine(sync, sync.eventEls[index].lineEl);
+        if (event && sync.eventEls[index]) {
+          sync.eventEls[index].chordEl.classList.add('is-active');
+          // instrumental rows have no words to sweep through; scroll to them here
+          if (sync.eventFlat[index] < 0) {
+            scrollToLine(sync, sync.eventEls[index].lineEl);
+          }
         }
       }
     }
@@ -890,4 +904,47 @@ document.addEventListener('DOMContentLoaded', function() {
     seconds = seconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
+
+  // ---- Add a Tape uploader ---------------------------------------------------
+  // Design only for now: picks up a file / fills the form, but nothing is sent
+  // anywhere yet. Wire this to a real upload endpoint later.
+  const uploadDrop     = document.getElementById('uploadDrop');
+  const uploadFile     = document.getElementById('uploadFile');
+  const uploadFileName = document.getElementById('uploadFileName');
+  const uploadCategory = document.getElementById('uploadCategory');
+  const uploadSubmit   = document.getElementById('uploadSubmit');
+  const uploadStatus   = document.getElementById('uploadStatus');
+
+  function setUploadFile(file) {
+    uploadFileName.textContent = file.name;
+    uploadSubmit.disabled = false;
+  }
+
+  ['dragenter', 'dragover'].forEach(evt => {
+    uploadDrop.addEventListener(evt, function(e) {
+      e.preventDefault();
+      uploadDrop.classList.add('is-dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    uploadDrop.addEventListener(evt, function(e) {
+      e.preventDefault();
+      uploadDrop.classList.remove('is-dragover');
+    });
+  });
+  uploadDrop.addEventListener('drop', function(e) {
+    const file = e.dataTransfer.files[0];
+    if (file) setUploadFile(file);
+  });
+  uploadFile.addEventListener('change', function() {
+    if (this.files[0]) setUploadFile(this.files[0]);
+  });
+  uploadCategory.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      uploadCategory.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('is-active', c === this));
+    });
+  });
+  uploadSubmit.addEventListener('click', function() {
+    uploadStatus.textContent = 'Uploads aren\'t wired up yet, this is only a design preview.';
+  });
 });

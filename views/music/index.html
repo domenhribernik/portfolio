@@ -145,6 +145,50 @@
                 <div class="finder__results" id="results"></div>
                 <p class="finder__empty hidden" id="finderEmpty">Nothing on that shelf. Loosen the filters.</p>
             </section>
+
+            <!-- Add a tape: upload a new backing track. Design only for now, not wired to a backend. -->
+            <section class="uploader" aria-label="Upload a track">
+                <div class="uploader__head">
+                    <span class="uploader__label"><i class="fas fa-upload"></i> Add a Tape</span>
+                    <span class="uploader__hint">MP3 only, up to 30&nbsp;MB</span>
+                </div>
+                <div class="uploader__body">
+                    <label class="uploader__drop" id="uploadDrop" for="uploadFile">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        <span class="uploader__drop-title">Drop an MP3 here, or click to browse</span>
+                        <span class="uploader__drop-file" id="uploadFileName">No file selected</span>
+                        <input type="file" id="uploadFile" accept=".mp3,audio/mpeg" class="hidden" />
+                    </label>
+                    <div class="uploader__fields">
+                        <div class="uploader__field">
+                            <label class="uploader__field-label" for="uploadTitle">Title</label>
+                            <input class="field" id="uploadTitle" type="text" placeholder="Wonderwall"
+                                autocomplete="off" />
+                        </div>
+                        <div class="uploader__field">
+                            <label class="uploader__field-label" for="uploadArtist">Artist</label>
+                            <input class="field" id="uploadArtist" type="text" placeholder="Oasis"
+                                autocomplete="off" />
+                        </div>
+                        <div class="uploader__field">
+                            <span class="uploader__field-label">Type</span>
+                            <div class="filter-row" id="uploadCategory">
+                                <button type="button" class="filter-chip is-active" data-value="acoustic"><i
+                                        class="fas fa-guitar"></i> Acoustic</button>
+                                <button type="button" class="filter-chip" data-value="electric"><i
+                                        class="fas fa-bolt"></i> Electric</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="uploader__footer">
+                        <button class="btn-flat btn-flat--accent" id="uploadSubmit" disabled>
+                            <i class="fas fa-floppy-disk"></i> Upload Track
+                        </button>
+                        <p class="status-line" id="uploadStatus">Uploads go into a review queue before they show up
+                            in the crate.</p>
+                    </div>
+                </div>
+            </section>
         </div>
 
         <footer class="music-footer">

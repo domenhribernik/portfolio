@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const tabEdit     = document.getElementById('tabEdit');
   const tabAnchor   = document.getElementById('tabAnchor');
   const tabSync     = document.getElementById('tabSync');
-  const anchorHint  = document.getElementById('anchorHint');
   const syncTools   = document.getElementById('syncTools');
   const syncUndo    = document.getElementById('syncUndo');
   const syncClear   = document.getElementById('syncClear');
@@ -359,6 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     const event = { time: Math.round(wavesurfer.getCurrentTime() * 100) / 100, chord: name };
+    autoAnchorChord(event);
     chords.push(event);
     sortChords();
     selected = chords.indexOf(event);
@@ -506,13 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
   tabAnchor.addEventListener('click', () => setLyricsMode('anchor'));
   tabSync.addEventListener('click', () => setLyricsMode('sync'));
 
-  const MODE_HINTS = {
-    edit: 'Switch to Anchor mode to pin chords to words, or Sync mode to time-stamp the words themselves.',
-    anchor: 'Select a chord on the left, then click the word it lands on. Click again to unanchor.',
-    sync: 'Play the tape and click each word as it is sung; Enter clicks the outlined word. '
-      + 'Click a stamped word again without moving the playhead to remove it. Slow the speed down if taps land late.'
-  };
-
   function setLyricsMode(mode) {
     lyricsMode = mode;
     tabEdit.classList.toggle('is-active', mode === 'edit');
@@ -521,7 +514,6 @@ document.addEventListener('DOMContentLoaded', function() {
     lyricsInput.classList.toggle('hidden', mode !== 'edit');
     wordGrid.classList.toggle('hidden', mode === 'edit');
     syncTools.classList.toggle('hidden', mode !== 'sync');
-    anchorHint.textContent = MODE_HINTS[mode];
     if (mode === 'sync') syncNext = wordAfterLastStamp();
     if (mode !== 'edit') renderWordGrid();
   }
@@ -660,7 +652,9 @@ document.addEventListener('DOMContentLoaded', function() {
       syncNext = nextWordAfter({ line: lineIndex, word: wordIndex });
     }
     words.sort((a, b) => a.time - b.time);
+    autoAnchorAll();
     markDirty();
+    renderChordList();
     renderWordGrid();
   }
 
@@ -697,17 +691,55 @@ document.addEventListener('DOMContentLoaded', function() {
       delete event.line;
       delete event.word;
     } else {
-      // a word holds at most one chord; steal it if another event was anchored here
-      if (anchoredIndex !== undefined && anchoredIndex !== selected) {
-        delete chords[anchoredIndex].line;
-        delete chords[anchoredIndex].word;
-      }
-      event.line = lineIndex;
-      event.word = wordIndex;
+      assignAnchor(event, lineIndex, wordIndex);
     }
     markDirty();
     renderChordList();
     renderWordGrid();
+  }
+
+  // ---- Auto-anchor from word sync ------------------------------------------
+  // Once words are time-stamped (Sync tab), a chord's own timestamp already
+  // tells us which word is playing right then, so a freshly tapped chord can
+  // bind itself straight to that word instead of requiring a manual Anchor
+  // click. Binding only happens within roughly one word's worth of time of
+  // the match, so a chord tapped during a real instrumental stretch is left
+  // unanchored (and still renders as an instrumental run) instead of
+  // snapping to a stale word from the last line that was sung.
+
+  function averageWordGap() {
+    if (words.length < 2) return 2;
+    let total = 0;
+    for (let i = 1; i < words.length; i++) total += words[i].time - words[i - 1].time;
+    return total / (words.length - 1);
+  }
+
+  function assignAnchor(event, line, word) {
+    // a word holds at most one chord; steal it from whoever else has it
+    chords.forEach(other => {
+      if (other !== event && other.line === line && other.word === word) {
+        delete other.line;
+        delete other.word;
+      }
+    });
+    event.line = line;
+    event.word = word;
+  }
+
+  function autoAnchorChord(event) {
+    if (!words.length || Number.isInteger(event.line)) return;
+    let match = null;
+    for (let i = 0; i < words.length; i++) {
+      if (words[i].time <= event.time) match = words[i]; else break;
+    }
+    if (!match) return; // the chord lands before any synced word
+    const threshold = Math.max(averageWordGap() * 2.5, 1.5);
+    if (event.time - match.time > threshold) return; // too far: probably instrumental
+    assignAnchor(event, match.line, match.word);
+  }
+
+  function autoAnchorAll() {
+    chords.forEach(autoAnchorChord);
   }
 
   function renderAll() {
@@ -725,6 +757,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const suggestBlock = document.getElementById('suggestBlock');
   const suggestRow   = document.getElementById('suggestRow');
   const keyGuess     = document.getElementById('keyGuess');
+  // chord names currently shown in suggestRow, in display order; the keydown
+  // handler taps currentSuggestions[digit - 1] when the digit is 1-4
+  let currentSuggestions = [];
 
   const NOTE_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
   // diatonic triads as offset-from-tonic -> quality
@@ -766,6 +801,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const parsed = chords
       .map(e => ChordCard.parse(e.chord))
       .filter(p => p && p.quality !== '5');
+    currentSuggestions = [];
     if (parsed.length < 2) {
       suggestBlock.classList.add('hidden');
       return;
@@ -785,14 +821,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     keyGuess.textContent = `// sounds like ${NOTE_NAMES[key.tonic]} ${key.mode}`;
     suggestRow.innerHTML = '';
+    currentSuggestions = [];
     offsets.slice(0, 4).forEach(offset => {
       const quality = DIATONIC[key.mode][offset];
       if (quality === 'dim') return; // rarely what a guitarist reaches for
       const name = NOTE_NAMES[(key.tonic + offset) % 12] + (quality === 'm' ? 'm' : '');
+      const keyNum = currentSuggestions.length + 1;
+      currentSuggestions.push(name);
       const chip = document.createElement('button');
       chip.className = 'chip chip--suggest';
-      chip.innerHTML = `${name} <span class="chip__degree">${roman[offset]}</span>`;
-      chip.title = `Tap ${name} at the playhead`;
+      chip.innerHTML = `<span class="chip__key">${keyNum}</span>${name} <span class="chip__degree">${roman[offset]}</span>`;
+      chip.title = `Press ${keyNum} or click to tap ${name} at the playhead`;
       chip.addEventListener('click', () => {
         chordInput.value = name;
         tapChord(name);
@@ -902,6 +941,7 @@ document.addEventListener('DOMContentLoaded', function() {
       syncHistory = [];
       syncNext = wordAfterLastStamp();
       importedWords = words.length;
+      autoAnchorAll();
     }
     markDirty();
     renderAll();
@@ -929,10 +969,14 @@ document.addEventListener('DOMContentLoaded', function() {
         tapChord();
       }
     }
-    // number keys tap the quick chord chips (1-9, 0 = tenth chip)
+    // 1-4 tap the current "next chord ideas" suggestion when it's shown;
+    // otherwise number keys tap the quick chord chips (1-9, 0 = tenth chip)
     if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && /^Digit\d$/.test(e.code) && trackKey) {
       const digit = Number(e.code.slice(5));
-      const chip = QUICK_CHORDS[digit === 0 ? 9 : digit - 1];
+      const suggested = digit >= 1 && digit <= 4 && !suggestBlock.classList.contains('hidden')
+        ? currentSuggestions[digit - 1]
+        : null;
+      const chip = suggested || QUICK_CHORDS[digit === 0 ? 9 : digit - 1];
       if (chip) {
         e.preventDefault();
         chordInput.value = chip;

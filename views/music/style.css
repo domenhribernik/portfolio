@@ -814,6 +814,122 @@
     display: none;
 }
 
+/* ---- Uploader ("add a tape": upload a new backing track) ---------------- */
+.uploader {
+    display: flex;
+    flex-direction: column;
+    border: 3px solid var(--ink, #1c1a17);
+    background: var(--card, #fffdf8);
+    box-shadow: var(--shadow-ink);
+}
+
+.uploader__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    border-bottom: 3px solid var(--ink, #1c1a17);
+    background: var(--amber);
+}
+
+.uploader__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink, #1c1a17);
+}
+
+.uploader__hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink, #1c1a17);
+    opacity: 0.75;
+}
+
+.uploader__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 1.1rem;
+}
+
+.uploader__drop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2rem 1rem;
+    border: 2px dashed var(--stone, #6b6256);
+    background: var(--paper, #f6f2ea);
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.uploader__drop:hover,
+.uploader__drop.is-dragover {
+    background: var(--paper-2, #efe9dd);
+    border-color: var(--clay, #d4451f);
+}
+
+.uploader__drop i {
+    font-size: 1.6rem;
+    color: var(--stone, #6b6256);
+}
+
+.uploader__drop-title {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.92rem;
+    color: var(--ink, #1c1a17);
+}
+
+.uploader__drop-file {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--stone, #6b6256);
+}
+
+.uploader__fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.9rem;
+}
+
+.uploader__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.uploader__field .field {
+    width: 100%;
+}
+
+.uploader__field-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--stone, #6b6256);
+}
+
+.uploader__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+
+.uploader__footer .status-line {
+    margin: 0;
+}
+
 /* ---- Chordsheet (synced chords + lyrics under the deck) ----------------- */
 .chordsheet {
     margin-top: 1.25rem;
@@ -1096,6 +1212,8 @@
 
 /* ---- Shared UI for the editor / analysis screens ------------------------ */
 .panel {
+    display: flex;
+    flex-direction: column;
     border: 3px solid var(--ink, #1c1a17);
     background: var(--card, #fffdf8);
     box-shadow: var(--shadow-ink);
@@ -1145,6 +1263,9 @@
 }
 
 .panel__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     padding: 1.1rem;
 }
 
@@ -1167,6 +1288,12 @@
     width: 100%;
     resize: vertical;
     line-height: 1.6;
+    /* inside a .panel__body (now a flex column) this grows to fill the
+       panel's stretched height instead of stopping at its `rows` attribute
+       and leaving a gap below; harmless where the parent isn't flex (e.g.
+       the import dialog's textarea). */
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .btn-flat {

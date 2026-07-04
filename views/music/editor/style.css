@@ -183,6 +183,20 @@
     opacity: 0.7;
 }
 
+/* keyboard-shortcut badge (1-4) on a suggestion chip */
+.chip__key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1em;
+    height: 1.1em;
+    margin-right: 0.35rem;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-size: 0.66rem;
+    opacity: 0.75;
+}
+
 /* ---- Chord event list ---------------------------------------------------- */
 .chord-list {
     position: relative;
@@ -267,10 +281,15 @@
 /* ---- Word grid (anchor mode) --------------------------------------------- */
 .word-grid {
     position: relative;
-    /* words measure their offsetTop against the grid for auto-scroll */
-    max-height: 360px;
+    /* words measure their offsetTop against the grid for auto-scroll.
+       flex-basis 0 (not auto) keeps this from contributing its own, possibly
+       huge, full-lyrics content height to the panel's size: the panel stays
+       matched to the Chords panel's height and this just fills whatever
+       that turns out to be, scrolling internally for anything past it. */
     overflow-y: auto;
     padding: 0.4rem 0.2rem;
+    flex: 1 1 0;
+    min-height: 0;
 }
 
 .word-grid.hidden {
