@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dom's Jeger ❦ Domači zeliščni liker</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -47,11 +48,17 @@
                 <span class="font-display text-gold-bright text-2xl tracking-wider">Dom's Jeger</span>
                 <span class="text-ember">✦</span>
             </span>
-            <a href="#recipe-section" class="ml-auto">
-                <img src="../../assets/img/jeger.png" alt="Recept"
-                     class="h-9 sm:h-11 w-auto opacity-60 hover:opacity-100 transition-opacity"
-                     style="filter: drop-shadow(0 0 8px rgba(184,154,92,0.5))">
-            </a>
+            <div class="ml-auto flex items-center gap-3">
+                <a id="signinBtn" href="../account/" style="display: none;"
+                   class="border border-gold/40 text-gold-bright hover:bg-gold/10 transition-colors rounded-full px-3 py-1.5 text-xs font-mono uppercase tracking-widest no-underline inline-flex items-center gap-2">
+                    <i class="fas fa-right-to-bracket"></i><span>Sign in</span>
+                </a>
+                <a id="accountChip" href="../account/" style="display: none;" title="Your account"
+                   class="items-center gap-2 no-underline text-cream border border-gold/30 rounded-full pl-1 pr-3 py-1">
+                    <span id="accountAvatar" class="w-6 h-6 rounded-full bg-gold/20 text-gold-bright flex items-center justify-center text-[10px] overflow-hidden shrink-0"></span>
+                    <span id="accountName" class="max-md:hidden text-xs font-mono tracking-wide"></span>
+                </a>
+            </div>
         </div>
         <div class="h-[2px] bg-gradient-to-r from-transparent via-ember/40 to-transparent"></div>
     </header>
@@ -123,6 +130,18 @@
 
     <!-- ╔══════ PLANT CHECKLIST ══════╗ -->
     <main class="max-w-4xl mx-auto px-5 pb-4">
+
+        <!-- Read-only demo banner (signed out) -->
+        <div id="demo-banner" style="display: none;"
+             class="items-center gap-3 bg-night-soft border border-dashed border-gold/30 rounded-xl px-4 py-3 mb-6 text-sm text-cream/80">
+            <span class="text-lg shrink-0 select-none">👀</span>
+            <p class="flex-1 m-0 leading-relaxed">
+                <strong class="text-gold-bright">Domenov seznam</strong> gledaš samo za ogled.
+                <a id="demo-signin-link" href="../account/" class="text-gold-bright underline underline-offset-2 hover:text-ember transition-colors">Prijavi se</a>
+                in dobiš svoj seznam, ki ga lahko odkljukaš sam.
+            </p>
+        </div>
+
         <div id="plant-list"></div>
 
         <!-- ╔══════ RECIPE ══════╗ -->

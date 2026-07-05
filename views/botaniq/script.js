@@ -1,10 +1,15 @@
+import { loginUrl } from '../../components/auth-gate.js';
+
 (() => {
     'use strict';
 
     const API = '../../app/controllers/plants-controller.php';
+    const LOCK_TITLE = 'Sign in to manage your own plants';
 
     // --- State ---
     let plants = [];
+    let isDemo = true;
+    let viewer = null;
     let currentIssues = [];
     let currentTips = [];
     let countdownInterval = null;
@@ -12,9 +17,17 @@
     // --- DOM refs ---
     const plantsGrid = document.getElementById('plantsGrid');
     const emptyState = document.getElementById('emptyState');
+    const emptyMessage = document.getElementById('emptyMessage');
+    const emptyAddBtn = document.getElementById('emptyAddBtn');
     const loadingState = document.getElementById('loadingState');
     const errorState = document.getElementById('errorState');
     const errorMessage = document.getElementById('errorMessage');
+    const demoBanner = document.getElementById('demoBanner');
+    const demoSigninLink = document.getElementById('demoSigninLink');
+    const signinBtn = document.getElementById('signinBtn');
+    const accountChip = document.getElementById('accountChip');
+    const accountAvatar = document.getElementById('accountAvatar');
+    const accountName = document.getElementById('accountName');
     const detailModal = document.getElementById('detailModal');
     const detailContent = document.getElementById('detailContent');
     const formModal = document.getElementById('formModal');
@@ -35,9 +48,11 @@
 
     async function apiFetch(url, options = {}) {
         const response = await fetch(url, options);
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
         if (!response.ok) {
-            throw new Error(data.error || `Request failed (${response.status})`);
+            const err = new Error((data && data.error) || `Request failed (${response.status})`);
+            err.status = response.status;
+            throw err;
         }
         return data;
     }
@@ -45,10 +60,14 @@
     async function loadPlants() {
         showLoading();
         try {
-            plants = await apiFetch(API);
+            const data = await apiFetch(API);
+            isDemo = !!data.demo;
+            viewer = data.viewer || null;
+            plants = Array.isArray(data.plants) ? data.plants : [];
+            updateAuthUI();
             renderPlants();
         } catch (err) {
-            showError(err.message);
+            showError(err.status ? err.message : 'Could not reach the server. Check your connection and try again.');
         }
     }
 
@@ -68,6 +87,15 @@
         return apiFetch(`${API}?action=water&id=${id}`, { method: 'POST' });
     }
 
+    /** Session expired mid-write: drop back to the read-only demo view. */
+    function handleAuthLoss() {
+        closeModal(formModal);
+        closeModal(detailModal);
+        closeModal(deleteModal);
+        showToast('Your session expired. Sign in again to continue.', true);
+        loadPlants();
+    }
+
     // --- Utility ---
 
     function esc(str) {
@@ -82,6 +110,27 @@
         temp = temp.trim();
         if (temp.includes('°')) return temp;
         return temp + '°C';
+    }
+
+    // --- Header / demo state ---
+
+    function updateAuthUI() {
+        if (isDemo) {
+            signinBtn.href = loginUrl();
+            demoSigninLink.href = loginUrl();
+            signinBtn.style.display = 'inline-flex';
+            accountChip.style.display = 'none';
+            demoBanner.style.display = 'flex';
+            return;
+        }
+        signinBtn.style.display = 'none';
+        demoBanner.style.display = 'none';
+        const name = (viewer && viewer.display_name) || 'Account';
+        accountName.textContent = name.split(' ')[0];
+        accountAvatar.innerHTML = viewer && viewer.avatar_url
+            ? `<img src="${esc(viewer.avatar_url)}" alt="" class="w-full h-full object-cover" referrerpolicy="no-referrer">`
+            : '<i class="fas fa-user"></i>';
+        accountChip.style.display = 'inline-flex';
     }
 
     // --- Rendering ---
@@ -107,14 +156,25 @@
 
         if (plants.length === 0) {
             plantsGrid.style.display = 'none';
+            emptyMessage.textContent = isDemo ? 'No plants on this shelf yet' : 'No plants yet';
+            emptyAddBtn.style.display = isDemo ? 'none' : '';
             emptyState.style.display = 'block';
             return;
         }
 
         emptyState.style.display = 'none';
         plantsGrid.style.display = 'grid';
-        plantsGrid.innerHTML = plants.map(plantCardHTML).join('');
+        plantsGrid.innerHTML = plants.map(plantCardHTML).join('') + (isDemo ? '' : addCardHTML());
         startCountdownUpdates();
+    }
+
+    function addCardHTML() {
+        return `
+        <button id="addCard" title="Add plant"
+            class="border-2 border-dashed border-neutral-300 rounded-xl bg-transparent cursor-pointer text-neutral-400 flex flex-col items-center justify-center gap-3 min-h-[220px] transition-colors hover:border-[#2d6a4f] hover:text-[#2d6a4f]">
+            <span class="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center text-base"><i class="fas fa-plus"></i></span>
+            <span class="text-sm font-medium">Add a plant</span>
+        </button>`;
     }
 
     function plantCardHTML(plant) {
@@ -126,6 +186,28 @@
             ? `<img class="w-full aspect-square object-cover block" src="../../${esc(plant.image_url)}" alt="${esc(displayName)}" loading="lazy">`
             : `<div class="w-full aspect-square bg-neutral-100 flex items-center justify-center text-6xl select-none">🪴</div>`;
         const watering = getWateringStatus(plant);
+
+        const waterBtn = isDemo
+            ? `<button class="bg-neutral-100 text-neutral-400 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-not-allowed inline-flex items-center gap-1.5" disabled title="${LOCK_TITLE}">
+                    <i class="fas fa-tint"></i> Water
+                </button>`
+            : `<button class="bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer transition-colors hover:bg-sky-200 inline-flex items-center gap-1.5" onclick="event.stopPropagation(); waterPlant(${plant.id})" title="Mark as watered">
+                    <i class="fas fa-tint"></i> Water
+                </button>`;
+
+        const actionRow = isDemo
+            ? `<button class="bg-transparent border-none cursor-not-allowed text-neutral-200 p-1.5 rounded-md text-sm" disabled title="${LOCK_TITLE}">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="bg-transparent border-none cursor-not-allowed text-neutral-200 p-1.5 rounded-md text-sm" disabled title="${LOCK_TITLE}">
+                    <i class="fas fa-trash"></i>
+                </button>`
+            : `<button class="bg-transparent border-none cursor-pointer text-neutral-400 p-1.5 rounded-md text-sm transition-colors hover:text-neutral-900 hover:bg-neutral-100" onclick="event.stopPropagation(); openEditForm(${plant.id})" title="Edit">
+                    <i class="fas fa-pen"></i>
+                </button>
+                <button class="bg-transparent border-none cursor-pointer text-neutral-400 p-1.5 rounded-md text-sm transition-colors hover:text-neutral-900 hover:bg-neutral-100" onclick="event.stopPropagation(); confirmDelete(${plant.id})" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>`;
 
         return `
         <div class="plant-card bg-white border border-neutral-200 rounded-xl overflow-hidden cursor-pointer transition-shadow hover:shadow-lg" data-id="${plant.id}">
@@ -140,17 +222,10 @@
                         <div class="watering-label text-[0.7rem] text-neutral-500 uppercase tracking-wide font-semibold">Next watering</div>
                         <div class="watering-time text-sm font-semibold">${watering.text}</div>
                     </div>
-                    <button class="bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer transition-colors hover:bg-sky-200 inline-flex items-center gap-1.5" onclick="event.stopPropagation(); waterPlant(${plant.id})" title="Mark as watered">
-                        <i class="fas fa-tint"></i> Water
-                    </button>
+                    ${waterBtn}
                 </div>
                 <div class="flex gap-1.5 justify-end pt-2 border-t border-neutral-100">
-                    <button class="bg-transparent border-none cursor-pointer text-neutral-400 p-1.5 rounded-md text-sm transition-colors hover:text-neutral-900 hover:bg-neutral-100" onclick="event.stopPropagation(); openEditForm(${plant.id})" title="Edit">
-                        <i class="fas fa-pen"></i>
-                    </button>
-                    <button class="bg-transparent border-none cursor-pointer text-neutral-400 p-1.5 rounded-md text-sm transition-colors hover:text-neutral-900 hover:bg-neutral-100" onclick="event.stopPropagation(); confirmDelete(${plant.id})" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    ${actionRow}
                 </div>
             </div>
         </div>`;
@@ -236,6 +311,26 @@
             ? `<ul class="list-none p-0">${plant.useful_tips.map(t => `<li class="py-1.5 text-sm text-neutral-500 flex items-start gap-2"><span class="text-neutral-300 font-bold shrink-0">&bull;</span>${esc(t)}</li>`).join('')}</ul>`
             : '<p class="text-neutral-400 text-sm">None listed</p>';
 
+        const actionsHTML = isDemo
+            ? `<button class="flex-1 justify-center bg-neutral-100 text-neutral-400 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-not-allowed inline-flex items-center gap-1.5" disabled title="${LOCK_TITLE}">
+                    <i class="fas fa-tint"></i> Mark as Watered
+                </button>
+                <button class="flex-1 justify-center bg-neutral-100 text-neutral-400 px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-not-allowed inline-flex items-center gap-1.5" disabled title="${LOCK_TITLE}">
+                    <i class="fas fa-pen"></i> Edit
+                </button>
+                <button class="flex-1 justify-center bg-neutral-100 text-neutral-400 px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-not-allowed inline-flex items-center gap-1.5" disabled title="${LOCK_TITLE}">
+                    <i class="fas fa-trash"></i> Delete
+                </button>`
+            : `<button class="flex-1 justify-center bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer transition-colors hover:bg-sky-200 inline-flex items-center gap-1.5" onclick="waterPlant(${plant.id})">
+                    <i class="fas fa-tint"></i> Mark as Watered
+                </button>
+                <button class="flex-1 justify-center bg-neutral-100 text-neutral-900 px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-200 inline-flex items-center gap-1.5" onclick="openEditForm(${plant.id})">
+                    <i class="fas fa-pen"></i> Edit
+                </button>
+                <button class="flex-1 justify-center bg-red-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-red-700 inline-flex items-center gap-1.5" onclick="confirmDelete(${plant.id})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>`;
+
         detailContent.innerHTML = `
             ${imageHTML}
             <div class="text-2xl font-bold mb-0.5">${esc(displayName)}</div>
@@ -288,15 +383,7 @@
             </div>
 
             <div class="flex gap-3 mt-6 pt-4 border-t border-neutral-100">
-                <button class="flex-1 justify-center bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer transition-colors hover:bg-sky-200 inline-flex items-center gap-1.5" onclick="waterPlant(${plant.id})">
-                    <i class="fas fa-tint"></i> Mark as Watered
-                </button>
-                <button class="flex-1 justify-center bg-neutral-100 text-neutral-900 px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-200 inline-flex items-center gap-1.5" onclick="openEditForm(${plant.id})">
-                    <i class="fas fa-pen"></i> Edit
-                </button>
-                <button class="flex-1 justify-center bg-red-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-red-700 inline-flex items-center gap-1.5" onclick="confirmDelete(${plant.id})">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
+                ${actionsHTML}
             </div>
         `;
 
@@ -306,6 +393,7 @@
     // --- Form handling ---
 
     function openAddForm() {
+        if (isDemo) return;
         formTitle.textContent = 'Add Plant';
         plantForm.reset();
         document.getElementById('plantId').value = '';
@@ -322,6 +410,7 @@
     }
 
     window.openEditForm = function (id) {
+        if (isDemo) return;
         const plant = plants.find(p => p.id === id);
         if (!plant) return;
 
@@ -438,7 +527,11 @@
             closeModal(formModal);
             await loadPlants();
         } catch (err) {
-            showFormError(err.message);
+            if (err.status === 401) {
+                handleAuthLoss();
+            } else {
+                showFormError(err.message);
+            }
         } finally {
             setSubmitting(false);
         }
@@ -521,6 +614,7 @@
     // --- Delete ---
 
     window.confirmDelete = function (id) {
+        if (isDemo) return;
         const plant = plants.find(p => p.id === id);
         if (!plant) return;
         deleteTargetId = id;
@@ -537,7 +631,11 @@
             closeModal(deleteModal);
             await loadPlants();
         } catch (err) {
-            showToast(err.message, true);
+            if (err.status === 401) {
+                handleAuthLoss();
+            } else {
+                showToast(err.message, true);
+            }
         }
         deleteTargetId = null;
     }
@@ -545,13 +643,18 @@
     // --- Water ---
 
     window.waterPlant = async function (id) {
+        if (isDemo) return;
         try {
             await waterPlantApi(id);
             showToast('Marked as watered');
             closeModal(detailModal);
             await loadPlants();
         } catch (err) {
-            showToast(err.message, true);
+            if (err.status === 401) {
+                handleAuthLoss();
+            } else {
+                showToast(err.message, true);
+            }
         }
     };
 
@@ -585,8 +688,7 @@
 
     // --- Event listeners ---
 
-    document.getElementById('addPlantBtn').addEventListener('click', openAddForm);
-    document.getElementById('emptyAddBtn').addEventListener('click', openAddForm);
+    emptyAddBtn.addEventListener('click', openAddForm);
     document.getElementById('retryBtn').addEventListener('click', loadPlants);
 
     plantForm.addEventListener('submit', handleFormSubmit);
@@ -603,8 +705,12 @@
         });
     });
 
-    // Card click → detail
+    // Card click → detail, add card → form (both re-rendered, so delegate)
     plantsGrid.addEventListener('click', e => {
+        if (e.target.closest('#addCard')) {
+            openAddForm();
+            return;
+        }
         const card = e.target.closest('.plant-card');
         if (!card) return;
         if (e.target.closest('button')) return;

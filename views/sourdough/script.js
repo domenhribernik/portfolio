@@ -15,6 +15,8 @@
     // --- State ---
     let starter = null;
     let breads = [];
+    let isDemo = true;          // signed out: read-only demo of the owner's portal
+    let viewer = null;
     let deleteTargetId = null;
     let tickInterval = null;
     let audioCtx = null;
@@ -36,6 +38,17 @@
     const deleteModal       = document.getElementById('deleteModal');
     const deleteBreadName   = document.getElementById('deleteBreadName');
     const toastContainer    = document.getElementById('toastContainer');
+    const signinBtn         = document.getElementById('signinBtn');
+    const accountChip       = document.getElementById('accountChip');
+    const accountAvatar     = document.getElementById('accountAvatar');
+    const accountName       = document.getElementById('accountName');
+    const demoBanner        = document.getElementById('demoBanner');
+    const demoSigninLink    = document.getElementById('demoSigninLink');
+
+    // Build the sign-in URL that returns here after login (see components/auth-gate.js).
+    function loginUrl() {
+        return '../account/?redirect=' + encodeURIComponent(location.pathname);
+    }
 
     // --- Utilities ---
     function esc(s) {
@@ -76,8 +89,57 @@
     async function api(url, options = {}) {
         const res = await fetch(url, options);
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+        if (!res.ok) {
+            const err = new Error(data.error || `Request failed (${res.status})`);
+            err.status = res.status;
+            // Session expired mid-write: fall back to the read-only demo.
+            if (res.status === 401) handleAuthLoss();
+            throw err;
+        }
         return data;
+    }
+
+    // Drop back to the demo view when the session is gone (expired cookie).
+    function handleAuthLoss() {
+        if (isDemo) return;
+        isDemo = true;
+        viewer = null;
+        closeModal(newBreadModal);
+        closeModal(deleteModal);
+        toast('Your session expired. Sign in again to continue.', true);
+        loadAll();
+    }
+
+    // --- Auth UI ---
+    function updateAuthUI() {
+        if (isDemo) {
+            signinBtn.href = loginUrl();
+            demoSigninLink.href = loginUrl();
+            signinBtn.style.display = 'inline-flex';
+            accountChip.style.display = 'none';
+            demoBanner.style.display = 'flex';
+            newBreadBtn.classList.add('hidden');
+            return;
+        }
+        signinBtn.style.display = 'none';
+        demoBanner.style.display = 'none';
+        newBreadBtn.classList.remove('hidden');
+        const name = (viewer && viewer.display_name) || 'Account';
+        accountName.textContent = name.split(' ')[0];
+        accountAvatar.innerHTML = viewer && viewer.avatar_url
+            ? `<img src="${esc(viewer.avatar_url)}" alt="" class="w-full h-full object-cover" referrerpolicy="no-referrer">`
+            : '<i class="fas fa-user"></i>';
+        accountChip.style.display = 'inline-flex';
+    }
+
+    // In demo mode, grey out and disable every action button after a render.
+    function applyDemoLock() {
+        if (!isDemo) return;
+        document.querySelectorAll('#starterCard [data-action], #breadsGrid [data-action]').forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('opacity-40', 'cursor-not-allowed', 'pointer-events-none');
+            btn.setAttribute('title', 'Sign in to bake your own');
+        });
     }
 
     const StarterAPI = {
@@ -186,7 +248,8 @@
     // --- Starter render ---
     function renderStarter() {
         if (!starter) {
-            starterCard.innerHTML = `<p class="text-rye text-sm">Could not load the starter. Has the table been seeded?</p>`;
+            // Only happens in the demo when the owner has no starter yet.
+            starterCard.innerHTML = `<p class="text-yeast text-sm">No starter on this shelf yet.</p>`;
             return;
         }
         const lastFed = parseSqlDate(starter.last_fed_at);
@@ -228,6 +291,8 @@
                 ${fridgeBtn}
             </div>
         `;
+
+        applyDemoLock();
     }
 
     // --- Bread phase logic ---
@@ -486,6 +551,10 @@
         breadsLoading.classList.add('hidden');
         breadsError.classList.add('hidden');
         if (breads.length === 0) {
+            const sub = document.getElementById('breadsEmptySub');
+            if (sub) sub.textContent = isDemo
+                ? 'Domen has no loaves in the oven right now.'
+                : 'click "mix new dough" to start one.';
             breadsGrid.classList.add('hidden');
             breadsEmpty.classList.remove('hidden');
             return;
@@ -493,6 +562,7 @@
         breadsEmpty.classList.add('hidden');
         breadsGrid.classList.remove('hidden');
         breadsGrid.innerHTML = breads.map(breadCardHtml).join('');
+        applyDemoLock();
     }
 
     function showBreadsError(msg) {
@@ -593,12 +663,16 @@
 
     async function loadAll() {
         try {
-            const [s, b] = await Promise.all([
+            const [session, s, b] = await Promise.all([
+                api(`${API}?resource=session`),
                 StarterAPI.get().catch(err => { throw new Error('Starter: ' + err.message); }),
                 BreadAPI.list(),
             ]);
+            isDemo = !!session.demo;
+            viewer = session.viewer || null;
             starter = s;
             breads  = b;
+            updateAuthUI();
             renderStarter();
             renderBreads();
             startTicker();

@@ -3,16 +3,27 @@ declare(strict_types=1);
 define('SECURE_ACCESS', true);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Responses vary with the session cookie, so they must never be cached.
+// The image endpoint overrides this with its own Cache-Control.
+header('Cache-Control: no-store');
+// No Access-Control-Allow-Origin here: writes are gated by the session
+// cookie, and wildcard CORS is incompatible with cookie auth.
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
 
+require_once __DIR__ . '/../config/dev-mode.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/auth.php';
+
+// One shelf per user. Reads are public: signed-out visitors get a read-only
+// demo of the site owner's shelf, signed-in users get their own rows. Writes
+// require login and are always scoped to the caller's own plants. This is the
+// third backend shape next to images-controller.php (public reads, role-gated
+// writes) and shopping-controller.php (project gate + row ACL); no project
+// role is involved, an account is the only requirement.
 
 $method = $_SERVER['REQUEST_METHOD'];
 $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
@@ -24,31 +35,34 @@ try {
             if ($action === 'image' && $id) {
                 getPlantImage($id);
             } elseif ($id) {
-                getPlant($id);
+                getPlant($id, shelfUserId());
             } else {
                 getAllPlants();
             }
             break;
         case 'POST':
+            $user = Auth::requireLogin();
             if ($action === 'water' && $id) {
-                waterPlant($id);
+                waterPlant($id, $user);
             } elseif ($id) {
-                updatePlant($id);
+                updatePlant($id, $user);
             } else {
-                createPlant();
+                createPlant($user);
             }
             break;
         case 'PUT':
+            $user = Auth::requireLogin();
             if (!$id) {
                 sendError('Plant ID is required', 400);
             }
-            updatePlant($id);
+            updatePlant($id, $user);
             break;
         case 'DELETE':
+            $user = Auth::requireLogin();
             if (!$id) {
                 sendError('Plant ID is required', 400);
             }
-            deletePlant($id);
+            deletePlant($id, $user);
             break;
         default:
             sendError('Method not allowed', 405);
@@ -72,6 +86,28 @@ function sendError(string $message, int $code = 400): void
     http_response_code($code);
     echo json_encode(['error' => $message], JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+/** The user whose plants back the public demo: the first active site admin. */
+function showcaseUserId(): ?int
+{
+    static $resolved = false;
+    static $id = null;
+    if (!$resolved) {
+        $resolved = true;
+        $found = Database::read()
+            ->query('SELECT id FROM users WHERE is_admin = 1 AND is_active = 1 ORDER BY id LIMIT 1')
+            ->fetchColumn();
+        $id = $found === false ? null : (int) $found;
+    }
+    return $id;
+}
+
+/** Whose shelf the current request reads: the viewer's own, or the demo one. */
+function shelfUserId(): ?int
+{
+    $viewer = Auth::currentUser();
+    return $viewer !== null ? (int) $viewer['id'] : showcaseUserId();
 }
 
 function sanitize(string $value): string
@@ -152,7 +188,7 @@ function formatPlant(array $row): array
     $row['image_url'] = $row['has_image']
         ? 'app/controllers/plants-controller.php?action=image&id=' . $row['id']
         : null;
-    unset($row['image_data'], $row['image_mime']);
+    unset($row['image_data'], $row['image_mime'], $row['user_id']);
     return $row;
 }
 
@@ -160,7 +196,7 @@ function formatPlant(array $row): array
 
 function getPlantImage(int $id): void
 {
-    $stmt = Database::read()->prepare('SELECT image_data, image_mime FROM plants WHERE id = ?');
+    $stmt = Database::read()->prepare('SELECT image_data, image_mime, user_id FROM plants WHERE id = ?');
     $stmt->execute([$id]);
     $plant = $stmt->fetch();
 
@@ -169,9 +205,18 @@ function getPlantImage(int $id): void
         exit;
     }
 
+    // Demo images are public; anyone else's are visible to their owner only.
+    $ownerId = (int) $plant['user_id'];
+    $isDemoPlant = $ownerId === showcaseUserId();
+    $viewer = Auth::currentUser();
+    if (!$isDemoPlant && ($viewer === null || (int) $viewer['id'] !== $ownerId)) {
+        http_response_code(404);
+        exit;
+    }
+
     header('Content-Type: ' . $plant['image_mime']);
     header('Content-Length: ' . strlen($plant['image_data']));
-    header('Cache-Control: public, max-age=86400');
+    header('Cache-Control: ' . ($isDemoPlant ? 'public' : 'private') . ', max-age=86400');
     echo $plant['image_data'];
     exit;
 }
@@ -180,25 +225,45 @@ function getPlantImage(int $id): void
 
 function getAllPlants(): void
 {
-    $sql = 'SELECT id, name, nickname, type, description, watering_frequency_text,
-            watering_min_days, watering_max_days, light, humidity, temperature, soil,
-            common_issues, useful_tips, IF(image_data IS NOT NULL, 1, 0) AS image_data,
-            image_mime, last_watered, created_at, updated_at
-            FROM plants ORDER BY created_at DESC';
-    $stmt = Database::read()->query($sql);
-    $plants = array_map('formatPlant', $stmt->fetchAll());
-    sendJson($plants);
+    $viewer = Auth::currentUser();
+    $ownerId = $viewer !== null ? (int) $viewer['id'] : showcaseUserId();
+
+    $plants = [];
+    if ($ownerId !== null) {
+        $sql = 'SELECT id, user_id, name, nickname, type, description, watering_frequency_text,
+                watering_min_days, watering_max_days, light, humidity, temperature, soil,
+                common_issues, useful_tips, IF(image_data IS NOT NULL, 1, 0) AS image_data,
+                image_mime, last_watered, created_at, updated_at
+                FROM plants WHERE user_id = ? ORDER BY created_at DESC';
+        $stmt = Database::read()->prepare($sql);
+        $stmt->execute([$ownerId]);
+        $plants = array_map('formatPlant', $stmt->fetchAll());
+    }
+
+    sendJson([
+        'demo' => $viewer === null,
+        'viewer' => $viewer !== null ? [
+            'id' => (int) $viewer['id'],
+            'display_name' => $viewer['display_name'],
+            'avatar_url' => $viewer['avatar_url'],
+        ] : null,
+        'plants' => $plants,
+    ]);
 }
 
-function getPlant(int $id): void
+function getPlant(int $id, ?int $ownerId): void
 {
-    $sql = 'SELECT id, name, nickname, type, description, watering_frequency_text,
+    if ($ownerId === null) {
+        sendError('Plant not found', 404);
+    }
+
+    $sql = 'SELECT id, user_id, name, nickname, type, description, watering_frequency_text,
             watering_min_days, watering_max_days, light, humidity, temperature, soil,
             common_issues, useful_tips, IF(image_data IS NOT NULL, 1, 0) AS image_data,
             image_mime, last_watered, created_at, updated_at
-            FROM plants WHERE id = ?';
+            FROM plants WHERE id = ? AND user_id = ?';
     $stmt = Database::read()->prepare($sql);
-    $stmt->execute([$id]);
+    $stmt->execute([$id, $ownerId]);
     $plant = $stmt->fetch();
 
     if (!$plant) {
@@ -208,7 +273,17 @@ function getPlant(int $id): void
     sendJson(formatPlant($plant));
 }
 
-function createPlant(): void
+/** 404 unless the plant exists and belongs to the caller. */
+function assertOwnPlant(int $id, array $user): void
+{
+    $stmt = Database::read()->prepare('SELECT id FROM plants WHERE id = ? AND user_id = ?');
+    $stmt->execute([$id, (int) $user['id']]);
+    if (!$stmt->fetch()) {
+        sendError('Plant not found', 404);
+    }
+}
+
+function createPlant(array $user): void
 {
     $data = $_POST;
 
@@ -226,13 +301,14 @@ function createPlant(): void
         ? json_encode(array_map('sanitize', json_decode($data['useful_tips'], true) ?? []), JSON_UNESCAPED_UNICODE)
         : '[]';
 
-    $sql = 'INSERT INTO plants (name, nickname, type, description, watering_frequency_text,
+    $sql = 'INSERT INTO plants (user_id, name, nickname, type, description, watering_frequency_text,
             watering_min_days, watering_max_days, light, humidity, temperature, soil,
             common_issues, useful_tips, image_data, image_mime, last_watered)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())';
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())';
 
     $stmt = Database::write()->prepare($sql);
     $stmt->execute([
+        (int) $user['id'],
         sanitize($data['name']),
         !empty($data['nickname']) ? sanitize($data['nickname']) : null,
         sanitize($data['type']),
@@ -251,10 +327,10 @@ function createPlant(): void
     ]);
 
     $id = (int) Database::write()->lastInsertId();
-    getPlant($id);
+    getPlant($id, (int) $user['id']);
 }
 
-function updatePlant(int $id): void
+function updatePlant(int $id, array $user): void
 {
     // For PUT, read raw input since it might be multipart or JSON
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
@@ -270,12 +346,7 @@ function updatePlant(int $id): void
         sendError(implode('; ', $errors), 400);
     }
 
-    // Check plant exists
-    $checkStmt = Database::read()->prepare('SELECT id FROM plants WHERE id = ?');
-    $checkStmt->execute([$id]);
-    if (!$checkStmt->fetch()) {
-        sendError('Plant not found', 404);
-    }
+    assertOwnPlant($id, $user);
 
     $image = handleImageUpload();
     $removeImage = isset($data['remove_image']) && $data['remove_image'] === '1';
@@ -287,103 +358,65 @@ function updatePlant(int $id): void
         ? json_encode(array_map('sanitize', json_decode($data['useful_tips'], true) ?? []), JSON_UNESCAPED_UNICODE)
         : '[]';
 
+    $params = [
+        sanitize($data['name']),
+        !empty($data['nickname']) ? sanitize($data['nickname']) : null,
+        sanitize($data['type']),
+        sanitize($data['description']),
+        sanitize($data['watering_frequency_text']),
+        (int) $data['watering_min_days'],
+        (int) $data['watering_max_days'],
+        sanitize($data['light']),
+        sanitize($data['humidity']),
+        sanitize($data['temperature']),
+        sanitize($data['soil']),
+        $commonIssues,
+        $usefulTips,
+    ];
+
     if ($image) {
         $sql = 'UPDATE plants SET name = ?, nickname = ?, type = ?, description = ?,
                 watering_frequency_text = ?, watering_min_days = ?, watering_max_days = ?,
                 light = ?, humidity = ?, temperature = ?, soil = ?, common_issues = ?,
-                useful_tips = ?, image_data = ?, image_mime = ? WHERE id = ?';
-        $params = [
-            sanitize($data['name']),
-            !empty($data['nickname']) ? sanitize($data['nickname']) : null,
-            sanitize($data['type']),
-            sanitize($data['description']),
-            sanitize($data['watering_frequency_text']),
-            (int) $data['watering_min_days'],
-            (int) $data['watering_max_days'],
-            sanitize($data['light']),
-            sanitize($data['humidity']),
-            sanitize($data['temperature']),
-            sanitize($data['soil']),
-            $commonIssues,
-            $usefulTips,
-            $image['data'],
-            $image['mime'],
-            $id,
-        ];
+                useful_tips = ?, image_data = ?, image_mime = ? WHERE id = ? AND user_id = ?';
+        $params[] = $image['data'];
+        $params[] = $image['mime'];
     } elseif ($removeImage) {
         $sql = 'UPDATE plants SET name = ?, nickname = ?, type = ?, description = ?,
                 watering_frequency_text = ?, watering_min_days = ?, watering_max_days = ?,
                 light = ?, humidity = ?, temperature = ?, soil = ?, common_issues = ?,
-                useful_tips = ?, image_data = NULL, image_mime = NULL WHERE id = ?';
-        $params = [
-            sanitize($data['name']),
-            !empty($data['nickname']) ? sanitize($data['nickname']) : null,
-            sanitize($data['type']),
-            sanitize($data['description']),
-            sanitize($data['watering_frequency_text']),
-            (int) $data['watering_min_days'],
-            (int) $data['watering_max_days'],
-            sanitize($data['light']),
-            sanitize($data['humidity']),
-            sanitize($data['temperature']),
-            sanitize($data['soil']),
-            $commonIssues,
-            $usefulTips,
-            $id,
-        ];
+                useful_tips = ?, image_data = NULL, image_mime = NULL WHERE id = ? AND user_id = ?';
     } else {
         $sql = 'UPDATE plants SET name = ?, nickname = ?, type = ?, description = ?,
                 watering_frequency_text = ?, watering_min_days = ?, watering_max_days = ?,
                 light = ?, humidity = ?, temperature = ?, soil = ?, common_issues = ?,
-                useful_tips = ? WHERE id = ?';
-        $params = [
-            sanitize($data['name']),
-            !empty($data['nickname']) ? sanitize($data['nickname']) : null,
-            sanitize($data['type']),
-            sanitize($data['description']),
-            sanitize($data['watering_frequency_text']),
-            (int) $data['watering_min_days'],
-            (int) $data['watering_max_days'],
-            sanitize($data['light']),
-            sanitize($data['humidity']),
-            sanitize($data['temperature']),
-            sanitize($data['soil']),
-            $commonIssues,
-            $usefulTips,
-            $id,
-        ];
+                useful_tips = ? WHERE id = ? AND user_id = ?';
     }
+    $params[] = $id;
+    $params[] = (int) $user['id'];
 
     $stmt = Database::write()->prepare($sql);
     $stmt->execute($params);
 
-    getPlant($id);
+    getPlant($id, (int) $user['id']);
 }
 
-function waterPlant(int $id): void
+function waterPlant(int $id, array $user): void
 {
-    $checkStmt = Database::read()->prepare('SELECT id FROM plants WHERE id = ?');
-    $checkStmt->execute([$id]);
-    if (!$checkStmt->fetch()) {
-        sendError('Plant not found', 404);
-    }
+    assertOwnPlant($id, $user);
 
-    $stmt = Database::write()->prepare('UPDATE plants SET last_watered = NOW() WHERE id = ?');
-    $stmt->execute([$id]);
+    $stmt = Database::write()->prepare('UPDATE plants SET last_watered = NOW() WHERE id = ? AND user_id = ?');
+    $stmt->execute([$id, (int) $user['id']]);
 
-    getPlant($id);
+    getPlant($id, (int) $user['id']);
 }
 
-function deletePlant(int $id): void
+function deletePlant(int $id, array $user): void
 {
-    $checkStmt = Database::read()->prepare('SELECT id FROM plants WHERE id = ?');
-    $checkStmt->execute([$id]);
-    if (!$checkStmt->fetch()) {
-        sendError('Plant not found', 404);
-    }
+    assertOwnPlant($id, $user);
 
-    $stmt = Database::write()->prepare('DELETE FROM plants WHERE id = ?');
-    $stmt->execute([$id]);
+    $stmt = Database::write()->prepare('DELETE FROM plants WHERE id = ? AND user_id = ?');
+    $stmt->execute([$id, (int) $user['id']]);
 
     sendJson(['message' => 'Plant deleted']);
 }

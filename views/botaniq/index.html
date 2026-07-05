@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Botaniq — Plant Care Manager</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,25 +27,46 @@
     <div>
         <header class="bg-white border-b border-neutral-200 sticky top-0 z-[100]">
             <div class="max-w-[1200px] mx-auto px-8 py-4 flex items-center justify-between max-md:px-4 max-md:py-3">
-                <a href="../../" class="text-neutral-500 no-underline text-lg transition-colors hover:text-neutral-900 w-10">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
+                <div class="flex-1 flex justify-start">
+                    <a id="back-link" href="../../" class="text-neutral-500 no-underline text-lg transition-colors hover:text-neutral-900 w-10">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                </div>
                 <div class="flex items-center gap-2">
                     <i class="fas fa-leaf text-[#2d6a4f] text-xl"></i>
                     <h1 class="text-xl font-bold tracking-tight">Botaniq</h1>
                 </div>
-                <button class="bg-neutral-900 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm border-none cursor-pointer transition-colors hover:bg-neutral-700" id="addPlantBtn" title="Add plant">
-                    <i class="fas fa-plus"></i>
-                </button>
+                <div class="flex-1 flex justify-end">
+                    <a id="signinBtn" href="../account/" style="display: none;"
+                        class="bg-[#2d6a4f] text-white px-4 py-2 rounded-lg text-sm font-medium no-underline transition-colors hover:bg-[#245a41] inline-flex items-center gap-2">
+                        <i class="fas fa-right-to-bracket"></i>
+                        <span>Sign in</span>
+                    </a>
+                    <a id="accountChip" href="../account/" style="display: none;" title="Your account"
+                        class="items-center gap-2 no-underline text-neutral-900 bg-neutral-100 rounded-full pl-1 pr-3.5 py-1 text-sm font-medium transition-colors hover:bg-neutral-200">
+                        <span id="accountAvatar" class="w-7 h-7 rounded-full bg-[#2d6a4f] text-white flex items-center justify-center text-xs overflow-hidden shrink-0"></span>
+                        <span id="accountName" class="max-md:hidden"></span>
+                    </a>
+                </div>
             </div>
         </header>
 
         <main class="max-w-[1200px] mx-auto p-8 max-md:p-4">
+            <div id="demoBanner" style="display: none;"
+                class="items-center gap-3.5 bg-[#eaf4ec] border border-[#cfe5d6] rounded-xl px-5 py-3.5 mb-6 text-sm text-[#2d6a4f] max-md:flex-col max-md:items-start">
+                <i class="fas fa-eye text-base shrink-0"></i>
+                <p class="flex-1 m-0 leading-relaxed">
+                    <strong>You're browsing Domen's plants</strong> in read-only mode.
+                    <a id="demoSigninLink" href="../account/" class="text-[#2d6a4f] font-semibold underline hover:text-[#1b4332]">Sign in</a>
+                    to grow your own botaniq: add plants and track when they need watering.
+                </p>
+            </div>
+
             <div class="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5 max-md:grid-cols-1" id="plantsGrid"></div>
 
             <div class="text-center py-16 px-8 text-neutral-400" id="emptyState" style="display: none;">
                 <div class="text-5xl mb-4">🪴</div>
-                <p class="mb-6 text-base">No plants yet</p>
+                <p class="mb-6 text-base" id="emptyMessage">No plants yet</p>
                 <button class="bg-neutral-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-700" id="emptyAddBtn">Add your first plant</button>
             </div>
 
@@ -194,6 +216,7 @@
         <div class="fixed bottom-6 right-6 z-[2000] flex flex-col gap-2" id="toastContainer"></div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
