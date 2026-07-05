@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Control Room · Domen Hribernik</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        faint: '#a49a8a',
+                        clay: '#d4451f',
+                        claydk: '#b8371a',
+                        pine: '#2f5b53',
+                        danger: '#b3261e',
+                        hairline: 'rgba(28, 26, 23, 0.12)',
+                    },
+                    fontFamily: {
+                        display: ['Fraunces', 'serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-paper text-ink font-sans min-h-screen antialiased">
+    <div class="ledger-bg" aria-hidden="true"></div>
+
+    <div class="relative max-w-6xl mx-auto px-5 py-8">
+
+        <!-- Masthead -->
+        <header class="mb-8 reveal">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <p class="flex items-center gap-2.5 font-mono text-[11px] tracking-[0.3em] uppercase text-stone mb-2">
+                        <span class="led led-clay" aria-hidden="true"></span>Users &amp; Permissions
+                    </p>
+                    <h1 class="font-display text-4xl sm:text-[2.75rem] font-semibold tracking-tight leading-none">
+                        Control Room</h1>
+                </div>
+                <div class="flex items-center gap-4 font-mono text-xs pb-1">
+                    <span id="whoami" class="text-faint"></span>
+                    <a href="../account/" class="text-stone hover:text-clay transition-colors">account</a>
+                    <a href="../../" class="text-faint hover:text-clay transition-colors">home</a>
+                </div>
+            </div>
+            <div class="rule-double mt-5" aria-hidden="true"></div>
+        </header>
+
+        <!-- Loading -->
+        <section id="view-loading" class="card p-10 text-center max-w-md mx-auto">
+            <div class="spinner mx-auto mb-4" aria-hidden="true"></div>
+            <p class="font-mono text-xs text-faint tracking-widest uppercase">Verifying clearance…</p>
+        </section>
+
+        <!-- Denied -->
+        <section id="view-denied" class="hidden card p-10 text-center max-w-md mx-auto reveal">
+            <p class="font-mono text-[11px] tracking-[0.25em] uppercase text-danger mb-2">Clearance required</p>
+            <h2 class="font-display text-2xl font-semibold mb-3">Admins only</h2>
+            <p class="text-stone text-sm mb-6">Sign in with the admin account to open the control room.</p>
+            <a id="denied-login-link" href="../account/" class="btn-clay inline-block">Go to sign-in</a>
+        </section>
+
+        <!-- Dashboard -->
+        <main id="view-dash" class="hidden reveal">
+
+            <nav class="tab-bar" role="tablist" aria-label="Dashboard sections">
+                <button type="button" class="tab" role="tab" data-tab="users" aria-controls="panel-users">
+                    Users<span class="tab-count" id="count-users"></span></button>
+                <button type="button" class="tab" role="tab" data-tab="projects" aria-controls="panel-projects">
+                    Projects<span class="tab-count" id="count-projects"></span></button>
+                <button type="button" class="tab" role="tab" data-tab="hub" aria-controls="panel-hub">
+                    Hub tiles<span class="tab-count" id="count-hub"></span></button>
+            </nav>
+
+            <!-- Tab: Users -->
+            <section id="panel-users" class="tab-panel" role="tabpanel">
+                <div class="grid lg:grid-cols-[360px_1fr] gap-6 items-start">
+
+                    <!-- Left: user roster -->
+                    <div class="card p-5">
+                        <h2 class="section-title mb-4">Roster</h2>
+                        <input id="user-search" type="search" class="field-input mb-4"
+                            placeholder="Search email, username, name…" autocomplete="off">
+                        <ul id="user-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></ul>
+                        <p id="user-empty" class="hidden font-mono text-xs text-faint mt-2">No users match.</p>
+                    </div>
+
+                    <!-- Right: selected user -->
+                    <div id="detail-placeholder" class="card p-10 text-center">
+                        <p class="font-mono text-xs text-faint tracking-widest uppercase">Select a user from the
+                            roster</p>
+                    </div>
+
+                    <div id="detail" class="hidden space-y-6">
+
+                        <!-- Profile -->
+                        <div class="card p-6">
+                            <div class="flex items-start gap-4">
+                                <img id="d-avatar" src="" alt="" referrerpolicy="no-referrer"
+                                    class="hidden w-12 h-12 rounded-[3px] border border-hairline object-cover">
+                                <div id="d-avatar-fallback"
+                                    class="w-12 h-12 rounded-[3px] border border-hairline bg-paper2 flex items-center justify-center font-display text-clay text-xl font-semibold">
+                                    ?</div>
+                                <div class="min-w-0 flex-1">
+                                    <h2 id="d-name" class="font-display text-xl font-semibold truncate"></h2>
+                                    <p id="d-email" class="font-mono text-xs text-stone truncate"></p>
+                                    <div id="d-badges" class="flex flex-wrap gap-2 mt-2"></div>
+                                </div>
+                                <button id="btn-toggle-active" class="btn-ghost shrink-0"></button>
+                            </div>
+                            <dl id="d-meta" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5"></dl>
+                        </div>
+
+                        <!-- Roles -->
+                        <div class="card p-6">
+                            <h3 class="section-title">Project roles</h3>
+                            <p class="text-stone text-sm mb-4">What this user can touch, per project.</p>
+                            <ul id="d-roles" class="space-y-2 mb-5"></ul>
+                            <form id="grant-form" class="grid sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                                <div>
+                                    <label for="grant-project" class="field-label">Project</label>
+                                    <select id="grant-project" class="field-input" required></select>
+                                </div>
+                                <div>
+                                    <label for="grant-role" class="field-label">Role</label>
+                                    <input id="grant-role" type="text" class="field-input" required
+                                        placeholder="editor, viewer, player…">
+                                </div>
+                                <button type="submit" class="btn-clay">Grant</button>
+                                <div class="sm:col-span-3">
+                                    <label for="grant-permissions" class="field-label">Permissions JSON
+                                        (optional)</label>
+                                    <input id="grant-permissions" type="text" class="field-input"
+                                        placeholder='{"max_uploads": 50}'>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="card p-6">
+                            <h3 class="section-title">Password</h3>
+                            <p class="text-stone text-sm mb-4">Backup credentials: <span id="d-haspwd"
+                                    class="font-mono text-xs"></span></p>
+                            <div class="flex flex-wrap gap-3 mb-4">
+                                <button id="btn-reset-link" class="btn-clay">Generate one-time reset link</button>
+                                <button id="btn-temp-pwd" class="btn-ghost">Set temp password</button>
+                            </div>
+                            <div id="reset-output" class="hidden border border-clay/40 bg-paper rounded-[3px] p-4">
+                                <p class="field-label">One-time link · shown once · expires in <span
+                                        id="reset-ttl"></span></p>
+                                <div class="flex gap-2 items-center">
+                                    <code id="reset-url" class="font-mono text-xs text-clay break-all flex-1"></code>
+                                    <button id="btn-copy-reset" class="btn-ghost shrink-0">Copy</button>
+                                </div>
+                            </div>
+                            <form id="temp-form" class="hidden grid sm:grid-cols-[1fr_auto] gap-3 items-end mt-2">
+                                <div>
+                                    <label for="temp-password" class="field-label">Temporary password</label>
+                                    <input id="temp-password" type="text" class="field-input" required
+                                        placeholder="at least 10 characters">
+                                </div>
+                                <button type="submit" class="btn-clay">Apply</button>
+                            </form>
+                            <p id="d-resets-note" class="font-mono text-[11px] text-faint mt-3"></p>
+                        </div>
+
+                        <!-- Sessions -->
+                        <div class="card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="section-title mb-0">Sessions</h3>
+                                <button id="btn-revoke-all" class="btn-ghost">Revoke all</button>
+                            </div>
+                            <ul id="d-sessions" class="space-y-2"></ul>
+                            <p id="d-sessions-empty" class="hidden font-mono text-xs text-faint">No active sessions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Projects -->
+            <section id="panel-projects" class="tab-panel hidden space-y-6" role="tabpanel">
+                <div class="card p-6">
+                    <h2 class="section-title">Register a view</h2>
+                    <p class="text-stone text-sm mb-4">Views that plug into the user system. Roles can only be granted
+                        for registered, active projects; grant them from the Users tab.</p>
+                    <form id="project-form" class="grid sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                        <div>
+                            <label for="project-key" class="field-label">Key</label>
+                            <input id="project-key" type="text" class="field-input" required
+                                placeholder="images, tarok, quizz…">
+                        </div>
+                        <div>
+                            <label for="project-name" class="field-label">Name</label>
+                            <input id="project-name" type="text" class="field-input" required
+                                placeholder="Image Manager">
+                        </div>
+                        <button type="submit" class="btn-clay">Register</button>
+                    </form>
+                </div>
+
+                <div class="card p-6">
+                    <h2 class="section-title mb-4">Registry</h2>
+                    <input id="project-search" type="search" class="field-input mb-4"
+                        placeholder="Filter by key or name…" autocomplete="off">
+                    <ul id="project-list" class="space-y-2 max-h-[58vh] overflow-y-auto pr-1"></ul>
+                    <p id="project-empty" class="hidden font-mono text-xs text-faint mt-2">No projects match.</p>
+                </div>
+            </section>
+
+            <!-- Tab: Hub tiles -->
+            <section id="panel-hub" class="tab-panel hidden space-y-6" role="tabpanel">
+                <div class="card p-6">
+                    <h2 class="section-title">Tile composer</h2>
+                    <p class="text-stone text-sm mb-4">Tiles on the Hub launcher. A tile with no project is visible to
+                        any signed-in user; otherwise only to users holding a role in that project (admins see
+                        everything).</p>
+                    <form id="hub-form" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
+                        <div>
+                            <label for="hub-name" class="field-label">Name</label>
+                            <input id="hub-name" type="text" class="field-input" required placeholder="Botaniq">
+                        </div>
+                        <div>
+                            <label for="hub-url" class="field-label">Url</label>
+                            <input id="hub-url" type="text" class="field-input" required
+                                placeholder="/views/botaniq/">
+                        </div>
+                        <div>
+                            <label for="hub-icon" class="field-label">Icon</label>
+                            <input id="hub-icon" type="text" class="field-input" placeholder="fa-solid fa-leaf">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="hub-gradient" class="field-label">Gradient</label>
+                            <input id="hub-gradient" type="text" class="field-input"
+                                placeholder="linear-gradient(45deg, #d4451f 0%, #f2b705 100%)">
+                        </div>
+                        <div>
+                            <label for="hub-project" class="field-label">Project</label>
+                            <select id="hub-project" class="field-input"></select>
+                        </div>
+                        <div>
+                            <label for="hub-sort" class="field-label">Sort order</label>
+                            <input id="hub-sort" type="number" class="field-input" value="0">
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit" id="hub-submit" class="btn-clay">Add tile</button>
+                            <button type="button" id="hub-cancel" class="btn-ghost hidden">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card p-6">
+                    <h2 class="section-title mb-4">Tiles</h2>
+                    <input id="hub-search" type="search" class="field-input mb-4"
+                        placeholder="Filter by name, url or project…" autocomplete="off">
+                    <ul id="hub-list" class="space-y-2 max-h-[58vh] overflow-y-auto pr-1"></ul>
+                    <p id="hub-empty" class="hidden font-mono text-xs text-faint mt-2">No tiles match.</p>
+                </div>
+            </section>
+
+            <footer
+                class="mt-10 pt-4 border-t border-hairline flex items-center justify-between font-mono text-[10px] tracking-[0.2em] uppercase text-faint">
+                <span>auth v1 · control room</span>
+                <span>hribernik / portfolio</span>
+            </footer>
+        </main>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>

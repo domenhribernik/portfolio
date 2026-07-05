@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Account · Domen Hribernik</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        faint: '#a49a8a',
+                        clay: '#d4451f',
+                        claydk: '#b8371a',
+                        pine: '#2f5b53',
+                        danger: '#b3261e',
+                        hairline: 'rgba(28, 26, 23, 0.12)',
+                    },
+                    fontFamily: {
+                        display: ['Fraunces', 'serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body class="bg-paper text-ink font-sans min-h-screen antialiased">
+    <div class="ledger-bg" aria-hidden="true"></div>
+
+    <main class="relative max-w-xl mx-auto px-5 py-10 sm:py-14">
+
+        <!-- Masthead -->
+        <header class="mb-10 reveal">
+            <div class="flex items-end justify-between gap-3">
+                <div>
+                    <p class="flex items-center gap-2.5 font-mono text-[11px] tracking-[0.3em] uppercase text-stone mb-2">
+                        <span class="led led-clay" aria-hidden="true"></span>One account for everything
+                    </p>
+                    <h1 class="font-display text-4xl font-semibold tracking-tight leading-none">Access Terminal</h1>
+                </div>
+                <a href="../../" class="font-mono text-xs text-faint hover:text-clay transition-colors pb-1">
+                    domen.hribernik // home</a>
+            </div>
+            <div class="rule-double mt-5" aria-hidden="true"></div>
+        </header>
+
+        <!-- Loading -->
+        <section id="view-loading" class="card p-10 text-center">
+            <div class="spinner mx-auto mb-4" aria-hidden="true"></div>
+            <p class="font-mono text-xs text-faint tracking-widest uppercase">Checking credentials…</p>
+        </section>
+
+        <!-- Signed out -->
+        <section id="view-login" class="hidden reveal">
+            <div class="card p-8 sm:p-10">
+                <p class="font-mono text-[11px] tracking-[0.25em] uppercase text-clay mb-2">Identify yourself</p>
+                <h2 class="font-display text-3xl font-semibold mb-1">Sign in</h2>
+                <p class="text-stone text-sm mb-8">One account for every project on this site. Google is the primary
+                    door, backup credentials are optional.</p>
+
+                <div id="gsi-button" class="mb-3 min-h-[44px]"></div>
+                <p id="gsi-note" class="hidden font-mono text-xs text-faint mb-3">Google sign-in is not configured
+                    yet.</p>
+
+                <div class="flex items-center gap-3 my-7">
+                    <div class="h-px bg-hairline flex-1"></div>
+                    <span class="font-mono text-[10px] tracking-[0.3em] uppercase text-faint">or backup login</span>
+                    <div class="h-px bg-hairline flex-1"></div>
+                </div>
+
+                <form id="login-form" class="space-y-4" autocomplete="on">
+                    <div>
+                        <label for="login-identifier" class="field-label">Username or email</label>
+                        <input id="login-identifier" name="username" type="text" required autocomplete="username"
+                            class="field-input" placeholder="you@example.com">
+                    </div>
+                    <div>
+                        <label for="login-password" class="field-label">Password</label>
+                        <input id="login-password" name="password" type="password" required
+                            autocomplete="current-password" class="field-input" placeholder="••••••••••">
+                    </div>
+                    <p id="login-error" class="hidden font-mono text-xs text-danger"></p>
+                    <button type="submit" class="btn-clay w-full">Enter</button>
+                </form>
+            </div>
+            <p class="font-mono text-[11px] text-faint mt-4 px-1">Forgot the backup password? Ask the admin for a
+                reset link, there is no self-service reset.</p>
+        </section>
+
+        <!-- Signed in -->
+        <section id="view-account" class="hidden space-y-6 reveal">
+            <div class="card p-8">
+                <div class="flex items-start gap-4">
+                    <img id="acct-avatar" src="" alt="" referrerpolicy="no-referrer"
+                        class="hidden w-14 h-14 rounded-[3px] border border-hairline object-cover">
+                    <div id="acct-avatar-fallback"
+                        class="w-14 h-14 rounded-[3px] border border-hairline bg-paper2 flex items-center justify-center font-display text-clay text-2xl font-semibold">
+                        ?</div>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-mono text-[11px] tracking-[0.25em] uppercase text-pine mb-1 flex items-center gap-2">
+                            <span class="led led-ok" aria-hidden="true"></span>Signed in</p>
+                        <h2 id="acct-name" class="font-display text-2xl font-semibold truncate"></h2>
+                        <p id="acct-email" class="font-mono text-xs text-stone truncate"></p>
+                    </div>
+                    <button id="btn-logout" class="btn-ghost shrink-0">Log out</button>
+                </div>
+                <div id="acct-badges" class="flex flex-wrap gap-2 mt-5"></div>
+            </div>
+
+            <div class="card p-8">
+                <h2 class="section-title">Backup credentials</h2>
+                <p class="text-stone text-sm mb-6">A username and password that work when Google is not an option.
+                    <span id="cred-state" class="font-mono text-xs whitespace-nowrap"></span>
+                </p>
+                <form id="cred-form" class="space-y-4">
+                    <div>
+                        <label for="cred-username" class="field-label">Username</label>
+                        <input id="cred-username" name="username" type="text" required autocomplete="username"
+                            class="field-input" placeholder="3-32 chars: letters, digits, . _ -">
+                    </div>
+                    <div id="cred-current-wrap" class="hidden">
+                        <label for="cred-current" class="field-label">Current password</label>
+                        <input id="cred-current" name="current-password" type="password"
+                            autocomplete="current-password" class="field-input">
+                    </div>
+                    <div>
+                        <label for="cred-password" class="field-label">New password</label>
+                        <input id="cred-password" name="new-password" type="password" required
+                            autocomplete="new-password" class="field-input" placeholder="at least 10 characters">
+                    </div>
+                    <p id="cred-msg" class="hidden font-mono text-xs"></p>
+                    <button type="submit" class="btn-clay">Save credentials</button>
+                </form>
+            </div>
+
+            <div class="card p-8">
+                <h2 class="section-title">Active sessions</h2>
+                <p class="text-stone text-sm mb-6">Every device currently signed in with your account.</p>
+                <ul id="session-list" class="space-y-3"></ul>
+            </div>
+        </section>
+
+        <!-- Password reset via one-time link -->
+        <section id="view-reset" class="hidden reveal">
+            <div class="card p-8 sm:p-10">
+                <p class="font-mono text-[11px] tracking-[0.25em] uppercase text-clay mb-2">One-time reset link</p>
+                <h2 class="font-display text-3xl font-semibold mb-1">Set a new password</h2>
+                <p class="text-stone text-sm mb-8">This link works once. After saving, sign in with your username or
+                    email and the new password.</p>
+                <form id="reset-form" class="space-y-4">
+                    <div>
+                        <label for="reset-password" class="field-label">New password</label>
+                        <input id="reset-password" name="new-password" type="password" required
+                            autocomplete="new-password" class="field-input" placeholder="at least 10 characters">
+                    </div>
+                    <div>
+                        <label for="reset-password2" class="field-label">Repeat it</label>
+                        <input id="reset-password2" name="new-password-repeat" type="password" required
+                            autocomplete="new-password" class="field-input">
+                    </div>
+                    <p id="reset-msg" class="hidden font-mono text-xs"></p>
+                    <button type="submit" class="btn-clay w-full">Save password</button>
+                </form>
+            </div>
+        </section>
+
+        <footer
+            class="mt-12 pt-4 border-t border-hairline flex items-center justify-between font-mono text-[10px] tracking-[0.2em] uppercase text-faint reveal">
+            <span>auth v1</span>
+            <span>hribernik / portfolio</span>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

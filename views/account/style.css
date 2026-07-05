@@ -1,0 +1,221 @@
+/* Account / access terminal styles, editorial paper edition. Shares the
+   visual language of the homepage's light theme (paper / ink / clay,
+   Fraunces + Space Mono). Component classes live here because the Tailwind
+   CDN cannot @apply inside linked stylesheets; everything else is utilities. */
+
+/* ---------- Atmosphere: faint ledger ruling ---------- */
+
+.ledger-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgba(28, 26, 23, 0.05) 1px, transparent 1px);
+    background-size: 100% 36px;
+    mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, black 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, black 20%, transparent 100%);
+}
+
+/* ---------- Masthead double rule (newspaper style) ---------- */
+
+.rule-double {
+    border-top: 3px solid #1c1a17;
+}
+
+.rule-double::after {
+    content: '';
+    display: block;
+    margin-top: 3px;
+    border-top: 1px solid rgba(28, 26, 23, 0.3);
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+    background: #fffdf8;
+    border: 1px solid rgba(28, 26, 23, 0.12);
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(28, 26, 23, 0.04);
+}
+
+/* ---------- Status dots ---------- */
+
+.led {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.led-clay {
+    background: #d4451f;
+    animation: led-pulse 2.4s ease-in-out infinite;
+}
+
+.led-ok {
+    background: #2f5b53;
+    animation: led-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes led-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.35;
+    }
+}
+
+/* ---------- Form fields and buttons ---------- */
+
+.field-label {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #6b6256;
+    margin-bottom: 6px;
+}
+
+.field-input {
+    width: 100%;
+    background: #f6f2ea;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    border-radius: 3px;
+    color: #1c1a17;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.field-input::placeholder {
+    color: #a49a8a;
+}
+
+.field-input:focus {
+    background: #fffdf8;
+    border-color: #d4451f;
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.12);
+}
+
+.btn-clay {
+    display: inline-block;
+    background: #d4451f;
+    color: #f6f2ea;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 11px 22px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-clay:hover {
+    background: #b8371a;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 rgba(28, 26, 23, 0.85);
+}
+
+.btn-clay:active {
+    transform: translate(0, 0);
+    box-shadow: 1px 1px 0 rgba(28, 26, 23, 0.85);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #6b6256;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-ghost:hover {
+    color: #d4451f;
+    border-color: #d4451f;
+}
+
+/* ---------- Section titles ---------- */
+
+.section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1c1a17;
+    margin-bottom: 4px;
+}
+
+.section-title::before {
+    content: '/ ';
+    color: #d4451f;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.95rem;
+}
+
+/* ---------- Spinner ---------- */
+
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid rgba(28, 26, 23, 0.15);
+    border-top-color: #d4451f;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---------- Entry reveal ---------- */
+
+.reveal {
+    animation: rise-in 0.5s ease both;
+}
+
+.reveal:nth-child(2) {
+    animation-delay: 0.06s;
+}
+
+.reveal:nth-child(3) {
+    animation-delay: 0.12s;
+}
+
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .reveal,
+    .led-clay,
+    .led-ok,
+    .spinner {
+        animation: none;
+    }
+}

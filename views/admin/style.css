@@ -1,0 +1,357 @@
+/* Control room styles, editorial paper edition. Shares the visual language
+   of the homepage's light theme (paper / ink / clay, Fraunces + Space Mono).
+   Component classes live here because the Tailwind CDN cannot @apply inside
+   linked stylesheets; everything else is utility classes. */
+
+/* ---------- Atmosphere: faint ledger ruling ---------- */
+
+.ledger-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgba(28, 26, 23, 0.05) 1px, transparent 1px);
+    background-size: 100% 36px;
+    mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, black 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, black 20%, transparent 100%);
+}
+
+/* ---------- Masthead double rule (newspaper style) ---------- */
+
+.rule-double {
+    border-top: 3px solid #1c1a17;
+}
+
+.rule-double::after {
+    content: '';
+    display: block;
+    margin-top: 3px;
+    border-top: 1px solid rgba(28, 26, 23, 0.3);
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+    background: #fffdf8;
+    border: 1px solid rgba(28, 26, 23, 0.12);
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(28, 26, 23, 0.04);
+}
+
+/* ---------- Folder tabs ---------- */
+
+.tab-bar {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.12);
+    padding: 0 4px;
+}
+
+.tab {
+    position: relative;
+    top: 1px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6b6256;
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    padding: 10px 16px 11px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.tab:hover {
+    color: #1c1a17;
+}
+
+.tab.active {
+    color: #1c1a17;
+    background: #fffdf8;
+    border-color: rgba(28, 26, 23, 0.12);
+}
+
+/* The clay "lip" on the active folder tab */
+.tab.active::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    height: 3px;
+    background: #d4451f;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab-count {
+    color: #a49a8a;
+    margin-left: 8px;
+}
+
+.tab-count:empty {
+    display: none;
+}
+
+.tab-panel {
+    padding-top: 24px;
+}
+
+/* ---------- Status dots ---------- */
+
+.led {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.led-clay {
+    background: #d4451f;
+    animation: led-pulse 2.4s ease-in-out infinite;
+}
+
+.led-ok {
+    background: #2f5b53;
+}
+
+.led-off {
+    background: #a49a8a;
+}
+
+@keyframes led-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.35;
+    }
+}
+
+/* ---------- Form fields and buttons ---------- */
+
+.field-label {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #6b6256;
+    margin-bottom: 6px;
+}
+
+.field-input {
+    width: 100%;
+    background: #f6f2ea;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    border-radius: 3px;
+    color: #1c1a17;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.field-input::placeholder {
+    color: #a49a8a;
+}
+
+.field-input:focus {
+    background: #fffdf8;
+    border-color: #d4451f;
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.12);
+}
+
+select.field-input {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #6b6256 50%),
+        linear-gradient(135deg, #6b6256 50%, transparent 50%);
+    background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+}
+
+.btn-clay {
+    display: inline-block;
+    background: #d4451f;
+    color: #f6f2ea;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-clay:hover {
+    background: #b8371a;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 rgba(28, 26, 23, 0.85);
+}
+
+.btn-clay:active {
+    transform: translate(0, 0);
+    box-shadow: 1px 1px 0 rgba(28, 26, 23, 0.85);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #6b6256;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 7px 12px;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-ghost:hover {
+    color: #d4451f;
+    border-color: #d4451f;
+}
+
+.btn-ghost:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.btn-ghost:disabled:hover {
+    color: #6b6256;
+    border-color: rgba(28, 26, 23, 0.18);
+}
+
+/* ---------- Section titles ---------- */
+
+.section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1c1a17;
+    margin-bottom: 4px;
+}
+
+.section-title::before {
+    content: '/ ';
+    color: #d4451f;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+}
+
+/* ---------- Roster rows ---------- */
+
+.roster-row {
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    background: #f6f2ea;
+    border: 1px solid rgba(28, 26, 23, 0.1);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.roster-row:hover {
+    border-color: rgba(28, 26, 23, 0.3);
+}
+
+.roster-row.selected {
+    border-color: #d4451f;
+    background: rgba(212, 69, 31, 0.06);
+    box-shadow: inset 3px 0 0 #d4451f;
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 50;
+    max-width: 340px;
+    background: #fffdf8;
+    border: 1px solid rgba(28, 26, 23, 0.15);
+    border-left: 3px solid #d4451f;
+    border-radius: 3px;
+    color: #1c1a17;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 8px 24px rgba(28, 26, 23, 0.12);
+    animation: toast-in 0.25s ease both;
+}
+
+.toast.toast-error {
+    border-left-color: #b3261e;
+    color: #b3261e;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---------- Spinner and reveal ---------- */
+
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid rgba(28, 26, 23, 0.15);
+    border-top-color: #d4451f;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.reveal {
+    animation: rise-in 0.5s ease both;
+}
+
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .reveal,
+    .led-clay,
+    .spinner,
+    .toast {
+        animation: none;
+    }
+}
