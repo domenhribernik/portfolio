@@ -1,0 +1,5 @@
+{
+    "//": "Module-type marker only, so `node --test tests/` parses .js files as ES modules. No dependencies, no build step; do not add any.",
+    "private": true,
+    "type": "module"
+}
