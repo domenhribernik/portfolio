@@ -1,0 +1,110 @@
+/* Hub launcher: supplemental styles Tailwind can't cleanly express
+   (keyframes, nth-child sticker rotation, press physics, skeleton shimmer).
+   Everything else is Tailwind in index.html. */
+
+:root {
+    --ink: #1c1a17;
+    --paper-2: #efe9dd;
+}
+
+/* Faint dotted paper grid for depth */
+body {
+    background-image: radial-gradient(rgba(28, 26, 23, 0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+/* Entrance: the li rises while the tile inside holds its sticker rotation */
+@keyframes tile-rise {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#tile-grid > li {
+    opacity: 0;
+    animation: tile-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Tiles: hard offset shadow, physical press */
+.tile {
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+#tile-grid .tile:hover,
+#tile-grid .tile:focus-visible {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--ink);
+}
+
+#tile-grid .tile:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 var(--ink);
+}
+
+.tile-arrow {
+    transform: rotate(-45deg);
+    transition: transform 0.16s ease;
+}
+
+.tile:hover .tile-arrow {
+    transform: rotate(-45deg) translateX(3px);
+}
+
+/* State cards and buttons share the offset-shadow press physics */
+.press {
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+a.press:active,
+button.press:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 var(--ink);
+}
+
+/* Skeleton shimmer while the shelf loads */
+@keyframes shimmer {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.skeleton-tile {
+    position: relative;
+    overflow: hidden;
+    background: var(--paper-2);
+    border: 1px solid rgba(28, 26, 23, 0.12);
+    border-radius: 4px;
+}
+
+.skeleton-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 253, 248, 0.9) 50%, transparent 70%);
+    animation: shimmer 1.4s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #tile-grid > li {
+        animation: none;
+        opacity: 1;
+    }
+    .skeleton-tile::after {
+        animation: none;
+    }
+    .tile,
+    .press,
+    .tile-arrow {
+        transition: none;
+    }
+}

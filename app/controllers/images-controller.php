@@ -3,9 +3,8 @@ declare(strict_types=1);
 define('SECURE_ACCESS', true);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// No Access-Control-Allow-Origin here: writes are gated by the session cookie,
+// and wildcard CORS is incompatible with cookie auth. Consumers are same-origin.
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -14,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../config/dev-mode.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../services/image-service.php';
 
 // Catch fatal errors (e.g. out-of-memory) that bypass try-catch
@@ -45,15 +45,20 @@ try {
             }
             break;
         case 'POST':
+            // Reads stay public (galleries fetch anonymously); writes need the
+            // images editor role or site admin.
+            Auth::requireProjectRole('images', 'editor');
             uploadImage();
             break;
         case 'PUT':
+            Auth::requireProjectRole('images', 'editor');
             if (!$uuid) {
                 sendError('UUID is required', 400);
             }
             updateImage($uuid);
             break;
         case 'DELETE':
+            Auth::requireProjectRole('images', 'editor');
             if (!$uuid) {
                 sendError('UUID is required', 400);
             }

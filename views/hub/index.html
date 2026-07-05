@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#f6f2ea">
+    <title>Hub</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Hub">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        cobalt: '#1f35e0',
+                        marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="min-h-[100dvh] bg-paper text-ink font-sans antialiased"
+    style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);">
+
+    <main class="max-w-3xl lg:max-w-4xl mx-auto px-5 sm:px-8 pt-10">
+
+        <header class="mb-10">
+            <div
+                class="flex items-baseline justify-between font-mono text-[11px] tracking-[0.2em] uppercase text-stone border-b border-ink/15 pb-3">
+                <span>DH // HUB</span>
+                <span id="today"></span>
+            </div>
+            <h1 class="font-display font-extrabold uppercase tracking-tight text-5xl sm:text-6xl mt-6">
+                Hub<span class="text-clay">.</span></h1>
+            <p id="shelf-note" class="font-mono text-xs text-stone mt-2">opening the shelf…</p>
+        </header>
+
+        <!-- Loading skeleton -->
+        <section id="view-loading">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                <div class="skeleton-tile aspect-[4/5]"></div>
+                <div class="skeleton-tile aspect-[4/5]"></div>
+                <div class="skeleton-tile aspect-[4/5] hidden sm:block"></div>
+                <div class="skeleton-tile aspect-[4/5] hidden lg:block"></div>
+            </div>
+        </section>
+
+        <!-- Signed out -->
+        <section id="view-signin" class="hidden">
+            <div class="press max-w-sm border border-ink bg-card rounded p-6">
+                <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-clay mb-3">401 // private shelf</p>
+                <h2 class="font-display font-extrabold uppercase text-3xl leading-tight">This shelf is private.</h2>
+                <p class="text-stone text-sm mt-3 mb-6">Sign in and the apps that belong to you will show up here.</p>
+                <a id="signin-link" href="../account/"
+                    class="press inline-block bg-clay hover:bg-clay-dk text-paper font-display font-bold uppercase tracking-wide text-sm border border-ink rounded px-5 py-2.5">
+                    Sign in <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i></a>
+            </div>
+        </section>
+
+        <!-- The grid -->
+        <section id="view-grid" class="hidden">
+            <ul id="tile-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5"></ul>
+        </section>
+
+        <!-- Nothing granted -->
+        <section id="view-empty" class="hidden">
+            <div class="press max-w-sm border border-ink bg-card rounded p-6">
+                <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-stone mb-3">0 apps</p>
+                <h2 class="font-display font-extrabold uppercase text-3xl leading-tight">Nothing here yet.</h2>
+                <p class="text-stone text-sm mt-3">Your account has no apps on the shelf. Ask the admin to put
+                    something here.</p>
+            </div>
+        </section>
+
+        <!-- Load failure -->
+        <section id="view-error" class="hidden">
+            <div class="press max-w-sm border border-ink bg-card rounded p-6">
+                <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-clay mb-3">error</p>
+                <h2 class="font-display font-extrabold uppercase text-3xl leading-tight">The shelf did not load.</h2>
+                <p class="text-stone text-sm mt-3 mb-6">Could not reach the server. Check the connection and try
+                    again.</p>
+                <button id="btn-retry" type="button"
+                    class="press inline-block bg-clay hover:bg-clay-dk text-paper font-display font-bold uppercase tracking-wide text-sm border border-ink rounded px-5 py-2.5">
+                    Retry</button>
+            </div>
+        </section>
+
+        <footer
+            class="mt-14 pb-8 flex items-center justify-between font-mono text-[10px] tracking-[0.2em] uppercase text-stone/70">
+            <span>hub · launcher</span>
+            <span>hribernik / portfolio</span>
+        </footer>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
