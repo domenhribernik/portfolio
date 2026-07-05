@@ -1,0 +1,119 @@
+/*
+ * Recipes view: only what Tailwind can't cleanly express lives here
+ * (JS-toggled screen states, pseudo-element texture, keyframes, classes
+ * for JS-generated markup, reduced-motion overrides). Layout, typography
+ * and colors are Tailwind utility classes in index.html / script.js.
+ */
+
+body {
+    background: #efe9dd;
+    color: #1c1a17;
+}
+
+/* Faint paper grain over the beige, so the page reads as a printed book. */
+.paper-grain::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+header, main, .modal-overlay, #toastContainer {
+    position: relative;
+    z-index: 1;
+}
+header {
+    position: sticky; /* re-assert: z-index above must not break stickiness */
+}
+
+/* --- JS-switched screens --- */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* --- Ingredient chips inside step text (JS-generated) --- */
+.ing-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3em;
+    padding: 0.05em 0.5em 0.1em;
+    margin: 0 0.08em;
+    border-radius: 999px;
+    background: rgba(224, 115, 29, 0.12);
+    border: 1px solid rgba(224, 115, 29, 0.35);
+    color: #b85a10;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.ing-chip .ing-chip-qty {
+    font-size: 0.78em;
+    font-weight: 500;
+    color: #6b6256;
+}
+
+/* --- Loading spinner --- */
+.loading-spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid #e0d7c4;
+    border-top-color: #e0731d;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Cooking mode: current step + timer --- */
+@keyframes ember-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(224, 115, 29, 0.28); }
+    50%      { box-shadow: 0 0 0 7px rgba(224, 115, 29, 0.10); }
+}
+.step-current {
+    animation: ember-glow 2.4s ease-in-out infinite;
+}
+@keyframes timer-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.45; }
+}
+.timer-done .cook-timer-digits {
+    animation: timer-pulse 1s ease-in-out infinite;
+}
+
+/* --- Modal overlay (default hidden, toggled by JS) --- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(28, 26, 23, 0.45);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.modal-overlay.active { display: flex; }
+
+/* --- Toasts (JS-generated) --- */
+.toast {
+    background: #1c1a17;
+    color: #fffdf8;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 14px 34px -16px rgba(28, 26, 23, 0.45);
+    animation: toast-in 0.25s ease-out;
+}
+.toast.toast-error { background: #b85a10; }
+@keyframes toast-in {
+    from { transform: translateY(8px); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .step-current,
+    .timer-done .cook-timer-digits,
+    .toast,
+    .loading-spinner {
+        animation: none;
+    }
+}

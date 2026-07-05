@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans:    ['Karla', 'system-ui', 'sans-serif'],
+                    display: ['Fraunces', 'Georgia', 'serif'],
+                    mono:    ['IBM Plex Mono', 'ui-monospace', 'monospace'],
+                },
+                colors: {
+                    beige:   '#efe9dd',
+                    card:    '#fffdf8',
+                    ink:     '#1c1a17',
+                    cocoa:   '#6b6256',
+                    linen:   '#e0d7c4',
+                    ember:   '#e0731d',
+                    emberdk: '#b85a10',
+                },
+                boxShadow: {
+                    lift: '0 14px 34px -16px rgba(28, 26, 23, 0.28)',
+                },
+            },
+        },
+    };
+    </script>
+</head>
+<body class="font-sans bg-beige text-ink min-h-screen m-0 p-0 leading-relaxed paper-grain">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-beige/90 backdrop-blur border-b border-linen">
+        <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+                <a id="back-link" href="../../" class="text-ink no-underline hover:text-ember transition-colors inline-flex items-center gap-2 font-medium">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+            <h1 class="font-display font-semibold text-xl sm:text-2xl tracking-tight flex items-baseline gap-2 select-none">
+                Recipes<span class="w-2 h-2 rounded-full bg-ember inline-block translate-y-[-2px]"></span>
+            </h1>
+            <div class="flex-1 flex justify-end">
+                <a id="signinBtn" href="../account/" style="display: none;"
+                   class="items-center gap-2 no-underline bg-ink text-beige text-sm font-semibold px-3.5 py-1.5 rounded-full hover:bg-emberdk transition-colors">
+                    <i class="fas fa-right-to-bracket text-xs"></i><span>Sign in</span>
+                </a>
+                <a id="accountChip" href="../account/" style="display: none;" title="Your account"
+                   class="items-center gap-2 no-underline text-ink bg-card border border-linen rounded-full pl-1 pr-3 py-1">
+                    <span id="accountAvatar" class="w-6 h-6 rounded-full bg-ink text-beige flex items-center justify-center text-[10px] overflow-hidden shrink-0"></span>
+                    <span id="accountName" class="max-md:hidden text-sm font-semibold"></span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 sm:py-10">
+
+        <!-- ==================== List ==================== -->
+        <section id="listScreen" class="screen">
+            <div class="flex items-end justify-between flex-wrap gap-4 mb-2">
+                <div>
+                    <h2 class="font-display font-semibold text-3xl sm:text-[2.6rem] leading-tight tracking-tight">Cook something good.</h2>
+                    <p class="text-cocoa mt-1 max-w-lg">Recipes written for actual cooking: gather the ingredients, then follow along step by step, timers included.</p>
+                </div>
+                <button id="newRecipeBtn" class="hidden shrink-0 bg-ember hover:bg-emberdk text-card font-semibold px-4 py-2.5 rounded-xl shadow-lift transition-colors">
+                    <i class="fas fa-pen-to-square mr-2"></i>New recipe
+                </button>
+            </div>
+
+            <div id="listHint" style="display: none;"
+                 class="items-center gap-2 text-sm text-cocoa border border-dashed border-linen rounded-xl px-4 py-2.5 mt-4 bg-card/60 w-fit">
+                <i class="fas fa-feather text-ember"></i>
+                <span>Browse freely. <a id="listSigninLink" href="../account/" class="text-emberdk font-semibold underline decoration-ember/40 hover:decoration-ember">Sign in</a> to write your own recipes and rate the ones you cook.</span>
+            </div>
+
+            <div id="listLoading" class="flex justify-center py-20"><div class="loading-spinner"></div></div>
+
+            <div id="listEmpty" class="hidden text-center py-20">
+                <div class="font-display italic text-2xl text-cocoa">Nothing on the menu yet.</div>
+                <p class="text-cocoa mt-1 text-sm">The first recipe is waiting to be written.</p>
+            </div>
+
+            <div id="listError" class="hidden border border-emberdk/40 bg-ember/10 text-emberdk rounded-xl p-4 mt-6">
+                <p id="listErrorMsg" class="font-medium m-0"></p>
+                <button id="listRetryBtn" class="mt-1 underline font-semibold">Retry</button>
+            </div>
+
+            <div id="recipeGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8"></div>
+        </section>
+
+        <!-- ==================== Detail ==================== -->
+        <section id="detailScreen" class="screen">
+            <button id="backToListBtn" class="text-cocoa hover:text-ember transition-colors text-sm font-semibold mb-5">
+                <i class="fas fa-arrow-left mr-1.5"></i>All recipes
+            </button>
+            <div id="detailBody"></div>
+        </section>
+
+        <!-- ==================== Cooking mode ==================== -->
+        <section id="cookScreen" class="screen">
+            <div class="flex items-center justify-between mb-6">
+                <div class="min-w-0">
+                    <p class="text-[11px] uppercase tracking-[0.18em] text-ember font-bold m-0">Cooking mode</p>
+                    <h2 id="cookTitle" class="font-display font-semibold text-2xl sm:text-3xl tracking-tight truncate m-0"></h2>
+                </div>
+                <button id="cookExitBtn" class="shrink-0 text-cocoa hover:text-emberdk border border-linen hover:border-emberdk/50 bg-card rounded-full px-4 py-1.5 text-sm font-semibold transition-colors">
+                    <i class="fas fa-xmark mr-1.5"></i>Exit
+                </button>
+            </div>
+            <div id="cookChecklist"></div>
+            <div id="cookSteps"></div>
+            <div id="cookDone"></div>
+        </section>
+
+        <!-- ==================== Editor ==================== -->
+        <section id="editorScreen" class="screen">
+            <button id="editorCancelTop" class="text-cocoa hover:text-ember transition-colors text-sm font-semibold mb-5">
+                <i class="fas fa-arrow-left mr-1.5"></i>Back
+            </button>
+            <h2 id="editorHeading" class="font-display font-semibold text-3xl tracking-tight mb-6">New recipe</h2>
+
+            <div class="bg-card border border-linen rounded-2xl p-5 sm:p-7 mb-6">
+                <label for="titleInput" class="block text-[11px] uppercase tracking-[0.18em] text-cocoa font-bold mb-1.5">Title</label>
+                <input id="titleInput" type="text" maxlength="150" autocomplete="off" placeholder="Grandma's apricot dumplings"
+                       class="w-full bg-transparent font-display font-semibold text-2xl sm:text-3xl tracking-tight placeholder:text-cocoa/40 border-0 border-b border-linen focus:border-ember focus:outline-none focus:ring-0 pb-2">
+                <label for="descInput" class="block text-[11px] uppercase tracking-[0.18em] text-cocoa font-bold mt-5 mb-1.5">Short description <span class="normal-case tracking-normal font-medium text-cocoa/70">(optional)</span></label>
+                <textarea id="descInput" rows="2" maxlength="1000" placeholder="What makes this one worth cooking?"
+                          class="w-full bg-beige/50 border border-linen rounded-xl px-3 py-2 text-base focus:outline-none focus:border-ember resize-y"></textarea>
+
+                <label class="block text-[11px] uppercase tracking-[0.18em] text-cocoa font-bold mt-5 mb-1.5">Cover photo <span class="normal-case tracking-normal font-medium text-cocoa/70">(optional)</span></label>
+                <div class="flex items-center gap-4 flex-wrap">
+                    <div id="coverPreview" class="w-36 h-24 rounded-xl border border-linen bg-beige/60 overflow-hidden flex items-center justify-center text-cocoa/50">
+                        <i class="fas fa-image text-xl"></i>
+                    </div>
+                    <label class="cursor-pointer text-sm font-semibold text-emberdk border border-dashed border-ember/50 hover:bg-ember/10 rounded-xl px-4 py-2 transition-colors">
+                        <i class="fas fa-upload mr-1.5"></i>Choose image
+                        <input id="coverInput" type="file" accept="image/*" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-[2fr,3fr] gap-6 items-start">
+                <!-- Ingredients panel -->
+                <div class="bg-card border border-linen rounded-2xl p-5 sm:p-6">
+                    <div class="flex items-baseline justify-between mb-1">
+                        <h3 class="font-display font-semibold text-xl m-0">Ingredients</h3>
+                        <span id="usedCount" class="text-xs text-cocoa"></span>
+                    </div>
+                    <p class="text-xs text-cocoa mt-0 mb-4">Write them here first, then link them into your steps with <i class="fas fa-link text-ember text-[10px]"></i>. Linked ones get checked off.</p>
+                    <div id="ingRows" class="flex flex-col gap-2"></div>
+                    <button id="addIngBtn" class="mt-3 text-sm font-semibold text-emberdk hover:text-ember transition-colors">
+                        <i class="fas fa-plus mr-1.5"></i>Add ingredient
+                    </button>
+                </div>
+
+                <!-- Steps panel -->
+                <div class="bg-card border border-linen rounded-2xl p-5 sm:p-6">
+                    <h3 class="font-display font-semibold text-xl mb-1">Method</h3>
+                    <p class="text-xs text-cocoa mt-0 mb-4">One action per step. Add a duration and the cook gets a timer. A rest or a wait is just a step of its own ("Let the dough rise", 60 min).</p>
+                    <div id="stepRows" class="flex flex-col gap-4"></div>
+                    <button id="addStepBtn" class="mt-4 text-sm font-semibold text-emberdk hover:text-ember transition-colors">
+                        <i class="fas fa-plus mr-1.5"></i>Add step
+                    </button>
+                </div>
+            </div>
+
+            <div id="editorErrors" class="hidden border border-emberdk/40 bg-ember/10 text-emberdk rounded-xl p-4 mt-6 text-sm font-medium"></div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button id="editorCancelBtn" class="text-cocoa hover:text-ink font-semibold px-4 py-2.5 transition-colors">Cancel</button>
+                <button id="editorSaveBtn" class="bg-ember hover:bg-emberdk text-card font-semibold px-6 py-2.5 rounded-xl shadow-lift transition-colors">
+                    <span class="btn-text"><i class="fas fa-check mr-2"></i>Save recipe</span>
+                    <span class="btn-loading hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Delete confirmation modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="bg-card border border-linen rounded-2xl w-full max-w-sm p-6 shadow-lift text-center">
+            <div class="text-3xl mb-2 select-none">🗑️</div>
+            <h3 class="font-display font-semibold text-xl mb-1">Delete this recipe?</h3>
+            <p class="text-sm text-cocoa mb-5"><strong id="deleteRecipeName" class="text-ink"></strong> and its ratings will be gone for good.</p>
+            <div class="flex gap-2 justify-center">
+                <button id="deleteCancelBtn" class="border border-linen bg-beige/60 text-ink px-4 py-2 rounded-xl font-semibold hover:bg-beige transition-colors">Keep it</button>
+                <button id="deleteConfirmBtn" class="bg-emberdk hover:bg-ink text-card px-4 py-2 rounded-xl font-semibold transition-colors">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[2000] flex flex-col gap-2"></div>
+
+    <script src="../../components/gtranslate.js"></script>
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
