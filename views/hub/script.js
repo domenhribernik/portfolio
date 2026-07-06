@@ -78,52 +78,34 @@ function renderTiles(apps) {
 
     apps.forEach((app, i) => {
         const li = document.createElement('li');
-        li.style.animationDelay = (i * 70) + 'ms';
+        li.style.animationDelay = (i * 60) + 'ms';
 
         const a = document.createElement('a');
-        a.className = 'tile block bg-card border border-ink rounded p-3 sm:p-4';
+        a.className = 'tile';
+        // Each tile's stored gradient collapses to a single flat accent (its
+        // first hex), driving the border, the icon, and the press-tint.
+        a.style.setProperty('--accent', accentFromGradient(app.gradient));
         a.href = app.url.startsWith('/') ? new URL(app.url.slice(1), siteRoot).href : app.url;
 
-        const square = document.createElement('div');
-        square.className = 'aspect-square rounded-sm border border-ink/10 bg-paper-2 flex items-center justify-center';
         const icon = document.createElement('i');
-        icon.className = app.icon + ' text-clay text-4xl';
+        icon.className = app.icon + ' tile-icon';
         icon.setAttribute('aria-hidden', 'true');
-        square.appendChild(icon);
 
-        const row = document.createElement('div');
-        row.className = 'flex items-baseline justify-between gap-2 mt-3';
         const name = document.createElement('span');
-        name.className = 'font-display font-bold text-lg leading-tight truncate';
+        name.className = 'tile-name';
         name.textContent = app.name;
-        const arrow = document.createElement('i');
-        arrow.className = 'fa-solid fa-arrow-right tile-arrow text-clay text-sm shrink-0';
-        arrow.setAttribute('aria-hidden', 'true');
-        row.append(name, arrow);
 
-        const kicker = document.createElement('p');
-        kicker.className = 'font-mono text-[10px] tracking-[0.18em] uppercase text-stone mt-1 truncate flex items-center gap-1.5';
-        // The tile's color survives only as this small accent dot.
-        const dot = document.createElement('span');
-        dot.className = 'w-2 h-2 rounded-full inline-block shrink-0';
-        dot.style.background = app.gradient;
-        kicker.append(dot, document.createTextNode(kickerFor(app.url)));
-
-        a.append(square, row, kicker);
+        a.append(icon, name);
         li.appendChild(a);
         grid.appendChild(li);
     });
 }
 
-function kickerFor(url) {
-    if (url.startsWith('/')) {
-        return url.replace(/^\/views\//, '').replace(/\/+$/, '').replace(/^\//, '') || 'home';
-    }
-    try {
-        return new URL(url).hostname;
-    } catch {
-        return 'link';
-    }
+// The stored gradient collapses to a flat accent: its first hex color, or ink
+// if it has none. Mirrors accentFromGradient() in views/admin/logic.js.
+function accentFromGradient(gradient) {
+    const m = /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/.exec(gradient || '');
+    return m ? m[0] : '#1c1a17';
 }
 
 document.getElementById('btn-retry').addEventListener('click', boot);

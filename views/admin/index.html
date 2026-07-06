@@ -252,8 +252,14 @@
                         </div>
                         <div class="sm:col-span-2">
                             <label for="hub-gradient" class="field-label">Gradient</label>
-                            <input id="hub-gradient" type="text" class="field-input"
-                                placeholder="linear-gradient(45deg, #d4451f 0%, #f2b705 100%)">
+                            <div class="flex items-center gap-2">
+                                <span id="hub-gradient-swatch" class="hub-swatch shrink-0" aria-hidden="true"></span>
+                                <input id="hub-gradient" type="text" class="field-input flex-1 min-w-0"
+                                    placeholder="linear-gradient(45deg, #d4451f 0%, #f2b705 100%)">
+                                <button type="button" id="hub-gradient-random" class="btn-ghost shrink-0"
+                                    title="Generate a random on-theme gradient">
+                                    <i class="fa-solid fa-shuffle" aria-hidden="true"></i> Random</button>
+                            </div>
                         </div>
                         <div>
                             <label for="hub-project" class="field-label">Project</label>

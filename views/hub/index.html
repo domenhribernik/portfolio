@@ -52,47 +52,49 @@
 
     <main class="max-w-3xl lg:max-w-4xl mx-auto px-5 sm:px-8 pt-10">
 
-        <header class="mb-10">
+        <header class="mb-8">
             <div
                 class="flex items-baseline justify-between font-mono text-[11px] tracking-[0.2em] uppercase text-stone border-b border-ink/15 pb-3">
                 <span>DH // HUB</span>
                 <span id="today"></span>
             </div>
-            <h1 class="font-display font-extrabold uppercase tracking-tight text-5xl sm:text-6xl mt-6">
+            <h1 class="font-display font-extrabold uppercase tracking-tight text-4xl sm:text-5xl mt-5">
                 Hub<span class="text-clay">.</span></h1>
             <p id="shelf-note" class="font-mono text-xs text-stone mt-2">opening the shelf…</p>
         </header>
 
         <!-- Loading skeleton -->
         <section id="view-loading">
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                <div class="skeleton-tile aspect-[4/5]"></div>
-                <div class="skeleton-tile aspect-[4/5]"></div>
-                <div class="skeleton-tile aspect-[4/5] hidden sm:block"></div>
-                <div class="skeleton-tile aspect-[4/5] hidden lg:block"></div>
-            </div>
+            <ul class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                <li class="skeleton-tile aspect-square"></li>
+                <li class="skeleton-tile aspect-square"></li>
+                <li class="skeleton-tile aspect-square"></li>
+                <li class="skeleton-tile aspect-square hidden sm:block"></li>
+                <li class="skeleton-tile aspect-square hidden lg:block"></li>
+                <li class="skeleton-tile aspect-square hidden lg:block"></li>
+            </ul>
         </section>
 
         <!-- Signed out -->
         <section id="view-signin" class="hidden">
-            <div class="press max-w-sm border border-ink bg-card rounded p-6">
+            <div class="max-w-sm border border-ink bg-card p-6">
                 <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-clay mb-3">401 // private shelf</p>
                 <h2 class="font-display font-extrabold uppercase text-3xl leading-tight">This shelf is private.</h2>
                 <p class="text-stone text-sm mt-3 mb-6">Sign in and the apps that belong to you will show up here.</p>
                 <a id="signin-link" href="../account/"
-                    class="press inline-block bg-clay hover:bg-clay-dk text-paper font-display font-bold uppercase tracking-wide text-sm border border-ink rounded px-5 py-2.5">
+                    class="press inline-block bg-clay hover:bg-clay-dk text-paper font-display font-bold uppercase tracking-wide text-sm border border-ink px-5 py-2.5">
                     Sign in <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i></a>
             </div>
         </section>
 
         <!-- The grid -->
         <section id="view-grid" class="hidden">
-            <ul id="tile-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5"></ul>
+            <ul id="tile-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3"></ul>
         </section>
 
         <!-- Nothing granted -->
         <section id="view-empty" class="hidden">
-            <div class="press max-w-sm border border-ink bg-card rounded p-6">
+            <div class="max-w-sm border border-ink bg-card p-6">
                 <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-stone mb-3">0 apps</p>
                 <h2 class="font-display font-extrabold uppercase text-3xl leading-tight">Nothing here yet.</h2>
                 <p class="text-stone text-sm mt-3">Your account has no apps on the shelf. Ask the admin to put
@@ -102,13 +104,13 @@
 
         <!-- Load failure -->
         <section id="view-error" class="hidden">
-            <div class="press max-w-sm border border-ink bg-card rounded p-6">
+            <div class="max-w-sm border border-ink bg-card p-6">
                 <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-clay mb-3">error</p>
                 <h2 class="font-display font-extrabold uppercase text-3xl leading-tight">The shelf did not load.</h2>
                 <p class="text-stone text-sm mt-3 mb-6">Could not reach the server. Check the connection and try
                     again.</p>
                 <button id="btn-retry" type="button"
-                    class="press inline-block bg-clay hover:bg-clay-dk text-paper font-display font-bold uppercase tracking-wide text-sm border border-ink rounded px-5 py-2.5">
+                    class="press inline-block bg-clay hover:bg-clay-dk text-paper font-display font-bold uppercase tracking-wide text-sm border border-ink px-5 py-2.5">
                     Retry</button>
             </div>
         </section>

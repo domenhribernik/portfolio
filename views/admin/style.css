@@ -233,6 +233,23 @@ select.field-input {
     border-color: rgba(28, 26, 23, 0.18);
 }
 
+/* ---------- Gradient swatch (hub tile composer + list) ---------- */
+
+.hub-swatch {
+    display: inline-block;
+    width: 34px;
+    height: 34px;
+    border-radius: 3px;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    background: var(--swatch, #f6f2ea);
+}
+
+.hub-swatch-sm {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+}
+
 /* ---------- Section titles ---------- */
 
 .section-title {

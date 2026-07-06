@@ -1,4 +1,4 @@
-import { resolveTab, filterProjects, filterHubApps, buildHubPayload, swapPlan } from './logic.js';
+import { resolveTab, filterProjects, filterHubApps, buildHubPayload, swapPlan, randomGradient, accentFromGradient } from './logic.js';
 
 const ADMIN_API = '../../app/controllers/admin-controller.php';
 const AUTH_API = '../../app/controllers/auth-controller.php';
@@ -596,12 +596,17 @@ function renderHubApps() {
         info.className = 'flex items-center gap-3 min-w-0';
         const led = document.createElement('span');
         led.className = 'led ' + (app.active ? 'led-ok' : 'led-off');
+        const swatch = document.createElement('span');
+        swatch.className = 'hub-swatch hub-swatch-sm shrink-0';
+        swatch.style.setProperty('--swatch', app.gradient);
+        // Mirror the hub: the icon carries the tile's flat accent (first hex).
         const icon = document.createElement('i');
-        icon.className = app.icon + ' text-clay w-4 text-center shrink-0';
+        icon.className = app.icon + ' w-4 text-center shrink-0';
+        icon.style.color = accentFromGradient(app.gradient);
         const label = document.createElement('p');
         label.className = 'font-mono text-xs text-ink truncate';
         label.textContent = `${app.name} · ${app.url} · ${app.project_key || 'everyone'} · #${app.sort_order}`;
-        info.append(led, icon, label);
+        info.append(led, swatch, icon, label);
         li.appendChild(info);
 
         const actions = document.createElement('div');
@@ -673,6 +678,14 @@ async function moveHubApp(i, dir) {
     }
 }
 
+// Reflect the current gradient value in the composer swatch. An empty field
+// falls back to the paper placeholder so the swatch never renders as black.
+function syncGradientSwatch() {
+    const value = document.getElementById('hub-gradient').value.trim();
+    document.getElementById('hub-gradient-swatch')
+        .style.setProperty('--swatch', value || '#f6f2ea');
+}
+
 function startHubEdit(app) {
     editingHubAppId = app.id;
     document.getElementById('hub-name').value = app.name;
@@ -683,6 +696,7 @@ function startHubEdit(app) {
     document.getElementById('hub-sort').value = app.sort_order;
     document.getElementById('hub-submit').textContent = 'Save tile';
     document.getElementById('hub-cancel').classList.remove('hidden');
+    syncGradientSwatch();
     document.getElementById('hub-name').focus();
 }
 
@@ -693,9 +707,15 @@ function resetHubForm() {
     document.getElementById('hub-sort').value = '0';
     document.getElementById('hub-submit').textContent = 'Add tile';
     document.getElementById('hub-cancel').classList.add('hidden');
+    syncGradientSwatch();
 }
 
 document.getElementById('hub-cancel').addEventListener('click', resetHubForm);
+document.getElementById('hub-gradient').addEventListener('input', syncGradientSwatch);
+document.getElementById('hub-gradient-random').addEventListener('click', () => {
+    document.getElementById('hub-gradient').value = randomGradient();
+    syncGradientSwatch();
+});
 
 document.getElementById('hub-form').addEventListener('submit', async (e) => {
     e.preventDefault();

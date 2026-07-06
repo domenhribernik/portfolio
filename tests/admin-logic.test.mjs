@@ -2,7 +2,15 @@
 // Run: node --test tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveTab, filterProjects, filterHubApps, buildHubPayload, swapPlan } from '../views/admin/logic.js';
+import { resolveTab, filterProjects, filterHubApps, buildHubPayload, swapPlan, hslToHex, randomGradient, accentFromGradient } from '../views/admin/logic.js';
+
+// Perceived brightness (0..255) of a #rrggbb string, for the legibility guard.
+function brightness(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+}
 
 test('resolveTab maps location hashes to tab ids, defaulting to users', () => {
     assert.equal(resolveTab('#users'), 'users');
@@ -66,6 +74,50 @@ test('buildHubPayload omits blank icon/gradient and maps empty project to null',
         buildHubPayload({ name: 'X', url: '/views/x/', icon: '  ', gradient: '', project: '', sort: '' }),
         { name: 'X', url: '/views/x/', project_id: null, sort_order: 0 }
     );
+});
+
+test('hslToHex converts the primary/secondary corners exactly', () => {
+    assert.equal(hslToHex(0, 0, 0), '#000000');
+    assert.equal(hslToHex(0, 0, 100), '#ffffff');
+    assert.equal(hslToHex(0, 100, 50), '#ff0000');
+    assert.equal(hslToHex(120, 100, 50), '#00ff00');
+    assert.equal(hslToHex(240, 100, 50), '#0000ff');
+    // Hue wraps past 360 (randomGradient's second stop uses hue + 35).
+    assert.equal(hslToHex(370, 100, 50), hslToHex(10, 100, 50));
+});
+
+test('randomGradient emits a fixed-angle, fixed-stop gradient (deterministic rng)', () => {
+    assert.equal(
+        randomGradient(() => 0),
+        `linear-gradient(45deg, ${hslToHex(0, 65, 42)} 0%, ${hslToHex(35, 70, 62)} 100%)`
+    );
+    // rng just under 1 -> hue 359, still well-formed.
+    assert.match(
+        randomGradient(() => 0.999),
+        /^linear-gradient\(45deg, #[0-9a-f]{6} 0%, #[0-9a-f]{6} 100%\)$/
+    );
+});
+
+test('randomGradient keeps a dark, legible first stop across many samples', () => {
+    for (let i = 0; i < 500; i++) {
+        const g = randomGradient();
+        assert.match(g, /^linear-gradient\(45deg, #[0-9a-f]{6} 0%, #[0-9a-f]{6} 100%\)$/);
+        const firstStop = g.slice(g.indexOf('#'), g.indexOf('#') + 7);
+        // The l=42 band must never drift bright enough to wash out on paper.
+        assert.ok(brightness(firstStop) < 175, `first stop too bright: ${firstStop}`);
+    }
+});
+
+test('accentFromGradient grabs the first hex, falling back to ink', () => {
+    assert.equal(accentFromGradient('linear-gradient(45deg, #2d6a4f 0%, #74c69d 100%)'), '#2d6a4f');
+    assert.equal(accentFromGradient('linear-gradient(45deg, #abc 0%, #def 100%)'), '#abc');
+    assert.equal(accentFromGradient('#1f35e0'), '#1f35e0');
+    assert.equal(accentFromGradient('hotpink'), '#1c1a17');
+    assert.equal(accentFromGradient(''), '#1c1a17');
+    assert.equal(accentFromGradient(null), '#1c1a17');
+    // A random gradient's accent is always its first stop.
+    const g = randomGradient(() => 0.4);
+    assert.equal(accentFromGradient(g), g.slice(g.indexOf('#'), g.indexOf('#') + 7));
 });
 
 test('swapPlan exchanges the sort orders of two neighboring tiles', () => {
