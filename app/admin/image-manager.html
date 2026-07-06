@@ -85,6 +85,7 @@
     <script>
         const API = '/portfolio/app/controllers/images-controller.php';
         const UPLOADS = '/portfolio/assets/uploads';
+        const AUTH_API = '/portfolio/app/controllers/auth-controller.php';
 
         const statusEl = document.getElementById('status');
         const foldersEl = document.getElementById('folders');
@@ -236,7 +237,28 @@
             buildFolderButtons();
         });
 
-        loadAll();
+        // UX gate only: the controller enforces auth on every write regardless.
+        async function gate() {
+            let allowed = false;
+            try {
+                const res = await fetch(`${AUTH_API}?action=me`);
+                const data = await res.json();
+                const u = data.user;
+                allowed = !!u && (u.is_admin || (data.roles ?? []).some(r => r.project_key === 'images'));
+            } catch { /* treated as signed out */ }
+            if (!allowed) {
+                statusEl.className = 'err';
+                statusEl.textContent = 'Deleting requires the images editor role. ';
+                const link = document.createElement('a');
+                link.href = '/portfolio/views/account/?redirect=' + encodeURIComponent(location.pathname);
+                link.textContent = 'Sign in';
+                link.style.color = '#8af';
+                statusEl.appendChild(link);
+                return;
+            }
+            loadAll();
+        }
+        gate();
     </script>
 </body>
 </html>

@@ -17,6 +17,7 @@
 - Unify the homepage and views otd
 - Remove google analytics on localhost
 - Finish pricing project, fix ip logging in db
+- Refactor app/admin into subprojects for admin page
 
 ## Project Ideas
 - **ASCII art converter** — transform images to ASCII (lightest to darkest); already have a project, put it on the portfolio

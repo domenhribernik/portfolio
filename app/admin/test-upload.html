@@ -72,6 +72,27 @@
     <img id="preview" alt="Uploaded preview">
 
     <script>
+        // UX gate only: the controller enforces auth on every upload regardless.
+        (async () => {
+            const result = document.getElementById('result');
+            let allowed = false;
+            try {
+                const res = await fetch('/portfolio/app/controllers/auth-controller.php?action=me');
+                const data = await res.json();
+                const u = data.user;
+                allowed = !!u && (u.is_admin || (data.roles ?? []).some(r => r.project_key === 'images'));
+            } catch { /* treated as signed out */ }
+            if (!allowed) {
+                result.className = 'err';
+                result.textContent = 'Uploading requires the images editor role. ';
+                const link = document.createElement('a');
+                link.href = '/portfolio/views/account/?redirect=' + encodeURIComponent(location.pathname);
+                link.textContent = 'Sign in';
+                link.style.color = '#8af';
+                result.appendChild(link);
+            }
+        })();
+
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const result = document.getElementById('result');
