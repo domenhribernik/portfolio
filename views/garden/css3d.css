@@ -1,0 +1,109 @@
+/* ==========================================================================
+   css3d.css : a tiny 3D CSS toolkit
+   --------------------------------------------------------------------------
+   Everything is a flat plane. You compose scenes from three ideas:
+
+   1. A scene establishes perspective (.c3d-scene).
+   2. A node is an invisible coordinate frame (.c3d). Nodes nest.
+   3. A face is a visible plane (.c3d-face). Faces are leaves of the tree.
+
+   Every node and face is placed with the same custom-property pipeline,
+   applied in this order:
+
+     translate3d(--x, --y, --z)        position in the parent's space
+     rotateY(--ry)                     azimuth, spin around the vertical axis
+     rotateX(--rx)                     tilt, lean forward or back
+     rotateZ(--rz)                     twist, roll in the face's own plane
+     translate3d(--ox, --oy, --oz)     push along the rotated (local) axes
+     scale3d(--s)                      uniform scale
+
+   "Rotate, then push" is the whole trick: to put 8 petals in a ring you
+   give each the same --oz and step --ry by 45deg. Y grows downward, as it
+   always does on the web, so "up" is a negative --y.
+   ========================================================================== */
+
+.c3d-scene {
+  position: relative;
+  perspective: var(--persp, 1100px);
+  perspective-origin: var(--persp-x, 50%) var(--persp-y, 45%);
+}
+
+/* Pipeline values must NOT inherit: custom properties normally cascade to
+   children, and a child node re-applying its parent's rotation and scale in
+   its own transform would compound them all the way down the tree. Declaring
+   identity defaults on every node keeps each transform local to its element. */
+.c3d,
+.c3d-face,
+.c3d-seg {
+  --x: 0px; --y: 0px; --z: 0px;
+  --rx: 0deg; --ry: 0deg; --rz: 0deg;
+  --ox: 0px; --oy: 0px; --oz: 0px;
+  --s: 1;
+  --bend: 0deg;
+}
+
+/* An invisible coordinate frame. Zero size, so children attach to a point. */
+.c3d {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transform:
+    translate3d(var(--x, 0px), var(--y, 0px), var(--z, 0px))
+    rotateY(var(--ry, 0deg))
+    rotateX(var(--rx, 0deg))
+    rotateZ(var(--rz, 0deg))
+    translate3d(var(--ox, 0px), var(--oy, 0px), var(--oz, 0px))
+    scale3d(var(--s, 1), var(--s, 1), var(--s, 1));
+}
+
+/* A visible plane, centered on its parent node's origin. */
+.c3d-face {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+  transform:
+    translate(-50%, -50%)
+    translate3d(var(--x, 0px), var(--y, 0px), var(--z, 0px))
+    rotateY(var(--ry, 0deg))
+    rotateX(var(--rx, 0deg))
+    rotateZ(var(--rz, 0deg))
+    translate3d(var(--ox, 0px), var(--oy, 0px), var(--oz, 0px))
+    scale3d(var(--s, 1), var(--s, 1), var(--s, 1));
+}
+
+/* A hinged plane: pivots around its bottom-center edge instead of its
+   middle. Petals, leaves, lids. With --rx: 0 it stands straight up from
+   the origin; positive --rx leans it outward like a petal opening. */
+.c3d-face--hinge {
+  transform-origin: 50% 100%;
+  transform:
+    translate(-50%, -100%)
+    translate3d(var(--x, 0px), var(--y, 0px), var(--z, 0px))
+    rotateY(var(--ry, 0deg))
+    rotateX(var(--rx, 0deg))
+    rotateZ(var(--rz, 0deg))
+    translate3d(var(--ox, 0px), var(--oy, 0px), var(--oz, 0px))
+    scale3d(var(--s, 1), var(--s, 1), var(--s, 1));
+}
+
+/* A chained segment: sits on the top edge of its parent plane and bends
+   at the joint by --bend. Chain a few with the same --bend and the plane
+   curves, which is how a flat div becomes a curled petal. */
+.c3d-seg {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) rotateX(var(--bend, 0deg));
+}
+
+/* Utility: hide the back of a plane (for two-sided skins, build a second
+   face with --ry: 180deg and give both this class). */
+.c3d-oneside {
+  backface-visibility: hidden;
+}

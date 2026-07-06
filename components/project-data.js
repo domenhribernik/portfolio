@@ -133,7 +133,7 @@ export const projects = {
     category: "passion",
     gradient: "linear-gradient(45deg, #f46b45 0%, #eea849 100%)",
     title: "Workout Tracker",
-    description: "A minimal reps logger for calisthenics: tap to count, check off sets, finish the session. Nothing else in the way.",
+    description: "Build workouts from your own exercise library, whether it's reps, weights, holds, or runs, then log every round as you go. Each session is saved, so you can look back and see yourself getting stronger.",
     links: {
       visitSite: "views/workout",
     },

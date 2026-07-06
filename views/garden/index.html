@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Garden · A Bouquet Built From Divs</title>
+    <meta name="description" content="A 3D bouquet of roses, tulips and daisies where every petal is a flat div rotated into place. No WebGL, no canvas, no images: only CSS transforms.">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Albert+Sans:wght@300;400;500;600&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        night: '#0b100c',
+                        moss: '#121a13',
+                        cream: '#f0e8d6',
+                        sage: '#9fae97',
+                        rose: '#e78fa3',
+                        gold: '#d9a851',
+                        leafg: '#8fb573',
+                    },
+                    fontFamily: {
+                        display: ['"Instrument Serif"', 'Georgia', 'serif'],
+                        sans: ['"Albert Sans"', 'sans-serif'],
+                        mono: ['"Fragment Mono"', 'monospace'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(240, 232, 214, 0.14)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css3d.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans bg-night text-cream min-h-screen antialiased">
+
+    <!-- Hero: the bouquet on stage -->
+    <section class="relative">
+
+        <header class="absolute top-0 left-0 right-0 z-20 pointer-events-none">
+            <div class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-5 sm:pt-7 flex items-center justify-between">
+                <a id="back-link" href="../../" class="pointer-events-auto font-mono text-sm text-sage no-underline hover:text-rose transition-colors" aria-label="Back">&larr; back</a>
+                <span class="font-mono text-[0.65rem] tracking-[0.28em] uppercase text-sage/80 text-right">Grown from divs · CSS only</span>
+            </div>
+        </header>
+
+        <!-- The 3D stage -->
+        <div id="scene" class="scene c3d-scene w-full">
+            <div id="stage" class="c3d">
+                <div class="c3d autospin">
+                    <div id="bouquet-root" class="c3d"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Headline, floating over the stage -->
+        <div class="absolute top-0 left-0 z-10 pointer-events-none w-full">
+            <div class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-16 sm:pt-24">
+                <p class="reveal reveal-1 font-mono text-[0.68rem] sm:text-xs tracking-[0.3em] uppercase text-rose mb-3">No WebGL · No canvas · No images</p>
+                <h1 class="reveal reveal-2 font-display text-[clamp(3.4rem,10vw,7rem)] leading-[0.95] tracking-tight">
+                    Paper<br><span class="italic text-rose">Garden</span>
+                </h1>
+                <p class="reveal reveal-3 mt-4 max-w-[34ch] text-sage text-[clamp(0.95rem,2vw,1.1rem)] leading-relaxed">
+                    A bouquet folded out of <span class="font-mono text-cream text-[0.9em]"><span data-plane-count>a few hundred</span></span> flat divs,
+                    every petal a plane rotated into space with CSS transforms.
+                </p>
+            </div>
+        </div>
+
+        <p class="absolute bottom-4 right-5 sm:right-8 z-10 pointer-events-none font-mono text-[0.65rem] tracking-[0.2em] uppercase text-sage/60">drag to turn it</p>
+    </section>
+
+    <!-- Controls -->
+    <section class="border-y border-hairline bg-moss/60">
+        <div class="max-w-[1200px] mx-auto px-5 sm:px-8 py-4 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <label class="flex items-center gap-3 min-w-[200px] flex-1 sm:flex-none sm:w-[260px]">
+                <span class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-sage">Bloom</span>
+                <input id="bloom-slider" type="range" min="0" max="100" value="0" class="bloom-range flex-1" aria-label="Bloom amount">
+            </label>
+            <button id="xray-toggle" aria-pressed="false"
+                class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 aria-pressed:bg-cream aria-pressed:text-night aria-pressed:border-cream transition-colors">
+                x-ray
+            </button>
+            <button id="spin-toggle" aria-pressed="false"
+                class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 transition-colors">
+                <span>still</span>
+            </button>
+            <span class="ml-auto font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/70">
+                planes on stage: <b class="text-gold font-normal" data-plane-count>0</b>
+            </span>
+        </div>
+    </section>
+
+    <!-- How it's made -->
+    <section class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-6">
+        <div class="flex items-baseline gap-4 mb-2">
+            <h2 class="font-display italic text-3xl sm:text-4xl whitespace-nowrap">How a flower grows from flat divs</h2>
+            <div class="hidden sm:block flex-1 border-b border-dotted border-cream/25"></div>
+        </div>
+        <p class="text-sage max-w-[68ch] mb-10">
+            CSS can only draw flat planes, but it can place them anywhere in space. The whole bouquet
+            comes down to four moves, each one a class in <a href="css3d.css" class="font-mono text-[0.9em] text-rose underline decoration-rose/40 underline-offset-4 hover:decoration-rose">css3d.css</a>.
+            The little scenes below run on the exact same classes as the bouquet above.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+
+            <!-- 01 The scene -->
+            <div class="code-card border border-hairline rounded-md bg-moss/50 p-5 flex flex-col">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-gold mb-3">01 · The scene</p>
+                <div class="demo-scene c3d-scene mb-4">
+                    <div class="c3d" style="--rx:-14deg">
+                        <div class="c3d demo-spin">
+                            <div class="c3d-face demo-plane" style="--ry:0deg"></div>
+                            <div class="c3d-face demo-plane" style="--ry:60deg"></div>
+                            <div class="c3d-face demo-plane" style="--ry:120deg"></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-sm text-sage leading-relaxed mb-4">
+                    A <span class="font-mono text-[0.85em] text-cream">perspective</span> on the scene gives depth,
+                    and <span class="font-mono text-[0.85em] text-cream">preserve-3d</span> on every node keeps
+                    children living in the same space instead of being flattened.
+                </p>
+                <pre class="mt-auto bg-night/70 border border-hairline rounded p-3"><code class="font-mono text-sage">.c3d-scene {
+  perspective: 1100px;
+}
+.c3d {
+  transform-style: preserve-3d;
+}</code></pre>
+            </div>
+
+            <!-- 02 Rotate then push -->
+            <div class="code-card border border-hairline rounded-md bg-moss/50 p-5 flex flex-col">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-gold mb-3">02 · Rotate, then push</p>
+                <div class="demo-scene c3d-scene mb-4">
+                    <div class="c3d" style="--rx:-14deg">
+                        <div class="c3d demo-spin">
+                            <div class="c3d-face demo-plane" style="--ry:0deg;--oz:42px"></div>
+                            <div class="c3d-face demo-plane" style="--ry:45deg;--oz:42px"></div>
+                            <div class="c3d-face demo-plane" style="--ry:90deg;--oz:42px"></div>
+                            <div class="c3d-face demo-plane" style="--ry:135deg;--oz:42px"></div>
+                            <div class="c3d-face demo-plane" style="--ry:180deg;--oz:42px"></div>
+                            <div class="c3d-face demo-plane" style="--ry:225deg;--oz:42px"></div>
+                            <div class="c3d-face demo-plane" style="--ry:270deg;--oz:42px"></div>
+                            <div class="c3d-face demo-plane" style="--ry:315deg;--oz:42px"></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-sm text-sage leading-relaxed mb-4">
+                    Turn a plane with <span class="font-mono text-[0.85em] text-cream">--ry</span>, then push it out
+                    along its own axis with <span class="font-mono text-[0.85em] text-cream">--oz</span>. Eight planes,
+                    one ring. The roses do this with the golden angle instead of 45&deg;.
+                </p>
+                <pre class="mt-auto bg-night/70 border border-hairline rounded p-3"><code class="font-mono text-sage">&lt;div class="c3d-face"
+  style="--ry: 45deg;
+         --oz: 42px"&gt;</code></pre>
+            </div>
+
+            <!-- 03 The hinge -->
+            <div class="code-card border border-hairline rounded-md bg-moss/50 p-5 flex flex-col">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-gold mb-3">03 · The hinge</p>
+                <div class="demo-scene c3d-scene mb-4">
+                    <div class="c3d" style="--rx:-22deg;--y:18px">
+                        <div class="c3d demo-spin">
+                            <div class="c3d" style="--ry:0deg"><div class="c3d-face c3d-face--hinge demo-petal"></div></div>
+                            <div class="c3d" style="--ry:72deg"><div class="c3d-face c3d-face--hinge demo-petal"></div></div>
+                            <div class="c3d" style="--ry:144deg"><div class="c3d-face c3d-face--hinge demo-petal"></div></div>
+                            <div class="c3d" style="--ry:216deg"><div class="c3d-face c3d-face--hinge demo-petal"></div></div>
+                            <div class="c3d" style="--ry:288deg"><div class="c3d-face c3d-face--hinge demo-petal"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-sm text-sage leading-relaxed mb-4">
+                    A hinged plane pivots around its bottom edge. Lean it out with a negative
+                    <span class="font-mono text-[0.85em] text-cream">--rx</span> and it opens like a petal.
+                    The bloom slider above just scales that one angle on every petal at once.
+                </p>
+                <pre class="mt-auto bg-night/70 border border-hairline rounded p-3"><code class="font-mono text-sage">.c3d-face--hinge {
+  transform-origin: 50% 100%;
+}
+--rx: calc(var(--open)
+      * var(--bloom) * -1)</code></pre>
+            </div>
+
+            <!-- 04 The bend -->
+            <div class="code-card border border-hairline rounded-md bg-moss/50 p-5 flex flex-col">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-gold mb-3">04 · The bend</p>
+                <div class="demo-scene c3d-scene mb-4">
+                    <div class="c3d" style="--rx:-14deg;--y:26px">
+                        <div class="c3d demo-spin">
+                            <div class="c3d-face c3d-face--hinge demo-strip" style="--rx:-24deg">
+                                <div class="c3d-seg demo-strip" style="--bend:-22deg">
+                                    <div class="c3d-seg demo-strip" style="--bend:-22deg">
+                                        <div class="c3d-seg demo-strip" style="--bend:-22deg"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-sm text-sage leading-relaxed mb-4">
+                    Planes are flat, petals are not. Chain short segments on the top edge of a plane, bend each
+                    joint a few degrees, and the eye reads one curved surface. Rose petals curl out, tulips curl in.
+                </p>
+                <pre class="mt-auto bg-night/70 border border-hairline rounded p-3"><code class="font-mono text-sage">.c3d-seg {
+  bottom: 100%;
+  transform:
+    rotateX(var(--bend));
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- The toolkit -->
+    <section class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-16">
+        <div class="flex items-baseline gap-4 mb-2">
+            <h2 class="font-display italic text-3xl sm:text-4xl whitespace-nowrap">Take the toolkit</h2>
+            <div class="hidden sm:block flex-1 border-b border-dotted border-cream/25"></div>
+        </div>
+        <p class="text-sage max-w-[68ch] mb-10">
+            The template is two small files with no dependencies:
+            <a href="css3d.css" class="font-mono text-[0.9em] text-rose underline decoration-rose/40 underline-offset-4 hover:decoration-rose">css3d.css</a>
+            defines the scene, nodes, faces and hinges, and
+            <a href="css3d.js" class="font-mono text-[0.9em] text-rose underline decoration-rose/40 underline-offset-4 hover:decoration-rose">css3d.js</a>
+            builds trees of them. Everything else here, wrap, ribbon, roses, is just data fed through those helpers.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="border border-hairline rounded-md bg-moss/50 p-5">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-gold mb-4">The pipeline, one transform for everything</p>
+                <ul class="font-mono text-[0.78rem] leading-loose text-sage">
+                    <li><span class="text-cream">--x --y --z</span> &nbsp;position in the parent's space</li>
+                    <li><span class="text-cream">--ry</span> &nbsp;azimuth, spin around the vertical axis</li>
+                    <li><span class="text-cream">--rx</span> &nbsp;tilt, lean forward or back</li>
+                    <li><span class="text-cream">--rz</span> &nbsp;twist, roll in the plane itself</li>
+                    <li><span class="text-cream">--ox --oy --oz</span> &nbsp;push along the rotated axes</li>
+                    <li><span class="text-cream">--s</span> &nbsp;scale, from the hinge point if hinged</li>
+                </ul>
+                <p class="text-sm text-sage leading-relaxed mt-4">
+                    Applied in that order on every node and face. Position it, aim it, push it out, size it.
+                    Because the values are custom properties, one variable set high in the tree, like
+                    <span class="font-mono text-[0.85em] text-cream">--bloom</span>, reaches every petal below it.
+                </p>
+            </div>
+
+            <div class="code-card border border-hairline rounded-md bg-moss/50 p-5 flex flex-col">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-gold mb-4">A daisy in nine lines</p>
+                <pre class="bg-night/70 border border-hairline rounded p-4 flex-1"><code class="font-mono text-sage">import { node, face, ring } from './css3d.js';
+
+const flower = node(stage);
+ring(12, (i, angle) =&gt; {
+  face(flower, {
+    ry: `${angle}deg`,
+    open: '75deg',
+    rx: 'calc(var(--open) * var(--bloom, 1) * -1)',
+  }, 'petal', 'hinge');
+});</code></pre>
+                <p class="text-sm text-sage leading-relaxed mt-4">
+                    Twelve hinged planes around a ring, opened 75&deg;. Skin them with a gradient in CSS
+                    and you have a daisy. The full bouquet builder lives in
+                    <a href="flowers.js" class="font-mono text-[0.9em] text-rose underline decoration-rose/40 underline-offset-4 hover:decoration-rose">flowers.js</a>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Colophon -->
+    <footer class="border-t border-hairline">
+        <div class="max-w-[1200px] mx-auto px-5 sm:px-8 py-8 flex flex-wrap gap-x-8 gap-y-2 justify-between">
+            <p class="font-mono text-[0.7rem] text-sage/80 leading-relaxed">
+                <span data-plane-count>0</span> planes, zero images, zero WebGL. Inspect any petal, it is a div.
+            </p>
+            <p class="font-mono text-[0.7rem] text-sage/60 leading-relaxed">
+                Standing on: <a href="https://codepen.io/yoksel/pen/YwwLxE" class="underline underline-offset-2 hover:text-cream">yoksel's 3D flower</a> ·
+                <a href="https://24ways.org/2010/intro-to-css-3d-transforms/" class="underline underline-offset-2 hover:text-cream">intro to CSS 3D transforms</a> ·
+                <a href="https://css-tricks.com/how-css-perspective-works/" class="underline underline-offset-2 hover:text-cream">how CSS perspective works</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="../../components/gtranslate.js"></script>
+    <script src="../../components/tawk-chat.js"></script>
+</body>
+</html>

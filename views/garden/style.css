@@ -1,0 +1,381 @@
+/* Paper Garden: page paint. Layout lives in Tailwind classes in index.html;
+   this file holds what Tailwind can't say: the flower skins, the 3D scene
+   atmosphere, keyframes, x-ray mode, and the doc mini-demos. */
+
+:root {
+  --night: #0b100c;
+  --moss: #121a13;
+  --cream: #f0e8d6;
+  --sage: #9fae97;
+  --rose: #e78fa3;
+  --gold: #d9a851;
+  --leaf: #8fb573;
+  --hairline: rgba(240, 232, 214, 0.14);
+}
+
+body {
+  background: var(--night);
+}
+
+/* Film grain, very quiet. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   The stage
+   ========================================================================== */
+
+.scene {
+  --persp: 1200px;
+  --persp-y: 42%;
+  height: clamp(500px, 82vh, 780px);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+
+.scene.grabbing {
+  cursor: grabbing;
+}
+
+/* Warm key light above, vignette at the edges. */
+.scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 48% at 50% 34%, rgba(235, 215, 175, 0.14), transparent 70%),
+    radial-gradient(130% 110% at 50% 50%, transparent 58%, rgba(4, 7, 5, 0.6) 100%);
+  z-index: 5;
+}
+
+.autospin {
+  animation: turn 75s linear infinite;
+}
+
+.spin-paused .autospin,
+.grabbing .autospin {
+  animation-play-state: paused;
+}
+
+@keyframes turn {
+  from { rotate: y 0deg; }
+  to { rotate: y 360deg; }
+}
+
+.sway {
+  animation-name: sway;
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes sway {
+  from { rotate: z -1.4deg; }
+  to { rotate: z 1.4deg; }
+}
+
+/* ==========================================================================
+   Flower skins. Each variant sets three tones: --c1 deep at the base,
+   --c2 the body, --c3 the light rim. Petal planes read them.
+   ========================================================================== */
+
+.rose--blush { --c1: #a83f5c; --c2: #e2839a; --c3: #f6c9d3; }
+.rose--cream { --c1: #bd8f52; --c2: #e8d3a8; --c3: #f9efd8; }
+.rose--coral { --c1: #b04832; --c2: #e8825f; --c3: #f8c4a4; }
+.tulip--plum { --c1: #571f40; --c2: #8e3f6a; --c3: #c76d94; }
+.tulip--butter { --c1: #bf7f22; --c2: #ecbf58; --c3: #f8e2a0; }
+.daisy--white { --c1: #cfc4ac; --c2: #efe9da; --c3: #fdfbf3; }
+.daisy--lavender { --c1: #7a63a8; --c2: #a98fd0; --c3: #d7c8ef; }
+
+.petal-base {
+  background:
+    linear-gradient(to right, rgba(20, 8, 10, 0.22), transparent 30% 70%, rgba(20, 8, 10, 0.22)),
+    linear-gradient(to top, var(--c1), var(--c2));
+}
+
+.petal-tip {
+  background:
+    linear-gradient(to right, rgba(20, 8, 10, 0.16), transparent 32% 68%, rgba(20, 8, 10, 0.16)),
+    linear-gradient(to top, var(--c2), var(--c3));
+}
+
+.p-rose.petal-base { border-radius: 12% 12% 55% 55% / 8% 8% 85% 85%; }
+.p-rose.petal-tip { border-radius: 50% 50% 4% 4% / 88% 88% 3% 3%; }
+
+.p-tulip.petal-base { border-radius: 10% 10% 60% 60% / 6% 6% 92% 92%; }
+.p-tulip.petal-tip { border-radius: 50% 50% 3% 3% / 96% 96% 2% 2%; }
+
+.p-daisy.petal-base { border-radius: 20% 20% 50% 50% / 10% 10% 90% 90%; }
+.p-daisy.petal-tip { border-radius: 50% 50% 6% 6% / 90% 90% 4% 4%; }
+
+.rose-core {
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, var(--c2) 0 28%, var(--c1) 68%, rgba(30, 8, 12, 0.9));
+}
+
+.daisy-core {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(122, 79, 15, 0.5) 0.8px, transparent 1.4px),
+    radial-gradient(circle at 38% 34%, #f6d67e, #d9a13c 62%, #a8761f);
+  background-size: 4.5px 4.5px, 100% 100%;
+}
+
+.daisy-core-side {
+  border-radius: 50%;
+  background: linear-gradient(to top, #a8761f, #ecc25e);
+}
+
+.puff {
+  border-radius: 50%;
+  background: radial-gradient(circle, #fdfcf6 0 32%, rgba(253, 252, 246, 0.55) 55%, transparent 72%);
+}
+
+.stem {
+  border-radius: 2px;
+  background: linear-gradient(to top, #35522e, #6f9457);
+}
+
+.euca-leaf {
+  border-radius: 50%;
+  background: linear-gradient(160deg, #93ac83, #5c7a54 70%);
+  opacity: 0.96;
+}
+
+.leaf-blade {
+  background:
+    linear-gradient(to right, transparent 46%, rgba(16, 34, 14, 0.4) 49% 51%, transparent 54%),
+    linear-gradient(to top, #3f6136, #7ba263);
+}
+
+.leaf-blade { border-radius: 14% 14% 58% 58% / 8% 8% 92% 92%; }
+
+.leaf-blade--tip {
+  border-radius: 52% 52% 4% 4% / 96% 96% 3% 3%;
+  background:
+    linear-gradient(to right, transparent 46%, rgba(16, 34, 14, 0.35) 49% 51%, transparent 54%),
+    linear-gradient(to top, #7ba263, #a7c489);
+}
+
+/* ==========================================================================
+   The wrap: kraft paper cone, liner, tissue, ribbon, bow.
+   ========================================================================== */
+
+.wrap-face {
+  background:
+    linear-gradient(to right, rgba(58, 33, 10, 0.28), transparent 20% 80%, rgba(255, 238, 205, 0.16)),
+    linear-gradient(to top, #a2743f, #c79a63 60%, #d8b184);
+}
+
+.wrap-face--liner {
+  background:
+    linear-gradient(to right, rgba(30, 16, 5, 0.3), transparent 25% 75%, rgba(30, 16, 5, 0.2)),
+    linear-gradient(to top, #6e4a26, #8a6136);
+}
+
+.tissue {
+  border-radius: 46% 54% 8% 8% / 36% 42% 4% 4%;
+  background: linear-gradient(to top, rgba(228, 168, 180, 0.75), rgba(246, 214, 220, 0.35));
+}
+
+.ribbon {
+  background: linear-gradient(to bottom, #e5a2b4, #b25672 55%, #8e3a52);
+}
+
+.bow-loop {
+  border-radius: 50%;
+  background: linear-gradient(105deg, #e9a7b8, #b25672 60%, #8e3a52);
+}
+
+.bow-knot {
+  border-radius: 30%;
+  background: linear-gradient(to bottom, #d98ba0, #9c4560);
+}
+
+.bow-tail {
+  background: linear-gradient(to bottom, #c66d87, #8e3a52);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+}
+
+.ground-shadow {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(0, 0, 0, 0.45) 0 14%, rgba(0, 0, 0, 0.22) 40%, transparent 62%),
+    radial-gradient(circle, rgba(233, 215, 180, 0.06) 30%, transparent 78%);
+}
+
+.fallen {
+  opacity: 0.95;
+}
+
+/* ==========================================================================
+   X-ray: strip every skin and show the flat planes that were always there.
+   ========================================================================== */
+
+.xray .bq .c3d-face,
+.xray .bq .c3d-seg {
+  /* Faint fill, not just outline: clip-path clips outlines away, so shapes
+     like the wrap cone would vanish from the x-ray without it. */
+  background: rgba(240, 232, 214, 0.06) !important;
+  outline: 1px solid rgba(240, 232, 214, 0.55);
+  outline-offset: -1px;
+}
+
+.xray .bq .ground-shadow {
+  outline: none;
+}
+
+.xray::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(240, 232, 214, 0.14) 1px, transparent 1.4px);
+  background-size: 26px 26px;
+}
+
+/* ==========================================================================
+   Controls
+   ========================================================================== */
+
+input[type='range'].bloom-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, rgba(231, 143, 163, 0.7), rgba(240, 232, 214, 0.25));
+  outline: none;
+}
+
+input[type='range'].bloom-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--rose);
+  border: 2px solid var(--night);
+  box-shadow: 0 0 0 1px rgba(231, 143, 163, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+input[type='range'].bloom-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--rose);
+  border: 2px solid var(--night);
+  box-shadow: 0 0 0 1px rgba(231, 143, 163, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Page entrance
+   ========================================================================== */
+
+.reveal {
+  opacity: 0;
+  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+.reveal-1 { animation-delay: 0.05s; }
+.reveal-2 { animation-delay: 0.2s; }
+.reveal-3 { animation-delay: 0.35s; }
+.reveal-4 { animation-delay: 0.5s; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Doc mini-demos. Handmade markup in index.html using the same toolkit
+   classes as the bouquet, so the docs are living proof.
+   ========================================================================== */
+
+.demo-scene {
+  --persp: 640px;
+  position: relative;
+  height: 170px;
+}
+
+.demo-spin {
+  animation: turn 17s linear infinite;
+}
+
+.demo-plane {
+  width: 30px;
+  height: 44px;
+  border: 1px solid rgba(231, 143, 163, 0.85);
+  border-radius: 42% 42% 6% 6% / 55% 55% 4% 4%;
+  background: rgba(231, 143, 163, 0.14);
+}
+
+/* Five hinged planes opening and closing: a wireframe flower. */
+.demo-petal {
+  width: 30px;
+  height: 46px;
+  border: 1px solid rgba(217, 168, 81, 0.85);
+  border-radius: 46% 46% 6% 6% / 60% 60% 4% 4%;
+  background: rgba(217, 168, 81, 0.13);
+  animation: hinge-open 3s ease-in-out infinite alternate;
+}
+
+@keyframes hinge-open {
+  from {
+    transform: translate(-50%, -100%) rotateX(-6deg);
+  }
+  to {
+    transform: translate(-50%, -100%) rotateX(-72deg);
+  }
+}
+
+/* Segment chain: four flat strips reading as one curved petal. */
+.demo-strip {
+  width: 26px;
+  height: 20px;
+  border: 1px solid rgba(143, 181, 115, 0.85);
+  background: rgba(143, 181, 115, 0.14);
+}
+
+.demo-strip.c3d-seg {
+  border-top: none;
+}
+
+/* Code samples */
+.code-card pre {
+  overflow-x: auto;
+}
+
+.code-card code {
+  font-size: 0.68rem;
+  line-height: 1.7;
+}
+
+/* ==========================================================================
+   Motion respect
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .autospin,
+  .sway,
+  .demo-spin,
+  .demo-petal,
+  .reveal {
+    animation: none;
+  }
+  .reveal {
+    opacity: 1;
+  }
+}
