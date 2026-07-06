@@ -4,70 +4,229 @@
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout Tracker</title>
+    <title>Workout</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Big+Shoulders+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
     tailwind.config = {
         theme: {
             extend: {
                 colors: {
-                    surface: '#111827',
-                    'surface-raised': '#1f2937',
-                    'surface-border': '#374151',
-                    accent: '#3b82f6',
-                    'accent-dim': '#1d4ed8',
-                    success: '#22c55e',
-                    muted: '#6b7280',
-                    label: '#e5e7eb',
+                    iron: '#0f0e0c',
+                    plate: '#1a1815',
+                    seam: '#2a2721',
+                    chalk: '#ece8e1',
+                    steel: '#6f6a61',
+                    ember: '#ff4d00',
+                    'ember-dim': '#c23a00',
+                },
+                fontFamily: {
+                    display: ['"Big Shoulders Display"', 'sans-serif'],
+                    sans: ['"Big Shoulders Text"', 'sans-serif'],
                 },
             },
         },
     }
     </script>
 </head>
-<body class="bg-surface text-label min-h-screen font-sans">
+<body class="bg-iron text-chalk min-h-screen font-sans">
 
     <!-- HEADER -->
-    <header class="sticky top-0 z-50 bg-surface/95 backdrop-blur-sm border-b border-surface-border">
-        <div class="max-w-2xl mx-auto px-5 py-4 flex items-center gap-4">
-            <a id="back-link" href="../../" class="text-muted hover:text-label transition-colors text-lg">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <div>
-                <h1 class="text-base font-semibold leading-tight">Workout Tracker</h1>
-                <p class="text-xs text-muted" id="session-date"></p>
+    <header class="sticky top-0 z-40 bg-iron/95 backdrop-blur-sm border-b border-seam">
+        <div class="max-w-3xl mx-auto px-5 pt-4 pb-3">
+            <div class="flex items-center gap-4">
+                <a id="back-link" href="../../" class="text-steel hover:text-chalk transition-colors text-lg" aria-label="Back">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <a href="#/" class="font-display font-black text-2xl uppercase tracking-wider leading-none select-none">
+                    Work<span class="text-ember">out</span>
+                </a>
+                <div class="ml-auto flex items-center gap-3">
+                    <a id="signin-btn" href="#" class="hidden items-center gap-2 text-xs font-semibold uppercase tracking-widest border border-seam hover:border-ember hover:text-ember rounded-sm px-3 py-1.5 transition-colors">
+                        <i class="fas fa-right-to-bracket"></i> Sign in
+                    </a>
+                    <span id="account-chip" class="hidden items-center gap-2 text-xs text-steel uppercase tracking-widest">
+                        <span id="account-avatar" class="w-6 h-6 rounded-full overflow-hidden border border-seam inline-flex items-center justify-center"></span>
+                        <span id="account-name"></span>
+                    </span>
+                </div>
             </div>
-            <div class="ml-auto flex items-center gap-3">
-                <span class="text-xs text-muted" id="overall-progress">0 / 0 sets</span>
-                <button id="reset-btn" class="text-xs text-muted hover:text-label border border-surface-border rounded px-2.5 py-1 transition-colors hover:border-muted">
-                    Reset
-                </button>
-            </div>
-        </div>
-        <div class="h-0.5 bg-surface-raised">
-            <div id="global-progress-bar" class="h-full bg-accent transition-all duration-500" style="width: 0%"></div>
+            <nav id="main-tabs" class="mt-3 flex gap-6 text-sm font-semibold uppercase tracking-widest">
+                <a href="#/" data-tab="list" class="tab-link pb-1.5">Workouts</a>
+                <a href="#/history" data-tab="history" class="tab-link pb-1.5">History</a>
+                <a href="#/library" data-tab="library" class="tab-link pb-1.5">Exercises</a>
+            </nav>
         </div>
     </header>
 
-    <!-- MAIN -->
-    <main class="max-w-2xl mx-auto px-5 py-6 space-y-4" id="exercise-list">
-    </main>
-
-    <!-- DONE BANNER -->
-    <div id="done-banner" class="hidden max-w-2xl mx-auto px-5 pb-8">
-        <div class="rounded-xl border border-success/30 bg-success/5 px-5 py-4 text-center">
-            <p class="text-success font-semibold text-sm">Session complete</p>
-            <p class="text-muted text-xs mt-1">Good work. All sets logged.</p>
-            <div id="session-summary" class="mt-4 space-y-1 text-left text-xs text-muted"></div>
+    <!-- DEMO BANNER -->
+    <div id="demo-banner" class="hidden border-b border-seam bg-plate">
+        <div class="max-w-3xl mx-auto px-5 py-2.5 flex items-center gap-3 text-sm">
+            <i class="fas fa-eye text-ember"></i>
+            <span class="text-steel">You're viewing Domen's workouts. Progress won't be saved.</span>
+            <a id="demo-signin" href="#" class="ml-auto whitespace-nowrap font-semibold uppercase tracking-widest text-xs text-ember hover:text-chalk transition-colors">Sign in <i class="fas fa-arrow-right text-[10px]"></i></a>
         </div>
     </div>
 
+    <main class="max-w-3xl mx-auto px-5 py-8">
+
+        <!-- LIST -->
+        <section id="screen-list" class="screen">
+            <div class="flex items-end justify-between gap-4">
+                <h2 class="font-display font-black text-5xl uppercase tracking-wide leading-none">The plan</h2>
+                <button id="new-workout-btn" data-action="new-workout" class="shrink-0 font-semibold uppercase tracking-widest text-xs border border-seam hover:border-ember hover:text-ember rounded-sm px-4 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-seam disabled:hover:text-chalk">
+                    <i class="fas fa-plus mr-1"></i> New workout
+                </button>
+            </div>
+            <div id="workout-rows" class="mt-6 border-y border-seam divide-y divide-seam"></div>
+            <p id="list-empty" class="hidden mt-10 text-center text-steel text-sm uppercase tracking-widest">No workouts yet. Build your first one.</p>
+        </section>
+
+        <!-- PLAYER -->
+        <section id="screen-player" class="screen">
+            <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <h2 id="player-title" class="font-display font-black text-5xl uppercase tracking-wide leading-none truncate"></h2>
+                    <p id="player-meta" class="text-steel text-xs uppercase tracking-widest mt-2"></p>
+                </div>
+                <button id="player-reset" data-action="player-reset" class="shrink-0 text-xs font-semibold uppercase tracking-widest text-steel hover:text-chalk border border-seam hover:border-steel rounded-sm px-3 py-1.5 transition-colors">Reset</button>
+            </div>
+
+            <div class="mt-5 flex items-center gap-3">
+                <div class="flex-1 h-4 bg-plate border border-seam overflow-hidden">
+                    <div id="player-progress-bar" class="hazard h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <span id="player-progress-label" class="font-display font-bold text-lg tabular-nums whitespace-nowrap">0 / 0</span>
+            </div>
+
+            <div id="player-cards" class="mt-6 space-y-5"></div>
+
+            <div id="done-banner" class="hidden mt-8">
+                <div class="stamp-block border-2 border-ember px-6 py-6 text-center relative overflow-hidden">
+                    <p class="font-display font-black text-4xl uppercase tracking-wider text-ember">Session complete</p>
+                    <p class="text-steel text-sm mt-1">Good work. Every set logged.</p>
+                    <div id="summary" class="mt-5 space-y-1.5 text-left text-sm"></div>
+                    <div class="mt-6 flex justify-center gap-3">
+                        <button id="finish-btn" data-action="finish" class="font-display font-bold uppercase tracking-widest bg-ember hover:bg-ember-dim text-iron px-6 py-2.5 transition-colors">Finish &amp; save</button>
+                        <a href="#/" id="done-home" class="hidden font-semibold uppercase tracking-widest text-xs border border-seam hover:border-ember hover:text-ember rounded-sm px-4 py-2 transition-colors self-center">Back to workouts</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HISTORY -->
+        <section id="screen-history" class="screen">
+            <h2 class="font-display font-black text-5xl uppercase tracking-wide leading-none">The log</h2>
+            <div id="session-rows" class="mt-6 border-y border-seam divide-y divide-seam"></div>
+            <p id="history-empty" class="hidden mt-10 text-center text-steel text-sm uppercase tracking-widest">Nothing logged yet. Go lift something.</p>
+        </section>
+
+        <!-- LIBRARY -->
+        <section id="screen-library" class="screen">
+            <div class="flex items-end justify-between gap-4">
+                <h2 class="font-display font-black text-5xl uppercase tracking-wide leading-none">The rack</h2>
+                <button id="new-exercise-btn" data-action="new-exercise" class="shrink-0 font-semibold uppercase tracking-widest text-xs border border-seam hover:border-ember hover:text-ember rounded-sm px-4 py-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-seam disabled:hover:text-chalk">
+                    <i class="fas fa-plus mr-1"></i> New exercise
+                </button>
+            </div>
+            <div id="exercise-rows" class="mt-6 border-y border-seam divide-y divide-seam"></div>
+            <p id="library-empty" class="hidden mt-10 text-center text-steel text-sm uppercase tracking-widest">No exercises yet. Add the moves you actually do.</p>
+        </section>
+    </main>
+
+    <!-- WORKOUT EDITOR MODAL -->
+    <div id="workout-modal" class="modal fixed inset-0 z-50 items-start justify-center overflow-y-auto bg-iron/80 backdrop-blur-sm p-4 md:p-8">
+        <div class="w-full max-w-2xl bg-plate border border-seam my-4">
+            <div class="px-6 py-4 border-b border-seam flex items-center justify-between">
+                <h3 id="w-title" class="font-display font-black text-2xl uppercase tracking-wide">New workout</h3>
+                <button data-action="close-workout-modal" class="text-steel hover:text-chalk transition-colors" aria-label="Close"><i class="fas fa-xmark text-lg"></i></button>
+            </div>
+            <div class="px-6 py-5 space-y-5">
+                <div>
+                    <label for="w-name" class="block text-xs font-semibold uppercase tracking-widest text-steel mb-1.5">Name</label>
+                    <input id="w-name" type="text" maxlength="100" class="w-full bg-iron border border-seam focus:border-ember outline-none px-3 py-2 text-chalk font-display font-bold text-xl uppercase tracking-wide" placeholder="Push day">
+                </div>
+                <div>
+                    <label for="w-desc" class="block text-xs font-semibold uppercase tracking-widest text-steel mb-1.5">Description <span class="normal-case font-normal">(optional)</span></label>
+                    <input id="w-desc" type="text" maxlength="500" class="w-full bg-iron border border-seam focus:border-ember outline-none px-3 py-2 text-sm" placeholder="What is this workout for?">
+                </div>
+                <div>
+                    <span class="block text-xs font-semibold uppercase tracking-widest text-steel mb-1.5">Rounds</span>
+                    <div class="inline-flex items-center border border-seam">
+                        <button data-action="rounds-step" data-dir="-1" class="px-3 py-1.5 text-steel hover:text-ember transition-colors" aria-label="Fewer rounds">&minus;</button>
+                        <span id="w-rounds" class="font-display font-bold text-xl tabular-nums w-10 text-center">3</span>
+                        <button data-action="rounds-step" data-dir="1" class="px-3 py-1.5 text-steel hover:text-ember transition-colors" aria-label="More rounds">+</button>
+                    </div>
+                    <span class="ml-3 text-xs text-steel uppercase tracking-widest">passes over every exercise</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-semibold uppercase tracking-widest text-steel mb-1.5">Exercises</span>
+                    <div id="w-items" class="space-y-2"></div>
+                    <div class="mt-3 flex items-center gap-2">
+                        <select id="w-add-select" class="flex-1 bg-iron border border-seam focus:border-ember outline-none px-3 py-2 text-sm"></select>
+                        <button data-action="add-item" class="font-semibold uppercase tracking-widest text-xs border border-seam hover:border-ember hover:text-ember px-3 py-2 transition-colors">Add</button>
+                        <button data-action="new-exercise-inline" class="font-semibold uppercase tracking-widest text-xs text-steel hover:text-ember px-2 py-2 transition-colors" title="Create a new exercise">+ New</button>
+                    </div>
+                </div>
+                <ul id="w-errors" class="hidden text-sm text-ember space-y-1"></ul>
+            </div>
+            <div class="px-6 py-4 border-t border-seam flex justify-end gap-3">
+                <button data-action="close-workout-modal" class="font-semibold uppercase tracking-widest text-xs text-steel hover:text-chalk px-4 py-2 transition-colors">Cancel</button>
+                <button id="w-save" data-action="save-workout" class="font-display font-bold uppercase tracking-widest bg-ember hover:bg-ember-dim text-iron px-6 py-2 transition-colors disabled:opacity-50">Save workout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXERCISE MODAL -->
+    <div id="exercise-modal" class="modal fixed inset-0 z-50 items-start justify-center overflow-y-auto bg-iron/80 backdrop-blur-sm p-4 md:p-8">
+        <div class="w-full max-w-lg bg-plate border border-seam my-4">
+            <div class="px-6 py-4 border-b border-seam flex items-center justify-between">
+                <h3 id="e-title" class="font-display font-black text-2xl uppercase tracking-wide">New exercise</h3>
+                <button data-action="close-exercise-modal" class="text-steel hover:text-chalk transition-colors" aria-label="Close"><i class="fas fa-xmark text-lg"></i></button>
+            </div>
+            <div class="px-6 py-5 space-y-5">
+                <div>
+                    <label for="e-name" class="block text-xs font-semibold uppercase tracking-widest text-steel mb-1.5">Name</label>
+                    <input id="e-name" type="text" maxlength="100" class="w-full bg-iron border border-seam focus:border-ember outline-none px-3 py-2 text-chalk font-display font-bold text-xl uppercase tracking-wide" placeholder="Push-ups">
+                </div>
+                <div>
+                    <label for="e-type" class="block text-xs font-semibold uppercase tracking-widest text-steel mb-1.5">Type</label>
+                    <select id="e-type" class="w-full bg-iron border border-seam focus:border-ember outline-none px-3 py-2 text-sm">
+                        <option value="reps">Reps: count them (push-ups, pull-ups)</option>
+                        <option value="weighted">Weighted: reps at a weight (bench, squat)</option>
+                        <option value="time">Time: hold or duration (plank, hang)</option>
+                        <option value="distance">Distance: meters and pace (runs)</option>
+                    </select>
+                    <p id="e-type-hint" class="hidden text-xs text-steel mt-1.5">Type is locked once created. To change it, make a new exercise.</p>
+                </div>
+                <div>
+                    <label for="e-icon" class="block text-xs font-semibold uppercase tracking-widest text-steel mb-1.5">Icon <span class="normal-case font-normal">(optional)</span></label>
+                    <div id="e-icon-presets" class="flex flex-wrap gap-1.5 mb-2"></div>
+                    <input id="e-icon" type="text" maxlength="50" class="w-full bg-iron border border-seam focus:border-ember outline-none px-3 py-2 text-sm font-mono" placeholder="fas fa-dumbbell">
+                </div>
+                <div>
+                    <label for="e-note" class="block text-xs font-semibold uppercase tracking-widest text-steel mb-1.5">Note <span class="normal-case font-normal">(optional)</span></label>
+                    <input id="e-note" type="text" maxlength="500" class="w-full bg-iron border border-seam focus:border-ember outline-none px-3 py-2 text-sm" placeholder="Form cue, rest hint...">
+                </div>
+                <ul id="e-errors" class="hidden text-sm text-ember space-y-1"></ul>
+            </div>
+            <div class="px-6 py-4 border-t border-seam flex justify-end gap-3">
+                <button data-action="close-exercise-modal" class="font-semibold uppercase tracking-widest text-xs text-steel hover:text-chalk px-4 py-2 transition-colors">Cancel</button>
+                <button id="e-save" data-action="save-exercise" class="font-display font-bold uppercase tracking-widest bg-ember hover:bg-ember-dim text-iron px-6 py-2 transition-colors disabled:opacity-50">Save exercise</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-plate border border-ember text-chalk text-sm px-5 py-2.5 pointer-events-none"></div>
+
     <script src="../../components/back-link.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

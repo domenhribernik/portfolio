@@ -1,15 +1,94 @@
-.set-row.done {
-    opacity: 0.55;
+/* Only what Tailwind can't express: grain texture, hazard stripes, keyframes,
+   JS-toggled state classes. Everything else is utility classes in index.html
+   and script.js. */
+
+/* base-style.css paints body with a navy gradient shorthand that outranks
+   Tailwind's bg-iron background-color; reassert the iron slab here. */
+body { background: #0f0e0c; }
+
+/* Faint grain over the whole page so the iron background reads as material,
+   not flat black. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image:
+        repeating-linear-gradient(115deg, rgba(236, 232, 225, 0.02) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(25deg, rgba(0, 0, 0, 0.25) 0 1px, transparent 1px 4px);
+}
+/* Keep page chrome above the grain overlay. The fixed-position layers (modals,
+   toast) already sit above it via their own z-index utilities; do NOT add them
+   here or the ID/class selector would override Tailwind's `fixed`. */
+header, main, #demo-banner { position: relative; z-index: 1; }
+
+/* Screens: hash router toggles .active. */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* Modals: JS toggles .open. */
+.modal { display: none; }
+.modal.open { display: flex; }
+
+/* Nav tabs: router stamps .active on the current one. */
+.tab-link { color: #6f6a61; border-bottom: 2px solid transparent; transition: color 0.15s; }
+.tab-link:hover { color: #ece8e1; }
+.tab-link.active { color: #ece8e1; border-bottom-color: #ff4d00; }
+
+/* Hazard-striped progress fill. */
+.hazard {
+    background: repeating-linear-gradient(
+        -45deg,
+        #ff4d00 0 10px,
+        #c23a00 10px 20px
+    );
+    background-size: 28px 28px;
+}
+#player-progress-bar.full { animation: hazard-slide 1.2s linear infinite; }
+
+@keyframes hazard-slide {
+    from { background-position: 0 0; }
+    to   { background-position: 28px 0; }
 }
 
-.rep-btn:active {
-    transform: scale(0.92);
+/* Staggered load reveal for list rows and player cards (script sets
+   animation-delay inline). */
+.reveal { animation: rise-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@keyframes rise-in {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.exercise-card {
-    transition: border-color 0.2s;
+/* Done toggle: chalk-on-ember stamp slams in. */
+.set-row .done-toggle { transition: border-color 0.15s, color 0.15s; }
+.set-row.done { opacity: 0.6; }
+.set-row.done .done-toggle { animation: stamp 0.25s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+
+@keyframes stamp {
+    0%   { transform: scale(1.6) rotate(-8deg); }
+    100% { transform: scale(1) rotate(0deg); }
 }
 
-.exercise-card.all-done {
-    border-color: #22c55e33;
+.exercise-card { transition: border-color 0.2s; }
+.exercise-card.all-done { border-color: rgba(255, 77, 0, 0.55); }
+
+/* Countdown running on a time-type row. */
+.set-row.counting .count-value { color: #ff4d00; animation: count-pulse 1s ease-in-out infinite; }
+
+@keyframes count-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.45; }
+}
+
+/* Toast: JS toggles .show. */
+#toast { opacity: 0; transform: translate(-50%, 8px); transition: opacity 0.2s, transform 0.2s; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal, .set-row.done .done-toggle, .set-row.counting .count-value,
+    #player-progress-bar.full { animation: none; }
+    #player-progress-bar { transition: none; }
 }
