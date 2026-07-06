@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -34,7 +35,7 @@
     <!-- HEADER -->
     <header class="sticky top-0 z-50 bg-surface/95 backdrop-blur-sm border-b border-surface-border">
         <div class="max-w-2xl mx-auto px-5 py-4 flex items-center gap-4">
-            <a href="../../" class="text-muted hover:text-label transition-colors text-lg">
+            <a id="back-link" href="../../" class="text-muted hover:text-label transition-colors text-lg">
                 <i class="fas fa-arrow-left"></i>
             </a>
             <div>
@@ -66,6 +67,7 @@
         </div>
     </div>
 
+    <script src="../../components/back-link.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
