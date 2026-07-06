@@ -5,8 +5,8 @@
    homepage and never leaks into the rest of the site. Tailwind in
    index.html handles layout/spacing; this file keeps what Tailwind
    can't cleanly express: the hero animations, cursor blobs, the
-   running marquee, the poster grid, grain, and the punched-up
-   cards / section headers.
+   running marquee, the poster grid, grain, the projects index
+   rows, and the contact composition.
    ============================================================ */
 
 .kinetic {
@@ -19,7 +19,6 @@
 
 /* Display + label faces override the editorial Fraunces on this page */
 .kinetic .section-title,
-.kinetic .project-title,
 .kinetic .otd-title,
 .kinetic .gallery-title,
 .kinetic .apod-main-title,
@@ -392,142 +391,293 @@
 }
 
 /* ============================================================
-   PROJECT CARDS — editorial catalogue with a colour-flood hover.
-   Scoped with `body.kinetic ...` so they beat the base-style
-   `body.editorial .project-card` rules (same specificity, loaded
-   later) instead of silently losing to them (which is what made
-   the titles fall back to serif/Times New Roman).
-   Per-card accent cycles clay -> cobalt -> pine.
+   PROJECTS INDEX (rendered by <projects-index>)
+   Magazine table-of-contents rows: title, one-line description,
+   secondary-link chips, springing arrow. The whole row is one tap
+   target (a stretched .pindex__cover link), so nothing depends on
+   hover to be usable; on desktop pointers the title letters wipe
+   to the row's accent (a background-clip: text sweep), the row's
+   rule turns accent, and a tilted icon stamp follows the cursor
+   (positioned by projects-index.js).
+   Accent cycles clay -> cobalt -> pine, set inline per row.
    ============================================================ */
-body.kinetic .projects-grid {
-    counter-reset: proj;
-    gap: 1.25rem;
+.pindex {
+    display: block;
 }
 
-body.kinetic .project-card {
-    --acc: var(--clay);
-    position: relative;
-    counter-increment: proj;
+.pindex__head {
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    isolation: isolate;
-    background: var(--card);
-    border: 1.5px solid rgba(28, 26, 23, 0.16);
-    border-radius: 3px;
-    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-                box-shadow 0.22s ease, border-color 0.22s ease;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-body.kinetic .project-card:nth-child(3n+1) { --acc: var(--clay); }
-body.kinetic .project-card:nth-child(3n+2) { --acc: var(--cobalt); }
-body.kinetic .project-card:nth-child(3n)   { --acc: var(--pine); }
-
-body.kinetic .project-card:hover {
-    transform: translate(-5px, -5px);
-    border-color: var(--ink);
-    box-shadow: 9px 9px 0 var(--acc);
-}
-
-/* Catalogue index, top-left (badge lives top-right) */
-body.kinetic .project-card::after {
-    content: counter(proj, decimal-leading-zero);
-    position: absolute;
-    top: 0.5rem;
-    left: 0.85rem;
-    z-index: 3;
-    font-family: 'Bricolage Grotesque', sans-serif;
-    font-weight: 800;
-    font-size: 1.4rem;
-    line-height: 1;
-    color: transparent;
-    -webkit-text-stroke: 1.4px rgba(28, 26, 23, 0.32);
-    transition: color 0.25s ease, -webkit-text-stroke-color 0.25s ease;
-    pointer-events: none;
-}
-
-body.kinetic .project-card:hover::after {
-    color: var(--paper);
-    -webkit-text-stroke-color: var(--paper);
-}
-
-/* Icon panel + the rising colour flood */
-body.kinetic .project-image {
-    position: relative;
-    height: 156px;
-    background: var(--paper-2);
-    border-bottom: 1.5px solid rgba(28, 26, 23, 0.16);
-    overflow: hidden;
-    transition: border-color 0.22s ease;
-}
-
-body.kinetic .project-image::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: var(--acc);
-    transform: translateY(101%);
-    transition: transform 0.36s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-body.kinetic .project-card:hover .project-image { border-color: var(--ink); }
-body.kinetic .project-card:hover .project-image::before { transform: translateY(0); }
-
-body.kinetic .project-image .project-image-background {
-    position: relative;
-    z-index: 2;
-    color: var(--ink);
-    font-size: 2.5rem;
-    transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease;
-}
-
-body.kinetic .project-card:hover .project-image-background {
-    color: var(--paper);
-    transform: scale(1.14) rotate(-5deg);
-}
-
-/* Badge: square mono tag */
-body.kinetic .project-badge {
-    background: var(--ink);
-    color: var(--paper);
-    border-radius: 0;
+.pindex__cat {
     font-family: 'Space Mono', monospace;
-    letter-spacing: 0.08em;
-    z-index: 3;
-}
-
-/* Content */
-body.kinetic .project-content {
-    padding: 1.4rem 1.5rem 1.6rem;
-}
-
-body.kinetic .project-content .project-title {
-    font-family: 'Bricolage Grotesque', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: -0.01em;
-    font-size: 1.18rem;
-    line-height: 1.12;
-    color: var(--ink);
-    transition: color 0.25s ease;
+    letter-spacing: 0.2em;
+    font-size: 0.72rem;
+    color: var(--stone);
 }
 
-body.kinetic .project-card:hover .project-content .project-title {
-    color: var(--acc);
+.pindex__rule {
+    flex: 1;
+    height: 1.5px;
+    background: rgba(28, 26, 23, 0.16);
 }
 
-body.kinetic .project-link {
+.pindex__count {
     font-family: 'Space Mono', monospace;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.05em;
-    border-bottom-width: 2px;
+    font-size: 0.72rem;
+    color: var(--stone);
+}
+
+.pindex__count::before {
+    content: '/ ';
+}
+
+.pindex__row {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.15rem 0.9rem 1.15rem 0.35rem;
+    border-bottom: 1.5px solid rgba(28, 26, 23, 0.16);
+    transition: border-color 0.3s ease;
+}
+
+.pindex__row--hidden {
+    display: none;
+}
+
+.pindex__row:hover,
+.pindex__row:focus-within {
     border-bottom-color: var(--acc);
 }
 
-body.kinetic .project-link:hover {
+/* Stretched link: the row's single tap target. Text layers above it
+   are pointer-events:none so clicks fall through; chips opt back in. */
+.pindex__cover {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.pindex__body,
+.pindex__meta {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.pindex__body {
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pindex__title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    font-size: clamp(1.25rem, 2.4vw, 1.85rem);
+    line-height: 1.08;
+    color: var(--ink);
+}
+
+/* Accent wipe: the title is painted by an oversized two-stop gradient
+   clipped to the glyphs; hover slides it so the letters flood with the
+   row accent, left to right. box-decoration-break keeps the sweep
+   continuous when a long title wraps. */
+.pindex__title-text {
+    background-image: linear-gradient(90deg, var(--acc) 0 50%, var(--ink) 50% 100%);
+    background-size: 205% 100%;
+    background-position: 100% 0;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-box-decoration-break: slice;
+    box-decoration-break: slice;
+    transition: background-position 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.pindex__row:hover .pindex__title-text,
+.pindex__row:focus-within .pindex__title-text {
+    background-position: 0 0;
+}
+
+.pindex__badge {
+    display: inline-block;
+    vertical-align: 0.35em;
+    margin-left: 0.7rem;
+    padding: 0.22em 0.6em;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.52rem;
+    letter-spacing: 0.14em;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+
+.pindex__desc {
+    margin-top: 0.4rem;
+    max-width: 62ch;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--stone);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.25s ease;
+}
+
+.pindex__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.pindex__chip {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    padding: 0.42em 0.8em;
+    border: 1.5px solid rgba(28, 26, 23, 0.45);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.62rem;
+    color: var(--ink);
+    text-decoration: none;
+    background: transparent;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.pindex__chip:hover {
+    background: var(--paper);
+    border-color: var(--paper);
+    color: var(--ink);
+}
+
+.pindex__arrow {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 1;
     color: var(--acc);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.25s ease;
+}
+
+/* Hover / keyboard-focus: letters wipe to accent, body nudges right,
+   arrow springs. Quiet everywhere else. */
+.pindex__row:hover .pindex__body,
+.pindex__row:focus-within .pindex__body {
+    transform: translateX(0.45rem);
+}
+
+.pindex__row:hover .pindex__badge,
+.pindex__row:focus-within .pindex__badge {
+    background: var(--acc);
+}
+
+.pindex__row:hover .pindex__arrow,
+.pindex__row:focus-within .pindex__arrow {
+    transform: translate(4px, -4px);
+}
+
+/* Touch: a quick accent wipe while the row is pressed */
+@media (hover: none) {
+    .pindex__title-text {
+        transition-duration: 0.18s;
+    }
+
+    .pindex__row:active .pindex__title-text { background-position: 0 0; }
+    .pindex__row:active { border-bottom-color: var(--acc); }
+}
+
+/* Show More toggle (created by projects-index.js) */
+.pindex__more {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.6em;
+    margin-top: 1.1rem;
+    padding: 0 0 3px;
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    color: var(--ink);
+}
+
+.pindex__more i {
+    font-style: normal;
+    color: var(--clay);
+}
+
+.pindex__more::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 1.5px;
+    width: 100%;
+    background: var(--clay);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.pindex__more:hover::after {
+    transform: scaleX(1);
+}
+
+/* Cursor stamp: outer element is positioned each frame by JS, the
+   inner card owns the CSS show/hide transition so the two never
+   fight over `transform`. */
+.pindex-stamp {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    pointer-events: none;
+}
+
+.pindex-stamp__card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 74px;
+    height: 74px;
+    margin: 1.4rem 0 0 1.6rem;
+    /* Paper card, accent icon: the row underneath is always flooded with
+       the accent while the stamp shows, so paper guarantees contrast. */
+    background: var(--paper);
+    color: var(--acc, var(--clay));
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+    box-shadow: 6px 6px 0 rgba(28, 26, 23, 0.85);
+    font-size: 1.7rem;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.55);
+    transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+                background 0.2s ease;
+}
+
+.pindex-stamp.is-on .pindex-stamp__card {
+    opacity: 1;
+    transform: rotate(-8deg) scale(1);
 }
 
 /* ============================================================
@@ -670,13 +820,6 @@ body.kinetic .project-link:hover {
     gap: 0.85rem;
 }
 
-.kinetic .show-more-btn {
-    font-family: 'Space Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.78rem;
-}
-
 /* Social buttons get the hard-shadow treatment */
 .kinetic .social-btn:hover {
     transform: translate(-2px, -2px);
@@ -729,43 +872,51 @@ html:has(body.kinetic)::-webkit-scrollbar-corner {
 
 /* ============================================================
    MOBILE COMPOSITION
-   Keep the projects two-up on phones so the list stays scannable
-   instead of collapsing into one tall, scroll-heavy column.
+   Index rows compress: tighter grid, chips tuck under the arrow.
+   No hover anywhere on phones; the :active accent wipe above is
+   the whole touch story.
    ============================================================ */
 @media (max-width: 640px) {
-    body.kinetic .projects-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .pindex__row {
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 0.7rem;
+        padding: 0.9rem 0.2rem;
     }
 
-    body.kinetic .project-image { height: 92px; }
-    body.kinetic .project-image .project-image-background { font-size: 1.6rem; }
-    body.kinetic .project-card::after { font-size: 1rem; top: 0.4rem; left: 0.6rem; }
+    .pindex__title {
+        font-size: 1.05rem;
+    }
 
-    body.kinetic .project-content { padding: 0.85rem 0.9rem 1rem; }
-    body.kinetic .project-content .project-title { font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .pindex__badge {
+        margin-left: 0.45rem;
+        font-size: 0.46rem;
+    }
 
-    body.kinetic .project-description {
+    .pindex__desc {
         font-size: 0.78rem;
         line-height: 1.45;
-        margin-bottom: 0.8rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        margin-top: 0.3rem;
     }
 
-    body.kinetic .project-link { font-size: 0.62rem; }
+    .pindex__meta {
+        flex-direction: column-reverse;
+        align-items: flex-end;
+        gap: 0.55rem;
+    }
+
+    .pindex__chip {
+        font-size: 0.54rem;
+        padding: 0.35em 0.6em;
+    }
+
+    .pindex__arrow {
+        font-size: 1.15rem;
+    }
 
     .kinetic-info {
         min-height: 0;
         gap: 1.4rem;
         padding: 1.4rem 1.45rem;
-    }
-
-    body.kinetic .project-badge {
-        font-size: 0.52rem;
-        padding: 0.15rem 0.45rem;
     }
 }
 
@@ -793,5 +944,16 @@ html:has(body.kinetic)::-webkit-scrollbar-corner {
 
     .kinetic-blob {
         opacity: 0.32 !important;
+    }
+
+    .pindex__title-text,
+    .pindex__body,
+    .pindex__arrow {
+        transition: none !important;
+    }
+
+    /* projects-index.js also never creates the stamp under reduced motion */
+    .pindex-stamp {
+        display: none !important;
     }
 }

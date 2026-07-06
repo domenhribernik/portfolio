@@ -1,9 +1,8 @@
 /* ============================================================
    Homepage-only styles. Layout/colour is handled by Tailwind in
-   index.html and the editorial card styles in base-style.css.
-   This file keeps only what Tailwind can't cleanly express:
-   the scroll-reveal, the JS-generated code-stats bars, and the
-   JS-generated "Show More" button.
+   index.html; the projects index and contact styles live in
+   kinetic.css. This file keeps only what Tailwind can't cleanly
+   express: the scroll-reveal and the JS-generated code-stats bars.
    ============================================================ */
 
 /* ---- Hero corner label: nudged up to clear the chat widget ---- */
@@ -219,38 +218,4 @@
         transform: none;
         transition: none;
     }
-}
-
-/* ---- Show More button (created by script.js) ---- */
-.show-more-btn {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 1.5rem;
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    color: var(--ink);
-    background: none;
-    border: none;
-    cursor: pointer;
-    position: relative;
-    padding-bottom: 3px;
-}
-
-.show-more-btn::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    height: 1px;
-    width: 100%;
-    background: var(--clay);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-}
-
-.show-more-btn:hover::after {
-    transform: scaleX(1);
 }

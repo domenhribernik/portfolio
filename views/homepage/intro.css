@@ -1,0 +1,458 @@
+/* ============================================================
+   HOMEPAGE INTRO: kinetic poster opening + shared-element hand-off.
+
+   Sequence (driven by intro.js, ~2.3s total):
+     1. Ink-black poster field with mono coordinates and a hairline
+        progress bar. A slot reel rolls through greetings in the
+        site's translate languages.
+     2. The name stamps in on two lines, set EXACTLY like the hero
+        headline (same face, size, tracking, line cropping).
+     3. The ink lifts away in staggered column wipes, revealing the
+        live hero underneath; the name flips from cream to ink.
+     4. The name FLIP-travels from center stage into the hero
+        headline's real position and hands off to the actual
+        letters 1:1, then the overlay leaves the document.
+
+   State contract:
+     html.preload      set pre-paint by the inline head script
+     html.intro-done   added at the wipe; watched by peel.js
+     html.intro-morph  full-motion runs only: holds the hero title
+                       letters invisible so the traveling name can
+                       hand off to them (stays on html for good)
+     html.intro-landed hero letters take over, entrance rise skipped
+                       (also permanent; removing it would replay the
+                       per-letter animation)
+   Overlay-local states: .is-on .is-name .is-wipe .is-travel
+   .is-done .is-calm (reduced motion). Pairs with intro.js.
+
+   Pace: every choreography duration below is multiplied by
+   --intro-speed, set on <html> by the SPEED knob at the top of
+   intro.js. Tune the pace there, not here.
+   ============================================================ */
+
+.intro {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    overflow: hidden;
+    pointer-events: all;
+    /* Solid ink backing: on fractional-device-pixel displays (125%
+       scaling etc.) hairline cracks open between the flex columns and
+       whatever is underneath shines through as bright vertical seams.
+       With the root painted ink, a crack just shows more ink. */
+    background: var(--ink);
+}
+
+/* The backing must vanish the instant the columns start lifting; they
+   still fully cover the viewport on that first frame, so no flash. */
+.intro.is-wipe {
+    background: transparent;
+}
+
+.intro[hidden] {
+    display: none !important;
+}
+
+/* Once the wipe starts the hero is live underneath: let clicks through */
+.intro.is-wipe {
+    pointer-events: none;
+}
+
+/* ---- Ink columns: the background itself, lifted off at the wipe ---- */
+.intro__cols {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+}
+
+.intro__col {
+    flex: 1;
+    background: var(--ink);
+    /* translateZ(0) + hidden backface: rasterize each column on the
+       device pixel grid (the site-wide seam fix, see CLAUDE.md), and
+       a 1px overlap so no crack can open between columns mid-wipe. */
+    transform: translateY(0) translateZ(0);
+    backface-visibility: hidden;
+    transition: transform calc(0.62s * var(--intro-speed, 1)) cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+.intro__col:not(:first-child) {
+    margin-left: -1px;
+}
+
+.intro__col:nth-child(2) { transition-delay: calc(0.05s * var(--intro-speed, 1)); }
+.intro__col:nth-child(3) { transition-delay: calc(0.10s * var(--intro-speed, 1)); }
+.intro__col:nth-child(4) { transition-delay: calc(0.15s * var(--intro-speed, 1)); }
+.intro__col:nth-child(5) { transition-delay: calc(0.20s * var(--intro-speed, 1)); }
+.intro__col:nth-child(6) { transition-delay: calc(0.25s * var(--intro-speed, 1)); }
+
+.intro.is-wipe .intro__col {
+    transform: translateY(-101%) translateZ(0);
+}
+
+/* ---- Faint poster grid, echoes the hero's .kinetic-grid ---- */
+.intro__grid {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    background-image: linear-gradient(to right, rgba(246, 242, 234, 0.06) 1px, transparent 1px);
+    background-size: calc(100% / 6) 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 82%, transparent);
+            mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 82%, transparent);
+}
+
+.intro.is-on .intro__grid {
+    opacity: 1;
+}
+
+/* ---- Film grain over the ink (screen blend so it reads on black) ---- */
+.intro__grain {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0.12;
+    mix-blend-mode: screen;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* ---- Corner chrome: Space Mono coordinates ---- */
+.intro__frame {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: clamp(0.58rem, 1.5vw, 0.72rem);
+    color: rgba(246, 242, 234, 0.75);
+}
+
+.intro__corner {
+    position: absolute;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.intro__corner--tl { top: clamp(1.3rem, 3.5vw, 2.6rem); left: clamp(1.3rem, 3.5vw, 2.6rem); display: inline-flex; align-items: center; gap: 0.6rem; color: var(--paper); font-weight: 700; }
+.intro__corner--tr { top: clamp(1.3rem, 3.5vw, 2.6rem); right: clamp(1.3rem, 3.5vw, 2.6rem); }
+.intro__corner--bl { bottom: clamp(1.3rem, 3.5vw, 2.6rem); left: clamp(1.3rem, 3.5vw, 2.6rem); }
+.intro__corner--br { bottom: clamp(1.3rem, 3.5vw, 2.6rem); right: clamp(1.3rem, 3.5vw, 2.6rem); }
+
+.intro.is-on .intro__corner--tl { opacity: 1; transform: none; }
+.intro.is-on .intro__corner--tr { opacity: 1; transform: none; transition-delay: 0.06s; }
+.intro.is-on .intro__corner--bl { opacity: 1; transform: none; transition-delay: 0.12s; }
+.intro.is-on .intro__corner--br { opacity: 1; transform: none; transition-delay: 0.18s; }
+
+.intro__blink {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--cobalt);
+    animation: introBlink 1.2s steps(1) infinite;
+}
+
+/* The reel index ticks 01..06 as the beats land */
+.intro__corner--bl {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Progress hairline along the very bottom ---- */
+.intro__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    z-index: 4;
+    background: rgba(246, 242, 234, 0.12);
+    transition: opacity 0.3s ease;
+}
+
+.intro__bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--clay);
+    transform: scaleX(0);
+    transform-origin: left center;
+    /* transition is set by intro.js so it always matches the beat sheet */
+}
+
+/* ---- Center stage: greeting reel + the name, stacked ---- */
+.intro__center {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+}
+
+.intro__slot {
+    grid-area: 1 / 1;
+    overflow: hidden;
+    /* 1.3em boxes leave headroom for diacritics (the Z caron clips at
+       tighter heights). intro.js steps the reel by this same value. */
+    height: 1.3em;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-size: clamp(2.6rem, 9vw, 7rem);
+    color: var(--paper);
+    /* Hidden until is-on: the sequence starts after the display font
+       resolves, so the first greeting never paints in a fallback face */
+    opacity: 0;
+    transition: opacity calc(0.2s * var(--intro-speed, 1)) ease, transform calc(0.2s * var(--intro-speed, 1)) ease;
+}
+
+.intro.is-on .intro__slot {
+    opacity: 1;
+}
+
+/* Must out-order the is-on rule above: both match once the reel ends */
+.intro.is-name .intro__slot {
+    opacity: 0;
+    transform: translateY(-0.4em);
+}
+
+.intro__reel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform calc(0.19s * var(--intro-speed, 1)) cubic-bezier(0.7, 0, 0.2, 1);
+    will-change: transform;
+}
+
+.intro__word {
+    height: 1.3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* Each greeting signs off with a different ink from the poster palette */
+.intro__word i { font-style: normal; }
+.intro__word:nth-child(1) i { color: var(--clay); }
+.intro__word:nth-child(2) i { color: var(--marigold); }
+.intro__word:nth-child(3) i { color: var(--pine); }
+.intro__word:nth-child(4) i { color: var(--cobalt); }
+.intro__word:nth-child(5) i { color: var(--clay); }
+
+/* ---- The name: metrics cloned from .leaf.kinetic-hero .kinetic-title
+   so the FLIP travel can dock onto the real headline glyph for glyph.
+   Kerning and ligatures are off because the hero sets every letter in
+   its own span (which suppresses both); widths must match exactly. ---- */
+.intro__name {
+    grid-area: 1 / 1;
+    width: max-content;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.84;
+    letter-spacing: -0.035em;
+    font-size: clamp(3.4rem, 14vw, 13rem);
+    font-kerning: none;
+    font-feature-settings: 'kern' 0, 'liga' 0;
+    color: var(--paper);
+    transform-origin: top left;
+    will-change: transform;
+    /* The color delay matters: the flip to ink is triggered at the wipe
+       but must not land while the still-ink columns sit under the name,
+       or it goes dark on dark. 0.3s in, the columns have cleared the
+       center band and the name takes its ink mid-flight over paper. */
+    transition: color calc(0.3s * var(--intro-speed, 1)) ease calc(0.3s * var(--intro-speed, 1)),
+                transform calc(0.72s * var(--intro-speed, 1)) cubic-bezier(0.72, 0, 0.16, 1);
+}
+
+.intro__name-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.06em;
+}
+
+.intro__name-rise {
+    display: inline-block;
+    transform: translateY(118%) rotate(4deg);
+}
+
+.intro.is-name .intro__name-rise {
+    transform: none;
+    transition: transform calc(0.55s * var(--intro-speed, 1)) cubic-bezier(0.16, 0.84, 0.34, 1);
+}
+
+.intro.is-name .intro__name-line:nth-child(2) .intro__name-rise {
+    transition-delay: calc(0.07s * var(--intro-speed, 1));
+}
+
+.intro__name-dot {
+    font-style: normal;
+    color: var(--cobalt);
+}
+
+/* ---- The wipe: ink lifts, chrome bows out, name takes real ink ---- */
+.intro.is-wipe .intro__grid,
+.intro.is-wipe .intro__grain,
+.intro.is-wipe .intro__corner,
+.intro.is-wipe .intro__bar {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    transition-delay: 0s;
+}
+
+.intro.is-wipe .intro__name {
+    color: var(--ink);
+}
+
+/* Landing: the hero letters are on underneath, fade the courier copy.
+   The travel transform has already finished, so swapping the
+   transition over to opacity is safe. */
+.intro.is-done .intro__name {
+    opacity: 0;
+    transition: opacity calc(0.18s * var(--intro-speed, 1)) ease;
+}
+
+/* ============================================================
+   PRE-REVEAL: hold the page behind the overlay.
+   Opacity only, no transform or blur: the FLIP travel measures the
+   hero headline's rect mid-sequence and needs true geometry.
+   Gated on html.preload (JS-set) so a no-JS visit is unaffected.
+   ============================================================ */
+html.preload body {
+    overflow: hidden;
+}
+
+html.preload .kinetic-hero {
+    opacity: 0;
+}
+
+html.preload main-navbar {
+    opacity: 0;
+}
+
+/* Park the hero's entrance animations so they play at the reveal,
+   not invisibly behind the overlay. On the full-motion path the
+   title letters are handled by intro-morph/intro-landed instead. */
+html.preload .kinetic-hero .kinetic-eyebrow,
+html.preload .kinetic-hero .kinetic-line .ch,
+html.preload .kinetic-hero .kinetic-sub,
+html.preload .kinetic-hero .kinetic-cta {
+    animation-play-state: paused;
+}
+
+/* ============================================================
+   HAND-OFF. Source order matters: these intro-done rules share
+   specificity with the preload rules above and must win while both
+   classes are briefly on <html> (preload stays until landing so the
+   page cannot scroll under the traveling name).
+   ============================================================ */
+html.intro-done .kinetic-hero {
+    opacity: 1;
+    transition: opacity 0.35s ease;
+}
+
+html.intro-done main-navbar {
+    opacity: 1;
+    transition: opacity 0.7s ease 0.85s;
+}
+
+/* ============================================================
+   TITLE LETTER HAND-OFF (full-motion path only).
+   intro-morph parks the hero letters, unstyled and invisible, at
+   their final resting spots; intro-landed pops them in the instant
+   the traveling name docks on top of them. Both classes are
+   permanent: re-enabling the animation later would replay it.
+   ============================================================ */
+html.intro-morph .kinetic-hero .kinetic-line .ch {
+    animation: none;
+    opacity: 0;
+    transform: none;
+}
+
+html.intro-landed .kinetic-hero .kinetic-line .ch {
+    animation: none;
+    opacity: 1;
+    transform: none;
+}
+
+/* The rules above out-rank kinetic.css's own hover, so restate it */
+html.intro-landed .kinetic-hero .kinetic-line .ch:hover {
+    transform: translateY(-0.06em) rotate(-2deg);
+    color: var(--clay);
+}
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+@keyframes introBlink {
+    0%, 49%   { opacity: 1; }
+    50%, 100% { opacity: 0.15; }
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+@media (max-width: 600px) {
+    .intro__frame {
+        letter-spacing: 0.15em;
+    }
+
+    /* The reel index reads as clutter at phone size */
+    .intro__corner--br {
+        display: none;
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION: a calm card. The name shows immediately on the
+   ink field, then the whole overlay fades. No reel, no wipe, no
+   travel (intro.js runs its .is-calm path and skips intro-morph,
+   so kinetic.css's own reduced-motion rules show the hero title).
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .intro__corner,
+    .intro__grid,
+    .intro__col,
+    .intro__blink {
+        transition: none;
+        animation: none;
+    }
+
+    .intro.is-calm .intro__slot,
+    .intro.is-calm .intro__bar,
+    .intro.is-calm .intro__corner--bl {
+        display: none;
+    }
+
+    .intro.is-calm .intro__name-rise {
+        transform: none;
+        transition: none;
+    }
+
+    .intro {
+        transition: opacity 0.4s ease;
+    }
+
+    .intro.is-done {
+        opacity: 0;
+    }
+
+    .intro.is-done .intro__name {
+        transition: none;
+        opacity: 1;
+    }
+
+    html.intro-done .kinetic-hero {
+        transition: opacity 0.4s ease;
+    }
+
+    html.intro-done main-navbar {
+        transition: opacity 0.4s ease;
+    }
+}

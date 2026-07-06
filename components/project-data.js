@@ -123,7 +123,7 @@ export const projects = {
     category: "passion",
     gradient: "linear-gradient(45deg, #11998e 0%, #38ef7d 100%)",
     title: "Multi-Source IP Locator",
-    description: "Fires seven geolocation APIs in parallel and consolidates their answers on a live map, so you see where the consensus lands and not just one provider's best guess.",
+    description: "Asks ten independent geolocation services where an IP lives and draws every answer on one map, so you see where the consensus lands and not just one provider's best guess.",
     links: {
       visitSite: "views/ip",
     },
@@ -168,5 +168,15 @@ export const projects = {
       visitSite: "views/blog",
     },
     iconClass: "fas fa-book-open",
+  },
+  recipes: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #e0731d 0%, #efe9dd 100%)",
+    title: "Recipes",
+    description: "A cozy recipe box where anyone can browse and cooks can write their own. A guided cooking mode walks you through each step with built in timers and a bell.",
+    links: {
+      visitSite: "views/recipes",
+    },
+    iconClass: "fas fa-utensils",
   }
 };

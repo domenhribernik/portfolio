@@ -44,14 +44,14 @@
     <link rel="stylesheet" href="base-style.css">
     <link rel="stylesheet" href="views/homepage/style.css">
     <link rel="stylesheet" href="views/homepage/kinetic.css">
-    <link rel="stylesheet" href="views/homepage/loader.css">
+    <link rel="stylesheet" href="views/homepage/intro.css">
     <link rel="stylesheet" href="views/homepage/apod-styles.css">
     <link rel="stylesheet" href="components/gallery.css">
     <link rel="stylesheet" href="views/homepage/otd-gallery.css">
     <link rel="stylesheet" href="views/homepage/peel.css">
 
-    <!-- Arm the loader before first paint so the hero starts hidden (no flash).
-         Gated on JS: if loader.js never runs, the failsafe still reveals the page. -->
+    <!-- Arm the intro before first paint so the hero starts hidden (no flash).
+         Gated on JS: if intro.js never runs, the failsafe still reveals the page. -->
     <script>
         (function () {
             var root = document.documentElement;
@@ -59,42 +59,50 @@
             window.__introFailsafe = setTimeout(function () {
                 root.classList.remove('preload');
                 root.classList.add('intro-done');
-            }, 9000);
+            }, 7000);
         })();
     </script>
-    <!-- Without JS the loader can never hand off, so don't let it cover the page. -->
+    <!-- Without JS the intro can never hand off, so don't let it cover the page. -->
     <noscript>
-        <style>.kn-loader { display: none !important; }</style>
+        <style>.intro { display: none !important; }</style>
     </noscript>
 </head>
 
 <body class="editorial kinetic bg-paper text-ink font-sans antialiased">
-    <div class="kn-loader" id="loadingOverlay" role="status" aria-live="polite" aria-label="Loading portfolio">
-        <div class="kn-loader__grid" aria-hidden="true"></div>
+    <!-- Kinetic intro overlay. notranslate: the greetings are deliberately
+         multilingual and the name must stay byte-identical to the hero
+         headline for the FLIP hand-off. See views/homepage/intro.css/js. -->
+    <div class="intro notranslate" id="introOverlay" translate="no" role="status" aria-live="polite" aria-label="Loading portfolio">
+        <div class="intro__cols" aria-hidden="true">
+            <span class="intro__col"></span><span class="intro__col"></span><span class="intro__col"></span><span class="intro__col"></span><span class="intro__col"></span><span class="intro__col"></span>
+        </div>
+        <div class="intro__grid" aria-hidden="true"></div>
+        <div class="intro__grain" aria-hidden="true"></div>
 
-        <div class="kn-loader__top">
-            <span class="kn-loader__tag"><span class="kn-loader__dot" aria-hidden="true"></span>Portfolio</span>
-            <span class="kn-loader__count" aria-hidden="true"><span id="knCount">00</span><span class="kn-loader__pct">%</span></span>
+        <div class="intro__frame" aria-hidden="true">
+            <span class="intro__corner intro__corner--tl"><span class="intro__blink"></span>Domen Hribernik</span>
+            <span class="intro__corner intro__corner--tr">Portfolio / 2026</span>
+            <span class="intro__corner intro__corner--bl"><span id="introIndex">01</span> / 06</span>
+            <span class="intro__corner intro__corner--br">Slovenia / 46.05&deg; N</span>
         </div>
 
-        <div class="kn-loader__center">
-            <div class="kn-loader__name" style="--p:0%" aria-hidden="true">
-                <div class="kn-loader__name-layer kn-loader__name-layer--outline">
-                    <span class="kn-line">Domen</span>
-                    <span class="kn-line">Hribernik<i class="kn-dot">.</i></span>
+        <div class="intro__center" aria-hidden="true">
+            <div class="intro__slot">
+                <div class="intro__reel" id="introReel">
+                    <span class="intro__word">Zdravo<i>.</i></span>
+                    <span class="intro__word">Hola<i>.</i></span>
+                    <span class="intro__word">Salut<i>.</i></span>
+                    <span class="intro__word">&#20320;&#22909;<i>&#12290;</i></span>
+                    <span class="intro__word">Hello<i>.</i></span>
                 </div>
-                <div class="kn-loader__name-layer kn-loader__name-layer--fill">
-                    <span class="kn-line">Domen</span>
-                    <span class="kn-line">Hribernik<i class="kn-dot">.</i></span>
-                </div>
+            </div>
+            <div class="intro__name" id="introName">
+                <span class="intro__name-line"><span class="intro__name-rise">Domen</span></span>
+                <span class="intro__name-line"><span class="intro__name-rise">Hribernik<i class="intro__name-dot">.</i></span></span>
             </div>
         </div>
 
-        <div class="kn-loader__bottom">
-            <span class="kn-loader__status" id="knStatus" aria-hidden="true">Setting the type</span>
-            <span class="kn-loader__bar" aria-hidden="true"><span class="kn-loader__bar-fill" id="knBar"></span></span>
-            <span class="kn-loader__meta">Slovenia / 2026</span>
-        </div>
+        <span class="intro__bar" aria-hidden="true"><span class="intro__bar-fill" id="introBar"></span></span>
     </div>
 
     <main-navbar></main-navbar>
@@ -224,26 +232,14 @@
                         </div>
                         <h2 class="reveal kinetic-heading uppercase text-5xl md:text-8xl text-ink mb-16">Projects</h2>
 
-                        <!-- Professional/Freelance Projects -->
-                        <div class="project-category mb-20">
-                            <h3 class="category-title font-serif text-2xl md:text-3xl text-ink mb-8 pb-3 border-b border-ink/15">
-                                Professional &amp; Freelance Work</h3>
-                            <projects-grid category="professional"></projects-grid>
-                        </div>
-
-                        <!-- Academic Projects -->
-                        <div class="project-category mb-20">
-                            <h3 class="category-title font-serif text-2xl md:text-3xl text-ink mb-8 pb-3 border-b border-ink/15">
-                                Academic Work &amp; Research</h3>
-                            <projects-grid category="academic"></projects-grid>
-                        </div>
-
-                        <!-- Personal/Passion Projects -->
-                        <div class="project-category">
-                            <h3 class="category-title font-serif text-2xl md:text-3xl text-ink mb-8 pb-3 border-b border-ink/15">
-                                Passion Projects</h3>
-                            <projects-grid category="passion"></projects-grid>
-                        </div>
+                        <!-- Editorial index: <projects-index> renders numbered rows straight
+                             from project-data.js; numbering and accents run continuously
+                             across the three groups. The about page keeps the card grid. -->
+                        <projects-index class="mb-16 md:mb-20" category="professional"
+                            label="Professional &amp; Freelance"></projects-index>
+                        <projects-index class="mb-16 md:mb-20" category="academic"
+                            label="Academic &amp; Research"></projects-index>
+                        <projects-index category="passion" label="Passion Projects"></projects-index>
                     </div>
                 </div>
             </section>
@@ -398,14 +394,12 @@
     </div><!-- /.book -->
 
     <script type="module" src="components/main-navbar.js"></script>
-    <script type="module" src="components/project-data.js"></script>
-    <script type="module" src="components/project-card.js"></script>
-    <script type="module" src="components/projects-grid.js"></script>
+    <script type="module" src="components/projects-index.js"></script>
     <script src="components/gallery.js"></script>
     <script src="views/homepage/homepage-proxy.js"></script>
     <script src="views/homepage/script.js"></script>
     <script src="views/homepage/kinetic.js"></script>
-    <script src="views/homepage/loader.js"></script>
+    <script src="views/homepage/intro.js"></script>
     <script src="views/homepage/peel.js"></script>
     <script src="components/tawk-chat.js"></script>
     <script src="components/gtranslate.js"></script>
