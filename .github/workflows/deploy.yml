@@ -41,10 +41,14 @@ jobs:
             bugs.md,
             ideas.md,
             plan.md,
+            LIENSE,
+            package.json,
+            README.md,
+            CLAUDE.md,
             views/stocks/**,
             views/slovenia/**,
             views/quizz/**,
             views/garden/**
           removeExtraFilesOnServer: false
           concurrency: 1
-          dryRun: true
+          dryRun: false
