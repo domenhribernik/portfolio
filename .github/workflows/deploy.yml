@@ -37,6 +37,10 @@ jobs:
             assets/uploads/**,
             tests/**,
             .agents/**,
-            .claude/**
+            .claude/**,
+            views/stocks/**,
+            views/slovenia/**,
+            views/quizz/**,
+            views/garden/**
           removeExtraFilesOnServer: false
-          dryRun: false
+          dryRun: true
