@@ -41,7 +41,7 @@ jobs:
             bugs.md,
             ideas.md,
             plan.md,
-            LIENSE,
+            LICENSE,
             package.json,
             README.md,
             CLAUDE.md,
