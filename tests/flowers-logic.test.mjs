@@ -23,6 +23,8 @@ import {
   stepCount,
   orderTotal,
   surpriseCounts,
+  hashId,
+  normalizeShareOrder,
 } from '../views/flowers/logic.js';
 
 test('lerp interpolates and clamp bounds', () => {
@@ -310,4 +312,49 @@ test('coneFaces builds a matching truncated cone', () => {
     assert.ok(Math.abs(f.tilt - tilt) < 1e-9);
     assert.ok(f.push > 0 && f.push < 96, 'push must sit inside the top radius');
   });
+});
+
+test('hashId is deterministic, base36, and input-sensitive', () => {
+  const a = hashId('rose:3|tulip:2|hello mum|1720000000000');
+  assert.equal(a, hashId('rose:3|tulip:2|hello mum|1720000000000'), 'same input, same id');
+  assert.match(a, /^[a-z0-9]{1,11}$/, 'must fit the server-side [a-z0-9] sanitizer');
+  assert.notEqual(a, hashId('rose:3|tulip:2|hello mum|1720000000001'), 'a changed input must move the id');
+  assert.notEqual(hashId('x'), hashId('x', 1), 'the seed must matter');
+});
+
+test('normalizeShareOrder keeps only known species with sane counts', () => {
+  const keys = ['rose', 'tulip', 'daisy'];
+  assert.deepEqual(normalizeShareOrder(undefined, keys), []);
+  assert.deepEqual(normalizeShareOrder('junk', keys), []);
+  assert.deepEqual(normalizeShareOrder([{ type: 'orchid', count: 3 }], keys), []);
+  assert.deepEqual(
+    normalizeShareOrder(
+      [
+        { type: 'rose', count: 3 },
+        null,
+        { type: 'tulip', count: '2' },
+        { type: 'daisy', count: 0 },
+        { type: 'rose', count: -4 },
+        { count: 2 },
+      ],
+      keys,
+    ),
+    [{ type: 'rose', count: 3 }, { type: 'tulip', count: 2 }],
+    'junk entries drop, numeric strings floor to ints',
+  );
+});
+
+test('normalizeShareOrder merges duplicates and caps the total at the wrap', () => {
+  const keys = ['rose', 'tulip'];
+  assert.deepEqual(
+    normalizeShareOrder([{ type: 'rose', count: 2 }, { type: 'rose', count: 1 }], keys),
+    [{ type: 'rose', count: 3 }],
+  );
+  const capped = normalizeShareOrder(
+    [{ type: 'rose', count: 9 }, { type: 'tulip', count: 99 }],
+    keys,
+  );
+  assert.deepEqual(capped, [{ type: 'rose', count: 9 }, { type: 'tulip', count: 3 }]);
+  const flood = normalizeShareOrder([{ type: 'rose', count: 1e9 }], keys);
+  assert.deepEqual(flood, [{ type: 'rose', count: 12 }], 'a crafted giant count clamps to MAX_STEMS');
 });

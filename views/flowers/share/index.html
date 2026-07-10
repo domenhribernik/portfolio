@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Bouquet For You · Paper Flowers</title>
+    <meta name="description" content="Someone picked you a bouquet of paper flowers. Open it and watch it bloom: every petal is a flat div rotated into place.">
+    <!-- Share links wilt after 7 days; keep the dead ones out of search results. -->
+    <meta name="robots" content="noindex">
+    <meta property="og:title" content="Someone picked you flowers">
+    <meta property="og:description" content="Open the link and watch a paper bouquet bloom. Every petal is a flat div, no WebGL, no images.">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/x-icon" href="../../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Same font URL as the builder page, so the two share one cache entry. -->
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Albert+Sans:wght@300;400;500;600&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+    <!-- No Tailwind CDN here: a share link is opened cold on phones, and this
+         page's layout is small enough to hand-write in style.css. The flower
+         skins and scene atmosphere come from the builder's stylesheets. -->
+    <link rel="stylesheet" href="../css3d.css">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="modulepreload" href="../flowers.js">
+    <link rel="modulepreload" href="../logic.js">
+    <link rel="modulepreload" href="../css3d.js">
+    <script>
+        /* Start fetching the bouquet before the module graph loads. */
+        window.__bouquet = (() => {
+            const id = new URLSearchParams(location.search).get('b') || '';
+            return /^[a-z0-9]{1,32}$/i.test(id)
+                ? fetch('../../../app/proxys/flowers.php?action=load&id=' + encodeURIComponent(id))
+                : null;
+        })();
+    </script>
+</head>
+<body>
+
+    <header class="top">
+        <a class="wordmark" href="../">Paper <i>Flowers</i></a>
+        <span class="strap">grown from divs · css only</span>
+    </header>
+
+    <main class="card">
+        <section class="note">
+            <p id="kicker" class="kicker reveal reveal-1">someone picked you flowers</p>
+            <p id="message" class="message" hidden></p>
+        </section>
+
+        <div id="scene" class="scene c3d-scene">
+            <div id="stage" class="c3d" style="--bloom:0">
+                <div class="c3d autospin">
+                    <div id="bouquet-root" class="c3d"></div>
+                </div>
+            </div>
+            <p id="hint" class="hint">drag to turn it</p>
+        </div>
+    </main>
+
+    <footer class="foot">
+        <a class="cta" href="../">grow your own bouquet &rarr;</a>
+        <p class="fine">picked at the flower stall · every petal is a div</p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

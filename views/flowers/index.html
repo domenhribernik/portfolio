@@ -95,9 +95,23 @@
                 class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 transition-colors">
                 <span>still</span>
             </button>
+            <button id="share-toggle" aria-expanded="false"
+                class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 aria-expanded:bg-cream aria-expanded:text-night aria-expanded:border-cream transition-colors">
+                share
+            </button>
             <span class="ml-auto font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/70">
                 planes on stage: <b class="text-gold font-normal" data-plane-count>0</b>
             </span>
+            <div id="share-panel" class="hidden w-full flex-col sm:flex-row sm:items-center gap-3">
+                <input id="share-message" type="text" maxlength="280" autocomplete="off"
+                    placeholder="add a note to go with the flowers (optional)"
+                    class="flex-1 min-w-0 bg-night/60 border border-hairline rounded-full px-4 py-2.5 text-sm text-cream placeholder:text-sage/50 focus:outline-none focus:border-rose/60">
+                <button id="share-copy"
+                    class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-6 py-2.5 rounded-full bg-rose text-night border border-rose hover:bg-cream hover:border-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    <span>copy link</span>
+                </button>
+                <span class="font-mono text-[0.6rem] tracking-[0.18em] uppercase text-sage/60">the link blooms for 7 days</span>
+            </div>
         </div>
     </section>
 

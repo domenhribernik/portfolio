@@ -1,0 +1,177 @@
+/* views/flowers/share : layout for the shared-bouquet page.
+   The flower skins, scene atmosphere, film grain, autospin and reveal
+   keyframes all come from ../style.css (loaded before this file); this
+   file only lays out the note, the stage and the footer. Hand-written
+   instead of Tailwind on purpose: share links open cold on phones and
+   the runtime CDN compiler is the single biggest cost we can skip. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Albert Sans', sans-serif;
+  color: var(--cream);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 0;
+}
+
+.wordmark {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1.15rem;
+  color: var(--cream);
+  text-decoration: none;
+}
+
+.wordmark i {
+  color: var(--rose);
+}
+
+.strap {
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(159, 174, 151, 0.8);
+  text-align: right;
+}
+
+/* ==========================================================================
+   The note
+   ========================================================================== */
+
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.note {
+  text-align: center;
+  padding: clamp(1.6rem, 6vh, 3.2rem) 1.25rem 0;
+}
+
+.kicker {
+  margin: 0;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--rose);
+}
+
+.message {
+  margin: 0.9rem auto 0;
+  max-width: 22ch;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.7rem, 6.5vw, 2.8rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+}
+
+/* ==========================================================================
+   The stage. ../style.css sizes .scene for the builder page and blocks all
+   touch gestures on it; here it flexes to the room the note leaves and
+   keeps vertical panning free so the page still scrolls on phones (the
+   orbit only reads horizontal drags).
+   ========================================================================== */
+
+.scene {
+  flex: 1;
+  height: auto;
+  min-height: clamp(360px, 58dvh, 700px);
+  touch-action: pan-y;
+}
+
+.hint {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 0.9rem;
+  z-index: 10;
+  margin: 0;
+  pointer-events: none;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(159, 174, 151, 0.6);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.foot {
+  text-align: center;
+  padding: 0 1.25rem calc(1.6rem + env(safe-area-inset-bottom, 0px));
+}
+
+.cta {
+  display: inline-block;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--night);
+  background: var(--rose);
+  border: 1px solid var(--rose);
+  border-radius: 999px;
+  padding: 0.75rem 1.6rem;
+  text-decoration: none;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.cta:hover {
+  background: var(--cream);
+  border-color: var(--cream);
+}
+
+.fine {
+  margin: 0.9rem 0 0;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(159, 174, 151, 0.55);
+}
+
+/* ==========================================================================
+   Wilted: the link expired (or never existed). The note explains, the
+   stage folds away, the stall invite stays.
+   ========================================================================== */
+
+body.wilted .scene,
+body.wilted .hint {
+  display: none;
+}
+
+body.wilted .card {
+  justify-content: center;
+}
+
+body.wilted .note {
+  padding-bottom: clamp(1.6rem, 6vh, 3.2rem);
+}
+
+body.wilted .message {
+  font-size: clamp(1.3rem, 5vw, 1.9rem);
+  max-width: 30ch;
+  color: var(--sage);
+}

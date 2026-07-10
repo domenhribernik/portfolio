@@ -18,9 +18,12 @@ the contract below.
   the `FLOWER_TYPES` registry the menu renders from, and `buildBouquet(root, order)` where
   `order` is `[{type, count}]`. All paint lives in style.css classes.
 - `script.js`: page wiring only (the stall menu + steppers + generate, orbit drag, bloom
-  slider, x-ray toggle, responsive fit).
+  slider, x-ray toggle, share panel, responsive fit).
 - `style.css`: skins (petal gradients, wrap, ribbon), scene atmosphere, stall menu states,
   doc mini-demos.
+- `share/`: the shared-bouquet page (see "Sharing" below). Reuses `../css3d.css` and
+  `../style.css` (skins + atmosphere) plus its own hand-written layout CSS; deliberately
+  no Tailwind CDN, so a share link opens fast on phones.
 
 ## The generator
 
@@ -53,6 +56,32 @@ paused and spin on card hover). Generate clears `#bouquet-root`, calls
 **Adding a species:** spec function in logic.js (use `jitter`, add a test), builder in
 flowers.js, skin + variant classes in style.css, one `FLOWER_TYPES` entry. The menu card,
 steppers, plane estimate, and bouquet placement all come free.
+
+## Sharing
+
+The share button in the controls strip saves the STAGED order (`stagedOrder`, captured at
+generate time, not the steppers) plus an optional note through
+[app/proxys/flowers.php](../../app/proxys/flowers.php), which stores each bouquet as a JSON
+file in `app/cache/flowers/` and prunes anything older than 7 days on every save (same
+pattern as `tarok.php`; no auth, links are public by design). The link points at
+`share/?b=<id>`; ids come from `hashId` in logic.js (cyrb53, base36, matches the server's
+`[a-z0-9]` sanitizer). On phones the button hands the URL to `navigator.share`; otherwise
+it copies to the clipboard.
+
+`share/index.html` kicks off the payload fetch in an inline script (`window.__bouquet`)
+before the module graph loads, then `share/script.js` runs the loaded order through
+`normalizeShareOrder` (logic.js: drops unknown species, merges duplicates, caps at
+`MAX_STEMS` so a crafted payload can't over-plant the scene), shows the note via
+`textContent` (never innerHTML), builds with the same `buildBouquet`, and replays the
+bloom. Any failure (missing id, expired, malformed) shows the "wilted" state. The share
+scene allows `touch-action: pan-y` and its orbit reads only horizontal drags, so the page
+still scrolls on touch. Server-side validation is tested by
+`/opt/lampp/bin/php tests/flowers-share.test.php` (boots the PHP built-in server, no DB);
+`hashId`/`normalizeShareOrder` are covered in `tests/flowers-logic.test.mjs`.
+
+Local gotcha: Apache runs as `daemon`, so an `app/cache/flowers/` dir created by the CLI
+test suite is unwritable from the browser (save 500s with `write_failed`). Locally
+`chmod 777` it; in prod the proxy's own `mkdir` creates it with the right owner.
 
 ## The toolkit contract
 

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Drawing Room · Sketch Together</title>
+    <meta name="description" content="A multiplayer parlour: open a room, hand round the four-letter code, and draw on the same sheet together in real time.">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        winedeep: '#26060c',
+                        wine: '#42101c',
+                        winelt: '#5a1f2b',
+                        paper: '#f6efdc',
+                        parchment: '#eee2c4',
+                        ink: '#2b2119',
+                        inkdim: '#6d5c47',
+                        cream: '#f3e6c8',
+                        brass: '#c9992e',
+                        brassdk: '#a87c22',
+                        rose: '#e08a8a',
+                    },
+                    fontFamily: {
+                        display: ['"Abril Fatface"', 'Georgia', 'serif'],
+                        body: ['"Old Standard TT"', 'Georgia', 'serif'],
+                        tele: ['"Courier Prime"', 'Courier', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-body text-cream min-h-screen">
+
+    <!-- ============================== THE GATE ============================== -->
+    <section id="screen-gate" class="screen">
+        <div class="max-w-[1040px] mx-auto px-5 py-8 sm:py-12">
+
+            <header class="reveal reveal-1 flex items-center justify-between mb-10 sm:mb-14">
+                <a id="back-link" href="../../" class="font-tele text-sm text-cream/60 hover:text-brass no-underline transition-colors">&larr; back</a>
+                <span class="font-tele text-[0.66rem] tracking-[0.3em] uppercase text-cream/50">Parlour Games &middot; No. 1</span>
+            </header>
+
+            <div class="reveal reveal-2 text-center mb-10 sm:mb-14">
+                <p class="font-tele text-[0.7rem] tracking-[0.35em] uppercase text-brass mb-4">&mdash; you are cordially invited to &mdash;</p>
+                <h1 class="font-display text-[clamp(3rem,9vw,6rem)] leading-[0.95] text-paper drop-shadow-[0_3px_0_rgba(0,0,0,0.35)]">The Drawing&nbsp;Room</h1>
+                <p class="mt-5 max-w-[46ch] mx-auto text-cream/80 text-[clamp(1rem,2.2vw,1.15rem)] italic">
+                    The parlour where everybody draws at once. Open a room, hand round the
+                    code, and when the bell rings, every guest sketches on the same sheet.
+                </p>
+                <div class="fleuron mt-7" aria-hidden="true"><span>&#10087;</span></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-[860px] mx-auto items-stretch">
+
+                <!-- Host card -->
+                <div class="reveal reveal-3 calling-card p-6 sm:p-8">
+                    <p class="font-tele text-[0.64rem] tracking-[0.28em] uppercase text-inkdim mb-1">Play the host</p>
+                    <h2 class="font-display text-2xl text-ink mb-5">Open the room</h2>
+                    <label for="hostName" class="block font-tele text-[0.68rem] tracking-[0.2em] uppercase text-inkdim mb-1.5">Your name</label>
+                    <input id="hostName" type="text" maxlength="20" autocomplete="nickname" placeholder="e.g. Ada"
+                        class="w-full bg-paper border border-ink/25 rounded-[2px] px-3.5 py-2.5 text-[16px] text-ink font-body placeholder:text-inkdim/50 focus:outline-none focus:border-brassdk focus:ring-1 focus:ring-brassdk/50 transition">
+                    <button id="createBtn" class="btn-press mt-5 w-full bg-brass hover:bg-brassdk text-ink font-tele font-bold text-sm uppercase tracking-[0.18em] rounded-[2px] px-5 py-3 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Open a room
+                    </button>
+                    <p class="mt-3 text-inkdim text-sm italic text-center">You will receive a four-letter code to share.</p>
+                </div>
+
+                <!-- Join card -->
+                <div class="reveal reveal-4 calling-card p-6 sm:p-8">
+                    <p class="font-tele text-[0.64rem] tracking-[0.28em] uppercase text-inkdim mb-1">Arrive as a guest</p>
+                    <h2 class="font-display text-2xl text-ink mb-5">Join the party</h2>
+                    <div class="grid grid-cols-[1fr_auto] gap-3">
+                        <div>
+                            <label for="joinName" class="block font-tele text-[0.68rem] tracking-[0.2em] uppercase text-inkdim mb-1.5">Your name</label>
+                            <input id="joinName" type="text" maxlength="20" autocomplete="nickname" placeholder="e.g. Brunel"
+                                class="w-full bg-paper border border-ink/25 rounded-[2px] px-3.5 py-2.5 text-[16px] text-ink font-body placeholder:text-inkdim/50 focus:outline-none focus:border-brassdk focus:ring-1 focus:ring-brassdk/50 transition">
+                        </div>
+                        <div>
+                            <label for="joinCode" class="block font-tele text-[0.68rem] tracking-[0.2em] uppercase text-inkdim mb-1.5">Code</label>
+                            <input id="joinCode" type="text" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="BXKZ"
+                                class="w-[8.5ch] bg-paper border border-ink/25 rounded-[2px] px-2 py-2.5 pl-[calc(0.5rem+0.3em)] text-[16px] text-ink font-tele font-bold tracking-[0.3em] text-center uppercase placeholder:text-inkdim/40 placeholder:font-normal focus:outline-none focus:border-brassdk focus:ring-1 focus:ring-brassdk/50 transition">
+                        </div>
+                    </div>
+                    <button id="joinBtn" class="btn-press mt-5 w-full bg-transparent border border-ink/60 hover:bg-ink hover:text-paper text-ink font-tele font-bold text-sm uppercase tracking-[0.18em] rounded-[2px] px-5 py-3 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        Join the party
+                    </button>
+                    <p class="mt-3 text-inkdim text-sm italic text-center">Ask your host for the code on their tag.</p>
+                </div>
+            </div>
+
+            <p id="gateError" role="alert" class="notice hidden max-w-[860px] mx-auto mt-6 text-center font-tele text-sm text-rose border border-rose/40 bg-rose/10 rounded-[2px] px-4 py-3"></p>
+
+            <div class="reveal reveal-5 mt-12 sm:mt-16 max-w-[720px] mx-auto">
+                <div class="flex items-center gap-4 text-cream/45 font-tele text-[0.66rem] tracking-[0.22em] uppercase">
+                    <span class="flex-1 border-t border-dotted border-cream/25"></span>
+                    <span>How the evening goes</span>
+                    <span class="flex-1 border-t border-dotted border-cream/25"></span>
+                </div>
+                <ol class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center text-cream/75 text-[0.95rem]">
+                    <li><span class="font-display text-brass text-lg block mb-1">I.</span>The host opens a room and shares its four-letter code.</li>
+                    <li><span class="font-display text-brass text-lg block mb-1">II.</span>Guests gather in the lobby; everyone gets an ink of their own.</li>
+                    <li><span class="font-display text-brass text-lg block mb-1">III.</span>The host rings the bell, and one shared sheet opens for all.</li>
+                </ol>
+            </div>
+
+            <footer class="reveal reveal-6 mt-12 text-center font-tele text-[0.68rem] text-cream/40">
+                No accounts, no gallery: rooms are anonymous and swept away after twelve quiet hours.
+            </footer>
+        </div>
+    </section>
+
+    <!-- ============================== THE LOBBY ============================== -->
+    <section id="screen-lobby" class="screen">
+        <div class="max-w-[900px] mx-auto px-5 py-6 sm:py-10 text-center">
+
+            <header class="flex items-center justify-between mb-8">
+                <button id="lobbyLeaveBtn" class="font-tele text-sm text-cream/60 hover:text-brass transition-colors">&larr; step out</button>
+                <span id="lobbyWire" class="wire font-tele text-[0.7rem] tracking-[0.2em] uppercase" aria-live="polite"></span>
+            </header>
+
+            <p class="font-tele text-[0.7rem] tracking-[0.35em] uppercase text-brass mb-3">&mdash; the room is open &mdash;</p>
+            <h2 class="font-display text-[clamp(1.8rem,4.5vw,2.6rem)] text-paper mb-7">Hand round the code</h2>
+
+            <button id="codeTag" class="code-tag mx-auto" title="Copy the room code">
+                <span id="codeTagText" class="font-tele font-bold text-[clamp(2rem,8vw,3.2rem)] tracking-[0.45em] pl-[0.45em] text-ink">&mdash;&mdash;&mdash;&mdash;</span>
+                <span id="codeTagHint" class="block font-tele text-[0.62rem] tracking-[0.25em] uppercase text-inkdim mt-1">tap to copy</span>
+            </button>
+
+            <div class="mt-10 mb-4 flex items-baseline justify-center gap-3">
+                <h3 class="font-display text-xl text-paper">In the parlour</h3>
+                <span id="guestCount" class="font-tele text-[0.7rem] text-cream/55 tracking-[0.2em]"></span>
+            </div>
+            <div id="guestCards" class="flex flex-wrap justify-center gap-3 sm:gap-4 max-w-[760px] mx-auto"></div>
+
+            <!-- Host: the bell. Guests: the waiting bell. -->
+            <div id="hostBell" class="hidden mt-11">
+                <button id="startBtn" class="bell-medallion group" title="Begin the sitting for everyone">
+                    <svg class="bell-svg" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M24 6v3" /><path d="M14 34c0-9 1.5-19 10-19s10 10 10 19" />
+                        <path d="M10 34h28c0 2.4-1 4-3.4 4H13.4c-2.4 0-3.4-1.6-3.4-4Z" />
+                        <path d="M24 38v2.2" /><circle cx="24" cy="42.6" r="1.8" fill="currentColor" stroke="none" />
+                    </svg>
+                </button>
+                <p class="mt-4 font-tele text-sm uppercase tracking-[0.22em] text-brass">Ring the bell</p>
+                <p class="mt-1 text-cream/60 italic text-sm">the sheet opens for everyone at once</p>
+            </div>
+            <div id="waitBell" class="hidden mt-11">
+                <div class="bell-medallion bell-waiting" aria-hidden="true">
+                    <svg class="bell-svg bell-swing" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M24 6v3" /><path d="M14 34c0-9 1.5-19 10-19s10 10 10 19" />
+                        <path d="M10 34h28c0 2.4-1 4-3.4 4H13.4c-2.4 0-3.4-1.6-3.4-4Z" />
+                        <path d="M24 38v2.2" /><circle cx="24" cy="42.6" r="1.8" fill="currentColor" stroke="none" />
+                    </svg>
+                </div>
+                <p class="mt-4 text-cream/70 italic">The host rings the bell once everyone has arrived&hellip;</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== THE TABLE ============================== -->
+    <section id="screen-table" class="screen">
+        <div class="table-shell mx-auto px-3 sm:px-5 py-3 sm:py-5">
+
+            <header class="flex items-center gap-3 sm:gap-4 mb-3 flex-wrap">
+                <button id="tableLeaveBtn" class="font-tele text-sm text-cream/60 hover:text-brass transition-colors whitespace-nowrap">&larr; step out</button>
+                <button id="codeChip" class="font-tele font-bold text-sm tracking-[0.3em] pl-[0.3em] text-ink bg-brass hover:bg-brassdk rounded-[2px] px-2.5 py-1 transition" title="Copy the room code">&mdash;&mdash;&mdash;&mdash;</button>
+                <div id="cameoStrip" class="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto py-1"></div>
+                <span id="wirePip" class="wire font-tele text-[0.68rem] tracking-[0.18em] uppercase whitespace-nowrap" aria-live="polite"></span>
+            </header>
+
+            <div id="sheetFrame" class="sheet-frame">
+                <canvas id="sheet" aria-label="The shared drawing sheet"></canvas>
+            </div>
+
+            <div class="tray mt-3 flex items-center gap-2 sm:gap-3 flex-wrap">
+                <div id="inkTray" class="flex items-center gap-1.5 sm:gap-2 flex-wrap" role="group" aria-label="Inks"></div>
+                <span class="tray-rule" aria-hidden="true"></span>
+                <div id="nibTray" class="flex items-center gap-1.5 sm:gap-2" role="group" aria-label="Nib sizes"></div>
+                <span class="flex-1"></span>
+                <button id="clearBtn" class="hidden font-tele text-[0.7rem] uppercase tracking-[0.18em] text-cream/80 hover:text-ink border border-cream/40 hover:bg-parchment hover:border-parchment rounded-[2px] px-3 py-1.5 transition" title="Host only: wipe the sheet for everyone">
+                    Fresh sheet
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <div id="toast" class="toast font-tele text-sm" role="status"></div>
+
+    <noscript>
+        <p style="text-align:center; padding:2rem; font-family:serif;">The Drawing Room needs JavaScript to open its doors.</p>
+    </noscript>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
    controls (orbit drag, bloom slider, x-ray toggle, spin toggle). */
 
 import { buildBouquet, countPlanes, FLOWER_TYPES, DEFAULT_ORDER, MAX_STEMS } from './flowers.js';
-import { clamp, easeOutCubic, orderTotal, stepCount, surpriseCounts } from './logic.js';
+import { clamp, easeOutCubic, hashId, orderTotal, stepCount, surpriseCounts } from './logic.js';
 
 const scene = document.getElementById('scene');
 const stage = document.getElementById('stage');
@@ -18,6 +18,10 @@ const planeEstimateEl = document.getElementById('plane-estimate');
 const stallNoteEl = document.getElementById('stall-note');
 const generateBtn = document.getElementById('generate-btn');
 const surpriseBtn = document.getElementById('surprise-btn');
+const shareToggle = document.getElementById('share-toggle');
+const sharePanel = document.getElementById('share-panel');
+const shareMessage = document.getElementById('share-message');
+const shareCopy = document.getElementById('share-copy');
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -72,9 +76,14 @@ function regrow(duration = 1900) {
   }, duration + 150);
 }
 
+/* What is on stage right now; sharing captures this, not the steppers,
+   so editing the order without regenerating can't share an unseen bouquet. */
+let stagedOrder = [];
+
 function generate({ scroll = false, duration = 1900 } = {}) {
   bouquetRoot.innerHTML = '';
-  const stats = buildBouquet(bouquetRoot, currentOrder());
+  stagedOrder = currentOrder();
+  const stats = buildBouquet(bouquetRoot, stagedOrder);
   updatePlaneCounts(stats.planes);
   regrow(duration);
   if (scroll) scene.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
@@ -152,6 +161,93 @@ surpriseBtn.addEventListener('click', () => {
   counts = surpriseCounts(FLOWER_TYPES.map((t) => t.key));
   syncMenu();
   generate({ scroll: true });
+});
+
+/* ==========================================================================
+   Sharing: save the staged bouquet (plus an optional note) through
+   app/proxys/flowers.php and hand the visitor a 7-day link to
+   views/flowers/share/. On phones the native share sheet does the handing.
+   ========================================================================== */
+
+const SHARE_API = '../../app/proxys/flowers.php';
+
+shareToggle.addEventListener('click', () => {
+  const open = sharePanel.classList.toggle('flex');
+  sharePanel.classList.toggle('hidden', !open);
+  shareToggle.setAttribute('aria-expanded', String(open));
+  if (open) shareMessage.focus();
+});
+
+const shareLabel = shareCopy.querySelector('span');
+let shareLabelTimer = 0;
+
+function shareFeedback(text, sticky = false) {
+  shareLabel.textContent = text;
+  clearTimeout(shareLabelTimer);
+  if (!sticky) {
+    shareLabelTimer = setTimeout(() => {
+      shareLabel.textContent = 'copy link';
+    }, 2600);
+  }
+}
+
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch { /* fall through to the legacy path */ }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); } catch { /* ignore */ }
+  document.body.removeChild(ta);
+}
+
+shareCopy.addEventListener('click', async () => {
+  const message = shareMessage.value.trim();
+  const payload = {
+    id: hashId(`${JSON.stringify(stagedOrder)}|${message}|${Date.now()}`),
+    order: stagedOrder,
+    message,
+  };
+  shareCopy.disabled = true;
+  shareFeedback('saving…', true);
+  try {
+    const res = await fetch(`${SHARE_API}?action=save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('save failed');
+    const { id } = await res.json();
+    const base = location.pathname.replace(/index\.html$/, '');
+    const url = `${location.origin}${base}share/?b=${id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Someone picked you flowers', url });
+        shareFeedback('shared ✓');
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') {
+          shareFeedback('copy link');
+          return;
+        }
+        /* share sheet unavailable: fall back to the clipboard */
+      }
+    }
+    await copyToClipboard(url);
+    shareFeedback('link copied ✓');
+  } catch {
+    shareFeedback('sharing failed');
+  } finally {
+    shareCopy.disabled = false;
+  }
 });
 
 /* ==========================================================================

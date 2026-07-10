@@ -292,6 +292,52 @@ export function surpriseCounts(keys, rand = Math.random, max = MAX_STEMS) {
   return counts;
 }
 
+/* ==========================================================================
+   Sharing: pure halves of the share feature (ids and payload hygiene).
+   The wire format is [{type, count}], stored server-side by
+   app/proxys/flowers.php and read back by views/flowers/share.
+   ========================================================================== */
+
+/* cyrb53 folded to base36: a tiny, fast, dependency-free string hash for
+   share ids. No secure-context requirement (unlike crypto.subtle), and the
+   base36 output matches the server-side id sanitizer ([a-z0-9]). Same
+   function the tarok scorekeeper uses for its share links. */
+export function hashId(str, seed = 0) {
+  let h1 = 0xdeadbeef ^ seed;
+  let h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+
+/* Normalize an order loaded from a share link before it reaches the
+   builder: drop unknown species and junk entries, floor the counts, merge
+   duplicates, and cap the total at MAX_STEMS so a crafted payload can
+   never over-plant the scene. Returns [] when nothing survives. */
+export function normalizeShareOrder(order, validKeys, max = MAX_STEMS) {
+  if (!Array.isArray(order)) return [];
+  const valid = new Set(validKeys);
+  const counts = new Map();
+  let total = 0;
+  for (const item of order) {
+    if (total >= max) break;
+    if (!item || typeof item !== 'object') continue;
+    const count = Math.floor(Number(item.count));
+    if (!valid.has(item.type) || !Number.isFinite(count) || count <= 0) continue;
+    const take = Math.min(count, max - total);
+    counts.set(item.type, (counts.get(item.type) ?? 0) + take);
+    total += take;
+  }
+  return [...counts].map(([type, count]) => ({ type, count }));
+}
+
 /* The wrap rim's scallop: one cosine wave sampled across a facet's top
    edge. x is 0..100 (percent of face width), y is 0 at the cut's highest
    point and dips to depthPct. phase shifts the wave (0.5 = half a wave),
