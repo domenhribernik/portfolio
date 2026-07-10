@@ -1,6 +1,6 @@
 {
-  "name": "Shopping",
-  "short_name": "Shop",
+  "name": "Lists",
+  "short_name": "Lists",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

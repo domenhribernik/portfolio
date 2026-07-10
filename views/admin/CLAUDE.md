@@ -24,7 +24,7 @@ $user = Auth::requireProjectRole('<project_key>', 'editor');  // exact role
 
 Roles are granted from this dashboard. Use this layer alone when the whole feature has one audience (everyone with access sees the same data). Precedents: `images-controller.php` (public GETs, role-gated writes), hub tiles (`hub_apps.project_id` decides tile visibility).
 
-**Layer 2, row-level access (access control list).** When different users must see different rows of the same table (one shopping collection for family, another for friends), add a per-feature ACL join table. Naming convention: `<feature>_<resource>_access`.
+**Layer 2, row-level access (access control list).** When different users must see different rows of the same table (one list for family, another for friends), add a per-feature ACL join table. Naming convention: `<feature>_<resource>_access`.
 
 ```sql
 CREATE TABLE IF NOT EXISTS <feature>_<resource>_access (
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS <feature>_<resource>_access (
 
 Do NOT store row grants in `user_project_roles.permissions` JSON: it cannot be joined or indexed, so every list query would degrade into PHP-side filtering. The JSON column is only for small per-user feature flags.
 
-First integration of the full pattern: the shopping view (`shopping_collection_access` in [shopping-model.sql](../../app/models/shopping-model.sql), enforced by [shopping-controller.php](../../app/controllers/shopping-controller.php), managed from an admin-only sheet inside `views/shopping` itself).
+First integration of the full pattern: the list view (`list_collection_access` in [list-model.sql](../../app/models/list-model.sql), enforced by [list-controller.php](../../app/controllers/list-controller.php), managed from an admin-only sheet inside `views/list` itself).
 
 ## Recipe: wiring row-level access into a view
 
@@ -52,7 +52,7 @@ First integration of the full pattern: the shopping view (`shopping_collection_a
 3. **Filter reads** with a JOIN or EXISTS against the ACL table for non-admins; admins skip the filter and see everything.
 4. **Check the grant before every row mutation.** Resolve the row's parent resource first (e.g. item id to collection), then verify access. Never trust a client-sent resource name alone on writes to other rows.
 5. **Grant management endpoints** live in the feature's own controller (list users with a `granted` flag, grant, revoke), each behind `Auth::requireAdmin()`. Granting row access also auto-inserts a `member` role in the feature's project (with `ON DUPLICATE KEY UPDATE role = role`, so an existing better role is never downgraded). This keeps the admin flow one-stop: one toggle both admits the user and shows them the row.
-6. **In-app manage UI:** an admin-only control inside the view itself (the shopping header button opens a bottom sheet: pick a collection, toggle users). The dashboard here stays generic; per-resource grants are managed where the resource lives.
+6. **In-app manage UI:** an admin-only control inside the view itself (the list header button opens a bottom sheet: pick a collection, toggle users). The dashboard here stays generic; per-resource grants are managed where the resource lives.
 7. **Creator auto-grant:** when a non-admin creates a resource, insert their own ACL row in the same request, otherwise they create things they cannot see.
 
 ## Frontend contract for gated views

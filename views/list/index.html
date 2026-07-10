@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Shopping</title>
+    <title>Lists</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#211f1c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Shop">
+    <meta name="apple-mobile-web-app-title" content="Lists">
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <link rel="stylesheet" href="../../base-style.css">
@@ -45,7 +45,7 @@
             <a id="back-link" href="../../" class="text-ink hover:text-accent transition-colors inline-flex items-center gap-2 font-medium text-sm">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <h1 class="flex-1 text-center text-xl sm:text-2xl font-semibold tracking-tight">Shopping</h1>
+            <h1 class="flex-1 text-center text-xl sm:text-2xl font-semibold tracking-tight">Lists</h1>
             <button id="manage-access" aria-label="Manage list access" title="Who can see this list"
                 class="invisible w-10 h-10 flex items-center justify-center rounded-full text-muted hover:text-ink hover:bg-line/60 transition-colors">
                 <i class="fas fa-user-lock"></i>
@@ -85,12 +85,12 @@
     <main id="main" class="flex-1 overflow-y-auto w-full max-w-[720px] mx-auto px-4 py-2 pb-24">
         <ul id="items-active" class="divide-y divide-line"></ul>
 
-        <div id="bought-divider" class="hidden flex items-center justify-between gap-3 mt-6 mb-1 px-1">
+        <div id="done-divider" class="hidden flex items-center justify-between gap-3 mt-6 mb-1 px-1">
             <div class="flex items-center gap-2 text-sm text-muted">
                 <span class="h-px bg-line flex-1 w-10"></span>
-                <span id="bought-count">bought</span>
+                <span id="done-count">done</span>
             </div>
-            <button id="clear-bought" class="text-sm text-muted hover:text-ink underline underline-offset-2">Clear bought</button>
+            <button id="clear-done" class="text-sm text-muted hover:text-ink underline underline-offset-2">Clear done</button>
         </div>
 
         <ul id="items-checked" class="divide-y divide-line"></ul>
@@ -106,7 +106,7 @@
         </div>
 
         <div id="empty-collections" class="hidden flex flex-col items-center justify-center py-16 gap-4">
-            <i class="fas fa-cart-shopping text-4xl text-muted"></i>
+            <i class="fas fa-list-check text-4xl text-muted"></i>
             <p class="text-muted text-center">No lists yet. Create your first one.</p>
             <div class="flex gap-2 w-full max-w-xs">
                 <input

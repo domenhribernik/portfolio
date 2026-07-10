@@ -16,10 +16,10 @@ require_once __DIR__ . '/../config/dev-mode.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/auth.php';
 
-// Membership gate: any role in the `shopping` project may use the app at all
+// Membership gate: any role in the `list` project may use the app at all
 // (site admins pass implicitly). Which collections a member actually sees is
-// decided per row by shopping_collection_access on top of this.
-$user = Auth::requireProjectRole('shopping');
+// decided per row by list_collection_access on top of this.
+$user = Auth::requireProjectRole('list');
 
 $method     = $_SERVER['REQUEST_METHOD'];
 $id         = isset($_GET['id']) ? (int) $_GET['id'] : null;
@@ -77,7 +77,7 @@ try {
             deleteItem($user, $id);
         } elseif ($collection !== null && $collection !== '' && $checked === '1') {
             requireCollectionAccess($user, $collection);
-            clearBought($collection);
+            clearChecked($collection);
         } else {
             sendError('DELETE requires ?id= or ?collection=&checked=1', 400);
         }
@@ -85,7 +85,7 @@ try {
         sendError('Method not allowed', 405);
     }
 } catch (Exception $e) {
-    error_log('Shopping controller error: ' . $e->getMessage());
+    error_log('List controller error: ' . $e->getMessage());
     sendError('Internal server error', 500);
 }
 
@@ -153,7 +153,7 @@ function addedByLabel(array $user): string
 
 function collectionIdByName(string $name): ?int
 {
-    $stmt = Database::read()->prepare('SELECT id FROM shopping_collections WHERE name = :name');
+    $stmt = Database::read()->prepare('SELECT id FROM list_collections WHERE name = :name');
     $stmt->execute([':name' => $name]);
     $id = $stmt->fetchColumn();
     return $id === false ? null : (int) $id;
@@ -165,8 +165,8 @@ function requireCollectionAccess(array $user, string $collection): void
     if (isAdmin($user)) return;
     $stmt = Database::read()->prepare(
         'SELECT 1
-         FROM shopping_collection_access a
-         JOIN shopping_collections c ON c.id = a.collection_id
+         FROM list_collection_access a
+         JOIN list_collections c ON c.id = a.collection_id
          WHERE c.name = :name AND a.user_id = :user_id'
     );
     $stmt->execute([':name' => $collection, ':user_id' => $user['id']]);
@@ -178,7 +178,7 @@ function requireCollectionAccess(array $user, string $collection): void
 function insertGrant(int $collectionId, int $userId, ?int $grantedBy): void
 {
     Database::write()->prepare(
-        'INSERT IGNORE INTO shopping_collection_access (collection_id, user_id, granted_by)
+        'INSERT IGNORE INTO list_collection_access (collection_id, user_id, granted_by)
          VALUES (:collection_id, :user_id, :granted_by)'
     )->execute([
         ':collection_id' => $collectionId,
@@ -199,7 +199,7 @@ function ensureCollectionAccess(array $user, string $name): void
         return;
     }
     Database::write()->prepare(
-        'INSERT IGNORE INTO shopping_collections (name) VALUES (:name)'
+        'INSERT IGNORE INTO list_collections (name) VALUES (:name)'
     )->execute([':name' => $name]);
     $id = collectionIdByName($name);
     if ($id !== null && !isAdmin($user)) {
@@ -211,7 +211,7 @@ function collectionVersion(string $collection): string
 {
     $stmt = Database::read()->prepare(
         'SELECT COUNT(*) AS c, COALESCE(UNIX_TIMESTAMP(MAX(updated_at)), 0) AS m
-         FROM shopping_items
+         FROM list_items
          WHERE collection = :collection'
     );
     $stmt->execute([':collection' => $collection]);
@@ -223,7 +223,7 @@ function fetchItem(int $id): ?array
 {
     $stmt = Database::read()->prepare(
         'SELECT id, collection, name, checked, added_by, created_at, updated_at
-         FROM shopping_items
+         FROM list_items
          WHERE id = :id'
     );
     $stmt->execute([':id' => $id]);
@@ -240,13 +240,13 @@ function listCollections(array $user): void
 {
     if (isAdmin($user)) {
         $stmt = Database::read()->query(
-            'SELECT name FROM shopping_collections ORDER BY name ASC'
+            'SELECT name FROM list_collections ORDER BY name ASC'
         );
     } else {
         $stmt = Database::read()->prepare(
             'SELECT c.name
-             FROM shopping_collections c
-             JOIN shopping_collection_access a ON a.collection_id = c.id
+             FROM list_collections c
+             JOIN list_collection_access a ON a.collection_id = c.id
              WHERE a.user_id = :user_id
              ORDER BY c.name ASC'
         );
@@ -272,7 +272,7 @@ function listItems(string $collection, ?string $since): void
     }
     $stmt = Database::read()->prepare(
         'SELECT id, collection, name, checked, added_by, created_at, updated_at
-         FROM shopping_items
+         FROM list_items
          WHERE collection = :collection
          ORDER BY checked ASC, created_at ASC, id ASC'
     );
@@ -294,7 +294,7 @@ function createItem(array $user): void
     ensureCollectionAccess($user, $collection);
 
     $stmt = Database::write()->prepare(
-        'INSERT INTO shopping_items (collection, name, added_by)
+        'INSERT INTO list_items (collection, name, added_by)
          VALUES (:collection, :name, :added_by)'
     );
     $stmt->execute([
@@ -320,7 +320,7 @@ function patchItem(array $user, int $id): void
     requireCollectionAccess($user, $item['collection']);
 
     Database::write()->prepare(
-        'UPDATE shopping_items SET checked = :checked WHERE id = :id'
+        'UPDATE list_items SET checked = :checked WHERE id = :id'
     )->execute([':checked' => $checked, ':id' => $id]);
 
     $item = fetchItem($id);
@@ -334,7 +334,7 @@ function deleteItem(array $user, int $id): void
     if (!$item) sendError('Item not found', 404);
     requireCollectionAccess($user, $item['collection']);
 
-    $stmt = Database::write()->prepare('DELETE FROM shopping_items WHERE id = :id');
+    $stmt = Database::write()->prepare('DELETE FROM list_items WHERE id = :id');
     $stmt->execute([':id' => $id]);
     sendJson(['deleted' => $id]);
 }
@@ -351,9 +351,9 @@ function deleteCollection(string $collection): void
     $write = Database::write();
     $write->beginTransaction();
     try {
-        $write->prepare('DELETE FROM shopping_items WHERE collection = :collection')
+        $write->prepare('DELETE FROM list_items WHERE collection = :collection')
             ->execute([':collection' => $collection]);
-        $write->prepare('DELETE FROM shopping_collections WHERE id = :id')
+        $write->prepare('DELETE FROM list_collections WHERE id = :id')
             ->execute([':id' => $collectionId]);
         $write->commit();
     } catch (Exception $e) {
@@ -363,10 +363,10 @@ function deleteCollection(string $collection): void
     sendJson(['deleted' => $collection]);
 }
 
-function clearBought(string $collection): void
+function clearChecked(string $collection): void
 {
     $stmt = Database::write()->prepare(
-        'DELETE FROM shopping_items WHERE collection = :collection AND checked = 1'
+        'DELETE FROM list_items WHERE collection = :collection AND checked = 1'
     );
     $stmt->execute([':collection' => $collection]);
     sendJson(['cleared' => $stmt->rowCount()]);
@@ -384,7 +384,7 @@ function listAccess(string $collection): void
         'SELECT u.id, u.display_name, u.email, u.avatar_url, u.is_admin,
                 (a.id IS NOT NULL) AS granted
          FROM users u
-         LEFT JOIN shopping_collection_access a
+         LEFT JOIN list_collection_access a
              ON a.user_id = u.id AND a.collection_id = :collection_id
          WHERE u.is_active = 1
          ORDER BY u.is_admin DESC, COALESCE(u.display_name, u.email) ASC'
@@ -416,7 +416,7 @@ function grantAccess(array $admin): void
     insertGrant($collectionId, $userId, (int) $admin['id']);
 
     // One-stop admin flow: a grant is useless if the user cannot pass the
-    // membership gate, so ensure a shopping role exists (never overwrite one).
+    // membership gate, so ensure a list role exists (never overwrite one).
     Database::write()->prepare(
         'INSERT INTO user_project_roles (user_id, project_id, role, granted_by)
          SELECT :user_id, p.id, :role, :granted_by
@@ -426,7 +426,7 @@ function grantAccess(array $admin): void
         ':user_id'     => $userId,
         ':role'        => 'member',
         ':granted_by'  => $admin['id'],
-        ':project_key' => 'shopping',
+        ':project_key' => 'list',
     ]);
 
     sendJson(['granted' => true]);
@@ -441,7 +441,7 @@ function revokeAccess(string $collection): void
     if ($collectionId === null) sendError('Collection not found', 404);
 
     Database::write()->prepare(
-        'DELETE FROM shopping_collection_access WHERE collection_id = ? AND user_id = ?'
+        'DELETE FROM list_collection_access WHERE collection_id = ? AND user_id = ?'
     )->execute([$collectionId, $userId]);
 
     sendJson(['revoked' => true]);

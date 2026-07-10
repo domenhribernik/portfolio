@@ -9,7 +9,7 @@ html, body { overscroll-behavior-y: contain; }
 body { background: #f8f7f4; }
 
 /* fix: ensure hidden overrides Tailwind flex/flex-col on these IDs */
-#bought-divider.hidden,
+#done-divider.hidden,
 #empty-collections.hidden,
 #gate.hidden { display: none !important; }
 
@@ -121,11 +121,11 @@ body { background: #f8f7f4; }
 #toast.visible { opacity: 1; transform: translate(-50%, 0); }
 
 /* tiny entrance animation for new items */
-@keyframes shopping-item-in {
+@keyframes list-item-in {
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-.item-row { animation: shopping-item-in 0.18s ease-out; }
+.item-row { animation: list-item-in 0.18s ease-out; }
 
 /* iOS safe area: pad body for the notch, pad main for the home indicator */
 @supports (padding: env(safe-area-inset-top)) {

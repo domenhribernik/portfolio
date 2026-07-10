@@ -1,7 +1,7 @@
 (() => {
     'use strict';
 
-    const API = '../../app/controllers/shopping-controller.php';
+    const API = '../../app/controllers/list-controller.php';
     const AUTH_API = '../../app/controllers/auth-controller.php';
     const POLL_INTERVAL_MS = 2000;
     const COLLECTIONS_POLL_INTERVAL_MS = 5000;
@@ -60,9 +60,9 @@
         addBar: $('add-bar'),
         itemsActive: $('items-active'),
         itemsChecked: $('items-checked'),
-        boughtDivider: $('bought-divider'),
-        boughtCount: $('bought-count'),
-        clearBought: $('clear-bought'),
+        doneDivider: $('done-divider'),
+        doneCount: $('done-count'),
+        clearDone: $('clear-done'),
         emptyItems: $('empty-items'),
         emptyCollections: $('empty-collections'),
         firstListInput: $('first-list-input'),
@@ -119,7 +119,7 @@
         body: JSON.stringify(body),
     });
 
-    const ShoppingAPI = {
+    const ListAPI = {
         collections: () => api(`${API}?collections=1`),
         items: (collection, since) => {
             const url = `${API}?collection=${encodeURIComponent(collection)}` +
@@ -133,7 +133,7 @@
         setChecked: (id, checked) =>
             api(`${API}?id=${id}`, jsonPatch({ checked: checked ? 1 : 0 })),
         remove: (id) => api(`${API}?id=${id}`, { method: 'DELETE' }),
-        clearBought: (collection) =>
+        clearDone: (collection) =>
             api(`${API}?collection=${encodeURIComponent(collection)}&checked=1`, { method: 'DELETE' }),
         me: () => api(`${AUTH_API}?action=me`),
         accessList: (collection) =>
@@ -202,7 +202,7 @@
                 if (!state.collections.includes(name)) {
                     state.itemsByCollection[name] = [];
                     state.versionByCollection[name] = '0:0';
-                    ShoppingAPI.registerCollection(name).catch(() => { /* silent */ });
+                    ListAPI.registerCollection(name).catch(() => { /* silent */ });
                 }
                 setActiveCollection(name);
                 setTimeout(() => els.addInput.focus(), 0);
@@ -237,7 +237,7 @@
         if (!hasCollection) {
             els.itemsActive.innerHTML = '';
             els.itemsChecked.innerHTML = '';
-            els.boughtDivider.classList.add('hidden');
+            els.doneDivider.classList.add('hidden');
             els.emptyItems.classList.add('hidden');
             return;
         }
@@ -252,10 +252,10 @@
         for (const it of checked)   els.itemsChecked.appendChild(renderItem(it));
 
         if (checked.length) {
-            els.boughtDivider.classList.remove('hidden');
-            els.boughtCount.textContent = `bought (${checked.length})`;
+            els.doneDivider.classList.remove('hidden');
+            els.doneCount.textContent = `done (${checked.length})`;
         } else {
-            els.boughtDivider.classList.add('hidden');
+            els.doneDivider.classList.add('hidden');
         }
 
         els.emptyItems.classList.toggle('hidden', items.length > 0);
@@ -308,7 +308,7 @@
         renderItems();
 
         try {
-            const res = await ShoppingAPI.add(collection, name);
+            const res = await ListAPI.add(collection, name);
             const real = res.item;
             // swap temp for real in the local list
             const list = state.itemsByCollection[collection];
@@ -349,7 +349,7 @@
         }
         renderItems();
         try {
-            await ShoppingAPI.setChecked(target.id, target.checked);
+            await ListAPI.setChecked(target.id, target.checked);
         } catch (err) {
             target.checked = prev;
             renderItems();
@@ -370,7 +370,7 @@
         }
         renderItems();
         try {
-            await ShoppingAPI.remove(item.id);
+            await ListAPI.remove(item.id);
         } catch (err) {
             list.splice(idx, 0, removed);
             renderItems();
@@ -378,7 +378,7 @@
         }
     }
 
-    async function clearBought() {
+    async function clearDone() {
         const collection = state.activeCollection;
         if (!collection) return;
         const list = state.itemsByCollection[collection] || [];
@@ -386,7 +386,7 @@
         state.itemsByCollection[collection] = list.filter((x) => !x.checked);
         renderItems();
         try {
-            await ShoppingAPI.clearBought(collection);
+            await ListAPI.clearDone(collection);
         } catch (err) {
             state.itemsByCollection[collection] = before;
             renderItems();
@@ -409,7 +409,7 @@
         const since = force ? null : state.versionByCollection[collection];
         let res;
         try {
-            res = await ShoppingAPI.items(collection, since);
+            res = await ListAPI.items(collection, since);
         } catch (err) {
             if (err.status === 401) showGate('signed-out');
             return; // silent on network blips
@@ -427,7 +427,7 @@
     async function refreshCollections() {
         let res;
         try {
-            res = await ShoppingAPI.collections();
+            res = await ListAPI.collections();
         } catch (err) {
             if (err.status === 401) showGate('signed-out');
             return;
@@ -472,7 +472,7 @@
 
     // ----- auth gate -----
     // Full-screen stop state: 'signed-out' (no session) or 'no-access'
-    // (signed in, but no role in the shopping project yet).
+    // (signed in, but no role in the list project yet).
     function showGate(kind) {
         stopPolling();
         state.activeCollection = null;
@@ -480,7 +480,7 @@
         els.addBar.classList.add('hidden');
         els.emptyCollections.classList.add('hidden');
         els.emptyItems.classList.add('hidden');
-        els.boughtDivider.classList.add('hidden');
+        els.doneDivider.classList.add('hidden');
         els.itemsActive.innerHTML = '';
         els.itemsChecked.innerHTML = '';
         if (kind === 'signed-out') {
@@ -490,7 +490,7 @@
             els.gateLink.classList.remove('hidden');
         } else {
             els.gateIcon.className = 'fas fa-lock text-4xl text-muted';
-            els.gateMessage.textContent = 'This account has no access to the shopping lists yet. Ask Domen to let you in.';
+            els.gateMessage.textContent = 'This account has no access to the lists yet. Ask Domen to let you in.';
             els.gateLink.classList.add('hidden');
         }
         els.gate.classList.remove('hidden');
@@ -529,7 +529,7 @@
         els.accessUsers.innerHTML = '<li class="py-4 text-sm text-muted">Loading…</li>';
         let res;
         try {
-            res = await ShoppingAPI.accessList(collection);
+            res = await ListAPI.accessList(collection);
         } catch (err) {
             els.accessUsers.innerHTML = '<li class="py-4 text-sm text-muted">Could not load users.</li>';
             toast('Failed to load access: ' + err.message);
@@ -550,7 +550,7 @@
 
         els.accessDelete.disabled = true;
         try {
-            await ShoppingAPI.deleteCollection(collection);
+            await ListAPI.deleteCollection(collection);
         } catch (err) {
             toast('Failed to delete: ' + err.message);
             return;
@@ -635,8 +635,8 @@
             const granted = toggle.checked;
             toggle.disabled = true;
             try {
-                if (granted) await ShoppingAPI.accessGrant(collection, user.id);
-                else await ShoppingAPI.accessRevoke(collection, user.id);
+                if (granted) await ListAPI.accessGrant(collection, user.id);
+                else await ListAPI.accessRevoke(collection, user.id);
             } catch (err) {
                 toggle.checked = !granted;
                 toast('Failed to update access: ' + err.message);
@@ -662,7 +662,7 @@
         els.addInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); submitAdd(); }
         });
-        els.clearBought.addEventListener('click', clearBought);
+        els.clearDone.addEventListener('click', clearDone);
 
         els.manageAccess.addEventListener('click', openAccessSheet);
         els.accessClose.addEventListener('click', closeAccessSheet);
@@ -680,7 +680,7 @@
             if (!name) return;
             state.itemsByCollection[name] = [];
             state.versionByCollection[name] = '0:0';
-            ShoppingAPI.registerCollection(name).catch(() => { /* silent */ });
+            ListAPI.registerCollection(name).catch(() => { /* silent */ });
             setActiveCollection(name);
             els.firstListInput.value = '';
             setTimeout(() => els.addInput.focus(), 0);
@@ -724,7 +724,7 @@
         // who is asking? gates everything else
         let me = null;
         try {
-            me = await ShoppingAPI.me();
+            me = await ListAPI.me();
         } catch { /* treated as signed out below */ }
         if (!me || !me.user) {
             showGate('signed-out');
@@ -736,7 +736,7 @@
 
         // initial load
         try {
-            const res = await ShoppingAPI.collections();
+            const res = await ListAPI.collections();
             state.collections = res.collections || [];
         } catch (err) {
             if (err.status === 401) { showGate('signed-out'); return; }

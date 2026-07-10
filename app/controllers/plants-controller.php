@@ -22,7 +22,7 @@ require_once __DIR__ . '/../config/auth.php';
 // demo of the site owner's shelf, signed-in users get their own rows. Writes
 // require login and are always scoped to the caller's own plants. This is the
 // third backend shape next to images-controller.php (public reads, role-gated
-// writes) and shopping-controller.php (project gate + row ACL); no project
+// writes) and list-controller.php (project gate + row ACL); no project
 // role is involved, an account is the only requirement.
 
 $method = $_SERVER['REQUEST_METHOD'];

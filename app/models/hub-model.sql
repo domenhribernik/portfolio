@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS hub_apps (
 INSERT INTO projects (project_key, name) VALUES
     ('botaniq',   'Botaniq'),
     ('sourdough', 'Sourdough'),
-    ('shopping',  'Shopping List'),
+    ('list',      'Lists'),
     ('vrata',     'Vrata')
 ON DUPLICATE KEY UPDATE name = name;
 
@@ -45,11 +45,10 @@ SELECT 'Sourdough', 'fa-solid fa-bread-slice',
 FROM projects p WHERE p.project_key = 'sourdough'
 ON DUPLICATE KEY UPDATE hub_apps.name = hub_apps.name;
 
--- The Todo tile deliberately points at the shopping list app.
 INSERT INTO hub_apps (name, icon, gradient, url, sort_order, project_id)
-SELECT 'Todo', 'fa-solid fa-list-check',
-       'linear-gradient(45deg, #1f35e0 0%, #4facfe 100%)', '/views/shopping/', 30, p.id
-FROM projects p WHERE p.project_key = 'shopping'
+SELECT 'Lists', 'fa-solid fa-list-check',
+       'linear-gradient(45deg, #1f35e0 0%, #4facfe 100%)', '/views/list/', 30, p.id
+FROM projects p WHERE p.project_key = 'list'
 ON DUPLICATE KEY UPDATE hub_apps.name = hub_apps.name;
 
 INSERT INTO hub_apps (name, icon, gradient, url, sort_order, project_id)

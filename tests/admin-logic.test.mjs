@@ -24,7 +24,7 @@ test('resolveTab maps location hashes to tab ids, defaulting to users', () => {
 test('filterProjects matches key or name, case-insensitively', () => {
     const projects = [
         { project_key: 'botaniq', name: 'Botaniq' },
-        { project_key: 'shopping', name: 'Shopping List' },
+        { project_key: 'list', name: 'Lists' },
         { project_key: 'vrata', name: 'Vrata' },
     ];
     assert.deepEqual(filterProjects(projects, 'BOTA'), [projects[0]]);
@@ -37,11 +37,11 @@ test('filterProjects matches key or name, case-insensitively', () => {
 test('filterHubApps matches name, url, and project key', () => {
     const apps = [
         { name: 'Botaniq', url: '/views/botaniq/', project_key: 'botaniq' },
-        { name: 'Todo', url: '/views/shopping/', project_key: 'shopping' },
+        { name: 'Lists', url: '/views/list/', project_key: 'list' },
         { name: 'Public thing', url: '/views/rocks/', project_key: null },
     ];
-    assert.deepEqual(filterHubApps(apps, 'todo'), [apps[1]]);
-    assert.deepEqual(filterHubApps(apps, 'shopping'), [apps[1]]);
+    assert.deepEqual(filterHubApps(apps, 'lists'), [apps[1]]);
+    assert.deepEqual(filterHubApps(apps, 'views/list'), [apps[1]]);
     assert.deepEqual(filterHubApps(apps, 'rocks'), [apps[2]]);
     assert.deepEqual(filterHubApps(apps, ''), apps);
 });

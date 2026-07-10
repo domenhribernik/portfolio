@@ -79,8 +79,8 @@ Severity counts: **Critical 2 · High 4 · Medium 7 · Low 8 · Improvements 6**
 - **Impact:** CLAUDE.md's own rule ("do NOT duplicate image columns; add `image_id` → `images(id)`") is followed by `iliana_photos` but not by `plants`. Storing image bytes inline bloats the `plants` table, forces PHP to stream every image through a DB round-trip, and every `SELECT *` risks pulling megabytes (the list query dodges it with `IF(image_data IS NOT NULL,1,0)`, so the pattern only half-works). 
 - **Fix:** Migrate plant images to the `images` table + `ImageService` like `iliana_photos`, referencing by `image_id`.
 
-### PERF-02 — Shopping list polls every 2 s with a COUNT/MAX query each time
-- **Where:** [views/shopping/script.js:6](views/shopping/script.js#L6) (`POLL_INTERVAL_MS = 2000`), server version via `collectionVersion()` [shopping-controller.php:210](app/controllers/shopping-controller.php#L210)
+### PERF-02 — List app polls every 2 s with a COUNT/MAX query each time
+- **Where:** [views/list/script.js:6](views/list/script.js#L6) (`POLL_INTERVAL_MS = 2000`), server version via `collectionVersion()` [list-controller.php:210](app/controllers/list-controller.php#L210)
 - **Impact:** Every active tab fires a request every 2 s; each runs `SELECT COUNT(*), MAX(updated_at)` plus an access check. Fine for a few users, but it's a steady DB load that scales with open tabs and never backs off.
 - **Fix:** Increase the interval (5–10 s), back off when the tab is hidden (already partly done) and when idle, or move to SSE/long-poll. The `since`/version short-circuit is good; lengthening the base interval is the cheap win.
 
@@ -114,7 +114,7 @@ Representative: [index.html](index.html) (6×), [components/project-card.js](com
 [app/controllers/images-controller.php:172](app/controllers/images-controller.php#L172): `$id = (int) Database::write()->lastInsertId();` is never used (the response is fetched by uuid). Remove it. (`uploadImage` also calls `Database::write()` a second time for `lastInsertId()`, opening on the write pool for what is effectively a read-back.)
 
 ### LOW-06 — Login/read paths use the write DB connection
-e.g. [auth-controller.php:106-110](app/controllers/auth-controller.php#L106-L110) does the initial user `SELECT` on `Database::write()`, and shopping/plants read-then-write helpers open the write pool for reads. Harmless functionally, but it defeats the read/write split. Use `Database::read()` for pure reads.
+e.g. [auth-controller.php:106-110](app/controllers/auth-controller.php#L106-L110) does the initial user `SELECT` on `Database::write()`, and list/plants read-then-write helpers open the write pool for reads. Harmless functionally, but it defeats the read/write split. Use `Database::read()` for pure reads.
 
 ### LOW-07 — `stats-proxy.php` reads every file fully to count lines
 [app/proxys/stats-proxy.php:42](app/proxys/stats-proxy.php#L42) `count(file($path))` loads each file into memory. It's cached daily so the blast radius is small, but a stale-cache request triggers a full-tree walk any anonymous visitor can cause. Stream-count lines, or gate the recompute.
@@ -127,7 +127,7 @@ e.g. [auth-controller.php:106-110](app/controllers/auth-controller.php#L106-L110
 ## IMPROVEMENTS (grouped, low urgency)
 
 - **IMP-01 — Copy-pasted controller helpers.** `sendJson`/`sendError`/`jsonBody`/`sanitize` are duplicated verbatim across ~10 controllers (CLAUDE.md acknowledges this). A drifted copy is how bugs creep in. Extract to a shared `app/config/http.php` include, like `auth.php`/`database.php` already are.
-- **IMP-02 — CORS policy is inconsistent and wrong on mutating endpoints.** The auth/admin/hub/images/shopping/plants controllers correctly omit `Access-Control-Allow-Origin`; the older ones (music, pricing, stocks, jeger, rocks, sourdough, iliana, tarok, apod, stats, vrata) send `*`. For state-changing, same-origin endpoints this is inappropriate. Default to no CORS header; add specific origins only where a cross-origin reader genuinely needs it.
+- **IMP-02 — CORS policy is inconsistent and wrong on mutating endpoints.** The auth/admin/hub/images/list/plants controllers correctly omit `Access-Control-Allow-Origin`; the older ones (music, pricing, stocks, jeger, rocks, sourdough, iliana, tarok, apod, stats, vrata) send `*`. For state-changing, same-origin endpoints this is inappropriate. Default to no CORS header; add specific origins only where a cross-origin reader genuinely needs it.
 - **IMP-03 — Adopt encode-on-output everywhere** (see BUG-01) and delete the write-time `htmlspecialchars` helpers.
 - **IMP-04 — Consider a front controller / router.** Every controller re-implements method/param dispatch, `SECURE_ACCESS`, headers, and error handling. A thin router would remove that duplication and make it impossible to forget the auth include on a new endpoint (the root cause of SEC-01/02/05).
 - **IMP-05 — Centralize upload validation.** `plants` and `iliana` hand-roll their own `finfo` MIME checks instead of going through `ImageService` (which already validates). Route all uploads through `ImageService::prepareFromUpload`.
@@ -136,7 +136,7 @@ e.g. [auth-controller.php:106-110](app/controllers/auth-controller.php#L106-L110
 ---
 
 ### Notes on what was checked and found clean
-- The auth core (`auth.php`, `google-auth-service.php`, `auth-controller.php`, `admin-controller.php`, `hub-controller.php`, `shopping-controller.php`) uses prepared statements throughout, hashes session/reset tokens with SHA-256, compares secrets with `hash_equals`, rate-limits password logins, and applies sensible CSRF backstops (JSON-only bodies + same-origin). No SQL injection was found in any controller (all dynamic SQL uses bound params; the only interpolated values — `LIMIT/OFFSET`, column-name lists — are integer-cast or from fixed allow-lists).
+- The auth core (`auth.php`, `google-auth-service.php`, `auth-controller.php`, `admin-controller.php`, `hub-controller.php`, `list-controller.php`) uses prepared statements throughout, hashes session/reset tokens with SHA-256, compares secrets with `hash_equals`, rate-limits password logins, and applies sensible CSRF backstops (JSON-only bodies + same-origin). No SQL injection was found in any controller (all dynamic SQL uses bound params; the only interpolated values — `LIMIT/OFFSET`, column-name lists — are integer-cast or from fixed allow-lists).
 - Command execution in `music-controller.php` → `analyze_audio.py` is safe (`escapeshellarg`/`escapeshellcmd`, list-form `subprocess`, `LD_LIBRARY_PATH` stripped).
 - Path traversal is correctly prevented in `ImageService::remove` (`realpath` + prefix check), `sanitizeFolder`, and `tarok.php`'s `sanitizeId`.
-- Frontend rendering is largely XSS-safe: `shopping`, `iliana`, `music`, `botaniq` render server strings via `textContent`/`escapeHtml`/`esc`, and `account`'s `?redirect=` is validated to same-origin paths ([account/script.js:67](views/account/script.js#L67)).
+- Frontend rendering is largely XSS-safe: `list`, `iliana`, `music`, `botaniq` render server strings via `textContent`/`escapeHtml`/`esc`, and `account`'s `?redirect=` is validated to same-origin paths ([account/script.js:67](views/account/script.js#L67)).
