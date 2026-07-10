@@ -42,15 +42,6 @@ body {
   color: var(--rose);
 }
 
-.strap {
-  font-family: 'Fragment Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: rgba(159, 174, 151, 0.8);
-  text-align: right;
-}
-
 /* ==========================================================================
    The note
    ========================================================================== */
@@ -102,7 +93,8 @@ body {
 
 .hint {
   position: absolute;
-  right: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0.9rem;
   z-index: 10;
   margin: 0;
@@ -141,15 +133,6 @@ body {
 .cta:hover {
   background: var(--cream);
   border-color: var(--cream);
-}
-
-.fine {
-  margin: 0.9rem 0 0;
-  font-family: 'Fragment Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(159, 174, 151, 0.55);
 }
 
 /* ==========================================================================
