@@ -4,8 +4,8 @@
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paper Garden · A Bouquet Built From Divs</title>
-    <meta name="description" content="A 3D bouquet of roses, tulips and daisies where every petal is a flat div rotated into place. No WebGL, no canvas, no images: only CSS transforms.">
+    <title>Paper Flowers · Build a Bouquet From Divs</title>
+    <meta name="description" content="Build your own 3D bouquet: pick roses, sunflowers, lilies, poppies, dandelions and more, and every petal is a flat div rotated into place. No WebGL, no canvas, no images: only CSS transforms.">
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,11 +65,14 @@
             <div class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-16 sm:pt-24">
                 <p class="reveal reveal-1 font-mono text-[0.68rem] sm:text-xs tracking-[0.3em] uppercase text-rose mb-3">No WebGL · No canvas · No images</p>
                 <h1 class="reveal reveal-2 font-display text-[clamp(3.4rem,10vw,7rem)] leading-[0.95] tracking-tight">
-                    Paper<br><span class="italic text-rose">Garden</span>
+                    Paper<br><span class="italic text-rose">Flowers</span>
                 </h1>
                 <p class="reveal reveal-3 mt-4 max-w-[34ch] text-sage text-[clamp(0.95rem,2vw,1.1rem)] leading-relaxed">
                     A bouquet folded out of <span class="font-mono text-cream text-[0.9em]"><span data-plane-count>a few hundred</span></span> flat divs,
                     every petal a plane rotated into space with CSS transforms.
+                </p>
+                <p class="reveal reveal-4 mt-5">
+                    <a href="#stall" class="pointer-events-auto inline-block font-mono text-[0.68rem] tracking-[0.25em] uppercase text-cream border border-hairline rounded-full px-4 py-2 no-underline hover:border-rose hover:text-rose transition-colors">Pick your stems &darr;</a>
                 </p>
             </div>
         </div>
@@ -95,6 +98,42 @@
             <span class="ml-auto font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/70">
                 planes on stage: <b class="text-gold font-normal" data-plane-count>0</b>
             </span>
+        </div>
+    </section>
+
+    <!-- The flower stall: pick stems, generate the bouquet -->
+    <section id="stall" class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-16 sm:pt-24">
+        <div class="flex items-baseline gap-4 mb-2">
+            <h2 class="font-display italic text-3xl sm:text-4xl whitespace-nowrap">The flower stall</h2>
+            <div class="hidden sm:block flex-1 border-b border-dotted border-cream/25"></div>
+            <span class="hidden sm:inline font-mono text-[0.65rem] tracking-[0.25em] uppercase text-sage/70">open all night</span>
+        </div>
+        <p class="text-sage max-w-[68ch] mb-10">
+            Ten species grow here, every one built from the same hinged planes as the bouquet above.
+            Pick what you like, as many as the wrap can hold, and it will be regrown on the spot.
+            Hover a card to see the flower turn.
+        </p>
+
+        <div id="flower-menu" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4"></div>
+
+        <div class="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4 border border-hairline rounded-md bg-moss/60 px-5 py-4">
+            <span class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage">
+                stems: <b id="stem-total" class="text-cream font-normal">0</b><span class="text-sage/60"> / 12</span>
+            </span>
+            <span class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/70">
+                &asymp; <b id="plane-estimate" class="text-gold font-normal">0</b> petal planes
+            </span>
+            <span id="stall-note" class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-rose/90 hidden">the wrap is full</span>
+            <div class="ml-auto flex items-center gap-3">
+                <button id="surprise-btn"
+                    class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2.5 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 transition-colors">
+                    surprise me
+                </button>
+                <button id="generate-btn"
+                    class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-6 py-2.5 rounded-full bg-rose text-night border border-rose hover:bg-cream hover:border-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-rose">
+                    generate
+                </button>
+            </div>
         </div>
     </section>
 

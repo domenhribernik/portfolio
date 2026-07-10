@@ -47,8 +47,7 @@ jobs:
             CLAUDE.md,
             views/stocks/**,
             views/slovenia/**,
-            views/quizz/**,
-            views/garden/**
+            views/quizz/**
           removeExtraFilesOnServer: false
           concurrency: 1
           dryRun: false
