@@ -34,6 +34,7 @@ jobs:
             app/vendor/**,
             app/cache/**,
             app/data/**,
+            app/config/dev-mode.php,
             assets/uploads/**,
             tests/**,
             .agents/**,
