@@ -1,0 +1,340 @@
+/* Session Zero: candlelit grimoire. Tailwind handles layout/spacing;
+   this file holds keyframes, pseudo-element ornaments, and texture. */
+
+html {
+    /* the hero candle glow is wider than the viewport; clip it at the root */
+    overflow-x: clip;
+}
+
+body {
+    background: #151009;
+}
+
+/* Full-page parchment grain, one fixed overlay */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Hero candle glow ─────────────────────────────── */
+.candle-glow {
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    width: 130vmin;
+    height: 90vmin;
+    transform: translateX(-50%);
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+        rgba(217, 164, 65, 0.16) 0%,
+        rgba(193, 75, 46, 0.07) 40%,
+        transparent 70%);
+    animation: candle-flicker 5s ease-in-out infinite;
+}
+
+@keyframes candle-flicker {
+    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    23%      { opacity: 0.82; transform: translateX(-50%) scale(1.015); }
+    41%      { opacity: 0.95; transform: translateX(-50%) scale(0.99); }
+    67%      { opacity: 0.78; transform: translateX(-50%) scale(1.03); }
+    84%      { opacity: 0.9;  transform: translateX(-50%) scale(1.005); }
+}
+
+.d20-float {
+    animation: d20-float 6s ease-in-out infinite;
+}
+
+@keyframes d20-float {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-14px) rotate(3deg); }
+}
+
+/* ── Section divider ──────────────────────────────── */
+.ornament-rule {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    max-width: 28rem;
+    margin: 0 auto;
+    color: rgba(217, 164, 65, 0.55);
+}
+
+.ornament-rule::before,
+.ornament-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(217, 164, 65, 0.4));
+}
+
+.ornament-rule::after {
+    background: linear-gradient(90deg, rgba(217, 164, 65, 0.4), transparent);
+}
+
+/* ── Ornate corner brackets on cards ──────────────── */
+.ornate::before,
+.ornate::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    pointer-events: none;
+}
+
+.ornate::before {
+    top: 7px;
+    left: 7px;
+    border-top: 2px solid rgba(217, 164, 65, 0.55);
+    border-left: 2px solid rgba(217, 164, 65, 0.55);
+}
+
+.ornate::after {
+    bottom: 7px;
+    right: 7px;
+    border-bottom: 2px solid rgba(217, 164, 65, 0.55);
+    border-right: 2px solid rgba(217, 164, 65, 0.55);
+}
+
+.ornate {
+    position: relative;
+}
+
+/* ── Scroll reveal ────────────────────────────────── */
+.reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ── Quiz ─────────────────────────────────────────── */
+.quiz-answer {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: rgba(233, 216, 174, 0.04);
+    border: 1px solid rgba(217, 164, 65, 0.2);
+    color: #e9d8ae;
+    font-family: 'Alegreya', serif;
+    font-size: 1.05rem;
+    padding: 0.9rem 1.2rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.quiz-answer:hover {
+    border-color: rgba(217, 164, 65, 0.7);
+    background: rgba(217, 164, 65, 0.1);
+    transform: translateX(4px);
+}
+
+.progress-pip {
+    width: 9px;
+    height: 9px;
+    transform: rotate(45deg);
+    border: 1px solid rgba(217, 164, 65, 0.5);
+    transition: background 0.3s ease;
+}
+
+.progress-pip.filled {
+    background: #d9a441;
+    border-color: #d9a441;
+}
+
+.quiz-screen {
+    animation: screen-in 0.45s ease both;
+}
+
+@keyframes screen-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-reveal {
+    animation: result-in 0.9s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes result-in {
+    from { opacity: 0; transform: scale(0.94); filter: blur(6px); }
+    to   { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+/* ── Compendium cards ─────────────────────────────── */
+.class-card {
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.class-card:hover {
+    border-color: rgba(217, 164, 65, 0.55);
+    box-shadow: 0 0 26px rgba(217, 164, 65, 0.12);
+    transform: translateY(-3px);
+}
+
+.class-card .card-more {
+    display: none;
+}
+
+.class-card.open .card-more {
+    display: block;
+    animation: screen-in 0.35s ease both;
+}
+
+.class-card.open .card-chevron {
+    transform: rotate(180deg);
+}
+
+.class-card.highlighted {
+    border-color: #d9a441;
+    box-shadow: 0 0 34px rgba(217, 164, 65, 0.25);
+}
+
+/* ── First game section bits ──────────────────────── */
+/* Diamond outline drawn by a rotated ::before so the numeral stays upright */
+.step-pip {
+    flex: none;
+    position: relative;
+    width: 2.1rem;
+    height: 2.1rem;
+    margin-top: 0.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d9a441;
+    font-family: 'Grenze Gotisch', serif;
+    font-size: 0.95rem;
+}
+
+.step-pip::before {
+    content: '';
+    position: absolute;
+    inset: 4%;
+    border: 1px solid rgba(217, 164, 65, 0.5);
+    border-radius: 2px;
+    transform: rotate(45deg);
+}
+
+.ability-tile {
+    border: 1px solid rgba(217, 164, 65, 0.2);
+    border-radius: 2px;
+    padding: 0.9rem;
+    background: rgba(233, 216, 174, 0.03);
+}
+
+.ability-tile span {
+    font-family: 'Grenze Gotisch', serif;
+    font-size: 1.5rem;
+    color: #d9a441;
+    letter-spacing: 0.08em;
+}
+
+.ability-tile p {
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    color: rgba(233, 216, 174, 0.75);
+    line-height: 1.45;
+}
+
+/* Checklist */
+.check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    color: rgba(233, 216, 174, 0.9);
+    font-size: 0.95rem;
+    user-select: none;
+}
+
+.check-item input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.check-box {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.1rem;
+    border: 1px solid rgba(217, 164, 65, 0.5);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #151009;
+    font-size: 0.8rem;
+    transition: background 0.2s ease;
+}
+
+.check-item input:checked + .check-box {
+    background: #d9a441;
+    border-color: #d9a441;
+}
+
+.check-item input:checked ~ .check-label {
+    color: rgba(156, 138, 103, 0.9);
+    text-decoration: line-through;
+    text-decoration-color: rgba(217, 164, 65, 0.5);
+}
+
+.check-item input:focus-visible + .check-box {
+    outline: 2px solid #d9a441;
+    outline-offset: 2px;
+}
+
+/* ── Dice roller ──────────────────────────────────── */
+.d20-btn.rolling svg {
+    animation: dice-shake 0.6s ease;
+}
+
+@keyframes dice-shake {
+    0%   { transform: rotate(0) scale(1); }
+    20%  { transform: rotate(-14deg) scale(1.05); }
+    40%  { transform: rotate(11deg) scale(0.97); }
+    60%  { transform: rotate(-8deg) scale(1.04); }
+    80%  { transform: rotate(5deg) scale(0.99); }
+    100% { transform: rotate(0) scale(1); }
+}
+
+.roll-crit {
+    color: #d9a441 !important;
+    font-style: normal !important;
+    font-weight: 700;
+    animation: result-in 0.5s ease both;
+}
+
+.roll-fumble {
+    color: #c14b2e !important;
+    animation: result-in 0.5s ease both;
+}
+
+/* ── Reduced motion ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .candle-glow,
+    .d20-float,
+    .d20-btn.rolling svg {
+        animation: none;
+    }
+
+    .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .quiz-screen,
+    .result-reveal,
+    .class-card.open .card-more {
+        animation: none;
+    }
+}

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="New to Dungeons and Dragons? Take a short quiz to find your class, then learn everything you need for your first session.">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <title>Session Zero · Find Your D&D Class</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: '#151009',
+                        soot: '#221a10',
+                        card: '#1c1509',
+                        parch: '#e9d8ae',
+                        gold: '#d9a441',
+                        dim: '#9c8a67',
+                        ember: '#c14b2e',
+                        blood: '#7e2318',
+                    },
+                    fontFamily: {
+                        display: ['"Grenze Gotisch"', 'serif'],
+                        body: ['Alegreya', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-ink text-parch font-body min-h-screen antialiased overflow-x-hidden">
+
+    <!-- Top bar -->
+    <header class="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-6 flex items-center justify-between">
+        <a id="back-link" href="../../" class="no-underline text-dim hover:text-gold transition-colors text-sm tracking-wide">
+            &larr; back to portfolio
+        </a>
+        <nav class="hidden sm:flex gap-7 text-sm uppercase tracking-[0.22em] text-dim">
+            <a href="#oracle" class="no-underline hover:text-gold transition-colors">The Oracle</a>
+            <a href="#classes" class="no-underline hover:text-gold transition-colors">The Classes</a>
+            <a href="#firstgame" class="no-underline hover:text-gold transition-colors">First Game</a>
+        </nav>
+    </header>
+
+    <!-- ═══════════ Hero ═══════════ -->
+    <section class="relative max-w-6xl mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-20 text-center">
+        <div class="candle-glow" aria-hidden="true"></div>
+
+        <!-- Floating d20 -->
+        <div class="d20-float mx-auto w-28 h-28 sm:w-36 sm:h-36 relative z-10" aria-hidden="true">
+            <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-[0_0_24px_rgba(217,164,65,0.35)]">
+                <g fill="none" stroke="#d9a441" stroke-width="3" stroke-linejoin="round">
+                    <polygon points="100,10 177.9,55 177.9,145 100,190 22.1,145 22.1,55" fill="#221a10"/>
+                    <polygon points="22.1,55 177.9,55 100,190" fill="#1c1509"/>
+                    <line x1="100" y1="10" x2="22.1" y2="55"/>
+                    <line x1="100" y1="10" x2="177.9" y2="55"/>
+                    <line x1="177.9" y1="145" x2="177.9" y2="55"/>
+                    <line x1="177.9" y1="145" x2="100" y2="190"/>
+                    <line x1="22.1" y1="145" x2="22.1" y2="55"/>
+                    <line x1="22.1" y1="145" x2="100" y2="190"/>
+                </g>
+                <text x="100" y="102" text-anchor="middle" dominant-baseline="middle"
+                      font-family="Grenze Gotisch, serif" font-size="52" font-weight="600" fill="#d9a441">20</text>
+            </svg>
+        </div>
+
+        <p class="relative z-10 mt-8 text-xs sm:text-sm uppercase tracking-[0.35em] text-gold/80">
+            A beginner's companion to Dungeons &amp; Dragons
+        </p>
+        <h1 class="relative z-10 font-display font-semibold text-[4.2rem] leading-[0.95] sm:text-[7rem] text-transparent bg-clip-text bg-gradient-to-b from-parch via-gold to-[#8a5a1c] mt-3">
+            Session Zero
+        </h1>
+        <p class="relative z-10 max-w-xl mx-auto mt-6 text-lg sm:text-xl text-dim italic">
+            Every legend starts with a blank character sheet. Answer eight questions,
+            meet your class, and walk into your first game knowing exactly what to do.
+        </p>
+
+        <div class="relative z-10 mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="#oracle" class="no-underline bg-gold text-ink font-bold px-8 py-3.5 rounded-sm uppercase tracking-[0.15em] text-sm hover:bg-parch transition-colors shadow-[0_0_30px_rgba(217,164,65,0.25)]">
+                Consult the Oracle
+            </a>
+            <a href="#classes" class="no-underline border border-gold/40 text-gold px-8 py-3.5 rounded-sm uppercase tracking-[0.15em] text-sm hover:border-gold hover:bg-gold/10 transition-colors">
+                Browse the Classes
+            </a>
+        </div>
+
+        <p class="relative z-10 mt-10 text-sm text-dim/80 tracking-[0.2em] uppercase">
+            12 classes &nbsp;·&nbsp; 8 questions &nbsp;·&nbsp; 1 destiny
+        </p>
+    </section>
+
+    <div class="ornament-rule" aria-hidden="true"><span>&#10070;</span></div>
+
+    <!-- ═══════════ The Oracle (quiz) ═══════════ -->
+    <section id="oracle" class="max-w-3xl mx-auto px-5 sm:px-8 py-16 sm:py-24 scroll-mt-8">
+        <p class="text-center text-xs uppercase tracking-[0.35em] text-gold/80 reveal">Chapter I</p>
+        <h2 class="font-display text-5xl sm:text-6xl text-center mt-2 reveal">The Oracle</h2>
+        <p class="text-center text-dim italic mt-3 max-w-md mx-auto reveal">
+            Answer honestly. The dice already know who you are; this merely confirms it.
+        </p>
+
+        <div id="quiz" class="ornate relative bg-card border border-gold/20 rounded-sm mt-10 p-6 sm:p-10 min-h-[380px] reveal">
+            <!-- Rendered by script.js -->
+            <noscript><p class="text-center text-dim">The Oracle requires JavaScript to speak.</p></noscript>
+        </div>
+    </section>
+
+    <div class="ornament-rule" aria-hidden="true"><span>&#10070;</span></div>
+
+    <!-- ═══════════ The Classes ═══════════ -->
+    <section id="classes" class="max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-24 scroll-mt-8">
+        <p class="text-center text-xs uppercase tracking-[0.35em] text-gold/80 reveal">Chapter II</p>
+        <h2 class="font-display text-5xl sm:text-6xl text-center mt-2 reveal">The Twelve Classes</h2>
+        <p class="text-center text-dim italic mt-3 max-w-lg mx-auto reveal">
+            Every adventurer belongs to a class: the shape of their power.
+            Tap any card to see if it fits you. Flames mark how much there is to learn.
+        </p>
+
+        <div id="compendium" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
+            <!-- Rendered by script.js -->
+        </div>
+    </section>
+
+    <div class="ornament-rule" aria-hidden="true"><span>&#10070;</span></div>
+
+    <!-- ═══════════ First game prep ═══════════ -->
+    <section id="firstgame" class="max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-24 scroll-mt-8">
+        <p class="text-center text-xs uppercase tracking-[0.35em] text-gold/80 reveal">Chapter III</p>
+        <h2 class="font-display text-5xl sm:text-6xl text-center mt-2 reveal">Your First Game</h2>
+        <p class="text-center text-dim italic mt-3 max-w-lg mx-auto reveal">
+            Here is a secret: nobody at the table knows all the rules. This is everything
+            you actually need.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-12">
+
+            <!-- How a turn works -->
+            <div class="ornate bg-card border border-gold/20 rounded-sm p-7 reveal">
+                <h3 class="font-display text-3xl text-gold">How the game works</h3>
+                <p class="text-dim text-sm mt-1 italic">The whole game is this loop.</p>
+                <ol class="mt-5 space-y-4 list-none">
+                    <li class="flex gap-4">
+                        <span class="step-pip">I</span>
+                        <p class="text-parch/90 text-[0.95rem]">The Dungeon Master describes the scene: a cave mouth, a nervous merchant, a door that is definitely trapped.</p>
+                    </li>
+                    <li class="flex gap-4">
+                        <span class="step-pip">II</span>
+                        <p class="text-parch/90 text-[0.95rem]">You say what your character does, in plain words. "I check the door for traps." No rulebook needed.</p>
+                    </li>
+                    <li class="flex gap-4">
+                        <span class="step-pip">III</span>
+                        <p class="text-parch/90 text-[0.95rem]">If the outcome is uncertain, you roll a d20 and add the number the DM asks for. Higher is better.</p>
+                    </li>
+                    <li class="flex gap-4">
+                        <span class="step-pip">IV</span>
+                        <p class="text-parch/90 text-[0.95rem]">The DM narrates what happens, and the story moves on. That's it. That's the game.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <!-- Bring to the table -->
+            <div class="ornate bg-card border border-gold/20 rounded-sm p-7 reveal">
+                <h3 class="font-display text-3xl text-gold">Bring to the table</h3>
+                <p class="text-dim text-sm mt-1 italic">Check items off as you gather them.</p>
+                <ul id="checklist" class="mt-5 space-y-3 list-none">
+                    <!-- Rendered by script.js -->
+                </ul>
+                <p class="mt-6 text-sm text-dim italic border-t border-gold/15 pt-4">
+                    No dice yet? Any free dice app works fine for a first session. Real
+                    dice come later, and then they multiply on their own.
+                </p>
+            </div>
+
+            <!-- Table wisdom -->
+            <div class="ornate bg-card border border-gold/20 rounded-sm p-7 reveal">
+                <h3 class="font-display text-3xl text-gold">Table wisdom</h3>
+                <p class="text-dim text-sm mt-1 italic">Six rules older than any rulebook.</p>
+                <ul class="mt-5 space-y-3.5 list-none text-[0.95rem] text-parch/90">
+                    <li class="flex gap-3"><span class="text-gold">&#10070;</span> You cannot ruin the game by not knowing a rule. Everyone at the table was new once.</li>
+                    <li class="flex gap-3"><span class="text-gold">&#10070;</span> When unsure, say "I'd like to try..." The answer is almost always "roll for it."</li>
+                    <li class="flex gap-3"><span class="text-gold">&#10070;</span> Your character can know things you don't. Just ask the DM.</li>
+                    <li class="flex gap-3"><span class="text-gold">&#10070;</span> Cheer other players' big moments. It comes back around.</li>
+                    <li class="flex gap-3"><span class="text-gold">&#10070;</span> Never split the party. You will split the party. You'll learn.</li>
+                    <li class="flex gap-3"><span class="text-gold">&#10070;</span> Bring snacks. Instant party favorite, no dice required.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Ability scores strip -->
+        <div class="mt-5 ornate bg-card border border-gold/20 rounded-sm p-7 reveal">
+            <h3 class="font-display text-3xl text-gold">The six ability scores</h3>
+            <p class="text-dim text-sm mt-1 italic">Every character is described by six numbers. Big number, good at the thing.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-5">
+                <div class="ability-tile"><span>STR</span><p>Strength. Hit hard, carry more, kick doors.</p></div>
+                <div class="ability-tile"><span>DEX</span><p>Dexterity. Sneak, dodge, shoot, go first.</p></div>
+                <div class="ability-tile"><span>CON</span><p>Constitution. Health, toughness, surviving poison.</p></div>
+                <div class="ability-tile"><span>INT</span><p>Intelligence. Knowledge, logic, wizard magic.</p></div>
+                <div class="ability-tile"><span>WIS</span><p>Wisdom. Perception, instinct, druid and cleric magic.</p></div>
+                <div class="ability-tile"><span>CHA</span><p>Charisma. Persuade, deceive, perform, lead.</p></div>
+            </div>
+        </div>
+
+        <!-- Glossary -->
+        <div class="mt-5 ornate bg-card border border-gold/20 rounded-sm p-7 reveal">
+            <h3 class="font-display text-3xl text-gold">Words you'll hear at the table</h3>
+            <p class="text-dim text-sm mt-1 italic">Nod knowingly. Now you actually know.</p>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 mt-5 text-[0.95rem]">
+                <div><dt class="text-gold font-bold inline">DM</dt><dd class="inline text-parch/85"> &middot; the Dungeon Master: narrator, referee, and every monster's voice.</dd></div>
+                <div><dt class="text-gold font-bold inline">d20</dt><dd class="inline text-parch/85"> &middot; the twenty-sided die. The heart of the whole game.</dd></div>
+                <div><dt class="text-gold font-bold inline">AC</dt><dd class="inline text-parch/85"> &middot; Armor Class. Roll this or higher to land a hit.</dd></div>
+                <div><dt class="text-gold font-bold inline">HP</dt><dd class="inline text-parch/85"> &middot; Hit Points. Reach zero and you're down (not dead, usually).</dd></div>
+                <div><dt class="text-gold font-bold inline">Initiative</dt><dd class="inline text-parch/85"> &middot; a roll that sets the turn order when a fight breaks out.</dd></div>
+                <div><dt class="text-gold font-bold inline">Advantage</dt><dd class="inline text-parch/85"> &middot; roll two d20s, keep the better. Disadvantage: keep the worse.</dd></div>
+                <div><dt class="text-gold font-bold inline">Saving throw</dt><dd class="inline text-parch/85"> &middot; a roll to resist something bad: dodge fire, shake off a spell.</dd></div>
+                <div><dt class="text-gold font-bold inline">Skill check</dt><dd class="inline text-parch/85"> &middot; a d20 roll to try something: sneak, persuade, climb, recall lore.</dd></div>
+                <div><dt class="text-gold font-bold inline">Cantrip</dt><dd class="inline text-parch/85"> &middot; a small spell you can cast forever, no resource spent.</dd></div>
+                <div><dt class="text-gold font-bold inline">Short rest</dt><dd class="inline text-parch/85"> &middot; an in-game breather that recovers some abilities and health.</dd></div>
+                <div><dt class="text-gold font-bold inline">Nat 20</dt><dd class="inline text-parch/85"> &middot; the die shows a natural 20. A critical hit. The table erupts.</dd></div>
+                <div><dt class="text-gold font-bold inline">Session zero</dt><dd class="inline text-parch/85"> &middot; the meetup before the campaign where characters get made. You're doing it now.</dd></div>
+            </dl>
+        </div>
+
+        <!-- Dice shrine -->
+        <div class="mt-5 ornate bg-card border border-gold/20 rounded-sm p-7 sm:p-10 text-center reveal">
+            <h3 class="font-display text-3xl text-gold">Practice your first roll</h3>
+            <p class="text-dim text-sm mt-1 italic">Go on. It's how every adventure starts.</p>
+            <button id="roll-btn" class="d20-btn group mx-auto mt-6 block bg-transparent border-0 cursor-pointer" aria-label="Roll the d20">
+                <svg viewBox="0 0 200 200" class="w-32 h-32 sm:w-40 sm:h-40 mx-auto transition-transform group-hover:scale-105 drop-shadow-[0_0_20px_rgba(217,164,65,0.25)]">
+                    <g fill="none" stroke="#d9a441" stroke-width="3" stroke-linejoin="round">
+                        <polygon points="100,10 177.9,55 177.9,145 100,190 22.1,145 22.1,55" fill="#221a10"/>
+                        <polygon points="22.1,55 177.9,55 100,190" fill="#1c1509"/>
+                        <line x1="100" y1="10" x2="22.1" y2="55"/>
+                        <line x1="100" y1="10" x2="177.9" y2="55"/>
+                        <line x1="177.9" y1="145" x2="177.9" y2="55"/>
+                        <line x1="177.9" y1="145" x2="100" y2="190"/>
+                        <line x1="22.1" y1="145" x2="22.1" y2="55"/>
+                        <line x1="22.1" y1="145" x2="100" y2="190"/>
+                    </g>
+                    <text id="roll-value" x="100" y="102" text-anchor="middle" dominant-baseline="middle"
+                          font-family="Grenze Gotisch, serif" font-size="52" font-weight="600" fill="#d9a441">?</text>
+                </svg>
+            </button>
+            <p id="roll-flavor" class="mt-4 text-dim italic min-h-[1.5rem]">Click the die to roll.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gold/15 mt-8">
+        <div class="max-w-6xl mx-auto px-5 sm:px-8 py-10 text-center">
+            <p class="font-display text-2xl text-gold/90">May all your rolls be twenties.</p>
+            <p class="text-dim text-sm mt-2">
+                Session Zero is a fan-made beginner's guide, not affiliated with Wizards of the Coast.
+                Part of <a href="../../" class="text-gold/80 hover:text-gold no-underline">domenhribernik.com</a>.
+            </p>
+        </div>
+    </footer>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="../../components/gtranslate.js"></script>
+    <script src="../../components/tawk-chat.js"></script>
+</body>
+</html>
