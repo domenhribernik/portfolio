@@ -90,7 +90,7 @@ test('daisyPetals spreads petals evenly with bounded wobble', () => {
   assert.equal(specs.length, count);
   specs.forEach((s, i) => {
     assert.ok(Math.abs(s.azimuth - i * step) <= step * 0.12 + 1e-9, `azimuth wobble too big at ${i}`);
-    assert.ok(s.open >= 78 - 6 && s.open <= 78 + 6, `droop out of range at ${i}`);
+    assert.ok(s.open >= 70.2 - 6 && s.open <= 70.2 + 6, `droop out of range at ${i}`);
     assert.ok(s.size > 0.9 && s.size < 1.1, `size wobble out of range at ${i}`);
   });
 });

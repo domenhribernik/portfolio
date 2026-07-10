@@ -58,7 +58,8 @@ export function tulipPetals() {
    with a little per-petal droop and length wobble so it reads as grown,
    not stamped. */
 export function daisyPetals(count, opts = {}) {
-  const { open = 78, droop = 6, sizeWobble = 0.08 } = opts;
+  /* 90% of the old 78deg spread: fully flat petals read stamped-out. */
+  const { open = 70.2, droop = 6, sizeWobble = 0.08 } = opts;
   const specs = [];
   const step = 360 / count;
   for (let i = 0; i < count; i++) {
@@ -78,10 +79,12 @@ export function daisyPetals(count, opts = {}) {
 export function sunflowerPetals(outer = 14, inner = 11) {
   const specs = [];
   const oStep = 360 / outer;
+  /* Ray angles sit at 90% of their old 80/64deg spread so the head keeps
+     a slight cup instead of opening dead flat. */
   for (let i = 0; i < outer; i++) {
     specs.push({
       azimuth: i * oStep + jitter(i, oStep * 0.1),
-      open: 80 + jitter(i, 4, 3),
+      open: 72 + jitter(i, 4, 3),
       size: 1 + jitter(i, 0.06, 5),
       bend: 10 + jitter(i, 5, 7),
       ring: 0,
@@ -91,7 +94,7 @@ export function sunflowerPetals(outer = 14, inner = 11) {
   for (let i = 0; i < inner; i++) {
     specs.push({
       azimuth: iStep / 2 + i * iStep + jitter(i, iStep * 0.1, 11),
-      open: 64 + jitter(i, 4, 13),
+      open: 57.6 + jitter(i, 4, 13),
       size: 0.82 + jitter(i, 0.05, 17),
       bend: 6 + jitter(i, 4, 19),
       ring: 1,

@@ -155,15 +155,20 @@ body::after {
    carnations froze the page for minutes). A mask keeps the plane a plain
    quad and cuts the teeth at raster time instead. */
 .p-carn.petal-tip {
+  /* Teeth point OUT: each 7x5 tile is a solid wedge with its apex on the
+     tile's top edge, widening to full tile width at the bottom, so the
+     band fuses with the petal body and the sawtooth IS the silhouette.
+     (A wedge anchored at 50% 100% renders the opposite: a detached flat
+     strip with the notches facing into the petal.) */
   -webkit-mask-image:
     linear-gradient(#000 0 0),
-    conic-gradient(from -45deg at 50% 100%, #000 90deg, transparent 0);
+    conic-gradient(from 135deg at 50% 0, #000 90deg, transparent 0);
   -webkit-mask-position: 0 100%, 50% 0;
   -webkit-mask-size: 100% calc(100% - 5px), 7px 5px;
   -webkit-mask-repeat: no-repeat, repeat-x;
   mask-image:
     linear-gradient(#000 0 0),
-    conic-gradient(from -45deg at 50% 100%, #000 90deg, transparent 0);
+    conic-gradient(from 135deg at 50% 0, #000 90deg, transparent 0);
   mask-position: 0 100%, 50% 0;
   mask-size: 100% calc(100% - 5px), 7px 5px;
   mask-repeat: no-repeat, repeat-x;
