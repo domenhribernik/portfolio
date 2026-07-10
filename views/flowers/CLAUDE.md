@@ -133,8 +133,19 @@ normal). Specs in logic.js keep openness positive; flowers.js multiplies by `-1`
   gentle twist (|rz| <= ~8deg) and a per-petal `lift`/`push` so the planes fan instead of
   all crossing at one shared origin. Every avoided petal-through-petal crossing is a
   compositor plane-split saved; this is why `bouquetSeats` staggers ring heads UP (never
-  down into the tissue collar) and why per-head stems stop 6/10 of the way to the wrap
-  rather than converging at the throat.
+  down into the tissue collar). Per-head stems run the FULL seat height so each end lands
+  inside the wrap (a stem stopping short reads as a cut-off floating stick; the cost of
+  crossing the tissue planes was measured and stayed near baseline). The decorative
+  throat stems keep their tops below the rim line (y >= -14 vs rim -18) so they never end
+  against open sky.
+- **Flat flowers' cores ride the bloom.** The sunflower and daisy seed cores set `--y`
+  through `bloomY(open, closed)` (flowers.js): the core caps the closed bud, then settles
+  onto the petal disc as the petals fold flat. A fixed-height core hovers in mid-air at
+  full bloom, and its dark petal-base ring shows around it.
+- **The carnation fringe mask points its teeth OUT.** The sawtooth tile is a conic wedge
+  anchored at `50% 0` (apex on the tile's top edge, full-width at the bottom) so the band
+  fuses with the petal body and the sawtooth is the silhouette. Anchoring at `50% 100%`
+  renders the opposite: a detached flat strip with the notches facing into the petal.
 - **JS-driven camera**: drag sets `--ry`/`--rx` on the stage node; the autospin wrapper sits
   INSIDE the stage so user orbit and idle spin compose instead of fighting.
 - Planes are double-sided by default; fake depth with left/right darkening gradient layers.
@@ -162,3 +173,10 @@ harness pattern that works: freeze the spin (`scene.classList.add('spin-paused')
 (`--bloom: 0.15`) / x-ray / stall menu / mobile 390px. Steppers and Generate are plain
 buttons, so a scripted order (click +, click generate) is one `page.click` chain. The tawk.to
 CORS console error on localhost is pre-existing noise.
+
+Two gotchas that produce wrong screenshots: (1) the initial `generate()` animates `--bloom`
+through a 2.6s rAF loop that overwrites any value you set on the stage, so wait ~3s after
+load (or trigger your own generate and wait it out) before pinning `--bloom`; (2) the hero
+headline is an overlay SIBLING of `#scene`, so element screenshots of the scene include it.
+Hide `#scene ~ *` and `header` before pixel analysis: the sage copy color classifies as
+stem green.

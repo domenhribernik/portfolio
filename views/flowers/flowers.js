@@ -25,6 +25,15 @@ function sized(el, w, h) {
   return el;
 }
 
+/* A y position that rides the bloom: `closed` while the bud is shut,
+   easing to `open` at full bloom. Flat flowers (sunflower, daisy) need
+   this for their seed cores: the core caps the closed bud high up, but
+   must settle down onto the petal disc as the petals fold flat, or it
+   hovers in mid-air over the open flower. */
+function bloomY(open, closed) {
+  return `calc(${open}px + ${closed - open}px * (1 - var(--bloom, 1)))`;
+}
+
 function petal(parent, spec, cls, dims) {
   const p = face(parent, {
     ry: `${spec.azimuth}deg`,
@@ -65,10 +74,10 @@ export function daisy(parent, variant = 'daisy--white', petals = 15) {
   for (const spec of daisyPetals(petals)) {
     petal(g, spec, 'p-daisy', { w: 11, h: 22, tipH: 14, push: 7 });
   }
-  sized(face(g, { rx: '90deg', y: '-3px' }, 'daisy-core'), 24, 24);
-  sized(face(g, { rx: '90deg', y: '-7px', s: 0.62 }, 'daisy-core'), 24, 24);
-  sized(face(g, { ry: '0deg', y: '-3px' }, 'daisy-core-side'), 16, 9);
-  sized(face(g, { ry: '90deg', y: '-3px' }, 'daisy-core-side'), 16, 9);
+  sized(face(g, { rx: '90deg', y: bloomY(-0.5, -3) }, 'daisy-core'), 24, 24);
+  sized(face(g, { rx: '90deg', y: bloomY(-3, -7), s: 0.62 }, 'daisy-core'), 24, 24);
+  sized(face(g, { ry: '0deg', y: bloomY(-0.5, -3) }, 'daisy-core-side'), 16, 9);
+  sized(face(g, { ry: '90deg', y: bloomY(-0.5, -3) }, 'daisy-core-side'), 16, 9);
   return g;
 }
 
@@ -77,10 +86,10 @@ export function sunflower(parent, variant = 'sunflower--gold') {
   for (const spec of sunflowerPetals()) {
     petal(g, spec, 'p-sun', { w: 12, h: 22, tipH: 16, push: 13 });
   }
-  sized(face(g, { rx: '90deg', y: '-6px' }, 'sun-core'), 34, 34);
-  sized(face(g, { rx: '90deg', y: '-9px', s: 0.82 }, 'sun-core sun-core--top'), 34, 34);
+  sized(face(g, { rx: '90deg', y: bloomY(-1, -6) }, 'sun-core'), 34, 34);
+  sized(face(g, { rx: '90deg', y: bloomY(-4, -9), s: 0.82 }, 'sun-core sun-core--top'), 34, 34);
   ring(8, (i, a) => {
-    sized(face(g, { ry: `${a}deg`, y: '-6px', oz: '16px' }, 'sun-core-side'), 13, 6);
+    sized(face(g, { ry: `${a}deg`, y: bloomY(-1, -6), oz: '16px' }, 'sun-core-side'), 13, 6);
   });
   return g;
 }
@@ -382,10 +391,15 @@ function tissue(parent) {
   }, 11);
 }
 
+/* Filler stems inside the throat, visible only when peering down into
+   the wrap. Tops stay below the rim line (y >= -14 vs rim -18) so the
+   paper always hides them from the side: a decorative stem poking into
+   open air ends at nothing and reads as a snipped stalk. The real head
+   stems carry the visible run from each flower down into the wrap. */
 function stems(parent, count = 7) {
   ring(count, (i, a) => {
     const g = node(parent, { ry: `${a}deg`, rz: `${jitter(i, 5)}deg` });
-    sized(face(g, { oz: `${8 + jitter(i, 9, 3)}px`, y: '-4px' }, 'stem'), 3, 84);
+    sized(face(g, { oz: `${8 + jitter(i, 9, 3)}px`, y: '18px' }, 'stem'), 3, 64);
   }, 23);
 }
 
@@ -482,13 +496,13 @@ export function buildBouquet(root, order = DEFAULT_ORDER, opts = {}) {
     plant(bq, (p) => {
       /* Drawn inside the tilted seat, the stem leans with its flower and
          runs down into the bunch; length divides by the seat scale so it
-         reads the same regardless of head size. It deliberately stops
-         6/10 of the way to the wrap: past that the stems converge at the
-         throat and every pair of planes intersects, which sends the
-         compositor into plane-splitting and tanks rendering on a full
-         wrap. Self-stemmed species (seatAdjust) bring their own. */
+         reads the same regardless of head size. It runs the FULL seat
+         height so the end lands below the wrap rim, inside the cone:
+         a stem that stops short reads as a cut-off floating stick (the
+         plane-splitting cost of crossing the tissue measured fine).
+         Self-stemmed species (seatAdjust) bring their own. */
       if (!adj) {
-        stemCross(p, (-seat.y * 0.62) / seat.s, -2);
+        stemCross(p, -seat.y / seat.s, -2);
       }
       return inst.def.build(p, inst.variant, i);
     }, seat);
