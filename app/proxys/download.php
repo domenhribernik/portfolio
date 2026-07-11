@@ -320,6 +320,16 @@ function fetchInfo(string $bin, string $videoId): array
 
 $action = isset($_GET['action']) && is_string($_GET['action']) ? $_GET['action'] : '';
 
+// Deployment smoke test, safe to expose (booleans only, no paths): open
+// ?action=health in a browser to see whether this host can rip at all.
+// A 400 unknown_action here means an older download.php is still deployed.
+if ($action === 'health') {
+    respond([
+        'ytdlp'  => resolveYtdlp() !== null,
+        'ffmpeg' => resolveFfmpeg() !== null,
+    ]);
+}
+
 if ($action === 'info') {
     $body = readJsonBody();
     $videoId = extractVideoId($body['url'] ?? null);

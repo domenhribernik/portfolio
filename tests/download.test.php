@@ -181,6 +181,10 @@ check('and names the problem', ($res['body']['error'] ?? null) === 'ytdlp_missin
 $res = request('action=prepare', json_encode(['url' => 'https://youtu.be/' . VIDEO_ID, 'format' => 'mp3']), 'POST');
 check('prepare without yt-dlp answers 503', $res['status'] === 503, "status {$res['status']}");
 
+$res = request('action=health');
+check('health reports yt-dlp missing', $res['status'] === 200 && ($res['body']['ytdlp'] ?? null) === false,
+    json_encode($res['body']));
+
 // ------------------------------------------------------------------
 //  Phase 2: /bin/false -> validation is the gate, exec is the proof
 // ------------------------------------------------------------------
@@ -397,6 +401,10 @@ chmod($STUB_PY, 0644);   // deliberately not executable: the whole point of this
 check('the stub file is not executable', !is_executable($STUB_PY));
 
 startServer(8945, $STUB_PY);
+
+$res = request('action=health');
+check('health reports the non-executable upload as usable', $res['status'] === 200 && ($res['body']['ytdlp'] ?? null) === true,
+    json_encode($res['body']));
 
 $res = request('action=info', json_encode(['url' => 'https://youtu.be/' . $pyVideoId]), 'POST');
 check('info succeeds through the python3 fallback', $res['status'] === 200, "status {$res['status']}");
