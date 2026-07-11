@@ -48,7 +48,9 @@ jobs:
             CLAUDE.md,
             views/stocks/**,
             views/slovenia/**,
-            views/quizz/**
+            views/quizz/**,
+            views/download/**,
+            app/proxys/download.php
           removeExtraFilesOnServer: false
           concurrency: 1
           dryRun: false

@@ -2,36 +2,31 @@
 // Backend for the unlisted views/download tool: rips a YouTube video to mp3
 // or mp4 by shelling out to yt-dlp (there is no viable pure-PHP downloader;
 // YouTube rotates its signature ciphering constantly). Same single-file shape
-// as tarok.php/flowers.php: route by ?action=, no auth (the view is unlisted,
-// anyone with the URL may use it), files stored in app/cache/download/ and
-// pruned after 3 hours.
+// as tarok.php/flowers.php: route by ?action=, no auth (this only ever runs
+// on localhost, see below), files stored in app/cache/download/ and pruned
+// after 3 hours.
 //
-// Host requirements (the endpoint answers 503 ytdlp_missing without them):
+// Local/dev only, deliberately never deployed: this file and views/download/
+// are excluded from the SFTP upload in .github/workflows/deploy.yml, so
+// pushing to master never puts a YouTube ripper on the production site.
+// Why: YouTube bot-checks shared/cloud hosting IPs hard ("Sign in to confirm
+// you're not a bot"), and the only real mitigation, riding a real signed-in
+// browser's session cookies through an unauthenticated public endpoint, is
+// more operational risk (a Google account getting flagged by arbitrary
+// visitor traffic) than this personal tool is worth. Running it only on
+// this machine sidesteps the whole problem.
 //
-// With shell access (e.g. this XAMPP box):
+// One-time local setup (needs a real shell, i.e. this XAMPP box):
 //   sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
 //   sudo chmod a+rx /usr/local/bin/yt-dlp
 //   mkdir -m 777 app/cache/download   # Apache's daemon user cannot mkdir under app/cache/
 // YouTube breaks yt-dlp regularly; if downloads start failing, update it:
 //   sudo /usr/local/bin/yt-dlp -U
-//
-// Shared/cPanel hosting with no shell (FTP only, exec() still works, as
-// proven by music-controller.php running analyze_audio.py + ffmpeg there):
-// download https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
-// and FTP-upload the plain file anywhere under your home directory (no
-// chmod needed, it runs through python3 instead, see ytdlpCmdPrefix()
-// below), then add to the prod app/.env: YTDLP_BIN=/absolute/path/to/yt-dlp
-// To update later: re-upload the latest release over the old file.
-// ffmpeg there too (mp3 extraction and mp4 merging both need it): find the
-// host's arch with a one-shot cron writing `uname -mrs` to a file, upload a
-// matching static build (e.g. johnvansickle.com/ffmpeg for Linux x86_64),
-// chmod 755 in the panel's File Manager, add FFMPEG_BIN=/absolute/path.
 // Verify every step from a browser via ?action=health (booleans only).
 //
-// Optional overrides in app/.env: YTDLP_BIN, FFMPEG_BIN (absolute paths),
-// PYTHON_BIN (bare command or absolute path, defaults to python3), and
-// DOWNLOAD_CACHE_MAX_MB (cache size cap, default 2048; shrink it on hosts
-// with a small disk quota).
+// Optional overrides in app/.env: YTDLP_BIN, FFMPEG_BIN (absolute paths,
+// must be directly executable) and DOWNLOAD_CACHE_MAX_MB (cache size cap in
+// MB, default 2048).
 
 declare(strict_types=1);
 
@@ -53,16 +48,14 @@ if (!is_dir($cacheDir)) {
     @mkdir($cacheDir, 0775, true);
 }
 
-// Optional app/.env overrides (YTDLP_BIN, FFMPEG_BIN), loaded the silent way
-// database.php does. Missing vendor or .env is fine: the path probing below
-// still finds a system-wide install.
-require_once __DIR__ . '/../config/dev-mode.php';
-$envBase   = $DEV_MODE ? dirname(__DIR__) : '/usr/home/meuhdy';
-$envVendor = ($DEV_MODE ? dirname(__DIR__) . '/vendor' : '/usr/home/meuhdy/vendor') . '/autoload.php';
-if (empty($_ENV['YTDLP_BIN']) && file_exists($envVendor) && file_exists($envBase . '/.env')) {
+// Optional app/.env overrides (YTDLP_BIN, FFMPEG_BIN, DOWNLOAD_CACHE_MAX_MB),
+// loaded the silent way database.php does. Missing vendor or .env is fine:
+// the path probing below still finds a system-wide install.
+$envVendor = dirname(__DIR__) . '/vendor/autoload.php';
+if (empty($_ENV['YTDLP_BIN']) && file_exists($envVendor) && file_exists(dirname(__DIR__) . '/.env')) {
     try {
         require_once $envVendor;
-        Dotenv\Dotenv::createImmutable($envBase)->safeLoad();
+        Dotenv\Dotenv::createImmutable(dirname(__DIR__))->safeLoad();
     } catch (Exception $e) {
         error_log('download.php dotenv error: ' . $e->getMessage());
     }
@@ -110,39 +103,14 @@ function resolveBin(string $envKey, array $fallbacks): ?string
     return null;
 }
 
-// yt-dlp's standalone release is itself a Python zipapp: it can run either
-// directly (its own shebang, needs the executable bit) or as `python3
-// <path>`. An explicit YTDLP_BIN override only needs to be readable, not
-// executable, so it can be FTP-uploaded onto a shared host with no shell
-// access and no way to chmod it; ytdlpInvocation() below picks the right
-// form. The local absolute-path fallbacks stay executable-gated since a
-// real local install always has correct permissions.
 function resolveYtdlp(): ?string
 {
-    $bin = envValue('YTDLP_BIN');
-    if ($bin !== '') {
-        return is_file($bin) && is_readable($bin) ? $bin : null;
-    }
-    foreach (['/usr/local/bin/yt-dlp', '/usr/bin/yt-dlp'] as $path) {
-        if (is_executable($path)) {
-            return $path;
-        }
-    }
-    return null;
+    return resolveBin('YTDLP_BIN', ['/usr/local/bin/yt-dlp', '/usr/bin/yt-dlp']);
 }
 
 function resolveFfmpeg(): ?string
 {
     return resolveBin('FFMPEG_BIN', ['/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg']);
-}
-
-// Same PYTHON_BIN override as music-controller.php. Always returns a
-// usable value: python3 is assumed present, exactly as analyze_audio.py
-// already assumes it in production.
-function resolvePython(): string
-{
-    $py = envValue('PYTHON_BIN');
-    return $py !== '' ? $py : 'python3';
 }
 
 // Pull the 11-char video id out of a pasted YouTube URL. Only the rebuilt
@@ -217,15 +185,10 @@ function downloadFilename(string $title, string $videoId, string $format): strin
 // gotcha (its bundled libstdc++ breaks system ffmpeg with CXXABI errors).
 // coreutils timeout is the only real guard against a hung download:
 // max_execution_time counts PHP's own CPU time, not time blocked in exec(),
-// so PHP alone can never kill a stuck yt-dlp. If the resolved yt-dlp path
-// is not itself executable (an FTP-uploaded file with no chmod available),
-// run it through python3 instead, same as analyze_audio.py already runs.
+// so PHP alone can never kill a stuck yt-dlp.
 function ytdlpCmdPrefix(string $bin, int $timeoutSeconds): string
 {
-    $invoke = is_executable($bin)
-        ? escapeshellcmd($bin)
-        : escapeshellcmd(resolvePython()) . ' ' . escapeshellarg($bin);
-    return 'env -u LD_LIBRARY_PATH timeout -k 15 ' . $timeoutSeconds . ' ' . $invoke;
+    return 'env -u LD_LIBRARY_PATH timeout -k 15 ' . $timeoutSeconds . ' ' . escapeshellcmd($bin);
 }
 
 // Flags shared by every invocation. --no-mtime matters: yt-dlp otherwise
@@ -339,19 +302,14 @@ function fetchInfo(string $bin, string $videoId): array
 
 $action = isset($_GET['action']) && is_string($_GET['action']) ? $_GET['action'] : '';
 
-// Deployment smoke test, safe to expose (booleans only, no paths or
-// versions): open ?action=health in a browser to see whether this host can
-// rip at all, and if not, which link of the chain is broken. ytdlpConfigured
-// tells apart an unset YTDLP_BIN from one pointing at a dead path; python3
-// proves the interpreter actually runs, not merely that a name is set.
-// A 400 unknown_action here means an older download.php is still deployed.
+// Local sanity check: open ?action=health in a browser to see whether this
+// box can rip at all, and if not, which link of the chain is broken.
+// ytdlpConfigured tells apart an unset YTDLP_BIN from one pointing at a
+// dead path.
 if ($action === 'health') {
     $execEnabled = function_exists('exec');
-    $python3 = false;
     $timeoutBin = false;
     if ($execEnabled) {
-        exec(escapeshellcmd(resolvePython()) . ' --version >/dev/null 2>&1', $out, $code);
-        $python3 = $code === 0;
         exec('command -v timeout >/dev/null 2>&1', $out, $code);
         $timeoutBin = $code === 0;
     }
@@ -360,7 +318,6 @@ if ($action === 'health') {
         'ffmpeg'           => resolveFfmpeg() !== null,
         'ytdlpConfigured'  => envValue('YTDLP_BIN') !== '',
         'execEnabled'      => $execEnabled,
-        'python3'          => $python3,
         'timeout'          => $timeoutBin,
         'cacheDirWritable' => is_dir($cacheDir) && is_writable($cacheDir),
     ]);

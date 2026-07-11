@@ -14,8 +14,7 @@ declare(strict_types=1);
 //   2. /bin/false                -> URL validation vs. exec reachability
 //   3. a generated shell stub    -> the full prepare/file/cleanup lifecycle
 //   3b. stub + dead ffmpeg       -> fresh rips refuse fast, cache still serves
-//   4. a non-executable py stub  -> the FTP-upload python3 fallback
-//   5. stub + 1 MB cache cap     -> DOWNLOAD_CACHE_MAX_MB trims oldest-first
+//   4. stub + 1 MB cache cap     -> DOWNLOAD_CACHE_MAX_MB trims oldest-first
 // Everything it creates (stubs, counters, cache files) is removed on shutdown.
 //
 // Run: /opt/lampp/bin/php tests/download.test.php
@@ -199,7 +198,6 @@ check('health reports yt-dlp missing', $res['status'] === 200 && ($h['ytdlp'] ??
 check('health reports ffmpeg missing', ($h['ffmpeg'] ?? null) === false, json_encode($h));
 check('health flags YTDLP_BIN as configured-but-broken', ($h['ytdlpConfigured'] ?? null) === true, json_encode($h));
 check('health confirms exec is enabled', ($h['execEnabled'] ?? null) === true, json_encode($h));
-check('health confirms python3 actually runs', ($h['python3'] ?? null) === true, json_encode($h));
 check('health confirms coreutils timeout exists', ($h['timeout'] ?? null) === true, json_encode($h));
 check('health confirms the cache dir is writable', ($h['cacheDirWritable'] ?? null) === true, json_encode($h));
 
@@ -215,8 +213,7 @@ startServer(8940, '/nonexistent/yt-dlp', [], ['-d', 'disable_functions=exec']);
 $res = request('action=health');
 $h = $res['body'];
 check('disabled exec shows in health', $res['status'] === 200 && ($h['execEnabled'] ?? null) === false, json_encode($h));
-check('and forces python3/timeout to false', ($h['python3'] ?? null) === false && ($h['timeout'] ?? null) === false,
-    json_encode($h));
+check('and forces timeout to false', ($h['timeout'] ?? null) === false, json_encode($h));
 $res = request('action=info', json_encode(['url' => 'https://youtu.be/' . VIDEO_ID]), 'POST');
 check('info with disabled exec answers 503 exec_disabled',
     $res['status'] === 503 && ($res['body']['error'] ?? null) === 'exec_disabled', "status {$res['status']}");
@@ -421,93 +418,12 @@ check('an already-ripped job still serves from cache', $res['status'] === 200 &&
 check('again without running yt-dlp', stubInvocations($COUNTER) === $before);
 
 // ------------------------------------------------------------------
-//  Phase 4: an FTP-uploaded, non-executable yt-dlp falls back to python3
+//  Phase 4: DOWNLOAD_CACHE_MAX_MB caps the cache
 // ------------------------------------------------------------------
 //
-// Simulates shared/cPanel hosting: no shell to chmod the uploaded file, so
-// ytdlpCmdPrefix() in download.php must invoke it as `python3 <path>`
-// instead of executing it directly. A shell-script stub can't stand in
-// here (python3 can't interpret sh syntax), so this phase uses a real
-// (tiny) Python stub, deliberately left non-executable.
-
-echo "python3 fallback (non-executable yt-dlp)\n";
-
-$pyVideoId = 'zzPyFallbk1';
-$idPy = substr(hash('sha256', $pyVideoId . ':mp3'), 0, 16);
-$STUB_PY = sys_get_temp_dir() . '/ytdlp-stub-py-' . getmypid() . '.py';
-$COUNTER_PY = sys_get_temp_dir() . '/ytdlp-stub-py-count-' . getmypid();
-
-register_shutdown_function(function () use ($STUB_PY, $COUNTER_PY, $idPy) {
-    @unlink($STUB_PY);
-    @unlink($COUNTER_PY);
-    foreach (glob(CACHE_DIR . '/' . $idPy . '.*') ?: [] as $file) {
-        @unlink($file);
-    }
-});
-
-$pyStub = <<<PY
-#!/usr/bin/env python3
-import sys
-with open("$COUNTER_PY", "a") as f:
-    f.write("run\\n")
-args = sys.argv[1:]
-if "-J" in args:
-    print('{"title":"Stub Video: Ünïcode Tape","channel":"Stub Channel","duration":42,"thumbnail":"https://example.com/thumb.jpg"}')
-    sys.exit(0)
-ext = "mp3" if "-x" in args else "mp4"
-out = None
-meta = None
-i = 0
-while i < len(args):
-    if args[i] == "-o":
-        out = args[i + 1]
-        i += 2
-        continue
-    if args[i] == "--print-to-file":
-        meta = args[i + 2]
-        i += 3
-        continue
-    i += 1
-if not out:
-    sys.exit(1)
-out = out.replace("%(ext)s", ext)
-with open(out, "w") as f:
-    f.write("PYSTUBMEDIA")
-if meta:
-    with open(meta, "w") as f:
-        f.write('{"title":"Stub Video: Ünïcode Tape","channel":"Stub Channel","duration":42}')
-sys.exit(0)
-PY;
-file_put_contents($STUB_PY, $pyStub);
-chmod($STUB_PY, 0644);   // deliberately not executable: the whole point of this phase
-check('the stub file is not executable', !is_executable($STUB_PY));
-
-startServer(8945, $STUB_PY, ['FFMPEG_BIN' => '/bin/true']);
-
-$res = request('action=health');
-check('health reports the non-executable upload as usable', $res['status'] === 200 && ($res['body']['ytdlp'] ?? null) === true,
-    json_encode($res['body']));
-
-$res = request('action=info', json_encode(['url' => 'https://youtu.be/' . $pyVideoId]), 'POST');
-check('info succeeds through the python3 fallback', $res['status'] === 200, "status {$res['status']}");
-check('and returns the stub metadata', ($res['body']['title'] ?? null) === STUB_TITLE);
-
-$before = stubInvocations($COUNTER_PY);
-$res = request('action=prepare', json_encode(['url' => 'https://youtu.be/' . $pyVideoId, 'format' => 'mp3']), 'POST');
-check('prepare succeeds through the python3 fallback', $res['status'] === 200, "status {$res['status']}");
-check('with the deterministic job id', ($res['body']['id'] ?? null) === $idPy);
-check('exactly one python3 invocation happened', stubInvocations($COUNTER_PY) === $before + 1);
-
-$res = rawRequest('action=file&id=' . $idPy);
-check('the resulting file downloads', $res['status'] === 200 && $res['raw'] === 'PYSTUBMEDIA');
-
-// ------------------------------------------------------------------
-//  Phase 5: DOWNLOAD_CACHE_MAX_MB caps the cache per host
-// ------------------------------------------------------------------
-//
-// Shared hosts have small disk quotas, so the 2 GB default cap must be
-// shrinkable from .env. The old fixture is bigger than the whole 1 MB cap,
-// so a trim can never keep it; the new one always fits.
+// The 2 GB default cap must be shrinkable from .env for a small disk. The
+// old fixture is bigger than the whole 1 MB cap, so a trim can never keep
+// it; the new one always fits.
 
 echo "cache size cap (DOWNLOAD_CACHE_MAX_MB)\n";
 
@@ -522,12 +438,12 @@ file_put_contents($capB, str_repeat('B', 100_000));
 touch($capA, time() - 120);
 touch($capB, time() - 60);
 
-// Still on the phase 4 boot: under the default 2 GB cap both survive.
+startServer(8947, $STUB, ['FFMPEG_BIN' => '/bin/true']);
 $res = request('action=cleanup');
 check('fresh files survive cleanup under the default cap', is_file($capA) && is_file($capB),
     json_encode($res['body']));
 
-startServer(8947, $STUB, ['FFMPEG_BIN' => '/bin/true', 'DOWNLOAD_CACHE_MAX_MB' => '1']);
+startServer(8948, $STUB, ['FFMPEG_BIN' => '/bin/true', 'DOWNLOAD_CACHE_MAX_MB' => '1']);
 $res = request('action=cleanup');
 check('a 1 MB override trims the oldest file out', !is_file($capA), json_encode($res['body']));
 check('and keeps the newest one that fits', is_file($capB));
