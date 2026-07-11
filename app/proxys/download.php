@@ -6,14 +6,25 @@
 // anyone with the URL may use it), files stored in app/cache/download/ and
 // pruned after 3 hours.
 //
-// Host requirements (the endpoint answers 503 ytdlp_missing without them,
-// e.g. on the shared prod host):
+// Host requirements (the endpoint answers 503 ytdlp_missing without them):
+//
+// With shell access (e.g. this XAMPP box):
 //   sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
 //   sudo chmod a+rx /usr/local/bin/yt-dlp
 //   mkdir -m 777 app/cache/download   # Apache's daemon user cannot mkdir under app/cache/
 // YouTube breaks yt-dlp regularly; if downloads start failing, update it:
 //   sudo /usr/local/bin/yt-dlp -U
-// Optional overrides in app/.env: YTDLP_BIN, FFMPEG_BIN (absolute paths).
+//
+// Shared/cPanel hosting with no shell (FTP only, exec() still works, as
+// proven by music-controller.php running analyze_audio.py + ffmpeg there):
+// download https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+// and FTP-upload the plain file anywhere under your home directory (no
+// chmod needed, it runs through python3 instead, see ytdlpCmdPrefix()
+// below), then add to the prod app/.env: YTDLP_BIN=/absolute/path/to/yt-dlp
+// To update later: re-upload the latest release over the old file.
+//
+// Optional overrides in app/.env: YTDLP_BIN, FFMPEG_BIN (absolute paths),
+// PYTHON_BIN (bare command or absolute path, defaults to python3).
 
 declare(strict_types=1);
 
@@ -85,14 +96,45 @@ function resolveBin(string $envKey, array $fallbacks): ?string
     return null;
 }
 
+// yt-dlp's standalone release is itself a Python zipapp: it can run either
+// directly (its own shebang, needs the executable bit) or as `python3
+// <path>`. An explicit YTDLP_BIN override only needs to be readable, not
+// executable, so it can be FTP-uploaded onto a shared host with no shell
+// access and no way to chmod it; ytdlpInvocation() below picks the right
+// form. The local absolute-path fallbacks stay executable-gated since a
+// real local install always has correct permissions.
 function resolveYtdlp(): ?string
 {
-    return resolveBin('YTDLP_BIN', ['/usr/local/bin/yt-dlp', '/usr/bin/yt-dlp']);
+    $bin = getenv('YTDLP_BIN');
+    if ($bin === false || $bin === '') {
+        $bin = isset($_ENV['YTDLP_BIN']) && is_string($_ENV['YTDLP_BIN']) ? $_ENV['YTDLP_BIN'] : '';
+    }
+    if ($bin !== '') {
+        return is_file($bin) && is_readable($bin) ? $bin : null;
+    }
+    foreach (['/usr/local/bin/yt-dlp', '/usr/bin/yt-dlp'] as $path) {
+        if (is_executable($path)) {
+            return $path;
+        }
+    }
+    return null;
 }
 
 function resolveFfmpeg(): ?string
 {
     return resolveBin('FFMPEG_BIN', ['/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg']);
+}
+
+// Same $_ENV-then-getenv precedent as PYTHON_BIN in music-controller.php.
+// Always returns a usable value: python3 is assumed present, exactly as
+// analyze_audio.py already assumes it in production.
+function resolvePython(): string
+{
+    $py = getenv('PYTHON_BIN');
+    if ($py === false || $py === '') {
+        $py = isset($_ENV['PYTHON_BIN']) && is_string($_ENV['PYTHON_BIN']) ? $_ENV['PYTHON_BIN'] : '';
+    }
+    return $py !== '' ? $py : 'python3';
 }
 
 // Pull the 11-char video id out of a pasted YouTube URL. Only the rebuilt
@@ -167,10 +209,15 @@ function downloadFilename(string $title, string $videoId, string $format): strin
 // gotcha (its bundled libstdc++ breaks system ffmpeg with CXXABI errors).
 // coreutils timeout is the only real guard against a hung download:
 // max_execution_time counts PHP's own CPU time, not time blocked in exec(),
-// so PHP alone can never kill a stuck yt-dlp.
+// so PHP alone can never kill a stuck yt-dlp. If the resolved yt-dlp path
+// is not itself executable (an FTP-uploaded file with no chmod available),
+// run it through python3 instead, same as analyze_audio.py already runs.
 function ytdlpCmdPrefix(string $bin, int $timeoutSeconds): string
 {
-    return 'env -u LD_LIBRARY_PATH timeout -k 15 ' . $timeoutSeconds . ' ' . escapeshellcmd($bin);
+    $invoke = is_executable($bin)
+        ? escapeshellcmd($bin)
+        : escapeshellcmd(resolvePython()) . ' ' . escapeshellarg($bin);
+    return 'env -u LD_LIBRARY_PATH timeout -k 15 ' . $timeoutSeconds . ' ' . $invoke;
 }
 
 // Flags shared by every invocation. --no-mtime matters: yt-dlp otherwise

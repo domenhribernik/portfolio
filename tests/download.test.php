@@ -335,6 +335,83 @@ $res = request('action=file&id=' . $idMp3);
 check('a pruned id 404s', $res['status'] === 404, "status {$res['status']}");
 
 // ------------------------------------------------------------------
+//  Phase 4: an FTP-uploaded, non-executable yt-dlp falls back to python3
+// ------------------------------------------------------------------
+//
+// Simulates shared/cPanel hosting: no shell to chmod the uploaded file, so
+// ytdlpCmdPrefix() in download.php must invoke it as `python3 <path>`
+// instead of executing it directly. A shell-script stub can't stand in
+// here (python3 can't interpret sh syntax), so this phase uses a real
+// (tiny) Python stub, deliberately left non-executable.
+
+echo "python3 fallback (non-executable yt-dlp)\n";
+
+$pyVideoId = 'zzPyFallbk1';
+$idPy = substr(hash('sha256', $pyVideoId . ':mp3'), 0, 16);
+$STUB_PY = sys_get_temp_dir() . '/ytdlp-stub-py-' . getmypid() . '.py';
+$COUNTER_PY = sys_get_temp_dir() . '/ytdlp-stub-py-count-' . getmypid();
+
+register_shutdown_function(function () use ($STUB_PY, $COUNTER_PY, $idPy) {
+    @unlink($STUB_PY);
+    @unlink($COUNTER_PY);
+    foreach (glob(CACHE_DIR . '/' . $idPy . '.*') ?: [] as $file) {
+        @unlink($file);
+    }
+});
+
+$pyStub = <<<PY
+#!/usr/bin/env python3
+import sys
+with open("$COUNTER_PY", "a") as f:
+    f.write("run\\n")
+args = sys.argv[1:]
+if "-J" in args:
+    print('{"title":"Stub Video: Ünïcode Tape","channel":"Stub Channel","duration":42,"thumbnail":"https://example.com/thumb.jpg"}')
+    sys.exit(0)
+ext = "mp3" if "-x" in args else "mp4"
+out = None
+meta = None
+i = 0
+while i < len(args):
+    if args[i] == "-o":
+        out = args[i + 1]
+        i += 2
+        continue
+    if args[i] == "--print-to-file":
+        meta = args[i + 2]
+        i += 3
+        continue
+    i += 1
+if not out:
+    sys.exit(1)
+out = out.replace("%(ext)s", ext)
+with open(out, "w") as f:
+    f.write("PYSTUBMEDIA")
+if meta:
+    with open(meta, "w") as f:
+        f.write('{"title":"Stub Video: Ünïcode Tape","channel":"Stub Channel","duration":42}')
+sys.exit(0)
+PY;
+file_put_contents($STUB_PY, $pyStub);
+chmod($STUB_PY, 0644);   // deliberately not executable: the whole point of this phase
+check('the stub file is not executable', !is_executable($STUB_PY));
+
+startServer(8945, $STUB_PY);
+
+$res = request('action=info', json_encode(['url' => 'https://youtu.be/' . $pyVideoId]), 'POST');
+check('info succeeds through the python3 fallback', $res['status'] === 200, "status {$res['status']}");
+check('and returns the stub metadata', ($res['body']['title'] ?? null) === STUB_TITLE);
+
+$before = stubInvocations($COUNTER_PY);
+$res = request('action=prepare', json_encode(['url' => 'https://youtu.be/' . $pyVideoId, 'format' => 'mp3']), 'POST');
+check('prepare succeeds through the python3 fallback', $res['status'] === 200, "status {$res['status']}");
+check('with the deterministic job id', ($res['body']['id'] ?? null) === $idPy);
+check('exactly one python3 invocation happened', stubInvocations($COUNTER_PY) === $before + 1);
+
+$res = rawRequest('action=file&id=' . $idPy);
+check('the resulting file downloads', $res['status'] === 200 && $res['raw'] === 'PYSTUBMEDIA');
+
+// ------------------------------------------------------------------
 
 echo "\n$passed passed, $failed failed\n";
 exit($failed === 0 ? 0 : 1);
