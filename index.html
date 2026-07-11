@@ -242,7 +242,7 @@
             </section>
 
             <!-- APOD section -->
-            <section class="leaf apod-section bg-paper py-24 md:py-32 border-b border-ink/10">
+            <section class="leaf apod-section py-24 md:py-32">
                 <div class="leaf__inner">
                     <div class="mx-auto max-w-[1200px] px-6 md:px-10">
                         <div class="kinetic-secthead reveal">
@@ -255,10 +255,8 @@
                         <div class="apod-body" id="apod-body" hidden>
                             <h2 class="reveal apod-main-title kinetic-heading text-4xl md:text-5xl text-ink mb-10">Astronomical Picture of the Day</h2>
 
-                            <div class="apod-content">
-                                <figure class="apod-media">
-                                    <img id="apod-img" class="apod-img" alt="">
-                                </figure>
+                            <div class="apod-content" data-orientation="landscape">
+                                <figure class="apod-media" id="apod-media"></figure>
 
                                 <div class="apod-text">
                                     <h3 class="apod-title" id="apod-title"></h3>
@@ -358,6 +356,7 @@
     <script type="module" src="components/main-navbar.js"></script>
     <script type="module" src="components/projects-index.js"></script>
     <script src="views/homepage/homepage-proxy.js"></script>
+    <script type="module" src="views/homepage/apod.js"></script>
     <script src="views/homepage/script.js"></script>
     <script src="views/homepage/kinetic.js"></script>
     <script src="views/homepage/intro.js"></script>

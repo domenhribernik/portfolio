@@ -93,46 +93,5 @@ function animateNumber(el, target) {
     })(start);
 }
 
-// ===== APOD (Astronomy Picture of the Day) =====
-
-(async () => {
-    const spinner = document.getElementById('apod-spinner');
-    const body    = document.getElementById('apod-body');
-    const imgEl   = document.getElementById('apod-img');
-
-    const renderApod = (d) => {
-        document.getElementById('apod-title').textContent   = d.title;
-        document.getElementById('apod-date').textContent    = new Date(d.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById('apod-explain').textContent = d.explanation;
-        document.getElementById('apod-link').href           = `https://apod.nasa.gov/apod/ap${d.date.replace(/-/g, '').slice(2)}.html`;
-        document.getElementById('apod-copy').textContent    = d.copyright ? `© ${d.copyright}` : '';
-
-        imgEl.src   = d.url;
-        imgEl.alt   = d.title;
-        imgEl.title = d.title;
-        imgEl.onclick = () => window.open(d.hdurl || d.url, '_blank');
-    };
-
-    try {
-        const res = await fetch('app/proxys/apod-proxy.php');
-        if (!res.ok) throw new Error(res.status);
-        const d = await res.json();
-
-        renderApod(d);
-        spinner.hidden = true;
-        body.hidden    = false;
-
-        // If what we got isn't today's date, try to fetch fresh in the background
-        const today = new Date().toISOString().slice(0, 10);
-        if (d.date !== today) {
-            fetch('app/proxys/apod-proxy.php?refresh=1')
-                .then(r => r.ok ? r.json() : null)
-                .then(fresh => { if (fresh?.date && fresh.date !== d.date) renderApod(fresh); })
-                .catch(() => {});
-        }
-    } catch (e) {
-        spinner.hidden = true;
-        body.hidden    = false;
-        body.innerHTML = `<p style="text-align:center;color:var(--clay)">Unable to load picture.</p>`;
-    }
-})();
+// APOD (Astronomy Picture of the Day) rendering lives in apod.js, loaded as an
+// ES module so it can import the tested layout logic from apod-logic.js.

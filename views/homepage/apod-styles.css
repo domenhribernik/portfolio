@@ -12,53 +12,135 @@
     margin: 3rem auto;
 }
 
+/* ============================================================
+   FEATURE BAND
+   The APOD section sits on a warm beige band, a step off the
+   page's paper so it reads as its own feature while staying light.
+   Text keeps the ink/stone palette; the floating tag keeps its
+   ink/paper pill (it sits on the picture, so band tone is moot).
+   ============================================================ */
+.apod-section {
+    --apod-fg: var(--ink, #1c1a17);      /* headings / strong text  */
+    --apod-body: #2c2822;                /* explanation body        */
+    --apod-muted: var(--stone, #6b6256); /* date, copyright         */
+    --apod-hairline: var(--hairline, rgba(28, 26, 23, 0.12));
+    background: radial-gradient(120% 85% at 50% -10%, #f2ecdd, #e7ddc9);
+    border-bottom: 1px solid var(--apod-hairline);
+}
+
+/* Floating "open at full resolution" tag, mirroring the projects badge:
+   ink pill, paper label, top-right corner of the picture. It is
+   pointer-events:none so a tap on it falls through to the media handler. */
+.apod-section .apod-open-tag {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--ink, #1c1a17);
+    color: var(--paper, #f6f2ea);
+    padding: 0.34rem 0.6rem;
+    border-radius: 2px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    z-index: 3;
+    pointer-events: none;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+}
+
+.apod-section .apod-open-tag i {
+    font-size: 0.7rem;
+    color: var(--clay, #d4451f);
+}
+
+/* The whole media box opens the full-resolution picture. */
+.apod-section .apod-content[data-kind="image"] .apod-media {
+    cursor: pointer;
+}
+
 /*
- * Layout: two fixed proportional columns on desktop so the picture never
- * dictates the row width. The image column is held at ~45% regardless of the
- * picture's aspect ratio (square, portrait, or panorama), leaving the text a
- * comfortable ~55%. The image is bounded by its column width plus a sane
- * max-height, so a square or portrait picture can no longer balloon and
- * squeeze the text the way it did when sized off the viewport.
+ * Layout: the picture is never poured into a fixed box. It renders at its own
+ * aspect ratio and the media column shrink-wraps to it, bounded by two caps:
+ *   - a WIDTH cap (max-width %), which binds on wide / landscape / panorama
+ *     pictures and guarantees the text column keeps a readable share;
+ *   - a HEIGHT cap (max-height vh), which binds on tall / portrait pictures so
+ *     they can own the section without ever overflowing above the fold.
+ * The text column simply flexes into whatever horizontal space is left. JS
+ * reads the picture's natural size, classifies it (portrait / square /
+ * landscape / panorama), and stamps that on [data-orientation] so each bucket
+ * can fine-tune its caps below. Baseline "balanced" feel: wide <= 58% width,
+ * tall <= 80vh, square ~50/50.
  */
 .apod-section .apod-content {
-    --apod-image-col: 5fr;   /* image side */
-    --apod-text-col: 6fr;    /* text side  */
-    display: grid;
-    grid-template-columns: minmax(0, var(--apod-image-col)) minmax(0, var(--apod-text-col));
+    display: flex;
     gap: 4rem;
-    align-items: start;
+    align-items: flex-start;
 }
 
 .apod-section .apod-media {
+    position: relative;  /* anchors the floating open-full-size tag */
+    flex: 0 1 auto;      /* shrink-wrap to the picture */
+    min-width: 0;
     margin: 0;
     padding: 0;
-    /* Full-width block within the image column; the image inside is left
-       anchored. The offset clay frame lives on the <img> itself (outline)
-       so it hugs the picture's true rendered box for any aspect ratio,
-       including portraits that get clamped by max-height. */
+    max-width: 58%;      /* baseline width cap; per-orientation overrides below */
 }
 
 .apod-section .apod-img {
     display: block;
     width: auto;
     height: auto;
-    max-width: 100%;     /* bounded by the image column, not the viewport */
-    max-height: 70vh;    /* keep tall / portrait pictures from running away */
+    max-width: 100%;     /* bounded by the media column, never the viewport */
+    max-height: 80vh;    /* baseline height cap; keeps tall pictures in check */
     border-radius: 2px;
-    box-shadow: 0 12px 40px rgba(28, 26, 23, 0.1);
-    outline: 1px solid rgba(212, 69, 31, 0.25); /* clay @ 25%, offset frame */
+    box-shadow: 0 14px 40px rgba(28, 26, 23, 0.12);
+    outline: 1px solid rgba(212, 69, 31, 0.25); /* clay offset frame that hugs any aspect */
     outline-offset: 6px;
-    cursor: pointer;
-    transition: box-shadow 0.35s ease, transform 0.35s ease;
-    object-fit: contain;
 }
 
-.apod-section .apod-img:hover {
-    box-shadow: 0 20px 60px rgba(28, 26, 23, 0.16);
-    transform: translateY(-3px);
+/* Per-orientation cap tuning. The attribute lives on .apod-content. */
+.apod-section .apod-content[data-orientation="portrait"] .apod-media  { max-width: 55%; }
+.apod-section .apod-content[data-orientation="portrait"] .apod-img    { max-height: 80vh; }
+
+.apod-section .apod-content[data-orientation="square"] .apod-media    { max-width: 50%; }
+.apod-section .apod-content[data-orientation="square"] .apod-img      { max-height: 72vh; }
+
+.apod-section .apod-content[data-orientation="landscape"] .apod-media,
+.apod-section .apod-content[data-orientation="panorama"]  .apod-media { max-width: 58%; }
+
+/* Video days: no intrinsic size, so give the column a fixed share and let a
+   16:9 frame do the sizing. Treated as landscape by the renderer. */
+.apod-section .apod-content[data-kind="video"] .apod-media {
+    flex: 0 0 58%;
+    max-width: 58%;
+}
+
+.apod-section .apod-video {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 2px;
+    outline: 1px solid rgba(212, 69, 31, 0.25);
+    outline-offset: 6px;
+    box-shadow: 0 12px 40px rgba(28, 26, 23, 0.1);
+    overflow: hidden;
+}
+
+.apod-section .apod-video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
 }
 
 .apod-section .apod-text {
+    flex: 1 1 0;         /* fills whatever the media column leaves */
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -68,7 +150,7 @@
     font-family: 'Bricolage Grotesque', sans-serif;
     font-size: 1.6rem;
     font-weight: 700;
-    color: var(--ink, #1c1a17);
+    color: var(--apod-fg);
     line-height: 1.2;
     letter-spacing: -0.02em;
     margin: 0;
@@ -79,7 +161,7 @@
     flex-direction: column;
     gap: 0.4rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--hairline, rgba(28, 26, 23, 0.12));
+    border-bottom: 1px solid var(--apod-hairline);
 }
 
 .apod-section .apod-date {
@@ -87,13 +169,13 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--stone, #6b6256);
+    color: var(--apod-muted);
     margin: 0;
 }
 
 .apod-section .apod-copyright {
     font-size: 0.85rem;
-    color: var(--stone, #6b6256);
+    color: var(--apod-muted);
     font-style: italic;
     margin: 0;
 }
@@ -101,7 +183,7 @@
 .apod-section .apod-explain {
     font-size: 1rem;
     line-height: 1.75;
-    color: var(--ink, #1c1a17);
+    color: var(--apod-body);
     margin: 0;
 }
 
@@ -113,7 +195,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--ink, #1c1a17);
+    color: var(--apod-fg);
     text-decoration: none;
     font-weight: 500;
     font-size: 0.9rem;
@@ -130,16 +212,36 @@
     font-size: 0.8rem;
 }
 
-/* Tablet / narrow desktop: stack into a single column. */
+/* Tablet / narrow desktop: the picture can no longer share the row usefully, so
+   stack it above the text. All orientation caps collapse to full width. */
 @media (max-width: 968px) {
-    .apod-section .apod-content {
-        grid-template-columns: 1fr;
+    .apod-section .apod-content,
+    .apod-section .apod-content[data-kind="video"] {
+        flex-direction: column;
         gap: 2.5rem;
+        align-items: stretch;
+    }
+
+    /* Images shrink-wrap to the picture and center, so the floating tag keeps
+       hugging the image's own corner rather than the column edge. */
+    .apod-section .apod-content:not([data-kind="video"]) .apod-media,
+    .apod-section .apod-content[data-orientation]:not([data-kind="video"]) .apod-media {
+        flex: 0 0 auto;
+        width: auto;
+        max-width: 100%;
+        align-self: center;
+    }
+
+    /* Video fills the column so its 16:9 frame can resolve a definite width. */
+    .apod-section .apod-content[data-kind="video"] .apod-media {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 100%;
+        align-self: stretch;
     }
 
     .apod-section .apod-img {
         max-height: 60vh;
-        margin-inline: auto; /* center when narrower than the column */
     }
 }
 

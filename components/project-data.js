@@ -188,5 +188,15 @@ export const projects = {
       visitSite: "views/parlour",
     },
     iconClass: "fas fa-bell",
+  },
+  nebo: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #0b102a 0%, #2c3e70 100%)",
+    title: "Nebo",
+    description: "A live map of the night sky: every naked eye star, the five visible planets, and the Moon in its exact phase, computed right in your browser from orbital mechanics. Drag time and watch dusk fall over the dome.",
+    links: {
+      visitSite: "views/nebo",
+    },
+    iconClass: "fas fa-moon",
   }
 };
