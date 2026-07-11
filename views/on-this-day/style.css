@@ -50,7 +50,9 @@ body.otd-page .logo {
 }
 
 /* ============================================================
-   MASTHEAD / HERO
+   MASTHEAD / HERO — a printed front page: folio nameplate, a giant
+   ghosted day-of-year figure watermark, the kinetic headline, a
+   dateline rule and the day's record index.
    ============================================================ */
 .otd-hero {
     position: relative;
@@ -76,6 +78,34 @@ body.otd-page .logo {
     mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
 }
 
+/* The day of the year, set enormous and ghost-faint behind the masthead.
+   An almanac is a record of one specific day, so the day number is the
+   watermark of the whole page. */
+.otd-hero__daynum {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: -0.08em;
+    transform: translateY(-46%) translateZ(0);
+    backface-visibility: hidden;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.8;
+    font-size: clamp(13rem, 34vw, 30rem);
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(28, 26, 23, 0.07);
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    animation: otdDaynumIn 1.2s ease 0.35s forwards;
+}
+
+@keyframes otdDaynumIn {
+    from { opacity: 0; transform: translateY(-40%) translateZ(0); }
+    to   { opacity: 1; transform: translateY(-46%) translateZ(0); }
+}
+
 .otd-hero__inner {
     position: relative;
     z-index: 3;
@@ -91,22 +121,23 @@ body.otd-page .logo {
     }
 }
 
-/* Newspaper dateline strip above the title */
-.otd-masthead {
-    display: flex;
+/* Folio nameplate: brand / edition / issue, framed by a heavy double rule
+   above and a hairline below, like the top of a broadsheet. */
+.otd-folio {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     gap: 1rem;
-    padding-bottom: 1.1rem;
-    margin-bottom: 1.8rem;
-    border-top: 2px solid var(--ink);
-    border-bottom: 1px solid rgba(28, 26, 23, 0.25);
-    padding-top: 0.7rem;
+    padding: 0.7rem 0 0.85rem;
+    border-top: 3px solid var(--ink);
+    box-shadow: 0 -6px 0 -5px var(--ink);   /* the thin second rule of the double line */
+    border-bottom: 1px solid rgba(28, 26, 23, 0.28);
+    margin-bottom: 1.9rem;
     opacity: 0;
     animation: otdFadeUp 0.7s ease 0.05s forwards;
 }
 
-.otd-masthead__brand {
+.otd-folio__brand {
     font-family: 'Space Mono', monospace;
     font-weight: 700;
     text-transform: uppercase;
@@ -115,13 +146,24 @@ body.otd-page .logo {
     color: var(--ink);
 }
 
-.otd-masthead__edition {
+.otd-folio__edition {
+    justify-self: center;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.64rem;
+    color: var(--clay);
+    white-space: nowrap;
+}
+
+.otd-folio__issue {
+    justify-self: end;
     font-family: 'Space Mono', monospace;
     text-transform: uppercase;
     letter-spacing: 0.18em;
     font-size: 0.66rem;
     color: var(--stone);
-    text-align: right;
+    white-space: nowrap;
 }
 
 .otd-eyebrow {
@@ -157,7 +199,7 @@ body.otd-page .logo {
     text-transform: uppercase;
     line-height: 0.86;
     letter-spacing: -0.035em;
-    font-size: clamp(2.6rem, 8.5vw, 7rem);
+    font-size: clamp(2.8rem, 9vw, 7.5rem);
     color: var(--ink);
     margin: 0;
 }
@@ -220,22 +262,43 @@ body.otd-page .logo {
     color: rgba(28, 26, 23, 0.78);
 }
 
-/* Big mono date readout — the changing centrepiece of the masthead */
+/* Dateline rule: the day's date on the left, place of publication on the
+   right, hung between two rules like the folio line of a paper. */
 .otd-dateline {
-    margin-top: 1.6rem;
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-size: clamp(0.95rem, 1.8vw, 1.25rem);
-    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 2rem;
+    padding: 0.7rem 0;
+    border-top: 1.5px solid var(--ink);
+    border-bottom: 1.5px solid var(--ink);
+    max-width: 44rem;
     opacity: 0;
     animation: otdFadeUp 0.8s ease 0.78s forwards;
 }
 
-.otd-dateline::before {
-    content: '▸ ';
+.otd-dateline__date {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: clamp(0.9rem, 1.8vw, 1.15rem);
+    color: var(--ink);
+}
+
+.otd-dateline__date::before {
+    content: '\25B8\00A0';
     color: var(--clay);
+}
+
+.otd-dateline__place {
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.66rem;
+    color: var(--stone);
 }
 
 .otd-hero__foot {
@@ -282,12 +345,24 @@ body.otd-page .logo {
     transform: translateY(3px);
 }
 
-/* Hero stat strip — live counts per ledger */
+/* Record index — the day's live counts, set as a small newspaper index
+   with a caption and clay-ticked columns. */
 .otd-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 0 2.2rem;
+    align-items: flex-end;
+    gap: 0.6rem 2.2rem;
     margin: 0;
+}
+
+.otd-stats__caption {
+    flex-basis: 100%;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.58rem;
+    color: var(--stone);
 }
 
 .otd-stat {
@@ -314,6 +389,7 @@ body.otd-page .logo {
     font-size: 1.9rem;
     line-height: 1;
     color: var(--ink);
+    font-variant-numeric: tabular-nums;
 }
 
 .otd-corner {
@@ -331,6 +407,7 @@ body.otd-page .logo {
 
 @media (max-width: 900px) {
     .otd-corner { display: none; }
+    .otd-hero__daynum { font-size: clamp(11rem, 42vw, 20rem); opacity: 0.9; }
 }
 
 /* ============================================================
@@ -416,17 +493,224 @@ body.otd-page .logo {
 }
 
 /* ============================================================
-   FEATURED GALLERY — broadsheet clippings
-   The component (gallery.css) handles layout/track; here we set its
-   vars and theme the slides script.js builds.
+   FEATURED — the front page: one big lead dispatch above a slider
+   of the remaining dispatches.
    ============================================================ */
-.otd-gallery {
+
+/* ---- Lead dispatch: the front-page lead story ---- */
+.otd-lead {
+    display: grid;
+    grid-template-columns: 1fr;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 8px 8px 0 var(--ink);
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
+}
+
+@media (min-width: 860px) {
+    .otd-lead {
+        grid-template-columns: 1.05fr 0.95fr;
+        min-height: 30rem;
+    }
+}
+
+a.otd-lead:hover {
+    transform: translate(-5px, -5px);
+    box-shadow: 13px 13px 0 var(--clay);
+}
+
+.otd-lead__media {
+    position: relative;
+    overflow: hidden;
+    min-height: 15rem;
+    background: var(--paper-2);
+    border-bottom: 2px solid var(--ink);
+}
+
+@media (min-width: 860px) {
+    .otd-lead__media {
+        border-bottom: none;
+        border-right: 2px solid var(--ink);
+    }
+}
+
+.otd-lead__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(38%) contrast(1.03);
+    transition: transform 0.6s ease, filter 0.4s ease;
+}
+
+a.otd-lead:hover .otd-lead__media img {
+    transform: scale(1.04);
+    filter: grayscale(0%);
+}
+
+.otd-lead__media--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    color: rgba(28, 26, 23, 0.18);
+}
+
+/* Rotated "Lead dispatch" ribbon in the corner of the media */
+.otd-lead__ribbon {
+    position: absolute;
+    top: 1rem;
+    left: -0.25rem;
+    z-index: 2;
+    padding: 0.35rem 1rem;
+    background: var(--clay);
+    color: var(--paper);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.62rem;
+    box-shadow: 3px 3px 0 rgba(28, 26, 23, 0.35);
+}
+
+.otd-lead__body {
+    display: flex;
+    flex-direction: column;
+    padding: 1.9rem 1.8rem 2rem;
+}
+
+@media (min-width: 860px) {
+    .otd-lead__body { padding: 2.6rem 2.4rem; justify-content: center; }
+}
+
+.otd-lead__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.1rem;
+}
+
+.otd-lead__year {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--clay);
+    font-variant-numeric: tabular-nums;
+}
+
+.otd-lead__kicker {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.62rem;
+    color: var(--stone);
+    padding-left: 0.9rem;
+    border-left: 2px solid rgba(28, 26, 23, 0.2);
+}
+
+.otd-lead__title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    font-size: clamp(1.5rem, 3.6vw, 2.5rem);
+    color: var(--ink);
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.otd-lead__extract {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(28, 26, 23, 0.74);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.otd-lead__extract p { margin-bottom: 0.5rem; }
+.otd-lead__extract a { color: var(--clay-dk); text-decoration: underline; text-underline-offset: 2px; }
+
+.otd-lead__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    margin-top: 1.6rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.74rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border-bottom: 2px solid var(--clay);
+    padding-bottom: 0.25rem;
+    transition: gap 0.2s ease, color 0.2s ease;
+}
+
+a.otd-lead:hover .otd-lead__more { color: var(--clay); gap: 0.85rem; }
+
+.otd-lead.is-in { animation: otdFadeUp 0.6s ease; }
+
+/* Lead loading skeleton */
+.otd-lead.loading { box-shadow: 8px 8px 0 rgba(28, 26, 23, 0.12); border-color: rgba(28, 26, 23, 0.22); }
+.otd-lead.loading .otd-lead__media { min-height: 16rem; }
+.otd-lead__sk {
+    height: 14px;
+    border-radius: 2px;
+    background: rgba(28, 26, 23, 0.1);
+    margin-bottom: 12px;
+}
+.otd-lead__sk--title { height: 30px; width: 82%; margin: 0.4rem 0 1rem; }
+.otd-lead__sk--short { width: 38%; }
+
+/* ---- More dispatches: the slider header + the component's vars ---- */
+.otd-more {
     /* Leave --gallery-gap at the component defaults (16px desktop / 12px
        mobile). gallery.js computes its slide-width + transform math from
        those exact numbers, so overriding the CSS gap here desyncs the
        carousel (most visibly on mobile). */
     --gallery-slide-radius: 3px;
-    --gallery-nav-size: 52px;
+    --gallery-nav-size: 46px;
+    margin-top: 2.75rem;
+}
+
+.otd-more__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.6rem;
+    border-bottom: 1.5px solid var(--ink);
+}
+
+.otd-more__label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 0.72rem;
+    color: var(--stone);
+}
+
+.otd-more__nav {
+    display: flex;
+    gap: 0.7rem;
 }
 
 /* Square editorial nav buttons with a hard ink shadow */
@@ -597,7 +881,7 @@ body.otd-page .logo {
 .gallery-link:hover svg { transform: translate(2px, -2px); }
 
 /* Dots: clay active, ink-tinted idle */
-.otd-gallery .gallery-dot { color: var(--ink); }
+.otd-more .gallery-dot { color: var(--ink); }
 .gallery-dot.active { background: var(--clay); opacity: 1; }
 
 /* ============================================================
@@ -792,27 +1076,49 @@ body.otd-page .logo {
 }
 
 /* ============================================================
-   COLOPHON / CLOSE
+   COLOPHON / CLOSE — the end-of-edition plate
    ============================================================ */
 .otd-section--close {
     background: var(--paper-2);
     text-align: center;
 }
 
-.otd-close {
+.otd-colophon {
     display: flex;
     flex-direction: column;
     align-items: center;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 3rem 2.5rem 3.4rem;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+    box-shadow: 8px 8px 0 var(--ink);
 }
 
-.otd-close__eyebrow {
+.otd-colophon__mark {
     font-family: 'Space Mono', monospace;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.24em;
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     color: var(--clay);
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.4rem;
+}
+
+.otd-colophon__rule {
+    width: 3.4rem;
+    height: 3px;
+    background: var(--ink);
+    margin: 1.6rem 0 1.3rem;
+}
+
+.otd-colophon__note {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: var(--stone);
+    margin-bottom: 2rem;
 }
 
 .otd-close__title {
@@ -823,7 +1129,6 @@ body.otd-page .logo {
     line-height: 0.98;
     font-size: clamp(2.2rem, 6vw, 4.4rem);
     color: var(--ink);
-    margin-bottom: 2rem;
 }
 
 .otd-link {
@@ -894,7 +1199,11 @@ html:has(body.otd-page)::-webkit-scrollbar-corner { background: #efe9dd; }
     .otd-wrap { padding: 0 1.15rem; }
 
     .otd-hero__inner { padding: 7.5rem 1.15rem 4rem; }
-    .otd-masthead { flex-wrap: wrap; gap: 0.3rem; }
+    .otd-folio {
+        grid-template-columns: 1fr auto;
+        row-gap: 0.35rem;
+    }
+    .otd-folio__edition { grid-column: 1 / -1; justify-self: start; order: 3; }
     .otd-hero__foot {
         flex-direction: column;
         align-items: flex-start;
@@ -902,12 +1211,17 @@ html:has(body.otd-page)::-webkit-scrollbar-corner { background: #efe9dd; }
         margin-top: 2.2rem;
     }
     .otd-btn { width: 100%; justify-content: center; }
-    .otd-stats { gap: 1.3rem 1.6rem; }
+    .otd-stats { gap: 1.1rem 1.6rem; }
     .otd-stat dd { font-size: 1.6rem; }
     .otd-sub { gap: 0.9rem; margin-top: 1.8rem; }
+    .otd-dateline { flex-direction: column; gap: 0.35rem; margin-top: 1.7rem; }
 
     .otd-secthead { gap: 0.8rem; margin-bottom: 1.4rem; }
     .otd-secthead__label { letter-spacing: 0.14em; font-size: 0.64rem; }
+
+    .otd-lead__body { padding: 1.5rem 1.35rem 1.7rem; }
+    .otd-lead__more { margin-top: 1.2rem; }
+    .otd-more__label { letter-spacing: 0.14em; font-size: 0.66rem; }
 
     .gallery-image { height: 220px; }
     .gallery-content { padding: 1.15rem; }
@@ -951,13 +1265,19 @@ html:has(body.otd-page)::-webkit-scrollbar-corner { background: #efe9dd; }
 @media (prefers-reduced-motion: reduce) {
     .otd-tline .ch,
     .otd-eyebrow,
-    .otd-masthead,
+    .otd-folio,
     .otd-sub,
     .otd-dateline,
     .otd-hero__foot {
         animation: none !important;
         opacity: 1 !important;
         transform: none !important;
+    }
+
+    /* The ghost day figure keeps its vertical centering transform. */
+    .otd-hero__daynum {
+        animation: none !important;
+        opacity: 1 !important;
     }
 
     .reveals-on .reveal {

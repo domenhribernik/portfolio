@@ -46,8 +46,6 @@
     <link rel="stylesheet" href="views/homepage/kinetic.css">
     <link rel="stylesheet" href="views/homepage/intro.css">
     <link rel="stylesheet" href="views/homepage/apod-styles.css">
-    <link rel="stylesheet" href="components/gallery.css">
-    <link rel="stylesheet" href="views/homepage/otd-gallery.css">
     <link rel="stylesheet" href="views/homepage/peel.css">
 
     <!-- Arm the intro before first paint so the hero starts hidden (no flash).
@@ -243,47 +241,12 @@
                 </div>
             </section>
 
-            <!-- On this day -->
-            <section id="on-this-day-section" class="leaf bg-paper-2 border-y border-ink/10">
-                <div class="leaf__inner">
-                    <div class="featured-section">
-                        <div class="kinetic-secthead reveal">
-                            <span class="kinetic-secthead__num">04</span>
-                            <span class="kinetic-secthead__label">Wikipedia</span>
-                            <span class="kinetic-secthead__rule"></span>
-                        </div>
-                        <div class="otd-head">
-                            <h2 class="reveal kinetic-heading uppercase text-5xl md:text-7xl text-ink mb-3">On This Day</h2>
-                            <p class="otd-view-more">View more that happened <a href="views/on-this-day"><u>On This Day</u></a></p>
-                        </div>
-                        <div class="gallery-container">
-                            <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous slide">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="15 18 9 12 15 6"></polyline>
-                                </svg>
-                            </button>
-                            <div class="gallery-viewport">
-                                <div class="gallery-track" id="featured-track"></div>
-                            </div>
-                            <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next slide">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="gallery-dots" id="featured-dots"></div>
-                    </div>
-                </div>
-            </section>
-
             <!-- APOD section -->
             <section class="leaf apod-section bg-paper py-24 md:py-32 border-b border-ink/10">
                 <div class="leaf__inner">
                     <div class="mx-auto max-w-[1200px] px-6 md:px-10">
                         <div class="kinetic-secthead reveal">
-                            <span class="kinetic-secthead__num">05</span>
+                            <span class="kinetic-secthead__num">04</span>
                             <span class="kinetic-secthead__label">NASA APOD</span>
                             <span class="kinetic-secthead__rule"></span>
                         </div>
@@ -322,7 +285,7 @@
                 <div class="leaf__inner flex flex-col min-h-[100svh]">
                     <div class="mx-auto max-w-[1200px] px-6 md:px-10 w-full pt-24 md:pt-32 pb-12">
                         <div class="kinetic-secthead reveal">
-                            <span class="kinetic-secthead__num">06</span>
+                            <span class="kinetic-secthead__num">05</span>
                             <span class="kinetic-secthead__label">Contact</span>
                             <span class="kinetic-secthead__rule"></span>
                         </div>
@@ -394,7 +357,6 @@
 
     <script type="module" src="components/main-navbar.js"></script>
     <script type="module" src="components/projects-index.js"></script>
-    <script src="components/gallery.js"></script>
     <script src="views/homepage/homepage-proxy.js"></script>
     <script src="views/homepage/script.js"></script>
     <script src="views/homepage/kinetic.js"></script>

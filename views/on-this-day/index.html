@@ -56,10 +56,16 @@
     <!-- ============================ MASTHEAD / HERO ============================ -->
     <header class="otd-hero">
         <div class="otd-grid" aria-hidden="true"></div>
+        <!-- Giant ghosted day-of-year figure: an almanac is about one specific
+             day, so the day number is the masthead's watermark. Filled by JS. -->
+        <span class="otd-hero__daynum" id="hero-daynum" aria-hidden="true">&nbsp;</span>
+
         <div class="otd-hero__inner">
-            <div class="otd-masthead">
-                <span class="otd-masthead__brand">Wikipedia Almanac</span>
-                <span class="otd-masthead__edition" id="masthead-edition">Daily Edition</span>
+            <!-- Folio strip / nameplate: brand · edition · issue number -->
+            <div class="otd-folio">
+                <span class="otd-folio__brand">The Wikipedia Almanac</span>
+                <span class="otd-folio__edition" id="masthead-edition">Daily Edition</span>
+                <span class="otd-folio__issue" id="masthead-issue">No.&nbsp;—</span>
             </div>
 
             <p class="otd-eyebrow"><span class="otd-eyebrow__dot" aria-hidden="true"></span>Today in history</p>
@@ -79,11 +85,16 @@
                     date, pulled live from Wikipedia and laid out like the morning paper.</p>
             </div>
 
-            <p class="otd-dateline" id="current-date">&nbsp;</p>
+            <!-- Dateline rule: today's date left, the place of publication right -->
+            <div class="otd-dateline">
+                <span class="otd-dateline__date" id="current-date">&nbsp;</span>
+                <span class="otd-dateline__place">Celje, Slovenia &middot; 46.23&deg;&nbsp;N</span>
+            </div>
 
             <div class="otd-hero__foot">
-                <a href="#almanac" class="otd-btn" data-scroll>Read the record <i class="fas fa-arrow-down"></i></a>
+                <a href="#featured" class="otd-btn" data-scroll>Read the edition <i class="fas fa-arrow-down"></i></a>
                 <dl class="otd-stats">
+                    <span class="otd-stats__caption" aria-hidden="true">In today's record</span>
                     <div class="otd-stat otd-stat--events"><dt>Events</dt><dd id="stat-events">—</dd></div>
                     <div class="otd-stat otd-stat--births"><dt>Births</dt><dd id="stat-births">—</dd></div>
                     <div class="otd-stat otd-stat--deaths"><dt>Deaths</dt><dd id="stat-deaths">—</dd></div>
@@ -93,7 +104,7 @@
         <span class="otd-corner" id="hero-corner" aria-hidden="true">&nbsp;</span>
     </header>
 
-    <!-- ============================ FEATURED ============================ -->
+    <!-- ============================ FEATURED / THE FRONT PAGE ============================ -->
     <section class="otd-section" id="featured">
         <div class="otd-wrap">
             <div class="otd-secthead reveal">
@@ -104,27 +115,38 @@
             <h2 class="otd-heading reveal">The front page.</h2>
             <p class="otd-lede reveal">The day's most notable moments, illustrated and dated.</p>
 
-            <div class="otd-gallery reveal" id="featured-section">
-                <div class="gallery-container">
-                    <button class="gallery-nav gallery-prev otd-gallery__nav" id="gallery-prev" aria-label="Previous slide">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="15 18 9 12 15 6"></polyline>
-                        </svg>
-                    </button>
-                    <div class="gallery-viewport">
-                        <div class="gallery-track" id="featured-track">
-                            <!-- Gallery slides injected by script.js -->
+            <div id="featured-section">
+                <!-- Lead dispatch (the biggest featured item). Built by script.js. -->
+                <article class="otd-lead reveal" id="featured-lead"></article>
+
+                <!-- The remaining dispatches, as a slider. -->
+                <div class="otd-more reveal">
+                    <div class="otd-more__head">
+                        <span class="otd-more__label">More dispatches</span>
+                        <div class="otd-more__nav">
+                            <button class="gallery-nav gallery-prev otd-gallery__nav" id="gallery-prev" aria-label="Previous slide">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <button class="gallery-nav gallery-next otd-gallery__nav" id="gallery-next" aria-label="Next slide">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
                         </div>
                     </div>
-                    <button class="gallery-nav gallery-next otd-gallery__nav" id="gallery-next" aria-label="Next slide">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </button>
+                    <div class="gallery-container">
+                        <div class="gallery-viewport">
+                            <div class="gallery-track" id="featured-track">
+                                <!-- Gallery slides injected by script.js -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gallery-dots" id="featured-dots"></div>
                 </div>
-                <div class="gallery-dots" id="featured-dots"></div>
             </div>
         </div>
     </section>
@@ -165,10 +187,15 @@
 
     <!-- ============================ COLOPHON ============================ -->
     <section class="otd-section otd-section--close">
-        <div class="otd-wrap otd-close">
-            <p class="otd-close__eyebrow reveal">One date, the whole record</p>
-            <h2 class="otd-close__title reveal">Come back<br>tomorrow.</h2>
-            <a href="../../index.html" class="otd-link reveal">Back to the portfolio <i class="fas fa-arrow-right"></i></a>
+        <div class="otd-wrap">
+            <div class="otd-colophon reveal">
+                <span class="otd-colophon__mark" aria-hidden="true">&#10022;&ensp;End of edition&ensp;&#10022;</span>
+                <h2 class="otd-close__title">Come back<br>tomorrow.</h2>
+                <span class="otd-colophon__rule" aria-hidden="true"></span>
+                <p class="otd-colophon__note">The record is reset every morning, pulled live from Wikipedia
+                    and set fresh for the date.</p>
+                <a href="../../index.html" class="otd-link">Back to the portfolio <i class="fas fa-arrow-right"></i></a>
+            </div>
         </div>
     </section>
 
@@ -182,7 +209,7 @@
 
     <script type="module" src="../../components/main-navbar.js"></script>
     <script src="../../components/gallery.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
     <script src="../../components/gtranslate.js"></script>
 </body>
 

@@ -1,10 +1,17 @@
+// On This Day — loads today's record from otd-proxy.php and typesets it as a
+// broadsheet: a folio masthead, a featured front page (one lead dispatch above
+// a slider of the rest) and three tabbed ledgers. DOM-free shaping lives in
+// logic.js (unit-tested); this file owns the DOM and the Gallery wiring.
+import {
+    splitFeatured, splitEntry, pickImage, pickExtractHtml, pickPageUrl, dayOfYear, pad2
+} from './logic.js';
+
 (() => {
     const loadingOverlay = document.getElementById('loading-overlay');
-    const currentDateEl = document.getElementById('current-date');
-
     const today = new Date();
 
-    //? Masthead dateline + colophon details
+    //? Masthead dateline
+    const currentDateEl = document.getElementById('current-date');
     if (currentDateEl) {
         currentDateEl.textContent = today.toLocaleDateString('en-US', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -16,14 +23,20 @@
         editionEl.textContent = `${today.toLocaleDateString('en-US', { weekday: 'long' })} Edition`;
     }
 
-    //? Day-of-year readout for the hero corner tag ("Day 158 / 365")
+    //? Day-of-year drives the issue number, the hero corner tag and the giant
+    //  ghost figure behind the masthead.
+    const doy = dayOfYear(today);
+    const isLeap = (y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0)(today.getFullYear());
+    const totalDays = isLeap ? 366 : 365;
+
+    const issueEl = document.getElementById('masthead-issue');
+    if (issueEl) issueEl.textContent = `No. ${pad2(doy)} / ${totalDays}`;
+
     const cornerEl = document.getElementById('hero-corner');
-    if (cornerEl) {
-        const startOfYear = new Date(today.getFullYear(), 0, 0);
-        const dayOfYear = Math.floor((today - startOfYear) / 86400000);
-        const isLeap = (y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0)(today.getFullYear());
-        cornerEl.textContent = `Day ${dayOfYear} / ${isLeap ? 366 : 365}`;
-    }
+    if (cornerEl) cornerEl.textContent = `Day ${doy} / ${totalDays}`;
+
+    const daynumEl = document.getElementById('hero-daynum');
+    if (daynumEl) daynumEl.textContent = String(doy).padStart(3, '0');
 
     const yearEl = document.getElementById('currentYear');
     if (yearEl) yearEl.textContent = today.getFullYear();
@@ -61,48 +74,25 @@
         return tmp.textContent || tmp.innerText || '';
     };
 
-    const getFirstImage = (pages) => {
-        if (!pages || !Array.isArray(pages) || pages.length === 0) return null;
-        const pageWithImage = pages.find(p => p.thumbnail?.source);
-        return pageWithImage?.thumbnail?.source || null;
-    };
-
-    const getExtractHtml = (pages) => {
-        if (!pages || !Array.isArray(pages) || pages.length === 0) return null;
-        return pages[0]?.extract_html || null;
-    };
-
-    const getFirstPageUrl = (pages) => {
-        if (!pages || !Array.isArray(pages) || pages.length === 0) return null;
-        const page = pages[0];
-        return page?.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${page?.title}`;
-    };
+    const READ_MORE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
 
     // ========================================
-    // GALLERY INSTANCE
+    // GALLERY INSTANCE (the "more dispatches" slider)
     // ========================================
 
     let featuredGallery = null;
 
     const initFeaturedGallery = () => {
         const track = document.getElementById('featured-track');
-        const prevBtn = document.getElementById('gallery-prev');
-        const nextBtn = document.getElementById('gallery-next');
-        const dotsContainer = document.getElementById('featured-dots');
-
         if (!track) return;
 
-        // Destroy existing gallery if any
-        if (featuredGallery) {
-            featuredGallery.destroy();
-        }
+        if (featuredGallery) featuredGallery.destroy();
 
-        // Create new gallery instance
         featuredGallery = new Gallery({
-            track: track,
-            prevBtn: prevBtn,
-            nextBtn: nextBtn,
-            dotsContainer: dotsContainer,
+            track,
+            prevBtn: document.getElementById('gallery-prev'),
+            nextBtn: document.getElementById('gallery-next'),
+            dotsContainer: document.getElementById('featured-dots'),
             options: {
                 slidesPerView: { desktop: 3, tablet: 2, mobile: 1 },
                 gap: 16,
@@ -120,6 +110,43 @@
     // UI COMPONENTS
     // ========================================
 
+    // The lead dispatch: the front-page lead story. Replaces #featured-lead so
+    // the whole plate can be an <a> when the dispatch links to Wikipedia.
+    const buildLead = (item) => {
+        const holder = document.getElementById('featured-lead');
+        if (!holder) return;
+
+        const year = item.year || '';
+        const text = stripHtml(item.text || '');
+        const imageUrl = pickImage(item.pages);
+        const extract = pickExtractHtml(item.pages);
+        const pageUrl = pickPageUrl(item.pages);
+
+        const el = document.createElement(pageUrl ? 'a' : 'article');
+        el.id = 'featured-lead';
+        el.className = 'otd-lead is-in';
+        if (pageUrl) { el.href = pageUrl; el.target = '_blank'; el.rel = 'noopener'; }
+
+        const media = imageUrl
+            ? `<div class="otd-lead__media"><span class="otd-lead__ribbon">Lead dispatch</span><img src="${imageUrl}" alt="${text.substring(0, 60)}" loading="lazy"></div>`
+            : `<div class="otd-lead__media otd-lead__media--placeholder"><span class="otd-lead__ribbon">Lead dispatch</span>📜</div>`;
+
+        el.innerHTML = `
+            ${media}
+            <div class="otd-lead__body">
+                <div class="otd-lead__meta">
+                    ${year ? `<span class="otd-lead__year">${year}</span>` : ''}
+                    <span class="otd-lead__kicker">Today's lead</span>
+                </div>
+                <h3 class="otd-lead__title">${text}</h3>
+                ${extract ? `<div class="otd-lead__extract">${extract}</div>` : ''}
+                ${pageUrl ? `<span class="otd-lead__more">Read the full entry ${READ_MORE_SVG}</span>` : ''}
+            </div>
+        `;
+
+        holder.replaceWith(el);
+    };
+
     const createGallerySlide = (item, index, total) => {
         const article = document.createElement('article');
         article.className = 'gallery-slide';
@@ -127,23 +154,18 @@
 
         const year = item.year || '';
         const text = stripHtml(item.text || '');
-        const imageUrl = getFirstImage(item.pages);
-        const extractHtml = getExtractHtml(item.pages);
-        const pageUrl = getFirstPageUrl(item.pages);
+        const imageUrl = pickImage(item.pages);
+        const extract = pickExtractHtml(item.pages);
+        const pageUrl = pickPageUrl(item.pages);
 
-        const imageHtml = imageUrl ? `
-            <div class="gallery-image">
-                <img src="${imageUrl}" alt="${text.substring(0, 50)}" loading="lazy">
-            </div>
-        ` : `<div class="gallery-image gallery-image-placeholder"><span>📜</span></div>`;
+        const imageHtml = imageUrl
+            ? `<div class="gallery-image"><img src="${imageUrl}" alt="${text.substring(0, 50)}" loading="lazy"></div>`
+            : `<div class="gallery-image gallery-image-placeholder"><span>📜</span></div>`;
 
-        const extractHtml2 = extractHtml ? `<div class="gallery-extract">${extractHtml}</div>` : '';
-        const linkHtml = pageUrl ? `
-            <a href="${pageUrl}" target="_blank" rel="noopener" class="gallery-link">
-                Read more
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-            </a>
-        ` : '';
+        const extractHtml = extract ? `<div class="gallery-extract">${extract}</div>` : '';
+        const linkHtml = pageUrl
+            ? `<a href="${pageUrl}" target="_blank" rel="noopener" class="gallery-link">Read more ${READ_MORE_SVG}</a>`
+            : '';
 
         article.innerHTML = `
             ${imageHtml}
@@ -153,7 +175,7 @@
                     <span class="gallery-counter">${index + 1} / ${total}</span>
                 </div>
                 <h3 class="gallery-title">${text}</h3>
-                ${extractHtml2}
+                ${extractHtml}
                 ${linkHtml}
             </div>
         `;
@@ -162,20 +184,9 @@
     };
 
     const createCategoryItem = (item) => {
-        const patterns = [
-            /^([^,]+),\s*(.+)$/, /^([^:]+):\s*(.+)$/, /^(.+?\([^)]+\))\s*,?\s*(.+)$/,
-        ];
-
-        let title = '', description = '';
-        const text = stripHtml(item.text || '');
-        for (const pattern of patterns) {
-            const match = text.match(pattern);
-            if (match) { title = match[1].trim(); description = match[2].trim(); break; }
-        }
-        if (!title) { title = text; }
-
+        const { title, description } = splitEntry(stripHtml(item.text || ''));
         const year = item.year || '';
-        const pageUrl = getFirstPageUrl(item.pages);
+        const pageUrl = pickPageUrl(item.pages);
 
         // The whole entry is the link when a Wikipedia page exists
         const el = document.createElement(pageUrl ? 'a' : 'div');
@@ -183,14 +194,23 @@
         if (pageUrl) { el.href = pageUrl; el.target = '_blank'; el.rel = 'noopener'; }
 
         const descHtml = description ? `<span class="otd-entry__desc">${description}</span>` : '';
-
         el.innerHTML = `
             <span class="otd-entry__year">${year || '—'}</span>
             <span class="otd-entry__body"><span class="otd-entry__title">${title}</span>${descHtml}</span>
         `;
-
         return el;
     };
+
+    const leadSkeleton = () => `
+        <div class="otd-lead__media loading-block"></div>
+        <div class="otd-lead__body">
+            <div class="otd-lead__sk otd-lead__sk--short"></div>
+            <div class="otd-lead__sk otd-lead__sk--title"></div>
+            <div class="otd-lead__sk"></div>
+            <div class="otd-lead__sk"></div>
+            <div class="otd-lead__sk" style="width:66%"></div>
+        </div>
+    `;
 
     const createGalleryPlaceholder = () => {
         const div = document.createElement('div');
@@ -232,25 +252,35 @@
     // ========================================
 
     const populateFeatured = (data) => {
-        const track = document.getElementById('featured-track');
         const section = document.getElementById('featured-section');
+        const track = document.getElementById('featured-track');
+        const more = document.querySelector('.otd-more');
+        if (!section) return;
 
-        if (!track || !section) return;
-        track.innerHTML = '';
+        const { lead, rest } = splitFeatured(data);
 
-        if (!data || data.length === 0) {
+        if (!lead) {
             section.style.display = 'none';
             return;
         }
 
-        data.forEach((item, index) => {
-            track.appendChild(createGallerySlide(item, index, data.length));
-        });
+        buildLead(lead);
 
+        // The slider only exists when there are dispatches beyond the lead.
+        if (track) track.innerHTML = '';
+        if (rest.length === 0) {
+            if (more) more.style.display = 'none';
+            return;
+        }
+
+        if (more) more.style.display = '';
+        rest.forEach((item, index) => {
+            track.appendChild(createGallerySlide(item, index, rest.length));
+        });
         initFeaturedGallery();
     };
 
-    const populateCategory = (containerId, data, type) => {
+    const populateCategory = (containerId, data) => {
         const container = document.getElementById(containerId);
         if (!container) return;
         container.innerHTML = '';
@@ -260,22 +290,24 @@
             return;
         }
 
-        data.slice(0, 15).forEach(item => {
-            container.appendChild(createCategoryItem(item, type));
-        });
+        data.slice(0, 15).forEach(item => container.appendChild(createCategoryItem(item)));
     };
 
     const fetchData = async () => {
+        const lead = document.getElementById('featured-lead');
         const track = document.getElementById('featured-track');
         const eventsContainer = document.getElementById('events-container');
         const birthsContainer = document.getElementById('births-container');
         const deathsContainer = document.getElementById('deaths-container');
 
+        if (lead) {
+            lead.className = 'otd-lead loading';
+            lead.innerHTML = leadSkeleton();
+        }
         if (track) {
             track.innerHTML = '';
             for (let i = 0; i < 3; i++) track.appendChild(createGalleryPlaceholder());
         }
-
         [eventsContainer, birthsContainer, deathsContainer].forEach(container => {
             if (container) {
                 container.innerHTML = '';
@@ -290,14 +322,14 @@
 
             loadingOverlay?.classList.add('hidden');
             populateFeatured(data.selected?.selected);
-            populateCategory('events-container', data.events?.events, 'events');
-            populateCategory('births-container', data.births?.births, 'births');
-            populateCategory('deaths-container', data.deaths?.deaths, 'deaths');
+            populateCategory('events-container', data.events?.events);
+            populateCategory('births-container', data.births?.births);
+            populateCategory('deaths-container', data.deaths?.deaths);
 
             //? Live counts for the hero stat strip + the record tabs
             const setCount = (id, arr) => {
                 const el = document.getElementById(id);
-                if (el) el.textContent = String(arr?.length ?? 0).padStart(2, '0');
+                if (el) el.textContent = pad2(arr?.length ?? 0);
             };
             setCount('stat-events', data.events?.events);
             setCount('stat-births', data.births?.births);
@@ -308,7 +340,8 @@
         } catch (error) {
             console.error('Error:', error);
             loadingOverlay?.classList.add('hidden');
-            if (track) showError(track);
+            const leadNow = document.getElementById('featured-lead');
+            if (leadNow) { leadNow.className = 'otd-lead'; showError(leadNow); }
             [eventsContainer, birthsContainer, deathsContainer].forEach(c => { if (c) showError(c); });
         }
     };
