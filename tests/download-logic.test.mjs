@@ -79,6 +79,10 @@ test('isProbablyExpired mirrors the server\'s 3 hour cache window', () => {
 test('errorMessage maps proxy codes to human text and falls back generically', () => {
     assert.match(errorMessage('invalid_url'), /youtube/i);
     assert.match(errorMessage('ytdlp_missing'), /server/i);
+    assert.match(errorMessage('ffmpeg_missing'), /server/i);
+    assert.notEqual(errorMessage('ffmpeg_missing'), errorMessage('ytdlp_missing'));
+    assert.match(errorMessage('exec_disabled'), /server|host/i);
+    assert.notEqual(errorMessage('exec_disabled'), errorMessage(undefined));
     assert.match(errorMessage('video_rejected'), /2 hours|500 MB/);
     assert.match(errorMessage('busy'), /minute/i);
     const generic = errorMessage(undefined);

@@ -58,6 +58,8 @@ const ERRORS = {
     invalid_url: 'That link does not point at a YouTube video.',
     invalid_format: 'Unknown format.',
     ytdlp_missing: 'The download tool is not installed on this server.',
+    ffmpeg_missing: 'The media converter (ffmpeg) is not installed on this server.',
+    exec_disabled: 'This server does not allow running the download tool.',
     live_stream: 'Live streams cannot be downloaded.',
     video_rejected: 'Video refused: longer than 2 hours, larger than 500 MB, or live.',
     info_timeout: 'YouTube took too long to answer, try again.',

@@ -5,13 +5,18 @@ declare(strict_types=1);
 // ripper: yt-dlp media + JSON sidecars in app/cache/download/, pruned after
 // 3 hours).
 //
-// No network, no yt-dlp, no database: the suite boots the PHP built-in
-// server three times with a different YTDLP_BIN injected into the process
-// environment (the proxy reads it via getenv() for exactly this reason):
-//   1. a nonexistent path        -> every rip action answers 503
+// No network, no yt-dlp, no ffmpeg, no database: the suite boots the PHP
+// built-in server once per host flavor, injecting YTDLP_BIN / FFMPEG_BIN /
+// DOWNLOAD_CACHE_MAX_MB into the process environment (the proxy reads them
+// via getenv() for exactly this reason):
+//   1. dead yt-dlp + dead ffmpeg -> rip actions 503, health tells the steps apart
+//      (plus an unset-YTDLP_BIN boot and a disable_functions=exec boot)
 //   2. /bin/false                -> URL validation vs. exec reachability
 //   3. a generated shell stub    -> the full prepare/file/cleanup lifecycle
-// Everything it creates (stub, counter, cache files) is removed on shutdown.
+//   3b. stub + dead ffmpeg       -> fresh rips refuse fast, cache still serves
+//   4. a non-executable py stub  -> the FTP-upload python3 fallback
+//   5. stub + 1 MB cache cap     -> DOWNLOAD_CACHE_MAX_MB trims oldest-first
+// Everything it creates (stubs, counters, cache files) is removed on shutdown.
 //
 // Run: /opt/lampp/bin/php tests/download.test.php
 
@@ -118,15 +123,19 @@ function stopServer(): void
     $server = null;
 }
 
-function startServer(int $port, string $ytdlpBin): void
+function startServer(int $port, ?string $ytdlpBin, array $extraEnv = [], array $phpArgs = []): void
 {
     global $server, $API;
     stopServer();
     // proc_open's env REPLACES the environment, so PATH must ride along
-    // (the proxy's exec() needs it to find env/timeout/sh).
-    $env = ['PATH' => (string) getenv('PATH'), 'YTDLP_BIN' => $ytdlpBin];
+    // (the proxy's exec() needs it to find env/timeout/sh). A null
+    // $ytdlpBin leaves YTDLP_BIN unset entirely (the unconfigured host).
+    $env = array_merge(['PATH' => (string) getenv('PATH')], $extraEnv);
+    if ($ytdlpBin !== null) {
+        $env['YTDLP_BIN'] = $ytdlpBin;
+    }
     $server = proc_open(
-        [PHP_BIN, '-S', HOST . ':' . $port, '-t', DOC_ROOT],
+        array_merge([PHP_BIN], $phpArgs, ['-S', HOST . ':' . $port, '-t', DOC_ROOT]),
         [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
         $pipes,
         DOC_ROOT,
@@ -172,7 +181,7 @@ function stubInvocations(string $counter): int
 // ------------------------------------------------------------------
 
 echo "yt-dlp missing\n";
-startServer(8942, '/nonexistent/yt-dlp');
+startServer(8942, '/nonexistent/yt-dlp', ['FFMPEG_BIN' => '/nonexistent/ffmpeg']);
 
 $res = request('action=info', json_encode(['url' => 'https://youtu.be/' . VIDEO_ID]), 'POST');
 check('info without yt-dlp answers 503', $res['status'] === 503, "status {$res['status']}");
@@ -181,9 +190,39 @@ check('and names the problem', ($res['body']['error'] ?? null) === 'ytdlp_missin
 $res = request('action=prepare', json_encode(['url' => 'https://youtu.be/' . VIDEO_ID, 'format' => 'mp3']), 'POST');
 check('prepare without yt-dlp answers 503', $res['status'] === 503, "status {$res['status']}");
 
+// This boot mirrors the broken shared host exactly: both binaries dead but
+// configured. Health must let a browser tell apart every deployment step.
 $res = request('action=health');
-check('health reports yt-dlp missing', $res['status'] === 200 && ($res['body']['ytdlp'] ?? null) === false,
+$h = $res['body'];
+check('health reports yt-dlp missing', $res['status'] === 200 && ($h['ytdlp'] ?? null) === false,
+    json_encode($h));
+check('health reports ffmpeg missing', ($h['ffmpeg'] ?? null) === false, json_encode($h));
+check('health flags YTDLP_BIN as configured-but-broken', ($h['ytdlpConfigured'] ?? null) === true, json_encode($h));
+check('health confirms exec is enabled', ($h['execEnabled'] ?? null) === true, json_encode($h));
+check('health confirms python3 actually runs', ($h['python3'] ?? null) === true, json_encode($h));
+check('health confirms coreutils timeout exists', ($h['timeout'] ?? null) === true, json_encode($h));
+check('health confirms the cache dir is writable', ($h['cacheDirWritable'] ?? null) === true, json_encode($h));
+
+// With no YTDLP_BIN at all, health must say so (unset, not just broken).
+startServer(8941, null, ['FFMPEG_BIN' => '/nonexistent/ffmpeg']);
+$res = request('action=health');
+check('an unset YTDLP_BIN reports unconfigured', $res['status'] === 200 && ($res['body']['ytdlpConfigured'] ?? null) === false,
     json_encode($res['body']));
+
+// A host with exec() in disable_functions can never rip; health must show
+// it and the rip actions must answer a clear 503 instead of a fatal 500.
+startServer(8940, '/nonexistent/yt-dlp', [], ['-d', 'disable_functions=exec']);
+$res = request('action=health');
+$h = $res['body'];
+check('disabled exec shows in health', $res['status'] === 200 && ($h['execEnabled'] ?? null) === false, json_encode($h));
+check('and forces python3/timeout to false', ($h['python3'] ?? null) === false && ($h['timeout'] ?? null) === false,
+    json_encode($h));
+$res = request('action=info', json_encode(['url' => 'https://youtu.be/' . VIDEO_ID]), 'POST');
+check('info with disabled exec answers 503 exec_disabled',
+    $res['status'] === 503 && ($res['body']['error'] ?? null) === 'exec_disabled', "status {$res['status']}");
+$res = request('action=prepare', json_encode(['url' => 'https://youtu.be/' . VIDEO_ID, 'format' => 'mp3']), 'POST');
+check('prepare with disabled exec answers 503 exec_disabled',
+    $res['status'] === 503 && ($res['body']['error'] ?? null) === 'exec_disabled', "status {$res['status']}");
 
 // ------------------------------------------------------------------
 //  Phase 2: /bin/false -> validation is the gate, exec is the proof
@@ -285,7 +324,9 @@ SH;
 file_put_contents($STUB, $stubScript);
 chmod($STUB, 0755);
 
-startServer(8944, $STUB);
+// FFMPEG_BIN is pinned to /bin/true so the lifecycle phases pass on a box
+// with no ffmpeg installed (the stub does the writing, not ffmpeg).
+startServer(8944, $STUB, ['FFMPEG_BIN' => '/bin/true']);
 
 $res = request('action=info', json_encode(['url' => 'https://youtu.be/' . VIDEO_ID]), 'POST');
 check('info returns the metadata', $res['status'] === 200, "status {$res['status']}");
@@ -337,6 +378,47 @@ check('cleanup reaps the aged pair', ($res['body']['deleted'] ?? 0) >= 2, json_e
 check('the fresh mp4 survives', is_file(CACHE_DIR . '/' . $idMp4 . '.mp4'));
 $res = request('action=file&id=' . $idMp3);
 check('a pruned id 404s', $res['status'] === 404, "status {$res['status']}");
+
+// ------------------------------------------------------------------
+//  Phase 3b: ffmpeg missing -> fresh rips refuse fast, the cache still serves
+// ------------------------------------------------------------------
+//
+// mp3 extraction and mp4 stream merging both need ffmpeg, so a fresh rip
+// must refuse instantly with a clear code instead of downloading the whole
+// video first and dying as a generic 502. info (metadata only) and already
+// ripped files keep working.
+
+echo "ffmpeg missing (fail-fast)\n";
+
+$ffVideoId = 'aB3dE5fG7h9';   // fresh id: nothing cached for it
+$idFfMp3 = substr(hash('sha256', $ffVideoId . ':mp3'), 0, 16);
+$idFfMp4 = substr(hash('sha256', $ffVideoId . ':mp4'), 0, 16);
+register_shutdown_function(function () use ($idFfMp3, $idFfMp4) {
+    foreach ([$idFfMp3, $idFfMp4] as $id) {
+        foreach (glob(CACHE_DIR . '/' . $id . '.*') ?: [] as $file) {
+            @unlink($file);
+        }
+    }
+});
+
+startServer(8946, $STUB, ['FFMPEG_BIN' => '/nonexistent/ffmpeg']);
+
+$res = request('action=info', json_encode(['url' => 'https://youtu.be/' . $ffVideoId]), 'POST');
+check('info needs no ffmpeg', $res['status'] === 200, "status {$res['status']}");
+
+$before = stubInvocations($COUNTER);
+$res = request('action=prepare', json_encode(['url' => 'https://youtu.be/' . $ffVideoId, 'format' => 'mp3']), 'POST');
+check('a fresh mp3 rip without ffmpeg refuses fast',
+    $res['status'] === 503 && ($res['body']['error'] ?? null) === 'ffmpeg_missing', "status {$res['status']}");
+$res = request('action=prepare', json_encode(['url' => 'https://youtu.be/' . $ffVideoId, 'format' => 'mp4']), 'POST');
+check('a fresh mp4 rip without ffmpeg refuses fast too',
+    $res['status'] === 503 && ($res['body']['error'] ?? null) === 'ffmpeg_missing', "status {$res['status']}");
+check('and yt-dlp never ran', stubInvocations($COUNTER) === $before);
+
+$res = request('action=prepare', json_encode(['url' => 'https://youtu.be/' . VIDEO_ID, 'format' => 'mp4']), 'POST');
+check('an already-ripped job still serves from cache', $res['status'] === 200 && ($res['body']['id'] ?? null) === $idMp4,
+    "status {$res['status']}");
+check('again without running yt-dlp', stubInvocations($COUNTER) === $before);
 
 // ------------------------------------------------------------------
 //  Phase 4: an FTP-uploaded, non-executable yt-dlp falls back to python3
@@ -400,7 +482,7 @@ file_put_contents($STUB_PY, $pyStub);
 chmod($STUB_PY, 0644);   // deliberately not executable: the whole point of this phase
 check('the stub file is not executable', !is_executable($STUB_PY));
 
-startServer(8945, $STUB_PY);
+startServer(8945, $STUB_PY, ['FFMPEG_BIN' => '/bin/true']);
 
 $res = request('action=health');
 check('health reports the non-executable upload as usable', $res['status'] === 200 && ($res['body']['ytdlp'] ?? null) === true,
@@ -418,6 +500,38 @@ check('exactly one python3 invocation happened', stubInvocations($COUNTER_PY) ==
 
 $res = rawRequest('action=file&id=' . $idPy);
 check('the resulting file downloads', $res['status'] === 200 && $res['raw'] === 'PYSTUBMEDIA');
+
+// ------------------------------------------------------------------
+//  Phase 5: DOWNLOAD_CACHE_MAX_MB caps the cache per host
+// ------------------------------------------------------------------
+//
+// Shared hosts have small disk quotas, so the 2 GB default cap must be
+// shrinkable from .env. The old fixture is bigger than the whole 1 MB cap,
+// so a trim can never keep it; the new one always fits.
+
+echo "cache size cap (DOWNLOAD_CACHE_MAX_MB)\n";
+
+$capA = CACHE_DIR . '/captest-a.tmp';
+$capB = CACHE_DIR . '/captest-b.tmp';
+register_shutdown_function(function () use ($capA, $capB) {
+    @unlink($capA);
+    @unlink($capB);
+});
+file_put_contents($capA, str_repeat('A', 1_200_000));
+file_put_contents($capB, str_repeat('B', 100_000));
+touch($capA, time() - 120);
+touch($capB, time() - 60);
+
+// Still on the phase 4 boot: under the default 2 GB cap both survive.
+$res = request('action=cleanup');
+check('fresh files survive cleanup under the default cap', is_file($capA) && is_file($capB),
+    json_encode($res['body']));
+
+startServer(8947, $STUB, ['FFMPEG_BIN' => '/bin/true', 'DOWNLOAD_CACHE_MAX_MB' => '1']);
+$res = request('action=cleanup');
+check('a 1 MB override trims the oldest file out', !is_file($capA), json_encode($res['body']));
+check('and keeps the newest one that fits', is_file($capB));
+check('reporting at least one deletion', ($res['body']['deleted'] ?? 0) >= 1, json_encode($res['body']));
 
 // ------------------------------------------------------------------
 

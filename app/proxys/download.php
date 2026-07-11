@@ -22,9 +22,16 @@
 // chmod needed, it runs through python3 instead, see ytdlpCmdPrefix()
 // below), then add to the prod app/.env: YTDLP_BIN=/absolute/path/to/yt-dlp
 // To update later: re-upload the latest release over the old file.
+// ffmpeg there too (mp3 extraction and mp4 merging both need it): find the
+// host's arch with a one-shot cron writing `uname -mrs` to a file, upload a
+// matching static build (e.g. johnvansickle.com/ffmpeg for Linux x86_64),
+// chmod 755 in the panel's File Manager, add FFMPEG_BIN=/absolute/path.
+// Verify every step from a browser via ?action=health (booleans only).
 //
 // Optional overrides in app/.env: YTDLP_BIN, FFMPEG_BIN (absolute paths),
-// PYTHON_BIN (bare command or absolute path, defaults to python3).
+// PYTHON_BIN (bare command or absolute path, defaults to python3), and
+// DOWNLOAD_CACHE_MAX_MB (cache size cap, default 2048; shrink it on hosts
+// with a small disk quota).
 
 declare(strict_types=1);
 
@@ -33,7 +40,6 @@ header('Cache-Control: no-store');
 
 const MAX_BODY_BYTES        = 4096;
 const MAX_AGE_SECONDS       = 3 * 60 * 60;          // media lives 3 hours
-const MAX_CACHE_BYTES       = 2 * 1024 * 1024 * 1024;
 const MAX_DURATION_SECONDS  = 7200;                 // 2 hour video cap
 const MAX_FILESIZE          = '500M';
 const MAX_CONCURRENT        = 3;                    // simultaneous rips
@@ -74,17 +80,25 @@ function fail(string $code, int $status): never
     respond(['error' => $code], $status);
 }
 
-// Resolve a binary: explicit env override first (getenv() because with
-// variables_order=GPCS the process environment, which the tests inject, is
-// invisible to $_ENV; $_ENV only carries app/.env via dotenv), then known
-// absolute paths. An override that is set but not executable resolves to
-// null rather than falling through, so a bad config fails loudly.
+// Read a config value: real process environment first (getenv() because
+// with variables_order=GPCS the process environment, which the tests
+// inject, is invisible to $_ENV), then $_ENV, which only carries app/.env
+// via dotenv. Empty string means unset.
+function envValue(string $key): string
+{
+    $val = getenv($key);
+    if ($val === false || $val === '') {
+        $val = isset($_ENV[$key]) && is_string($_ENV[$key]) ? $_ENV[$key] : '';
+    }
+    return $val;
+}
+
+// Resolve a binary: explicit env override first, then known absolute
+// paths. An override that is set but not executable resolves to null
+// rather than falling through, so a bad config fails loudly.
 function resolveBin(string $envKey, array $fallbacks): ?string
 {
-    $bin = getenv($envKey);
-    if ($bin === false || $bin === '') {
-        $bin = isset($_ENV[$envKey]) && is_string($_ENV[$envKey]) ? $_ENV[$envKey] : '';
-    }
+    $bin = envValue($envKey);
     if ($bin !== '') {
         return is_executable($bin) ? $bin : null;
     }
@@ -105,10 +119,7 @@ function resolveBin(string $envKey, array $fallbacks): ?string
 // real local install always has correct permissions.
 function resolveYtdlp(): ?string
 {
-    $bin = getenv('YTDLP_BIN');
-    if ($bin === false || $bin === '') {
-        $bin = isset($_ENV['YTDLP_BIN']) && is_string($_ENV['YTDLP_BIN']) ? $_ENV['YTDLP_BIN'] : '';
-    }
+    $bin = envValue('YTDLP_BIN');
     if ($bin !== '') {
         return is_file($bin) && is_readable($bin) ? $bin : null;
     }
@@ -125,15 +136,12 @@ function resolveFfmpeg(): ?string
     return resolveBin('FFMPEG_BIN', ['/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg']);
 }
 
-// Same $_ENV-then-getenv precedent as PYTHON_BIN in music-controller.php.
-// Always returns a usable value: python3 is assumed present, exactly as
-// analyze_audio.py already assumes it in production.
+// Same PYTHON_BIN override as music-controller.php. Always returns a
+// usable value: python3 is assumed present, exactly as analyze_audio.py
+// already assumes it in production.
 function resolvePython(): string
 {
-    $py = getenv('PYTHON_BIN');
-    if ($py === false || $py === '') {
-        $py = isset($_ENV['PYTHON_BIN']) && is_string($_ENV['PYTHON_BIN']) ? $_ENV['PYTHON_BIN'] : '';
-    }
+    $py = envValue('PYTHON_BIN');
     return $py !== '' ? $py : 'python3';
 }
 
@@ -231,6 +239,16 @@ function timedOut(int $exitCode): bool
     return $exitCode === 124 || $exitCode === 137;   // timeout's TERM / KILL exits
 }
 
+// Cache size cap: 2 GB by default, shrinkable per host via
+// DOWNLOAD_CACHE_MAX_MB in app/.env. Shared hosts have account-wide disk
+// quotas, and blowing the quota breaks the whole site, not just this tool.
+function cacheMaxBytes(): int
+{
+    $mb = envValue('DOWNLOAD_CACHE_MAX_MB');
+    $mb = is_numeric($mb) ? (int) $mb : 0;
+    return ($mb > 0 ? $mb : 2048) * 1024 * 1024;
+}
+
 // Delete expired files, then trim oldest-first if the cache still exceeds
 // the size cap. Lock files are skipped in the size pass so an active job's
 // lock is never yanked out from under it (the age pass still clears stale ones).
@@ -257,10 +275,11 @@ function pruneCache(string $cacheDir): int
     foreach ($survivors as [, , $size]) {
         $total += $size;
     }
-    if ($total > MAX_CACHE_BYTES) {
+    $maxBytes = cacheMaxBytes();
+    if ($total > $maxBytes) {
         usort($survivors, fn($a, $b) => $a[1] <=> $b[1]);
         foreach ($survivors as [$file, , $size]) {
-            if ($total <= MAX_CACHE_BYTES) {
+            if ($total <= $maxBytes) {
                 break;
             }
             if (substr($file, -5) === '.lock') {
@@ -320,13 +339,30 @@ function fetchInfo(string $bin, string $videoId): array
 
 $action = isset($_GET['action']) && is_string($_GET['action']) ? $_GET['action'] : '';
 
-// Deployment smoke test, safe to expose (booleans only, no paths): open
-// ?action=health in a browser to see whether this host can rip at all.
+// Deployment smoke test, safe to expose (booleans only, no paths or
+// versions): open ?action=health in a browser to see whether this host can
+// rip at all, and if not, which link of the chain is broken. ytdlpConfigured
+// tells apart an unset YTDLP_BIN from one pointing at a dead path; python3
+// proves the interpreter actually runs, not merely that a name is set.
 // A 400 unknown_action here means an older download.php is still deployed.
 if ($action === 'health') {
+    $execEnabled = function_exists('exec');
+    $python3 = false;
+    $timeoutBin = false;
+    if ($execEnabled) {
+        exec(escapeshellcmd(resolvePython()) . ' --version >/dev/null 2>&1', $out, $code);
+        $python3 = $code === 0;
+        exec('command -v timeout >/dev/null 2>&1', $out, $code);
+        $timeoutBin = $code === 0;
+    }
     respond([
-        'ytdlp'  => resolveYtdlp() !== null,
-        'ffmpeg' => resolveFfmpeg() !== null,
+        'ytdlp'            => resolveYtdlp() !== null,
+        'ffmpeg'           => resolveFfmpeg() !== null,
+        'ytdlpConfigured'  => envValue('YTDLP_BIN') !== '',
+        'execEnabled'      => $execEnabled,
+        'python3'          => $python3,
+        'timeout'          => $timeoutBin,
+        'cacheDirWritable' => is_dir($cacheDir) && is_writable($cacheDir),
     ]);
 }
 
@@ -335,6 +371,9 @@ if ($action === 'info') {
     $videoId = extractVideoId($body['url'] ?? null);
     if ($videoId === null) {
         fail('invalid_url', 400);
+    }
+    if (!function_exists('exec')) {
+        fail('exec_disabled', 503);   // disable_functions host: nothing can ever run
     }
     $bin = resolveYtdlp();
     if ($bin === null) {
@@ -364,6 +403,9 @@ if ($action === 'prepare') {
     if ($format !== 'mp3' && $format !== 'mp4') {
         fail('invalid_format', 400);
     }
+    if (!function_exists('exec')) {
+        fail('exec_disabled', 503);
+    }
     $bin = resolveYtdlp();
     if ($bin === null) {
         fail('ytdlp_missing', 503);
@@ -390,6 +432,14 @@ if ($action === 'prepare') {
     if (($job = $cacheHit()) !== null) {
         respond(['id' => $id, 'format' => $format, 'filename' => $job['filename'], 'size' => $job['size']]);
     }
+    // Both formats need ffmpeg (mp3 for extraction, mp4 to merge the video
+    // and audio streams), so refuse a fresh rip up front with a clear code
+    // rather than downloading everything and dying as a generic 502.
+    // Cached jobs above still serve: playback needs no ffmpeg.
+    $ffmpeg = resolveFfmpeg();
+    if ($ffmpeg === null) {
+        fail('ffmpeg_missing', 503);
+    }
     if (count(glob($cacheDir . '/*.part')) >= MAX_CONCURRENT) {
         fail('busy', 429);
     }
@@ -411,7 +461,6 @@ if ($action === 'prepare') {
     set_time_limit(0);   // the real cap is the coreutils timeout on the child
 
     $metaPath = $cacheDir . '/' . $id . '.meta';
-    $ffmpeg = resolveFfmpeg();
     $formatFlags = $format === 'mp3'
         ? ' -f bestaudio -x --audio-format mp3 --audio-quality 0'
         : ' -f ' . escapeshellarg('bv*[vcodec^=avc1][height<=1080]+ba[ext=m4a]/b[ext=mp4][height<=1080]/b[height<=1080]/b')
@@ -421,7 +470,7 @@ if ($action === 'prepare') {
         . YTDLP_COMMON_FLAGS
         . ' --match-filters ' . escapeshellarg('duration<=' . MAX_DURATION_SECONDS . ' & !is_live')
         . ' --max-filesize ' . MAX_FILESIZE
-        . ($ffmpeg !== null ? ' --ffmpeg-location ' . escapeshellarg($ffmpeg) : '')
+        . ' --ffmpeg-location ' . escapeshellarg($ffmpeg)
         . $formatFlags
         . ' --print-to-file ' . escapeshellarg('after_move:%(.{title,channel,duration})j') . ' ' . escapeshellarg($metaPath)
         . ' -o ' . escapeshellarg($cacheDir . '/' . $id . '.%(ext)s')
