@@ -1,0 +1,38 @@
+/* YouTube downloader: only what Tailwind can't express, per the repo styling
+   rules. Layout, colors, and spacing all live in index.html classes. */
+
+/* This view does not load base-style.css, but owning the background keeps it
+   correct even if that ever changes (gradient would beat bg-paper). */
+body {
+    background: #f6f2ea;
+}
+
+/* Small inline spinner used by the lookup line and the progress line */
+.spinner {
+    display: inline-block;
+    width: 0.85em;
+    height: 0.85em;
+    margin-right: 0.5em;
+    vertical-align: -0.1em;
+    border: 2px solid rgba(28, 26, 23, 0.2);
+    border-top-color: #d4451f;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Physical press on the format buttons, same feel as views/ip */
+.btn-press:active {
+    transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation-duration: 2s;
+    }
+    .btn-press:active {
+        transform: none;
+    }
+}

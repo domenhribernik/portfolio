@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>YouTube Downloader</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        claydk: '#b8371a',
+                        pine: '#2f5b53',
+                    },
+                    fontFamily: {
+                        display: ['Fraunces', 'Georgia', 'serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.14)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans bg-paper text-ink min-h-screen leading-relaxed">
+
+    <div class="max-w-[720px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+
+        <!-- Masthead -->
+        <header class="relative border-b-2 border-ink pb-6 mb-6 sm:mb-8">
+            <div class="flex items-center justify-between mb-5">
+                <a id="back-link" href="../../" class="shrink-0 whitespace-nowrap text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Back">&larr; back</a>
+                <span class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone text-right">Unlisted tool &middot; Personal use</span>
+            </div>
+            <h1 class="font-display font-semibold text-[clamp(2.2rem,7vw,3.6rem)] leading-[1.02] tracking-tight">YouTube Downloader</h1>
+            <p class="mt-3 max-w-[52ch] text-stone text-[clamp(0.95rem,2vw,1.05rem)]">
+                Paste a link, get the file: MP3 for just the audio, MP4 for the whole video.
+            </p>
+        </header>
+
+        <!-- Link input: the preview loads by itself once a valid link lands here -->
+        <section class="bg-card border border-hairline rounded-[3px] shadow-[0_10px_30px_rgba(28,26,23,0.06)] p-4 sm:p-5 mb-5">
+            <label for="url" class="block font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone mb-2">Paste a video link</label>
+            <input type="text" id="url" inputmode="url" autocomplete="off" spellcheck="false"
+                placeholder="https://www.youtube.com/watch?v=&hellip; or youtu.be/&hellip;"
+                class="w-full font-mono text-[16px] text-ink bg-paper border border-hairline rounded-[3px] px-4 py-3 placeholder:text-stone/60 focus:outline-none focus:border-clay focus:ring-1 focus:ring-clay/40 transition caret-clay">
+            <p id="url-hint" class="hidden mt-2 font-mono text-[0.8rem] text-claydk">That does not look like a YouTube video link.</p>
+            <p id="url-loading" class="hidden mt-2 font-mono text-[0.8rem] text-stone"><span class="spinner" aria-hidden="true"></span>Looking up the video&hellip;</p>
+        </section>
+
+        <!-- Error notice -->
+        <div id="error" class="hidden mb-5 rounded-[3px] border border-clay bg-clay/10 text-claydk px-4 py-3 font-mono text-sm" role="alert"></div>
+
+        <!-- Preview + format buttons -->
+        <section id="preview" class="hidden bg-card border border-hairline rounded-[3px] shadow-[0_10px_30px_rgba(28,26,23,0.06)] p-4 sm:p-5 mb-5" aria-live="polite">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <img id="preview-thumb" src="" alt="" class="w-full sm:w-44 aspect-video object-cover rounded-[3px] bg-paper2 border border-hairline shrink-0">
+                <div class="min-w-0 flex-1">
+                    <h2 id="preview-title" class="font-display font-semibold text-lg sm:text-xl leading-snug break-words"></h2>
+                    <p class="mt-1 font-mono text-[0.8rem] text-stone">
+                        <span id="preview-channel"></span> &middot; <span id="preview-duration"></span>
+                    </p>
+                    <div class="mt-4 flex flex-wrap gap-2.5">
+                        <button id="btn-mp3" class="btn-press flex-[1_1_140px] font-mono font-bold text-sm uppercase tracking-widest bg-clay text-paper border border-clay rounded-[3px] px-5 py-3 hover:bg-claydk hover:border-claydk transition disabled:opacity-40 disabled:cursor-not-allowed">Download MP3</button>
+                        <button id="btn-mp4" class="btn-press flex-[1_1_140px] font-mono font-bold text-sm uppercase tracking-widest bg-transparent text-pine border border-pine rounded-[3px] px-5 py-3 hover:bg-pine hover:text-paper transition disabled:opacity-40 disabled:cursor-not-allowed">Download MP4</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress line, used by the buttons above and by recent-list re-downloads -->
+        <section id="status" class="hidden mb-5 rounded-[3px] border border-hairline bg-card px-4 py-3 font-mono text-[0.8rem] text-stone" role="status">
+            <span id="status-spinner" class="spinner hidden" aria-hidden="true"></span>
+            <span id="status-text"></span>
+        </section>
+
+        <!-- Recent downloads -->
+        <section id="recent" class="hidden mb-5">
+            <div class="flex items-baseline justify-between mb-2">
+                <h3 class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone">Recent downloads</h3>
+                <button id="recent-clear" class="font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone hover:text-clay transition-colors">clear</button>
+            </div>
+            <ul id="recent-list" class="bg-card border border-hairline rounded-[3px] divide-y divide-[rgba(28,26,23,0.14)]"></ul>
+        </section>
+
+        <footer class="mt-8 font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone/80">
+            Files stay on the server for about 3 hours, then they are cleaned up.
+        </footer>
+    </div>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
