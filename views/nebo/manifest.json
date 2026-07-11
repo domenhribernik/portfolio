@@ -1,0 +1,14 @@
+{
+  "name": "Nebo · The Night Atlas",
+  "short_name": "Nebo",
+  "description": "The sky overhead right now: stars, planets and the Moon's phase, computed offline in your browser.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b102a",
+  "theme_color": "#0b102a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

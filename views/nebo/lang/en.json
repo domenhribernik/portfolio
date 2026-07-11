@@ -1,0 +1,101 @@
+{
+    "locale": "en-GB",
+    "meta": {
+        "title": "Nebo · The Night Atlas",
+        "description": "The sky above Slovenia right now: stars, planets and the Moon's exact phase, computed live in your browser from orbital mechanics."
+    },
+    "a11y": {
+        "back": "Back",
+        "language": "Language",
+        "canvas": "Star chart of the sky for the chosen time and place",
+        "slider": "Time offset in minutes from now",
+        "date": "Jump to date"
+    },
+    "head": {
+        "back": "← back",
+        "taglinePre": "ne·bo –",
+        "taglineAbbr": "n.",
+        "taglinePost": "Slovene: the sky, the heavens.",
+        "stamp": "1627 STARS · FIVE WANDERERS · ONE MOON"
+    },
+    "plate": {
+        "place": "Ljubljana, Slovenia",
+        "coords": "46.06° N · 14.51° E",
+        "yourSky": "Your sky",
+        "caption": "Fig. 1 · Stereographic projection, zenith at centre",
+        "lookingUp": "you are looking up"
+    },
+    "controls": {
+        "turnHours": "Turn the hours",
+        "live": "live",
+        "pinned": "pinned",
+        "minus24": "-24 h",
+        "scaleMid": "yesterday · today · tomorrow",
+        "plus24": "+24 h",
+        "now": "◎ Now",
+        "figures": "figures",
+        "names": "names",
+        "grid": "grid",
+        "mySky": "◉ my sky"
+    },
+    "ledger": {
+        "title": "The night's ledger",
+        "sun": "Sol",
+        "moon": "Luna",
+        "sunset": "Sunset",
+        "trueNight": "True night from",
+        "sunrise": "Sunrise",
+        "moonrise": "Moonrise",
+        "moonset": "Moonset",
+        "phase": "Phase",
+        "illuminated": "Illuminated",
+        "wanderers": "The wanderers",
+        "note": "Hover the dome: every named star answers.",
+        "notToday": "not today",
+        "noTrueNight": "no true night",
+        "allDay": "all day",
+        "belowAllDay": "below all day",
+        "planetUp": "{alt}° up",
+        "belowHorizon": "below the horizon"
+    },
+    "tooltip": {
+        "unnamedStar": "Unnamed star",
+        "starSub": "mag {mag}",
+        "wandererSub": "wanderer · {alt}° {dir}",
+        "moon": "The Moon",
+        "moonSub": "{phase} · {pct} % lit",
+        "sun": "The Sun",
+        "sunSub": "{alt}° above the horizon"
+    },
+    "sky": {
+        "moon": "Moon",
+        "cardinals": ["N", "S", "E", "W"]
+    },
+    "planets": {
+        "mercury": "Mercury",
+        "venus": "Venus",
+        "mars": "Mars",
+        "jupiter": "Jupiter",
+        "saturn": "Saturn"
+    },
+    "phases": {
+        "New Moon": "New Moon",
+        "Full Moon": "Full Moon",
+        "First Quarter": "First Quarter",
+        "Last Quarter": "Last Quarter",
+        "Waxing Crescent": "Waxing Crescent",
+        "Waning Crescent": "Waning Crescent",
+        "Waxing Gibbous": "Waxing Gibbous",
+        "Waning Gibbous": "Waning Gibbous"
+    },
+    "compass": ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"],
+    "errors": {
+        "noGeolocation": "Geolocation is not available in this browser.",
+        "geolocationFailed": "Could not read your location; the chart stays over Ljubljana.",
+        "catalog": "The star catalogue failed to load; only the Sun, Moon and planets are drawn."
+    },
+    "footer": {
+        "method": "Positions computed in-browser with Paul Schlyter's ephemerides, good to a few arcminutes. Nothing stored, nothing tracked across the sky.",
+        "credit": "Star data: Hipparcos, via d3-celestial (BSD)"
+    }
+}

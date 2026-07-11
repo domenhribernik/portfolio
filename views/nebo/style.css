@@ -1,0 +1,282 @@
+/* ============================================================
+   Nebo: the night edition of the atlas series.
+   Layout and most styling live in Tailwind classes (index.html).
+   This file holds only what Tailwind can't cleanly express:
+   keyframes, pseudo-elements, JS-generated markup (record rows,
+   chips, tooltip), form control internals, media queries.
+   ============================================================ */
+
+/* The page owns its background (base-style.css is not imported,
+   but Tailwind's bg-* would still lose to any inherited gradient). */
+body {
+    background:
+        radial-gradient(1100px 520px at 78% -8%, rgba(38, 52, 110, 0.5), transparent 65%),
+        radial-gradient(900px 480px at 8% 108%, rgba(30, 40, 88, 0.45), transparent 60%),
+        #0b102a;
+    /* keep content clear of notches and home bars when installed */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+/* no 300ms double-tap delay, no long-press callout on the chart */
+button,
+input[type="range"],
+input[type="date"] {
+    touch-action: manipulation;
+}
+
+#skyCanvas {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Page-load reveal ---- */
+.reveal {
+    opacity: 0;
+    animation: rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.reveal-1 { animation-delay: 0.05s; }
+.reveal-2 { animation-delay: 0.16s; }
+.reveal-3 { animation-delay: 0.27s; }
+.reveal-4 { animation-delay: 0.4s; }
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Masthead stamp ornament ---- */
+.stamp-ornament {
+    animation: rotate-slow 60s linear infinite;
+    transform-origin: 50% 50%;
+}
+
+@keyframes rotate-slow {
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Live indicator ---- */
+.live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #f0824f;
+    box-shadow: 0 0 0 0 rgba(240, 130, 79, 0.55);
+    animation: pulse 2.2s ease-out infinite;
+}
+
+.live-dot.is-paused {
+    background: #98a0c4;
+    box-shadow: none;
+    animation: none;
+}
+
+@keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(240, 130, 79, 0.55); }
+    70%  { box-shadow: 0 0 0 8px rgba(240, 130, 79, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(240, 130, 79, 0); }
+}
+
+/* ---- Button press ---- */
+.btn-press:active {
+    transform: translateY(1px);
+}
+
+/* ---- Layer toggles (state flipped by JS) ---- */
+.chip-toggle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #98a0c4;
+    background: transparent;
+    border: 1px solid rgba(231, 234, 248, 0.2);
+    border-radius: 3px;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.chip-toggle:hover {
+    color: #e7eaf8;
+}
+
+.chip-toggle.is-on {
+    color: #e9c98f;
+    border-color: rgba(233, 201, 143, 0.65);
+    background: rgba(233, 201, 143, 0.08);
+}
+
+/* ---- Time slider ---- */
+#timeSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 22px;
+    background: transparent;
+    cursor: pointer;
+}
+
+#timeSlider::-webkit-slider-runnable-track {
+    height: 2px;
+    background: linear-gradient(90deg,
+        rgba(231, 234, 248, 0.18),
+        rgba(233, 201, 143, 0.5) 50%,
+        rgba(231, 234, 248, 0.18));
+}
+
+#timeSlider::-moz-range-track {
+    height: 2px;
+    background: linear-gradient(90deg,
+        rgba(231, 234, 248, 0.18),
+        rgba(233, 201, 143, 0.5) 50%,
+        rgba(231, 234, 248, 0.18));
+}
+
+#timeSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: #e06a3d;
+    border: 2px solid #0b102a;
+    box-shadow: 0 0 0 1.5px #e06a3d;
+}
+
+#timeSlider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #e06a3d;
+    border: 2px solid #0b102a;
+    box-shadow: 0 0 0 1.5px #e06a3d;
+}
+
+/* ---- Date input (dark) ---- */
+#dateInput {
+    color-scheme: dark;
+}
+
+/* ---- Ledger (JS fills the rows) ---- */
+.ledger-heading {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #98a0c4;
+    margin-bottom: 0.35rem;
+}
+
+.record-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.32rem 0;
+}
+
+.record-row dt {
+    color: #98a0c4;
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+
+.record-row .leader {
+    flex: 1;
+    border-bottom: 1px dotted rgba(231, 234, 248, 0.2);
+    transform: translateY(-3px);
+}
+
+.record-row dd {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.record-row dd .dir {
+    color: #98a0c4;
+    font-size: 0.72rem;
+}
+
+.planet-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: 0;
+}
+
+/* ---- Dome tooltip (positioned by JS) ---- */
+.tooltip {
+    position: absolute;
+    z-index: 20;
+    pointer-events: none;
+    background: rgba(11, 16, 42, 0.92);
+    border: 1px solid rgba(233, 201, 143, 0.5);
+    border-radius: 3px;
+    padding: 0.45rem 0.65rem;
+    max-width: 240px;
+}
+
+.tooltip .t-name {
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #e7eaf8;
+}
+
+.tooltip .t-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    color: #98a0c4;
+    margin-top: 2px;
+}
+
+.tooltip.hidden {
+    display: none;
+}
+
+/* ---- Touch ergonomics ---- */
+@media (pointer: coarse) {
+    #timeSlider {
+        height: 34px;
+    }
+
+    #timeSlider::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+        margin-top: -11px;
+    }
+
+    #timeSlider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+    }
+
+    .chip-toggle {
+        padding: 0.65rem 0.95rem;
+    }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+    .reveal {
+        animation: none;
+        opacity: 1;
+    }
+
+    .stamp-ornament,
+    .live-dot {
+        animation: none;
+    }
+}

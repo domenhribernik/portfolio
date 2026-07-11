@@ -1,0 +1,101 @@
+{
+    "locale": "sl-SI",
+    "meta": {
+        "title": "Nebo · Nočni atlas",
+        "description": "Nebo nad Slovenijo prav zdaj: zvezde, planeti in natančna Lunina mena, izračunano v živo v tvojem brskalniku iz orbitalne mehanike."
+    },
+    "a11y": {
+        "back": "Nazaj",
+        "language": "Jezik",
+        "canvas": "Zvezdna karta neba za izbrani čas in kraj",
+        "slider": "Časovni zamik v minutah od zdaj",
+        "date": "Skoči na datum"
+    },
+    "head": {
+        "back": "← nazaj",
+        "taglinePre": "ne·bo –",
+        "taglineAbbr": "sam.",
+        "taglinePost": "nebesni svod nad nami; nebesa.",
+        "stamp": "1627 ZVEZD · PET PREMIČNIC · ENA LUNA"
+    },
+    "plate": {
+        "place": "Ljubljana, Slovenija",
+        "coords": "46.06° S · 14.51° V",
+        "yourSky": "Tvoje nebo",
+        "caption": "Sl. 1 · Stereografska projekcija, zenit v središču",
+        "lookingUp": "gledaš navzgor"
+    },
+    "controls": {
+        "turnHours": "Zavrti ure",
+        "live": "v živo",
+        "pinned": "pripeto",
+        "minus24": "-24 h",
+        "scaleMid": "včeraj · danes · jutri",
+        "plus24": "+24 h",
+        "now": "◎ Zdaj",
+        "figures": "liki",
+        "names": "imena",
+        "grid": "mreža",
+        "mySky": "◉ moje nebo"
+    },
+    "ledger": {
+        "title": "Nočni zapisnik",
+        "sun": "Sonce",
+        "moon": "Luna",
+        "sunset": "Sončni zahod",
+        "trueNight": "Prava noč od",
+        "sunrise": "Sončni vzhod",
+        "moonrise": "Lunin vzhod",
+        "moonset": "Lunin zahod",
+        "phase": "Mena",
+        "illuminated": "Osvetljenost",
+        "wanderers": "Premičnice",
+        "note": "Zapelji kazalec čez kupolo: vsaka imenovana zvezda se oglasi.",
+        "notToday": "danes ne",
+        "noTrueNight": "ni prave noči",
+        "allDay": "ves dan",
+        "belowAllDay": "ves dan pod obzorjem",
+        "planetUp": "{alt}° visoko",
+        "belowHorizon": "pod obzorjem"
+    },
+    "tooltip": {
+        "unnamedStar": "Brezimna zvezda",
+        "starSub": "mag {mag}",
+        "wandererSub": "premičnica · {alt}° {dir}",
+        "moon": "Luna",
+        "moonSub": "{phase} · {pct} % osvetljena",
+        "sun": "Sonce",
+        "sunSub": "{alt}° nad obzorjem"
+    },
+    "sky": {
+        "moon": "Luna",
+        "cardinals": ["S", "J", "V", "Z"]
+    },
+    "planets": {
+        "mercury": "Merkur",
+        "venus": "Venera",
+        "mars": "Mars",
+        "jupiter": "Jupiter",
+        "saturn": "Saturn"
+    },
+    "phases": {
+        "New Moon": "Mlaj",
+        "Full Moon": "Ščip",
+        "First Quarter": "Prvi krajec",
+        "Last Quarter": "Zadnji krajec",
+        "Waxing Crescent": "Rastoči srp",
+        "Waning Crescent": "Pojemajoči srp",
+        "Waxing Gibbous": "Rastoča izbočena luna",
+        "Waning Gibbous": "Pojemajoča izbočena luna"
+    },
+    "compass": ["S", "SSV", "SV", "VSV", "V", "VJV", "JV", "JJV", "J", "JJZ", "JZ", "ZJZ", "Z", "ZSZ", "SZ", "SSZ"],
+    "errors": {
+        "noGeolocation": "Ta brskalnik ne podpira geolokacije.",
+        "geolocationFailed": "Tvoje lokacije ni bilo mogoče prebrati; karta ostaja nad Ljubljano.",
+        "catalog": "Zvezdni katalog se ni naložil; narisani so samo Sonce, Luna in planeti."
+    },
+    "footer": {
+        "method": "Položaji so izračunani v brskalniku po efemeridah Paula Schlyterja, natančni na nekaj ločnih minut. Nič se ne shranjuje in nihče ti ne sledi, razen zvezd.",
+        "credit": "Podatki o zvezdah: Hipparcos, prek d3-celestial (BSD)"
+    }
+}

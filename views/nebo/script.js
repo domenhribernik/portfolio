@@ -1,0 +1,415 @@
+// Page wiring for Nebo: loads the catalogs, runs the clock, and connects the
+// controls, tooltip and almanac to the pure math in logic.js / render.js.
+// Every visible string flows through the dictionaries in lang/ (see i18n.js):
+// the system language picks the startup language, the masthead dropdown and
+// localStorage override it.
+import {
+    julianDay, schlyterD, lst, raDecToAltAz,
+    sunPosition, moonPosition, moonPhase, moonTopocentricAlt,
+    planetPositions, riseSet, parseStars,
+} from './logic.js';
+import { drawSky, PLANET_STYLE } from './render.js';
+import {
+    pickLanguage, lookup, format, loadDictionary, applyTranslations,
+    FALLBACK, STORAGE_KEY,
+} from './i18n.js';
+
+const LJUBLJANA = { lat: 46.0569, lon: 14.5058 };
+// English fallback until a dictionary arrives; dict.compass replaces it
+const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+
+const $ = (id) => document.getElementById(id);
+const canvas = $('skyCanvas');
+const ctx = canvas.getContext('2d');
+const tooltip = $('tooltip');
+
+const state = {
+    lat: LJUBLJANA.lat,
+    lon: LJUBLJANA.lon,
+    placeKey: 'home',  // 'home' = the Ljubljana default, 'yours' = geolocated
+    anchor: null,      // Date chosen via the date input; null = anchored to now
+    offsetMin: 0,      // slider offset in minutes
+    showLines: true,
+    showLabels: true,
+    showGraticule: true,
+    stars: [],
+    constellations: [],
+    hover: null,
+    objects: [],
+    almanacKey: '',
+    lang: null,
+    dict: null,
+};
+
+function displayedDate() {
+    const base = state.anchor ? state.anchor.getTime() : Date.now();
+    return new Date(base + state.offsetMin * 60000);
+}
+
+function isLive() {
+    return !state.anchor && state.offsetMin === 0;
+}
+
+// ---------------------------------------------------------------- language
+
+const t = (key, params) => (params ? format(lookup(state.dict, key), params) : lookup(state.dict, key));
+const locale = () => state.dict?.locale || 'en-GB';
+const phaseLabel = (phase) => state.dict?.phases?.[phase.name] ?? phase.name;
+const planetLabel = (key, fallback) => state.dict?.planets?.[key] ?? fallback;
+
+function compass(az) {
+    const points = state.dict?.compass ?? COMPASS;
+    return points[Math.round(az / 22.5) % 16];
+}
+
+// The place chip is written from state, not data-i18n, because geolocation
+// can replace it; a language switch re-renders whichever variant is showing.
+function updatePlateChips() {
+    if (state.placeKey === 'yours') {
+        $('platePlace').textContent = t('plate.yourSky');
+        const cardinals = state.dict?.sky?.cardinals ?? ['N', 'S', 'E', 'W'];
+        const ns = state.lat >= 0 ? cardinals[0] : cardinals[1];
+        const ew = state.lon >= 0 ? cardinals[2] : cardinals[3];
+        $('plateCoords').textContent = `${Math.abs(state.lat).toFixed(2)}° ${ns} · ${Math.abs(state.lon).toFixed(2)}° ${ew}`;
+    } else {
+        $('platePlace').textContent = t('plate.place');
+        $('plateCoords').textContent = t('plate.coords');
+    }
+}
+
+async function setLanguage(lang, { save = false } = {}) {
+    state.dict = await loadDictionary(lang);
+    state.lang = lang;
+    if (save) {
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch { /* private mode: the choice just won't stick */ }
+    }
+    document.documentElement.lang = lang;
+    document.title = t('meta.title');
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
+    applyTranslations(state.dict);
+    $('langSelect').value = lang;
+    updatePlateChips();
+    state.almanacKey = ''; // ledger wording changed: force the daily sweep to re-render
+    clearHover();
+    refresh();
+}
+
+// ------------------------------------------------------------------ drawing
+
+function redraw() {
+    const size = canvas.clientWidth;
+    if (!size) return;
+    const dpr = window.devicePixelRatio || 1;
+    if (canvas.width !== Math.round(size * dpr)) {
+        canvas.width = Math.round(size * dpr);
+        canvas.height = Math.round(size * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const result = drawSky(ctx, {
+        size,
+        date: displayedDate(),
+        lat: state.lat,
+        lon: state.lon,
+        stars: state.stars,
+        constellations: state.constellations,
+        showLines: state.showLines,
+        showLabels: state.showLabels,
+        showGraticule: state.showGraticule,
+        hover: state.hover,
+        labels: {
+            moon: state.dict?.sky?.moon,
+            cardinals: state.dict?.sky?.cardinals,
+            planets: state.dict?.planets,
+        },
+    });
+    state.objects = result.objects;
+}
+
+function resizeCanvas() {
+    canvas.style.height = `${canvas.clientWidth}px`;
+    redraw();
+}
+
+// -------------------------------------------------------------------- clock
+
+function updateClock() {
+    if (!state.dict) return; // no dictionary yet: the placeholder dashes stay
+    const date = displayedDate();
+    $('plateClock').textContent = date.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    $('plateDate').textContent = fmtDate(date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    $('liveDot').classList.toggle('is-paused', !isLive());
+    $('offsetLabel').textContent = offsetText();
+}
+
+function offsetText() {
+    if (isLive()) return t('controls.live');
+    const m = state.offsetMin;
+    const sign = m < 0 ? '−' : '+';
+    const abs = Math.abs(m);
+    const parts = `${sign}${Math.floor(abs / 60)} h ${String(abs % 60).padStart(2, '0')} m`;
+    return state.anchor ? `${parts} · ${t('controls.pinned')}` : parts;
+}
+
+// ------------------------------------------------------------------ almanac
+
+const fmtTime = (d) => d
+    ? d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
+    : '–';
+
+// Intl inconsistently puts a comma after the short weekday depending on
+// locale and options (sl-SI always does, en-GB only when year is present),
+// so strip it to keep "Sat 11 Jul" / "sob. 11. jul." matching across langs.
+const fmtDate = (d, opts) => d.toLocaleDateString(locale(), opts).replace(/,/g, '');
+
+function sunAltAt(date) {
+    const jd = julianDay(date);
+    const sun = sunPosition(schlyterD(jd));
+    return raDecToAltAz(sun.ra, sun.dec, lst(jd, state.lon), state.lat).alt;
+}
+
+function moonAltAt(date) {
+    const jd = julianDay(date);
+    const moon = moonPosition(schlyterD(jd));
+    const h = raDecToAltAz(moon.ra, moon.dec, lst(jd, state.lon), state.lat);
+    return moonTopocentricAlt(h.alt, moon.rEarthRadii);
+}
+
+function updateAlmanac() {
+    if (!state.dict) return; // the ledger needs words before it needs numbers
+    const date = displayedDate();
+    const key = `${date.toDateString()}|${state.lat.toFixed(2)}|${state.lon.toFixed(2)}`;
+    const phase = moonPhase(schlyterD(julianDay(date)));
+
+    // rise/set sweeps only change with the local day or the observer
+    if (key !== state.almanacKey) {
+        state.almanacKey = key;
+        const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+        const sun = riseSet(sunAltAt, dayStart);
+        const night = riseSet(sunAltAt, dayStart, -18);
+        const moon = riseSet(moonAltAt, dayStart);
+
+        $('sunriseVal').textContent = sun.alwaysDown ? t('ledger.notToday') : fmtTime(sun.rise);
+        $('sunsetVal').textContent = sun.alwaysUp ? t('ledger.notToday') : fmtTime(sun.set);
+        $('nightStartVal').textContent = night.set ? fmtTime(night.set) : t('ledger.noTrueNight');
+        $('moonriseVal').textContent = moon.alwaysUp ? t('ledger.allDay') : fmtTime(moon.rise);
+        $('moonsetVal').textContent = moon.alwaysDown ? t('ledger.belowAllDay') : fmtTime(moon.set);
+        $('ledgerDate').textContent = fmtDate(date, { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+
+    $('phaseVal').textContent = phaseLabel(phase);
+    $('illumVal').textContent = `${Math.round(phase.illumination * 100)} %`;
+    drawMoonIcon(phase);
+
+    // the wanderers, right now
+    const jd = julianDay(date);
+    const lstDeg = lst(jd, state.lon);
+    const rows = planetPositions(schlyterD(jd)).map((p) => {
+        const h = raDecToAltAz(p.ra, p.dec, lstDeg, state.lat);
+        const dot = `<span class="planet-dot" style="background:${PLANET_STYLE[p.key].color}"></span>`;
+        const value = h.alt > 1
+            ? `${t('ledger.planetUp', { alt: Math.round(h.alt) })} <span class="dir">${compass(h.az)}</span>`
+            : `<span class="dir">${t('ledger.belowHorizon')}</span>`;
+        return `<div class="record-row"><dt>${dot}${planetLabel(p.key, p.name)}</dt><span class="leader"></span><dd>${value}</dd></div>`;
+    });
+    $('planetRows').innerHTML = rows.join('');
+}
+
+function drawMoonIcon(phase) {
+    const icon = $('moonIcon');
+    const ictx = icon.getContext('2d');
+    const r = 9;
+    const cx = 11;
+    ictx.clearRect(0, 0, 22, 22);
+    ictx.save();
+    ictx.translate(cx, cx);
+    // northern-hemisphere habit: a waxing moon is lit on the right
+    if (!phase.waxing) ictx.scale(-1, 1);
+    ictx.fillStyle = 'rgba(231, 234, 248, 0.16)';
+    ictx.beginPath();
+    ictx.arc(0, 0, r, 0, Math.PI * 2);
+    ictx.fill();
+    ictx.fillStyle = '#e9c98f';
+    ictx.beginPath();
+    ictx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2, false);
+    ictx.ellipse(0, 0, Math.abs(2 * phase.illumination - 1) * r, r, 0, Math.PI / 2, Math.PI * 1.5, phase.illumination < 0.5);
+    ictx.fill();
+    ictx.restore();
+}
+
+// ------------------------------------------------------------------ tooltip
+
+function tooltipHtml(obj) {
+    const line = (name, sub) => `<div class="t-name">${name}</div><div class="t-sub">${sub}</div>`;
+    if (obj.type === 'star') {
+        const s = obj.data;
+        return line(s.name || t('tooltip.unnamedStar'), t('tooltip.starSub', { mag: s.mag.toFixed(1) }) + (s.con ? ` · ${s.con}` : ''));
+    }
+    if (obj.type === 'planet') {
+        const name = planetLabel(obj.data.key, obj.data.name);
+        return line(name, t('tooltip.wandererSub', { alt: Math.round(obj.data.alt), dir: compass(obj.data.az) }));
+    }
+    if (obj.type === 'moon') {
+        return line(t('tooltip.moon'), t('tooltip.moonSub', { phase: phaseLabel(obj.data), pct: Math.round(obj.data.illumination * 100) }));
+    }
+    return line(t('tooltip.sun'), t('tooltip.sunSub', { alt: obj.data.alt.toFixed(1) }));
+}
+
+const touchScreen = window.matchMedia('(hover: none)').matches;
+let tooltipTimer = null;
+
+function handlePointer(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    let best = null;
+    let bestDist = touchScreen ? 24 : 16; // fingers are blunter than cursors
+    for (const obj of state.objects) {
+        const dist = Math.hypot(obj.x - x, obj.y - y) - obj.hitR;
+        if (dist < bestDist) { bestDist = dist; best = obj; }
+    }
+    if (best !== state.hover) {
+        state.hover = best;
+        redraw();
+    }
+    if (best) {
+        tooltip.innerHTML = tooltipHtml(best);
+        tooltip.classList.remove('hidden');
+        const plate = canvas.parentElement.getBoundingClientRect();
+        const px = event.clientX - plate.left;
+        const py = event.clientY - plate.top;
+        tooltip.style.left = `${Math.min(px + 14, plate.width - 150)}px`;
+        tooltip.style.top = `${Math.max(py - 40, 6)}px`;
+        // no mouseleave on a touchscreen: let a tapped tooltip fade on its own
+        if (touchScreen) {
+            clearTimeout(tooltipTimer);
+            tooltipTimer = setTimeout(() => { clearHover(); redraw(); }, 4000);
+        }
+    } else {
+        tooltip.classList.add('hidden');
+    }
+}
+
+// ----------------------------------------------------------------- controls
+
+function refresh({ almanac = true } = {}) {
+    updateClock();
+    redraw();
+    if (almanac) updateAlmanac();
+}
+
+// a time jump invalidates whatever the pointer was resting on
+function clearHover() {
+    state.hover = null;
+    tooltip.classList.add('hidden');
+}
+
+$('timeSlider').addEventListener('input', (event) => {
+    state.offsetMin = parseInt(event.target.value, 10) || 0;
+    clearHover();
+    refresh();
+});
+
+$('nowBtn').addEventListener('click', () => {
+    state.anchor = null;
+    state.offsetMin = 0;
+    $('timeSlider').value = 0;
+    $('dateInput').value = '';
+    clearHover();
+    refresh();
+});
+
+$('dateInput').addEventListener('change', (event) => {
+    const value = event.target.value;
+    if (!value) { state.anchor = null; clearHover(); refresh(); return; }
+    const [y, m, d] = value.split('-').map(Number);
+    // pin the chart to a stargazing hour of that evening
+    state.anchor = new Date(y, m - 1, d, 22, 0, 0);
+    state.offsetMin = 0;
+    $('timeSlider').value = 0;
+    clearHover();
+    refresh();
+});
+
+for (const btn of document.querySelectorAll('.chip-toggle')) {
+    btn.addEventListener('click', () => {
+        const opt = btn.dataset.opt;
+        state[opt] = !state[opt];
+        btn.classList.toggle('is-on', state[opt]);
+        btn.setAttribute('aria-pressed', String(state[opt]));
+        redraw();
+    });
+}
+
+$('geoBtn').addEventListener('click', () => {
+    if (!navigator.geolocation) { showError(t('errors.noGeolocation')); return; }
+    navigator.geolocation.getCurrentPosition((pos) => {
+        state.lat = pos.coords.latitude;
+        state.lon = pos.coords.longitude;
+        state.placeKey = 'yours';
+        updatePlateChips();
+        refresh();
+    }, () => showError(t('errors.geolocationFailed')));
+});
+
+$('langSelect').addEventListener('change', (event) => {
+    setLanguage(event.target.value, { save: true })
+        .catch(() => { $('langSelect').value = state.lang; }); // dictionary fetch failed: stay put
+});
+
+function showError(message) {
+    const el = $('errorMsg');
+    el.textContent = message;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 6000);
+}
+
+canvas.addEventListener('mousemove', handlePointer);
+canvas.addEventListener('click', handlePointer);
+canvas.addEventListener('mouseleave', () => {
+    state.hover = null;
+    tooltip.classList.add('hidden');
+    redraw();
+});
+
+// -------------------------------------------------------------------- boot
+
+async function loadCatalogs() {
+    const [starsRes, consRes] = await Promise.all([
+        fetch('stars.json'),
+        fetch('constellations.json'),
+    ]);
+    if (!starsRes.ok || !consRes.ok) throw new Error('catalog fetch failed');
+    state.stars = parseStars(await starsRes.json());
+    state.constellations = (await consRes.json()).constellations;
+}
+
+loadCatalogs()
+    .then(() => refresh())
+    .catch(() => showError(t('errors.catalog')));
+
+let savedLang = null;
+try { savedLang = localStorage.getItem(STORAGE_KEY); } catch { /* private mode */ }
+const systemLanguages = navigator.languages?.length ? [...navigator.languages] : [navigator.language];
+console.info('[nebo] system language:', systemLanguages.join(', '));
+setLanguage(pickLanguage(savedLang, systemLanguages)).catch(() => {
+    // chosen dictionary unreachable: fall back to English; if even that fails
+    // the chart still draws, only the labels stay blank
+    setLanguage(FALLBACK).catch(() => {});
+});
+
+new ResizeObserver(resizeCanvas).observe(canvas);
+resizeCanvas();
+updateClock();
+
+// second hand for the chip; the dome itself only needs a slow tick
+setInterval(updateClock, 1000);
+setInterval(() => {
+    if (isLive()) refresh();
+}, 60000);
+
+// canvas labels use Space Mono; redraw once fonts arrive
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(redraw);
+}
