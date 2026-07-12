@@ -3,9 +3,11 @@ declare(strict_types=1);
 define('SECURE_ACCESS', true);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS');
+header('Cache-Control: no-store');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+// Deliberately no Access-Control-Allow-Origin: the admin-only reads below are
+// cookie-authed, same-origin only (see root CLAUDE.md gotchas).
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -13,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/auth.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int) $_GET['id'] : null;
@@ -22,7 +25,17 @@ try {
         createQuote();
     } elseif ($method === 'PUT' && $id) {
         updateQuote($id);
+    } elseif ($method === 'PATCH' && $id) {
+        Auth::requireAdmin();
+        markContacted($id);
+    } elseif ($method === 'GET' && isset($_GET['all'])) {
+        // Admin leads inbox: every submitted quote, newest first.
+        Auth::requireAdmin();
+        listQuotes();
     } elseif ($method === 'GET' && $id) {
+        // Admin-only: a quote carries the submitter's name/email/message,
+        // so this can't be left open to anyone who guesses an id.
+        Auth::requireAdmin();
         getQuote($id);
     } else {
         sendError('Method or resource not supported', 405);
@@ -178,7 +191,8 @@ function getQuote(int $id): void
 {
     $stmt = Database::read()->prepare(
         'SELECT id, ip_address, suggested_package, total_price, selections,
-                special_requests, contact_name, contact_email, message, created_at, updated_at
+                special_requests, contact_name, contact_email, message, contacted,
+                created_at, updated_at
          FROM pricing_quotes WHERE id = ?'
     );
     $stmt->execute([$id]);
@@ -187,7 +201,43 @@ function getQuote(int $id): void
 
     $row['id']          = (int) $row['id'];
     $row['total_price'] = (int) $row['total_price'];
+    $row['contacted']   = (bool) $row['contacted'];
     $row['selections']  = json_decode($row['selections'], true);
 
     sendJson($row);
+}
+
+function listQuotes(): void
+{
+    $stmt = Database::read()->query(
+        'SELECT id, suggested_package, total_price, selections, special_requests,
+                contact_name, contact_email, message, contacted, created_at, updated_at
+         FROM pricing_quotes
+         ORDER BY created_at DESC
+         LIMIT 500'
+    );
+    $rows = $stmt->fetchAll();
+    foreach ($rows as &$row) {
+        $row['id']          = (int) $row['id'];
+        $row['total_price'] = (int) $row['total_price'];
+        $row['contacted']   = (bool) $row['contacted'];
+        $row['selections']  = json_decode($row['selections'], true);
+    }
+    sendJson($rows);
+}
+
+function markContacted(int $id): void
+{
+    $data      = readBody();
+    $contacted = !empty($data['contacted']) ? 1 : 0;
+
+    $stmt = Database::write()->prepare('UPDATE pricing_quotes SET contacted = ? WHERE id = ?');
+    $stmt->execute([$contacted, $id]);
+    if ($stmt->rowCount() === 0) {
+        $exists = Database::read()->prepare('SELECT id FROM pricing_quotes WHERE id = ?');
+        $exists->execute([$id]);
+        if (!$exists->fetch()) sendError('Quote not found', 404);
+    }
+
+    getQuote($id);
 }

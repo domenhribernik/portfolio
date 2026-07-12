@@ -91,6 +91,8 @@
                     Projects<span class="tab-count" id="count-projects"></span></button>
                 <button type="button" class="tab" role="tab" data-tab="hub" aria-controls="panel-hub">
                     Hub tiles<span class="tab-count" id="count-hub"></span></button>
+                <button type="button" class="tab" role="tab" data-tab="leads" aria-controls="panel-leads">
+                    Leads<span class="tab-count" id="count-leads"></span></button>
             </nav>
 
             <!-- Tab: Users -->
@@ -282,6 +284,26 @@
                         placeholder="Filter by name, url or project…" autocomplete="off">
                     <ul id="hub-list" class="space-y-2 max-h-[58vh] overflow-y-auto pr-1"></ul>
                     <p id="hub-empty" class="hidden font-mono text-xs text-faint mt-2">No tiles match.</p>
+                </div>
+            </section>
+
+            <!-- Tab: Leads -->
+            <section id="panel-leads" class="tab-panel hidden space-y-6" role="tabpanel">
+                <div class="card p-6">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <h2 class="section-title mb-0">Quote calculator submissions</h2>
+                        <label class="flex items-center gap-2 font-mono text-[10px] tracking-widest uppercase text-stone shrink-0">
+                            <input id="leads-hide-contacted" type="checkbox" class="accent-clay">
+                            hide contacted
+                        </label>
+                    </div>
+                    <p class="text-stone text-sm mb-4">Every quote submitted through <code
+                            class="font-mono text-xs">/views/pricing</code>, newest first. A lead only reaches your
+                        inbox if the visitor clicked "send" there &mdash; check here too.</p>
+                    <input id="leads-search" type="search" class="field-input mb-4"
+                        placeholder="Search name, email, package, message…" autocomplete="off">
+                    <ul id="leads-list" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1"></ul>
+                    <p id="leads-empty" class="hidden font-mono text-xs text-faint mt-2">No submissions match.</p>
                 </div>
             </section>
 

@@ -9,6 +9,10 @@ CREATE TABLE IF NOT EXISTS pricing_quotes (
     contact_name VARCHAR(100) DEFAULT NULL,
     contact_email VARCHAR(255) DEFAULT NULL,
     message TEXT DEFAULT NULL,
+    contacted TINYINT(1) NOT NULL DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Run manually if the table already exists (prod already has this table live):
+-- ALTER TABLE pricing_quotes ADD COLUMN contacted TINYINT(1) NOT NULL DEFAULT 0 AFTER message;

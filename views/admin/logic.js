@@ -2,7 +2,7 @@
 // unit-tested with `node --test tests/` (no dependencies, no build step).
 // script.js imports this as an ES module.
 
-const TABS = ['users', 'projects', 'hub'];
+const TABS = ['users', 'projects', 'hub', 'leads'];
 
 export function resolveTab(hash) {
     const id = (hash || '').replace(/^#/, '');
@@ -14,6 +14,19 @@ export function filterProjects(projects, query) {
     if (!q) return projects;
     return projects.filter(p =>
         p.project_key.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
+}
+
+// Matches name, email, package, or message/special-requests text, so a
+// half-remembered detail from a quote is enough to find it again.
+export function filterLeads(quotes, query) {
+    const q = (query || '').trim().toLowerCase();
+    if (!q) return quotes;
+    return quotes.filter(quote =>
+        (quote.contact_name || '').toLowerCase().includes(q)
+        || (quote.contact_email || '').toLowerCase().includes(q)
+        || quote.suggested_package.toLowerCase().includes(q)
+        || (quote.message || '').toLowerCase().includes(q)
+        || (quote.special_requests || '').toLowerCase().includes(q));
 }
 
 export function filterHubApps(apps, query) {

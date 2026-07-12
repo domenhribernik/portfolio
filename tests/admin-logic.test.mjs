@@ -2,7 +2,7 @@
 // Run: node --test tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveTab, filterProjects, filterHubApps, buildHubPayload, swapPlan, hslToHex, randomGradient, accentFromGradient } from '../views/admin/logic.js';
+import { resolveTab, filterProjects, filterHubApps, filterLeads, buildHubPayload, swapPlan, hslToHex, randomGradient, accentFromGradient } from '../views/admin/logic.js';
 
 // Perceived brightness (0..255) of a #rrggbb string, for the legibility guard.
 function brightness(hex) {
@@ -16,9 +16,25 @@ test('resolveTab maps location hashes to tab ids, defaulting to users', () => {
     assert.equal(resolveTab('#users'), 'users');
     assert.equal(resolveTab('#projects'), 'projects');
     assert.equal(resolveTab('#hub'), 'hub');
+    assert.equal(resolveTab('#leads'), 'leads');
     assert.equal(resolveTab(''), 'users');
     assert.equal(resolveTab('#nonsense'), 'users');
     assert.equal(resolveTab(undefined), 'users');
+});
+
+test('filterLeads matches name, email, package, message, or special requests, case-insensitively', () => {
+    const quotes = [
+        { contact_name: 'Ana Novak', contact_email: 'ana@shop.si', suggested_package: 'PLUS', message: 'Need it by June', special_requests: '' },
+        { contact_name: null, contact_email: null, suggested_package: 'BASIC', message: null, special_requests: 'forest green branding' },
+        { contact_name: 'Jan Kos', contact_email: 'jan@example.com', suggested_package: 'CUSTOM', message: null, special_requests: null },
+    ];
+    assert.deepEqual(filterLeads(quotes, 'ANA'), [quotes[0]]);
+    assert.deepEqual(filterLeads(quotes, 'shop.si'), [quotes[0]]);
+    assert.deepEqual(filterLeads(quotes, 'basic'), [quotes[1]]);
+    assert.deepEqual(filterLeads(quotes, 'forest green'), [quotes[1]]);
+    assert.deepEqual(filterLeads(quotes, 'june'), [quotes[0]]);
+    assert.deepEqual(filterLeads(quotes, ''), quotes);
+    assert.deepEqual(filterLeads(quotes, 'zzz'), []);
 });
 
 test('filterProjects matches key or name, case-insensitively', () => {

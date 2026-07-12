@@ -1,8 +1,9 @@
-import { resolveTab, filterProjects, filterHubApps, buildHubPayload, swapPlan, randomGradient, accentFromGradient } from './logic.js';
+import { resolveTab, filterProjects, filterHubApps, filterLeads, buildHubPayload, swapPlan, randomGradient, accentFromGradient } from './logic.js';
 
 const ADMIN_API = '../../app/controllers/admin-controller.php';
 const AUTH_API = '../../app/controllers/auth-controller.php';
 const HUB_API = '../../app/controllers/hub-controller.php';
+const PRICING_API = '../../app/controllers/pricing-controller.php';
 
 let selectedUserId = null;
 let selectedUser = null;
@@ -26,6 +27,7 @@ async function apiFetch(base, params, options = {}) {
 
 const adminFetch = (params, options) => apiFetch(ADMIN_API, params, options);
 const hubFetch = (params, options) => apiFetch(HUB_API, params, options);
+const pricingFetch = (params, options) => apiFetch(PRICING_API, params, options);
 
 // ------------------------------------------------------------------
 //  Toast
@@ -54,7 +56,7 @@ function setTab(id, updateHash = false) {
         t.classList.toggle('active', active);
         t.setAttribute('aria-selected', String(active));
     });
-    ['users', 'projects', 'hub'].forEach(p => {
+    ['users', 'projects', 'hub', 'leads'].forEach(p => {
         document.getElementById('panel-' + p).classList.toggle('hidden', p !== id);
     });
     if (updateHash) history.replaceState(null, '', '#' + id);
@@ -90,7 +92,7 @@ async function boot() {
     document.getElementById('view-loading').classList.add('hidden');
     document.getElementById('view-dash').classList.remove('hidden');
 
-    await Promise.all([loadUsers(), loadProjects(), loadHubApps()]);
+    await Promise.all([loadUsers(), loadProjects(), loadHubApps(), loadLeads()]);
 }
 
 // ------------------------------------------------------------------
@@ -738,5 +740,107 @@ document.getElementById('hub-form').addEventListener('submit', async (e) => {
         toast(err.message, true);
     }
 });
+
+// ------------------------------------------------------------------
+//  Leads (quote calculator submissions)
+// ------------------------------------------------------------------
+
+let leads = [];
+
+async function loadLeads() {
+    try {
+        leads = await pricingFetch({ all: 1 });
+    } catch (err) {
+        toast(err.message, true);
+        return;
+    }
+    setCount('count-leads', leads.filter(l => !l.contacted).length || '');
+    renderLeads();
+}
+
+function renderLeads() {
+    const hideContacted = document.getElementById('leads-hide-contacted').checked;
+    let visible = filterLeads(leads, document.getElementById('leads-search').value);
+    if (hideContacted) visible = visible.filter(l => !l.contacted);
+
+    const list = document.getElementById('leads-list');
+    list.replaceChildren();
+    document.getElementById('leads-empty').classList.toggle('hidden', visible.length > 0);
+
+    visible.forEach(lead => {
+        const li = document.createElement('li');
+        li.className = 'border border-hairline bg-paper rounded-[3px] p-4' + (lead.contacted ? ' opacity-60' : '');
+
+        const head = document.createElement('div');
+        head.className = 'flex flex-wrap items-center gap-2 mb-2';
+
+        const led = document.createElement('span');
+        led.className = 'led ' + (lead.contacted ? 'led-off' : 'led-clay');
+        head.appendChild(led);
+
+        head.appendChild(badge(lead.suggested_package, 'clay'));
+
+        const price = document.createElement('span');
+        price.className = 'font-display text-base font-semibold text-ink';
+        price.textContent = `€${lead.total_price.toLocaleString('de-DE')}`;
+        head.appendChild(price);
+
+        const date = document.createElement('span');
+        date.className = 'font-mono text-[10px] text-faint ml-auto';
+        date.textContent = lead.created_at;
+        head.appendChild(date);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'btn-ghost shrink-0';
+        toggleBtn.textContent = lead.contacted ? 'Mark new' : 'Mark contacted';
+        toggleBtn.addEventListener('click', async () => {
+            try {
+                await pricingFetch({ id: lead.id }, {
+                    method: 'PATCH',
+                    body: { contacted: !lead.contacted },
+                });
+                loadLeads();
+            } catch (err) {
+                toast(err.message, true);
+            }
+        });
+        head.appendChild(toggleBtn);
+
+        li.appendChild(head);
+
+        const contact = document.createElement('p');
+        contact.className = 'text-sm text-ink mb-1';
+        const name = lead.contact_name || '(no name given)';
+        if (lead.contact_email) {
+            contact.textContent = name + ' — ';
+            const mail = document.createElement('a');
+            mail.href = 'mailto:' + lead.contact_email;
+            mail.className = 'text-clay hover:underline';
+            mail.textContent = lead.contact_email;
+            contact.appendChild(mail);
+        } else {
+            contact.textContent = name + ' — no email given';
+        }
+        li.appendChild(contact);
+
+        if (lead.message) {
+            const msg = document.createElement('p');
+            msg.className = 'text-stone text-sm whitespace-pre-wrap mb-1';
+            msg.textContent = lead.message;
+            li.appendChild(msg);
+        }
+        if (lead.special_requests) {
+            const special = document.createElement('p');
+            special.className = 'font-mono text-xs text-faint whitespace-pre-wrap';
+            special.textContent = 'Special requests: ' + lead.special_requests;
+            li.appendChild(special);
+        }
+
+        list.appendChild(li);
+    });
+}
+
+document.getElementById('leads-search').addEventListener('input', renderLeads);
+document.getElementById('leads-hide-contacted').addEventListener('change', renderLeads);
 
 boot();
