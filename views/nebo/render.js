@@ -160,7 +160,7 @@ export function drawSky(ctx, opts) {
         if (showLabels) {
             ctx.fillStyle = `rgba(170, 185, 230, ${lineAlpha + 0.12})`;
             // small: these full constellation names otherwise smother the dome
-            ctx.font = '8.5px "Space Mono", monospace';
+            ctx.font = '7.5px "Space Mono", monospace';
             ctx.textAlign = 'center';
             for (const con of constellations) {
                 if (!con.label || con.rank > 2) continue;
