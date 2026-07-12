@@ -128,14 +128,20 @@
                         <span data-i18n="controls.minus24"></span><span data-i18n="controls.scaleMid"></span><span data-i18n="controls.plus24"></span>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2 mt-4">
-                        <button id="nowBtn" class="btn-press font-mono font-bold text-[0.72rem] uppercase tracking-widest bg-clay text-night border border-clay rounded-[3px] px-4 py-2 hover:bg-claybt hover:border-claybt transition" data-i18n="controls.now"></button>
-                        <input type="date" id="dateInput" class="font-mono text-[0.72rem] text-star bg-night border border-hairline rounded-[3px] px-3 py-2 focus:outline-none focus:border-clay" data-i18n-attr="aria-label:a11y.date">
-                        <span class="flex-1 min-w-2"></span>
-                        <button data-opt="showLines" class="chip-toggle is-on" aria-pressed="true" data-i18n="controls.figures"></button>
-                        <button data-opt="showLabels" class="chip-toggle is-on" aria-pressed="true" data-i18n="controls.names"></button>
-                        <button data-opt="showGraticule" class="chip-toggle is-on" aria-pressed="true" data-i18n="controls.grid"></button>
-                        <button id="geoBtn" class="btn-press font-mono text-[0.72rem] uppercase tracking-widest bg-transparent text-star border border-star/40 rounded-[3px] px-4 py-2 hover:bg-star hover:text-night transition" data-i18n="controls.mySky"></button>
+                    <!-- On phones this splits into two tidy rows: when/where on top
+                         (flowing from the slider), the layer toggles below. On sm+ it
+                         is one row, controls left and toggles pushed to the right. -->
+                    <div class="flex flex-col gap-2 mt-4 sm:flex-row sm:items-center">
+                        <div class="flex items-center gap-2">
+                            <button id="nowBtn" class="btn-press shrink-0 font-mono font-bold text-[0.72rem] uppercase tracking-widest bg-clay text-night border border-clay rounded-[3px] px-4 py-2 hover:bg-claybt hover:border-claybt transition" data-i18n="controls.now"></button>
+                            <input type="date" id="dateInput" class="flex-1 min-w-0 sm:flex-none font-mono text-[0.72rem] text-star bg-night border border-hairline rounded-[3px] px-3 py-2 focus:outline-none focus:border-clay" data-i18n-attr="aria-label:a11y.date">
+                            <button id="geoBtn" class="btn-press shrink-0 font-mono text-[0.72rem] uppercase tracking-widest bg-transparent text-star border border-star/40 rounded-[3px] px-4 py-2 hover:bg-star hover:text-night transition" data-i18n="controls.mySky"></button>
+                        </div>
+                        <div class="flex items-center gap-2 sm:ml-auto">
+                            <button data-opt="showLines" class="chip-toggle is-on flex-1 sm:flex-none" aria-pressed="true" data-i18n="controls.figures"></button>
+                            <button data-opt="showLabels" class="chip-toggle is-on flex-1 sm:flex-none" aria-pressed="true" data-i18n="controls.names"></button>
+                            <button data-opt="showGraticule" class="chip-toggle is-on flex-1 sm:flex-none" aria-pressed="true" data-i18n="controls.grid"></button>
+                        </div>
                     </div>
                 </div>
             </section>

@@ -747,149 +747,283 @@
 }
 
 /* ============================================================
-   CONTACT INFO CARDS — editorial filing cards.
-
-   The accent sweep lives in the card's OWN background gradient
-   (an oversized two-stop gradient slid via background-position),
-   NOT a stacked pseudo-element flood. A border always paints on
-   top of its own element's background, so the ink border is
-   structurally above the sweep at every frame: no seam, no
-   flicker, no border getting covered. A corner arrow springs out
-   diagonally and the whole card inverts to paper text on hover.
+   COLOPHON (contact)
+   The contact leaf reads as the paper's imprint page: a short
+   ask, a message form styled as ruled ledger fields (underline
+   inputs, mono labels), then a thick-over-thin ruled index (the
+   projects masthead's double rule) carrying location, education
+   and socials as quiet text references. Interaction stays in the
+   paper's manner: underline inputs ink up on focus, the one bold
+   ink button lifts on a clay hard-shadow; nothing else fills.
    ============================================================ */
-.kinetic-info-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
+.colophon__ask {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.9rem, 4.5vw, 3.2rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: clamp(1.6rem, 3.5vh, 2.4rem);
 }
 
-@media (min-width: 768px) {
-    .kinetic-info-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+/* Quiet second clause: mono, on its own line, in stone */
+.colophon__ask-sub {
+    display: block;
+    margin-top: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 400;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    color: var(--stone);
 }
 
-.kinetic-info {
-    --info-accent: var(--clay);
-    position: relative;
+.colophon__form {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 1.75rem;
-    min-height: 188px;
-    padding: 1.6rem 1.7rem;
-    /* Gradient sized to 220% and parked at the right edge: only the
-       card colour shows at rest. Hover slides it to the left edge,
-       wiping the accent across on a slight diagonal. */
-    background-image: linear-gradient(105deg,
-        var(--info-accent) 0 46%,
-        var(--card) 54% 100%);
-    background-size: 220% 100%;
-    background-position: 100% 0;
-    background-repeat: no-repeat;
+    gap: clamp(1.4rem, 3vh, 1.9rem);
+    max-width: 680px;
+    width: 100%;
+}
+
+/* Name + email share a row on wider viewports */
+.colophon__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1.4rem, 3vw, 1.9rem);
+}
+
+.colophon__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.colophon__label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.64rem;
+    color: var(--stone);
+}
+
+/* Boxed input: a ruled card on paper that inks its border and lifts a soft
+   clay ring on focus. The textarea reads clearly as a writing box. */
+.colophon__input {
+    width: 100%;
+    padding: 0.7rem 0.85rem;
+    background: var(--card);
+    border: 2px solid rgba(28, 26, 23, 0.35);
+    border-radius: 3px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 500;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    transition: border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.colophon__input::placeholder {
+    color: rgba(28, 26, 23, 0.32);
+}
+
+.colophon__input:focus {
+    outline: none;
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.18);
+}
+
+.colophon__input.is-invalid {
+    border-color: var(--clay);
+}
+
+.colophon__textarea {
+    resize: vertical;
+    min-height: 8.5rem;
+    line-height: 1.45;
+}
+
+.colophon__err {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.02em;
+    color: var(--clay);
+}
+
+/* Honeypot: kept in the DOM for bots, pushed off-screen for people
+   (display:none is skipped by some bots, so move it instead). */
+.colophon__hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.colophon__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem 1.4rem;
+}
+
+/* The one bold moment: a solid ink button that lifts on a clay hard-shadow */
+.colophon__submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.6rem;
+    background: var(--ink);
+    color: var(--paper);
     border: 2px solid var(--ink);
     border-radius: 2px;
-    text-decoration: none;
-    color: var(--ink);
-    transition: background-position 0.5s cubic-bezier(0.66, 0, 0.2, 1),
-                box-shadow 0.25s ease,
-                transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.78rem;
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.22s ease;
 }
 
-.kinetic-info:hover {
-    background-position: 0 0;
+.colophon__submit:hover:not(:disabled),
+.colophon__submit:focus-visible:not(:disabled) {
     transform: translate(-3px, -3px);
-    box-shadow: 8px 8px 0 var(--ink);
+    box-shadow: 6px 6px 0 var(--clay);
+    outline: none;
 }
 
-/* Corner mark — springs out diagonally on hover */
-.kinetic-info::after {
-    content: '\2197'; /* ↗ */
+.colophon__submit-mark {
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.colophon__submit:hover:not(:disabled) .colophon__submit-mark,
+.colophon__submit:focus-visible:not(:disabled) .colophon__submit-mark {
+    transform: translate(2px, -2px);
+}
+
+.colophon__submit:disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+/* Status line: mono, coloured by outcome */
+.colophon__status {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.02em;
+    color: var(--stone);
+}
+
+.colophon__status:empty {
+    display: none;
+}
+
+.colophon__status--ok {
+    color: var(--pine);
+}
+
+.colophon__status--error {
+    color: var(--clay);
+}
+
+/* Ruled index line: location, education, socials */
+.colophon__index {
+    position: relative;
+    margin-top: clamp(2.4rem, 5vh, 3.6rem);
+    padding-top: 1.5rem;
+    border-top: 3px solid var(--ink);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem 2rem;
+}
+
+/* Thin partner line under the thick one: the masthead's double rule */
+.colophon__index::before {
+    content: '';
     position: absolute;
-    top: 1.05rem;
-    right: 1.2rem;
-    font-family: 'Bricolage Grotesque', sans-serif;
-    font-weight: 800;
-    font-size: 1.25rem;
-    line-height: 1;
-    color: var(--info-accent);
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
-                color 0.25s ease;
+    top: 5px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--ink);
 }
 
-.kinetic-info:hover::after {
-    transform: translate(3px, -3px);
-    color: var(--paper);
-}
-
-.kinetic-info__main {
+.colophon__col {
+    --acc: var(--clay);
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 0.55rem;
-    min-width: 0;
 }
 
-.kinetic-info__kicker {
+.colophon__kicker {
     font-family: 'Space Mono', monospace;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.2em;
     font-size: 0.66rem;
-    color: var(--info-accent);
-    transition: color 0.25s ease;
+    color: var(--acc);
 }
 
-.kinetic-info__value {
+.colophon__value {
     font-family: 'Bricolage Grotesque', sans-serif;
-    font-weight: 800;
-    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
-    line-height: 1.12;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-    word-break: break-word;
-    transition: color 0.25s ease;
-}
-
-.kinetic-info__value--sm {
-    font-size: clamp(0.92rem, 1.25vw, 1.08rem);
+    font-weight: 700;
+    font-size: clamp(1rem, 1.4vw, 1.2rem);
+    line-height: 1.15;
     letter-spacing: -0.01em;
+    color: var(--ink);
 }
 
-.kinetic-info__foot {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    width: 100%;
-    padding-top: 0.85rem;
-    border-top: 1.5px solid currentColor;
+.colophon__refs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.colophon__ref {
     font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.04em;
+    font-size: 0.72rem;
     text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--stone);
-    transition: color 0.25s ease, gap 0.25s ease;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgba(28, 26, 23, 0.28);
+    text-underline-offset: 0.32em;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
 }
 
-.kinetic-info__foot i {
-    color: var(--info-accent);
-    transition: color 0.25s ease;
+/* inline-block stops the underline propagating onto the arrow */
+.colophon__ref::after {
+    content: '\2197';
+    display: inline-block;
+    margin-left: 0.4em;
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.kinetic-info:hover .kinetic-info__kicker,
-.kinetic-info:hover .kinetic-info__value,
-.kinetic-info:hover .kinetic-info__foot,
-.kinetic-info:hover .kinetic-info__foot i {
-    color: var(--paper);
+.colophon__ref:hover,
+.colophon__ref:focus-visible {
+    color: var(--ink);
+    text-decoration-color: var(--acc);
 }
 
-.kinetic-info:hover .kinetic-info__foot {
-    gap: 0.85rem;
+.colophon__ref:hover::after,
+.colophon__ref:focus-visible::after {
+    transform: translate(2px, -2px);
 }
 
-/* Social buttons get the hard-shadow treatment */
-.kinetic .social-btn:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0 var(--cobalt);
+/* Desktop: hairline dividers between index columns */
+@media (min-width: 768px) {
+    .colophon__col + .colophon__col {
+        border-left: 1px solid var(--grid-line);
+        padding-left: 2rem;
+    }
 }
 
 /* ============================================================
@@ -970,11 +1104,25 @@ html:has(body.kinetic)::-webkit-scrollbar-corner {
     }
 }
 
-@media (max-width: 640px) {
-    .kinetic-info {
-        min-height: 0;
-        gap: 1.4rem;
-        padding: 1.4rem 1.45rem;
+/* Colophon: form fields and index stack into one column on phones */
+@media (max-width: 767px) {
+    .colophon__row {
+        grid-template-columns: 1fr;
+    }
+
+    .colophon__index {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .colophon__col {
+        padding: 1.05rem 0;
+        border-top: 1px solid var(--grid-line);
+    }
+
+    .colophon__col:first-child {
+        padding-top: 0.2rem;
+        border-top: 0;
     }
 }
 
@@ -1007,7 +1155,12 @@ html:has(body.kinetic)::-webkit-scrollbar-corner {
     .ppaper__headline,
     .ppaper__ref,
     .ppaper__crossref-label,
-    .ppaper__more::after {
+    .ppaper__more::after,
+    .colophon__input,
+    .colophon__submit,
+    .colophon__submit-mark,
+    .colophon__ref,
+    .colophon__ref::after {
         transition: none !important;
     }
 }

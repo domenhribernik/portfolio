@@ -9,6 +9,7 @@ import {
     planetPositions, riseSet, parseStars,
 } from './logic.js';
 import { drawSky, PLANET_STYLE } from './render.js';
+import { zoomAt, clampPan, clampZoom, screenToWorld } from './zoom.js';
 import {
     pickLanguage, lookup, format, loadDictionary, applyTranslations,
     FALLBACK, STORAGE_KEY,
@@ -36,6 +37,10 @@ const state = {
     constellations: [],
     hover: null,
     objects: [],
+    // pinch-to-zoom viewport (touch only): screen = world * zoom + pan
+    zoom: 1,
+    panX: 0,
+    panY: 0,
     almanacKey: '',
     lang: null,
     dict: null,
@@ -104,7 +109,10 @@ function redraw() {
         canvas.width = Math.round(size * dpr);
         canvas.height = Math.round(size * dpr);
     }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // fold the pinch viewport into the device-pixel transform, so every draw in
+    // render.js lands zoomed/panned without any of its math having to know
+    const s = state.zoom * dpr;
+    ctx.setTransform(s, 0, 0, s, state.panX * dpr, state.panY * dpr);
 
     const result = drawSky(ctx, {
         size,
@@ -128,6 +136,10 @@ function redraw() {
 
 function resizeCanvas() {
     canvas.style.height = `${canvas.clientWidth}px`;
+    // a rotate/resize changes how far the dome may pan; pull it back in bounds
+    const clamped = clampPan(state, canvas.clientWidth);
+    state.panX = clamped.panX;
+    state.panY = clamped.panY;
     redraw();
 }
 
@@ -261,10 +273,10 @@ let tooltipTimer = null;
 
 function handlePointer(event) {
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    // objects live in world space; undo the pinch viewport to hit-test them
+    const { x, y } = screenToWorld(state, event.clientX - rect.left, event.clientY - rect.top);
     let best = null;
-    let bestDist = touchScreen ? 24 : 16; // fingers are blunter than cursors
+    let bestDist = (touchScreen ? 24 : 16) / state.zoom; // fingers are blunter than cursors
     for (const obj of state.objects) {
         const dist = Math.hypot(obj.x - x, obj.y - y) - obj.hitR;
         if (dist < bestDist) { bestDist = dist; best = obj; }
@@ -366,12 +378,91 @@ function showError(message) {
 }
 
 canvas.addEventListener('mousemove', handlePointer);
-canvas.addEventListener('click', handlePointer);
 canvas.addEventListener('mouseleave', () => {
     state.hover = null;
     tooltip.classList.add('hidden');
     redraw();
 });
+
+// ---------------------------------------------------------- pinch to zoom
+// Touch only: two fingers scale the dome about their midpoint, one finger
+// drags it once zoomed in. The pure viewport math lives in zoom.js; here we
+// only translate raw touch points into calls to it.
+
+// Own every gesture while zoomed (pan + pinch); at rest let a one-finger drag
+// scroll the page but keep two-finger pinch for ourselves.
+function syncTouchAction() {
+    canvas.style.touchAction = state.zoom > 1 ? 'none' : 'pan-y';
+}
+
+function applyView(view) {
+    const clamped = clampPan({ ...view, zoom: clampZoom(view.zoom) }, canvas.clientWidth);
+    state.zoom = clamped.zoom;
+    state.panX = clamped.panX;
+    state.panY = clamped.panY;
+    syncTouchAction();
+    redraw();
+}
+
+const localPoint = (touch, rect) => ({ x: touch.clientX - rect.left, y: touch.clientY - rect.top });
+const touchSpread = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+const touchMidpoint = (a, b, rect) => ({
+    x: (a.clientX + b.clientX) / 2 - rect.left,
+    y: (a.clientY + b.clientY) / 2 - rect.top,
+});
+
+let pinch = null;         // { spread, x, y } of the last two-finger frame
+let panFrom = null;       // last one-finger point while dragging a zoomed dome
+let gestureMoved = false; // suppress the tap a pinch/pan would otherwise fire
+
+canvas.addEventListener('touchstart', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (event.touches.length === 1) {
+        gestureMoved = false; // a fresh finger: assume a tap until it slides
+        panFrom = state.zoom > 1 ? localPoint(event.touches[0], rect) : null;
+    } else if (event.touches.length === 2) {
+        const m = touchMidpoint(event.touches[0], event.touches[1], rect);
+        pinch = { spread: touchSpread(event.touches[0], event.touches[1]), x: m.x, y: m.y };
+        panFrom = null;
+        clearHover();
+        redraw();
+    }
+}, { passive: true });
+
+canvas.addEventListener('touchmove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (pinch && event.touches.length >= 2) {
+        event.preventDefault();
+        const spread = touchSpread(event.touches[0], event.touches[1]);
+        const m = touchMidpoint(event.touches[0], event.touches[1], rect);
+        // scale about the old midpoint, then slide with the midpoint's drift
+        const view = zoomAt(state, pinch.x, pinch.y, spread / pinch.spread);
+        view.panX += m.x - pinch.x;
+        view.panY += m.y - pinch.y;
+        applyView(view);
+        pinch = { spread, x: m.x, y: m.y };
+        gestureMoved = true;
+    } else if (panFrom && event.touches.length === 1 && state.zoom > 1) {
+        event.preventDefault();
+        const p = localPoint(event.touches[0], rect);
+        applyView({ zoom: state.zoom, panX: state.panX + (p.x - panFrom.x), panY: state.panY + (p.y - panFrom.y) });
+        panFrom = p;
+        gestureMoved = true;
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (event) => {
+    if (event.touches.length < 2) pinch = null;
+    if (event.touches.length === 0) panFrom = null;
+});
+
+// a moved gesture ends with a synthetic click; don't identify a random object
+canvas.addEventListener('click', (event) => {
+    if (gestureMoved) { gestureMoved = false; return; }
+    handlePointer(event);
+});
+
+syncTouchAction();
 
 // -------------------------------------------------------------------- boot
 

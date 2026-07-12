@@ -275,65 +275,84 @@
                 </div>
             </section>
 
-            <!-- Contact Section (last leaf — never peels; shares its screen with the footer) -->
+            <!-- Contact Section (last leaf, never peels; shares its screen with the footer).
+                 Composed as the paper's colophon: the imprint page that closes the edition.
+                 A short ask, a message form that lands in the DB and pings me on Telegram
+                 (app/proxys/contact.php), then a thick-over-thin ruled index (the projects
+                 masthead's double rule) carrying location, education and socials as quiet
+                 text references. Styles: kinetic.css "COLOPHON". -->
             <section id="contact" class="leaf bg-paper-2 border-t border-ink/10">
                 <div class="leaf__inner flex flex-col min-h-[100svh]">
-                    <div class="mx-auto max-w-[1200px] px-6 md:px-10 w-full pt-24 md:pt-32 pb-12">
+                    <div class="mx-auto max-w-[1200px] px-6 md:px-10 w-full flex-1 flex flex-col justify-center pt-24 md:pt-28 pb-12">
                         <div class="kinetic-secthead reveal">
                             <span class="kinetic-secthead__num">05</span>
                             <span class="kinetic-secthead__label">Contact</span>
                             <span class="kinetic-secthead__rule"></span>
                         </div>
-                        <h2 class="reveal kinetic-heading uppercase text-5xl md:text-8xl text-ink mb-16">Get in touch</h2>
 
-                        <div class="kinetic-info-grid">
-                            <a href="https://maps.google.com/?q=Celje,Slovenia" target="_blank" rel="noopener"
-                                class="reveal kinetic-info" style="--info-accent:var(--clay)">
-                                <span class="kinetic-info__main">
-                                    <span class="kinetic-info__kicker">Based in</span>
-                                    <span class="kinetic-info__value">Celje, Slovenia</span>
-                                </span>
-                                <span class="kinetic-info__foot">
-                                    <i class="fas fa-map-marker-alt"></i> View on map
-                                </span>
-                            </a>
+                        <h2 class="reveal colophon__ask">Have a project in mind?<span class="colophon__ask-sub">Drop me a line, I read every message.</span></h2>
 
-                            <a href="mailto:contact@domenhribernik.com" class="reveal kinetic-info"
-                                style="--info-accent:var(--cobalt);transition-delay:.08s">
-                                <span class="kinetic-info__main">
-                                    <span class="kinetic-info__kicker">Write to me</span>
-                                    <span class="kinetic-info__value kinetic-info__value--sm notranslate" translate="no">contact@domenhribernik.com</span>
-                                </span>
-                                <span class="kinetic-info__foot">
-                                    <i class="fas fa-envelope"></i> Send an email
-                                </span>
-                            </a>
+                        <form id="contactForm" class="reveal colophon__form" novalidate style="transition-delay:.08s">
+                            <div class="colophon__row">
+                                <div class="colophon__field">
+                                    <label class="colophon__label" for="cf-name">Name</label>
+                                    <input class="colophon__input" id="cf-name" name="name" type="text"
+                                        autocomplete="name" maxlength="120" required>
+                                    <span class="colophon__err" data-err="name" hidden></span>
+                                </div>
+                                <div class="colophon__field">
+                                    <label class="colophon__label" for="cf-email">Email</label>
+                                    <input class="colophon__input" id="cf-email" name="email" type="email"
+                                        autocomplete="email" maxlength="255" required>
+                                    <span class="colophon__err" data-err="email" hidden></span>
+                                </div>
+                            </div>
+                            <div class="colophon__field">
+                                <label class="colophon__label" for="cf-message">Message</label>
+                                <textarea class="colophon__input colophon__textarea" id="cf-message" name="message"
+                                    rows="4" maxlength="4000" required></textarea>
+                                <span class="colophon__err" data-err="message" hidden></span>
+                            </div>
+                            <!-- Honeypot: off-screen and skipped by keyboard; real people never fill it,
+                                 bots do. A filled value is silently dropped server-side. -->
+                            <div class="colophon__hp" aria-hidden="true">
+                                <label for="cf-website">Leave this field empty</label>
+                                <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off">
+                            </div>
+                            <div class="colophon__actions">
+                                <button class="colophon__submit" type="submit">
+                                    <span class="colophon__submit-label">Send message</span>
+                                    <span class="colophon__submit-mark" aria-hidden="true">&#8599;</span>
+                                </button>
+                                <p class="colophon__status" role="status" aria-live="polite"></p>
+                            </div>
+                        </form>
 
-                            <a href="https://feri.um.si/en/" target="_blank" rel="noopener" class="reveal kinetic-info"
-                                style="--info-accent:var(--pine);transition-delay:.16s">
-                                <span class="kinetic-info__main">
-                                    <span class="kinetic-info__kicker">Studied</span>
-                                    <span class="kinetic-info__value">BSc Computer Science &amp; IT</span>
-                                </span>
-                                <span class="kinetic-info__foot">
-                                    <i class="fas fa-graduation-cap"></i> University of Maribor
-                                </span>
-                            </a>
-                        </div>
-
-                        <div class="reveal flex gap-4 mt-12">
-                            <a href="https://github.com/domenhribernik" target="_blank" aria-label="GitHub"
-                                class="social-btn w-12 h-12 inline-flex items-center justify-center rounded-none border-2 border-ink/80 text-ink transition-all hover:bg-ink hover:text-paper">
-                                <i class="fab fa-github"></i>
-                            </a>
-                            <a href="https://www.instagram.com/domen_hribernik/" target="_blank" aria-label="Instagram"
-                                class="social-btn w-12 h-12 inline-flex items-center justify-center rounded-none border-2 border-ink/80 text-ink transition-all hover:bg-ink hover:text-paper">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                            <a href="https://www.linkedin.com/in/domen-hribernik-4081a121b/" target="_blank" aria-label="LinkedIn"
-                                class="social-btn w-12 h-12 inline-flex items-center justify-center rounded-none border-2 border-ink/80 text-ink transition-all hover:bg-ink hover:text-paper">
-                                <i class="fab fa-linkedin"></i>
-                            </a>
+                        <div class="reveal colophon__index" style="transition-delay:.16s">
+                            <div class="colophon__col" style="--acc:var(--clay)">
+                                <span class="colophon__kicker">Based in</span>
+                                <span class="colophon__value">Celje, Slovenia</span>
+                                <a class="colophon__ref" href="https://maps.google.com/?q=Celje,Slovenia"
+                                    target="_blank" rel="noopener">View on map</a>
+                            </div>
+                            <div class="colophon__col" style="--acc:var(--cobalt)">
+                                <span class="colophon__kicker">Studied</span>
+                                <span class="colophon__value">BSc Computer Science &amp; IT</span>
+                                <a class="colophon__ref" href="https://feri.um.si/en/" target="_blank"
+                                    rel="noopener">University of Maribor</a>
+                            </div>
+                            <div class="colophon__col" style="--acc:var(--pine)">
+                                <span class="colophon__kicker">Elsewhere</span>
+                                <ul class="colophon__refs">
+                                    <li><a class="colophon__ref" href="https://github.com/domenhribernik"
+                                            target="_blank" rel="noopener">GitHub</a></li>
+                                    <li><a class="colophon__ref"
+                                            href="https://www.linkedin.com/in/domen-hribernik-4081a121b/"
+                                            target="_blank" rel="noopener">LinkedIn</a></li>
+                                    <li><a class="colophon__ref" href="https://www.instagram.com/domen_hribernik/"
+                                            target="_blank" rel="noopener">Instagram</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
 
@@ -356,6 +375,7 @@
     <script type="module" src="views/homepage/apod.js"></script>
     <script src="views/homepage/script.js"></script>
     <script src="views/homepage/kinetic.js"></script>
+    <script type="module" src="views/homepage/contact-form.js"></script>
     <script src="views/homepage/intro.js"></script>
     <script src="views/homepage/peel.js"></script>
     <script src="components/tawk-chat.js"></script>
