@@ -1,91 +1,99 @@
 'use strict';
 
-// ─── Price map (source of truth from plan.md) ────────────────────────────────
+import {
+    pageCount, suggestTier, calculatePrice, validateForm,
+    PRICES, PACKAGE_FROM, SUPPORT_PRICES, LOADING_STEPS,
+} from './logic.js';
+import {
+    pickLanguage, lookup, format, loadDictionary, applyTranslations,
+    FALLBACK, STORAGE_KEY,
+} from './i18n.js';
 
-const PRICES = {
-    // Base packages (minimum cost depending on tier)
-    baseMini:    300,
-    baseBasic:   490,
+// ─── Language ──────────────────────────────────────────────────────────────
+// All visible copy flows through lang/<code>.json (see i18n.js): the system
+// language picks the startup language, the header dropdown and localStorage
+// override it. Ported from views/nebo/script.js's setLanguage wiring.
 
-    // Design upgrades (delta over template)
-    designSemi:  180,
-    designFull:  350,
-    logo:        120,
+const i18n = { lang: null, dict: null };
 
-    // Pages (extra beyond what's included in the package)
-    extraPage:   40,
+const t = (key, params) => (params ? format(lookup(i18n.dict, key), params) : lookup(i18n.dict, key));
 
-    // Content writing
-    copywriting: 40, // per page
+function formatCurrency(n) {
+    const locale = i18n.dict?.locale === 'sl-SI' ? 'sl-SI' : 'en-GB';
+    return format(t('currency'), { n: n.toLocaleString(locale) });
+}
 
-    // Languages (extra beyond first)
-    language:    120,
+// The package cards' data-amount starts as plain HTML text (so the page
+// still reads fine with JS disabled); PACKAGE_FROM in logic.js is the real
+// source of truth, so stamp it over the markup once before anything renders.
+function applyPackagePrices() {
+    document.querySelectorAll('.package-card[data-package]').forEach(card => {
+        const tier    = card.dataset.package;
+        const priceEl = card.querySelector('.price-cell');
+        if (priceEl && tier in PACKAGE_FROM) priceEl.dataset.amount = String(PACKAGE_FROM[tier]);
+    });
+}
 
-    // CMS
-    cms:         180,
+// Any element with a flat data-amount is a statically-priced cell (package
+// card price, à-la-carte table row); a price-chip is the small "(+€N)" /
+// "(from €N)" note next to a question option. Both need re-filling on every
+// language switch since the currency symbol moves sides.
+function formatPriceElements() {
+    document.querySelectorAll('.price-cell[data-amount]').forEach(el => {
+        const amount = Number(el.dataset.amount);
+        const money  = formatCurrency(amount);
+        if (el.dataset.prefix === 'from') el.textContent = `${t('table.fromPrefix')} ${money}`;
+        else if (el.dataset.suffix === 'perPage') el.textContent = `${money}${t('table.perPage')}`;
+        else if (el.dataset.suffix === 'each') el.textContent = `${money}${t('table.each')}`;
+        else el.textContent = money;
+    });
 
-    // Features
-    map:         30,
-    gallery:     60,
-    blog:        150,
-    newsletter:  60,
-    chat:        50,
-    booking:     400,  // minimum
-    accounts:    500,  // minimum
-    api:         250,  // minimum
+    document.querySelectorAll('.price-chip[data-amount]').forEach(el => {
+        const money = formatCurrency(Number(el.dataset.amount));
+        el.textContent = el.dataset.format === 'from'    ? `(${t('table.fromPrefix')} ${money})`
+                        : el.dataset.format === 'perPage' ? `(+${money}${t('table.perPage')})`
+                        : `(+${money})`;
+    });
 
-    // Shop
-    shopSetup:   600,
-    payments:    150,
-    orders:      200,
-    extraProduct: 3,
+    // Hints/labels that interpolate a price mid-sentence rather than showing
+    // a standalone chip (e.g. "extras billed at €40 each").
+    document.querySelectorAll('[data-i18n-template]').forEach(el => {
+        const price = formatCurrency(Number(el.dataset.price));
+        el.textContent = format(t(el.dataset.i18nTemplate), { price });
+    });
+}
 
-    // Marketing
-    seo:         180,
-    analytics:   60,
-    speed:       100,
-    security:    80,
-};
+// Toggle-button labels are JS-owned state (open/closed), not a static
+// data-i18n hook, so a language switch can't just re-run applyTranslations
+// on them without first knowing which of the two words currently applies.
+let refreshPackagesToggle = () => {};
+let refreshAlacToggle = () => {};
 
-// Features that need a custom quote (shown as "contact" in receipt)
-const CUSTOM_FEATURES = new Set(['booking', 'accounts', 'api']);
+// The results screen renders receipt/context copy from the last computed
+// quote; re-run it on a language switch so it doesn't stay stuck in the
+// previous language while every static label around it updates.
+let lastPriceData = null;
 
-// Pages included per tier
-const PAGES_INCLUDED = { MINI: 1, BASIC: 3, PLUS: 6, PREMIUM: 12, CUSTOM: 999 };
+async function setLanguage(lang, { save = false } = {}) {
+    i18n.dict = await loadDictionary(lang);
+    i18n.lang = lang;
+    if (save) {
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch { /* private mode: the choice just won't stick */ }
+    }
+    document.documentElement.lang = lang;
+    document.title = t('meta.title');
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
 
-// Package data for result display
-const PACKAGE_INFO = {
-    MINI: {
-        label:       'MINI',
-        from:        300,
-        description: 'A single-page online presence — clean, fast, and done.',
-        items:       ['1-page site', 'Template design', 'Mobile-friendly', 'SSL certificate', 'Contact form'],
-    },
-    BASIC: {
-        label:       'BASIC',
-        from:        490,
-        description: 'The foundation every small business needs.',
-        items:       ['Up to 3 pages', 'Template design', 'Basic SEO + search registration', 'Mobile-friendly', 'Domain + hosting 1yr', 'Contact form'],
-    },
-    PLUS: {
-        label:       'PLUS',
-        from:        890,
-        description: 'Everything a business presentation site genuinely needs.',
-        items:       ['Up to 6 pages', 'Semi-custom design', 'Logo included', 'Blog / news', 'Advanced SEO', 'Analytics', 'Interactive map', 'Multiple contact forms', 'Domain + hosting 1yr'],
-    },
-    PREMIUM: {
-        label:       'PREMIUM',
-        from:        1600,
-        description: 'Serious presence, multilingual, and independently manageable.',
-        items:       ['Up to 12 pages', 'Fully custom design', 'Advanced SEO', 'Multilingual (1 extra language)', 'CMS for self-editing', 'Speed optimisation', 'Security hardening', 'Everything in PLUS'],
-    },
-    CUSTOM: {
-        label:       'CUSTOM',
-        from:        2500,
-        description: 'No ceiling. Built exactly to your requirements.',
-        items:       ['Unlimited pages', 'Web shop + user accounts', 'Booking / reservation system', 'Dynamic content + dashboards', 'API integrations', 'Price by agreement'],
-    },
-};
+    applyTranslations(i18n.dict);
+    formatPriceElements();
+    refreshPackagesToggle();
+    refreshAlacToggle();
+    document.getElementById('langSelect').value = lang;
+
+    if (lastPriceData && !document.getElementById('state-results').classList.contains('hidden')) {
+        renderResults(lastPriceData.tier, lastPriceData.total, lastPriceData.lineItems, lastPriceData.hasCustom);
+    }
+}
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -147,184 +155,31 @@ function restoreFormState(s) {
     document.getElementById('specialRequests').value = s.special_requests || '';
 }
 
-// ─── Tier calculation ─────────────────────────────────────────────────────────
-
-function suggestTier(s) {
-    const features = s.features || [];
-    const shop     = s.shop     || [];
-    const purpose  = s.purpose  || [];
-
-    // CUSTOM triggers
-    if (purpose.includes('app')) return 'CUSTOM';
-    if (features.includes('accounts') || features.includes('api') || features.includes('booking')) return 'CUSTOM';
-    if (shop.length > 0) return 'CUSTOM';
-
-    // PREMIUM triggers
-    if (s.design === 'full')      return 'PREMIUM';
-    if (s.languages && s.languages !== '1') return 'PREMIUM';
-    if (s.cms === 'yes')          return 'PREMIUM';
-
-    // PLUS triggers
-    if (features.includes('blog')) return 'PLUS';
-    if (s.logo)                    return 'PLUS';
-    if (s.design === 'semi')       return 'PLUS';
-    if (s.pages === '4-6' || s.pages === '7-12' || s.pages === '13+') return 'PLUS';
-
-    // MINI trigger: only if 1 page, no domain/hosting
-    if (s.pages === '1' && s.hosting === 'own') return 'MINI';
-
-    return 'BASIC';
-}
-
-function pageCount(pagesValue) {
-    const map = { '1': 1, '2-3': 3, '4-6': 6, '7-12': 12, '13+': 13 };
-    return map[pagesValue] || 1;
-}
-
-function calculatePrice(s) {
-    const tier      = suggestTier(s);
-    const features  = s.features || [];
-    const shop      = s.shop     || [];
-    const marketing = s.marketing || [];
-    let total    = 0;
-    let hasCustom = false;
-    const lineItems = [];
-
-    // Base
-    const base = tier === 'MINI' ? PRICES.baseMini : PRICES.baseBasic;
-    total += base;
-    lineItems.push({ name: `Base (${tier === 'MINI' ? 'MINI' : 'BASIC'} package)`, price: base, isBase: true });
-
-    // Design upgrade
-    if (s.design === 'semi') {
-        total += PRICES.designSemi;
-        lineItems.push({ name: 'Semi-custom design', price: PRICES.designSemi });
-    } else if (s.design === 'full') {
-        total += PRICES.designFull;
-        lineItems.push({ name: 'Fully custom design', price: PRICES.designFull });
-    }
-
-    // Logo
-    if (s.logo) {
-        total += PRICES.logo;
-        lineItems.push({ name: 'Logo design', price: PRICES.logo });
-    }
-
-    // Extra pages
-    const pages       = pageCount(s.pages);
-    const included    = PAGES_INCLUDED[tier] ?? 3;
-    const extraPages  = Math.max(0, pages - included);
-    if (extraPages > 0) {
-        const cost = extraPages * PRICES.extraPage;
-        total += cost;
-        lineItems.push({ name: `Extra pages (${extraPages} × €40)`, price: cost });
-    }
-
-    // Copywriting
-    if (s.content === 'written') {
-        const cost = pages * PRICES.copywriting;
-        total += cost;
-        lineItems.push({ name: `Copywriting (${pages} pages × €40)`, price: cost });
-    }
-
-    // Languages
-    if (s.languages === '2') {
-        total += PRICES.language;
-        lineItems.push({ name: 'Multilingual (1 extra language)', price: PRICES.language });
-    } else if (s.languages === '3+') {
-        total += PRICES.language * 2;
-        lineItems.push({ name: 'Multilingual (2+ extra languages)', price: PRICES.language * 2 });
-    }
-
-    // CMS
-    if (s.cms === 'yes') {
-        total += PRICES.cms;
-        lineItems.push({ name: 'CMS for self-editing', price: PRICES.cms });
-    }
-
-    // Features
-    const featureNames = {
-        map:       ['Interactive map',       PRICES.map],
-        gallery:   ['Image gallery',         PRICES.gallery],
-        blog:      ['Blog / news section',   PRICES.blog],
-        newsletter:['Newsletter signup',     PRICES.newsletter],
-        chat:      ['Live chat',             PRICES.chat],
-        booking:   ['Booking system',        PRICES.booking],
-        accounts:  ['User accounts / dashboard', PRICES.accounts],
-        api:       ['API / third-party integration', PRICES.api],
-    };
-    features.forEach(f => {
-        if (!featureNames[f]) return;
-        const [name, price] = featureNames[f];
-        if (CUSTOM_FEATURES.has(f)) {
-            hasCustom = true;
-            lineItems.push({ name: `${name} (minimum)`, price, isCustom: true });
-        } else {
-            total += price;
-            lineItems.push({ name, price });
-        }
-    });
-    // Add custom feature minimums to total
-    features.forEach(f => {
-        if (CUSTOM_FEATURES.has(f)) total += featureNames[f][1];
-    });
-
-    // Shop
-    const shopNames = {
-        setup:    ['Shop setup (up to 20 products)', PRICES.shopSetup],
-        payments: ['Payment integration',            PRICES.payments],
-        orders:   ['Order / inventory management',   PRICES.orders],
-    };
-    shop.forEach(item => {
-        if (!shopNames[item]) return;
-        const [name, price] = shopNames[item];
-        hasCustom = true;
-        total += price;
-        lineItems.push({ name, price, isCustom: true });
-    });
-
-    // Extra products
-    if (s.extra_products > 0) {
-        const cost = s.extra_products * PRICES.extraProduct;
-        total += cost;
-        lineItems.push({ name: `Extra products (${s.extra_products} × €3)`, price: cost });
-    }
-
-    // Marketing
-    const marketingNames = {
-        seo:      ['Advanced SEO optimisation', PRICES.seo],
-        analytics:['Analytics & tracking',      PRICES.analytics],
-        speed:    ['Speed optimisation',         PRICES.speed],
-        security: ['Security hardening',         PRICES.security],
-    };
-    marketing.forEach(m => {
-        if (!marketingNames[m]) return;
-        const [name, price] = marketingNames[m];
-        total += price;
-        lineItems.push({ name, price });
-    });
-
-    return { tier, total, lineItems, hasCustom };
-}
-
 // ─── Results rendering ────────────────────────────────────────────────────────
 
+function lineItemLabel(item) {
+    const base = item.params ? format(t(`items.${item.key}`), item.params) : t(`items.${item.key}`);
+    return item.isCustom ? format(t('items.minimumSuffix'), { name: base }) : base;
+}
+
 function renderResults(tier, total, lineItems, hasCustom) {
+    lastPriceData = { tier, total, lineItems, hasCustom };
+
     // Package badge
     const badge = document.getElementById('resultPackageBadge');
-    badge.textContent  = tier;
-    badge.className    = `package-result-badge font-display text-sm tracking-widest px-3 py-1 border-2 shadow-stamp-sm badge-${tier}`;
+    badge.textContent = tier;
+    badge.className   = `package-result-badge font-mono text-sm tracking-widest px-3 py-1 rounded-[3px] border badge-${tier}`;
 
     // Receipt date
     document.getElementById('receiptDate').textContent =
-        new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        new Date().toLocaleDateString(i18n.dict.locale, { day: 'numeric', month: 'long', year: 'numeric' });
 
     // Line items
     const container = document.getElementById('receiptLineItems');
     container.innerHTML = lineItems.map(item => `
         <div class="receipt-line-item${item.isBase ? ' item-base' : ''}${item.isCustom ? ' item-contact' : ''}">
-            <span class="item-name">${item.isCustom ? '⚡ ' : ''}${item.name}</span>
-            <span class="item-price">€${item.price.toLocaleString('de-DE')}</span>
+            <span class="item-name">${item.isCustom ? '⚡ ' : ''}${lineItemLabel(item)}</span>
+            <span class="item-price">${formatCurrency(item.price)}</span>
         </div>
     `).join('');
 
@@ -332,18 +187,19 @@ function renderResults(tier, total, lineItems, hasCustom) {
     document.getElementById('customNote').classList.toggle('hidden', !hasCustom);
 
     // Total
-    document.getElementById('resultTotal').textContent = `€${total.toLocaleString('de-DE')}`;
+    document.getElementById('resultTotal').textContent = formatCurrency(total);
 
     // Rental
-    const monthly = Math.ceil(total / 18);
-    document.getElementById('rentalPrice').textContent = `~€${monthly}/mo for 18 months`;
+    const months  = 18;
+    const monthly = Math.ceil(total / months);
+    document.getElementById('rentalPrice').textContent = `~${formatCurrency(monthly)}${t('results.rentalFor', { months })}`;
+    document.getElementById('maintenanceNote').textContent = format(t('results.maintenanceNote'), { price: formatCurrency(SUPPORT_PRICES.basic) });
 
     // Package context card
-    const info = PACKAGE_INFO[tier];
-    document.getElementById('packageContextName').textContent = info.label;
-    document.getElementById('packageContextDesc').textContent = info.description;
-    document.getElementById('packageContextItems').innerHTML = info.items
-        .map(i => `<div class="flex gap-1.5 text-parchment/75"><span class="text-gold mt-0.5">✓</span>${i}</div>`)
+    document.getElementById('packageContextName').textContent = tier;
+    document.getElementById('packageContextDesc').textContent = t(`packages.${tier}.description`);
+    document.getElementById('packageContextItems').innerHTML = lookup(i18n.dict, `packages.${tier}.items`)
+        .map(item => `<div class="flex gap-1.5 text-parchment/75"><span class="text-gold mt-0.5">✓</span>${item}</div>`)
         .join('');
 
     // Highlight the matching package card in the packages grid
@@ -361,20 +217,6 @@ function renderResults(tier, total, lineItems, hasCustom) {
 
 // ─── Loading sequence ─────────────────────────────────────────────────────────
 
-const LOADING_MESSAGES = [
-    { delay: 0,    text: '$ analysing your requirements...',          type: 'prompt' },
-    { delay: 1200, text: '  reading scope...',                        type: 'line'   },
-    { delay: 2400, text: '  checking feature dependencies...',        type: 'line'   },
-    { delay: 3800, text: '$ selecting optimal package...',            type: 'prompt' },
-    { delay: 5200, text: '  comparing 5 packages...',                 type: 'line'   },
-    { delay: 6800, text: '  applying tier escalation rules...',       type: 'line'   },
-    { delay: 8200, text: '$ calculating price breakdown...',          type: 'prompt' },
-    { delay: 9600, text: '  summing à-la-carte items...',             type: 'line'   },
-    { delay: 11000, text: '  applying package minimums...',           type: 'line'   },
-    { delay: 12500, text: '$ finalising your quote...',               type: 'prompt' },
-    { delay: 14000, text: '  generating receipt...',                  type: 'line'   },
-];
-
 function runLoadingSequence(duration, onComplete) {
     const output   = document.getElementById('terminalOutput');
     const bar      = document.getElementById('loadingBar');
@@ -384,20 +226,18 @@ function runLoadingSequence(duration, onComplete) {
 
     output.innerHTML = '';
 
-    // Type messages
-    LOADING_MESSAGES.forEach(msg => {
-        if (msg.delay >= duration) return;
-        const t = setTimeout(() => {
+    LOADING_STEPS.forEach(step => {
+        if (step.delay >= duration) return;
+        const timeout = setTimeout(() => {
             const line = document.createElement('div');
-            line.className = msg.type === 'prompt' ? 'terminal-prompt' : 'terminal-line';
-            line.textContent = msg.text;
+            line.className   = step.type === 'prompt' ? 'terminal-prompt' : 'terminal-line';
+            line.textContent = t(`loading.steps.${step.key}`);
             output.appendChild(line);
             output.scrollTop = output.scrollHeight;
-        }, msg.delay);
-        timeouts.push(t);
+        }, step.delay);
+        timeouts.push(timeout);
     });
 
-    // Progress bar
     const barInterval = setInterval(() => {
         const elapsed  = Date.now() - start;
         const progress = Math.min(95, (elapsed / duration) * 100);
@@ -405,7 +245,6 @@ function runLoadingSequence(duration, onComplete) {
         pct.textContent  = `${Math.round(progress)}%`;
     }, 80);
 
-    // Done line + complete
     const doneTimeout = setTimeout(() => {
         clearInterval(barInterval);
         bar.style.width = '100%';
@@ -413,7 +252,7 @@ function runLoadingSequence(duration, onComplete) {
 
         const done = document.createElement('div');
         done.className   = 'terminal-prompt success';
-        done.textContent = '✓ quote ready.';
+        done.textContent = t('loading.steps.done');
         output.appendChild(done);
         output.scrollTop = output.scrollHeight;
 
@@ -434,19 +273,6 @@ function showState(name) {
         }
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ─── Form validation ──────────────────────────────────────────────────────────
-
-function validateForm(s) {
-    const errors = [];
-    if (!s.pages)    errors.push('Please select how many pages you need (question 2).');
-    if (!s.content)  errors.push('Please choose who writes the content (question 3).');
-    if (!s.design)   errors.push('Please choose a design style (question 4).');
-    if (!s.languages) errors.push('Please select the number of languages (question 5).');
-    if (!s.cms)      errors.push('Please choose whether you want a CMS (question 6).');
-    if (!s.hosting)  errors.push('Please choose a hosting option (question 10).');
-    return errors;
 }
 
 // ─── Quote submission (POST / PUT) ───────────────────────────────────────────
@@ -517,50 +343,50 @@ async function sendQuote() {
             );
         }
 
-        // Build mailto body
+        // Build mailto body, in whichever language the visitor is reading
         const state     = getFormState();
         const priceData = calculatePrice(state);
         const tier      = priceData.tier;
         const total     = priceData.total;
 
         const itemLines = priceData.lineItems
-            .map(i => `  • ${i.name}: €${i.price.toLocaleString('de-DE')}`)
+            .map(item => `  • ${lineItemLabel(item)}: ${formatCurrency(item.price)}`)
             .join('\n');
 
-        const supportText = support === 'none'    ? 'None'
-                           : support === 'basic'   ? 'Basic support (+€25/mo)'
-                           : 'Advanced support (+€60/mo)';
+        const supportText = support === 'none'    ? t('mailto.supportNone')
+                           : support === 'basic'   ? format(t('mailto.supportBasic'), { price: formatCurrency(SUPPORT_PRICES.basic) })
+                           : format(t('mailto.supportAdvanced'), { price: formatCurrency(SUPPORT_PRICES.advanced) });
 
         const body = [
-            `Hi Domen,`,
+            t('mailto.greeting'),
             ``,
-            `I used your pricing calculator and I'd like to discuss a project.`,
+            t('mailto.intro'),
             ``,
-            `─── QUOTE SUMMARY ───`,
-            `Suggested package : ${tier}`,
-            `Estimated total   : €${total.toLocaleString('de-DE')} (excl. VAT)`,
-            `Ongoing support   : ${supportText}`,
+            `─── ${t('mailto.quoteSummary')} ───`,
+            `${t('mailto.suggestedPackageLabel')} : ${tier}`,
+            `${t('mailto.estimatedTotalLabel')}   : ${formatCurrency(total)} ${t('mailto.exclVatParen')}`,
+            `${t('mailto.ongoingSupportLabel')}   : ${supportText}`,
             ``,
-            `─── BREAKDOWN ───`,
+            `─── ${t('mailto.breakdown')} ───`,
             itemLines,
             ``,
             state.special_requests
-                ? `─── SPECIAL REQUESTS ───\n${state.special_requests}\n`
+                ? `─── ${t('mailto.specialRequests')} ───\n${state.special_requests}\n`
                 : '',
-            name    ? `Name   : ${name}`    : '',
-            email   ? `E-mail : ${email}`   : '',
-            message ? `\nMessage:\n${message}` : '',
+            name    ? `${t('mailto.nameLabel')} : ${name}`    : '',
+            email   ? `${t('mailto.emailLabel')} : ${email}`   : '',
+            message ? `\n${t('mailto.messageLabel')}:\n${message}` : '',
             ``,
             `─────────────────────`,
-            `Quote #${currentQuoteId || '—'} · generated on ${new Date().toLocaleDateString('en-GB')}`,
+            format(t('mailto.footer'), { id: currentQuoteId || '—', date: new Date().toLocaleDateString(i18n.dict.locale) }),
         ].filter(l => l !== '').join('\n');
 
-        const subject = encodeURIComponent(`Web development quote — ${tier} package`);
+        const subject = encodeURIComponent(format(t('mailto.subject'), { tier }));
         const bodyEnc = encodeURIComponent(body);
         window.location.href = `mailto:contact@domenhribernik.com?subject=${subject}&body=${bodyEnc}`;
 
     } catch (err) {
-        errEl.textContent = 'Something went wrong saving the quote. You can still email me directly at contact@domenhribernik.com';
+        errEl.textContent = t('results.sendError');
         errEl.classList.remove('hidden');
     } finally {
         sendBtn.disabled = false;
@@ -578,20 +404,22 @@ function initPackagesToggle() {
     const chevron = btn.querySelector('.packages-chevron');
     let open      = true;
 
+    refreshPackagesToggle = () => {
+        label.textContent = open ? t('packagesSection.collapse') : t('packagesSection.expand');
+        chevron.style.transform = open ? '' : 'rotate(180deg)';
+        btn.setAttribute('aria-expanded', String(open));
+    };
+
     btn.addEventListener('click', () => {
         open = !open;
         grid.classList.toggle('hidden', !open);
-        label.textContent = open ? 'collapse' : 'expand';
-        chevron.style.transform = open ? '' : 'rotate(180deg)';
-        btn.setAttribute('aria-expanded', String(open));
+        refreshPackagesToggle();
     });
 
     // Collapse by default on mobile
     if (window.innerWidth < 640) {
         open = false;
         grid.classList.add('hidden');
-        label.textContent = 'expand';
-        chevron.style.transform = 'rotate(180deg)';
         btn.setAttribute('aria-expanded', 'false');
     }
 }
@@ -605,11 +433,15 @@ function initAlacToggle() {
     const chevron = btn.querySelector('.alac-chevron');
     let open      = false;
 
+    refreshAlacToggle = () => {
+        label.textContent = open ? t('table.hide') : t('table.show');
+        chevron.style.transform = open ? 'rotate(180deg)' : '';
+    };
+
     btn.addEventListener('click', () => {
         open = !open;
         content.classList.toggle('hidden', !open);
-        label.textContent = open ? 'hide' : 'show';
-        chevron.style.transform = open ? 'rotate(180deg)' : '';
+        refreshAlacToggle();
     });
 }
 
@@ -629,6 +461,8 @@ function loadFromStorage() {
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+    applyPackagePrices();
+
     // Restore saved state
     const saved = loadFromStorage();
     if (saved) restoreFormState(saved);
@@ -653,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const errEl  = document.getElementById('formError');
 
         if (errors.length) {
-            errEl.textContent = errors[0];
+            errEl.textContent = t(errors[0]);
             errEl.classList.remove('hidden');
             errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
@@ -695,4 +529,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Send quote ──
     document.getElementById('sendQuoteBtn').addEventListener('click', sendQuote);
+
+    // ── Language ──
+    document.getElementById('langSelect').addEventListener('change', (event) => {
+        setLanguage(event.target.value, { save: true })
+            .catch(() => { document.getElementById('langSelect').value = i18n.lang; }); // dictionary fetch failed: stay put
+    });
+
+    let savedLang = null;
+    try { savedLang = localStorage.getItem(STORAGE_KEY); } catch { /* private mode */ }
+    const systemLanguages = navigator.languages || [navigator.language];
+    setLanguage(pickLanguage(savedLang, systemLanguages)).catch(() => {
+        setLanguage(FALLBACK).catch(() => {});
+    });
 });

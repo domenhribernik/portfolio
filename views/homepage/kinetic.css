@@ -5,8 +5,8 @@
    homepage and never leaks into the rest of the site. Tailwind in
    index.html handles layout/spacing; this file keeps what Tailwind
    can't cleanly express: the hero animations, cursor blobs, the
-   running marquee, the poster grid, grain, the projects index
-   rows, and the contact composition.
+   running marquee, the poster grid, grain, the projects paper
+   columns, and the contact composition.
    ============================================================ */
 
 .kinetic {
@@ -391,220 +391,288 @@
 }
 
 /* ============================================================
-   PROJECTS INDEX (rendered by <projects-index>)
-   Magazine table-of-contents rows: title, one-line description,
-   secondary-link chips, springing arrow. The whole row is one tap
-   target (a stretched .pindex__cover link), so nothing depends on
-   hover to be usable; on desktop pointers the title letters wipe
-   to the row's accent (a background-clip: text sweep), the row's
-   rule turns accent, and a tilted icon stamp follows the cursor
-   (positioned by projects-index.js).
-   Accent cycles clay -> cobalt -> pine, set inline per row.
+   PROJECTS PAPER (rendered by <projects-paper>)
+   The projects section as one newspaper front page. Above the
+   fold, Professional & Freelance runs as the top-stories band:
+   the newest project set as a wide splash story, the others in
+   ruled columns beside it. Below, Passion Projects runs as the
+   dense inside-pages index: briefs flowing through real CSS
+   newspaper columns (multicol, hairline column rules). The foot
+   of the paper is a cross-reference line pointing at the about
+   page, where the academic work runs in full. Every story is one
+   stretched-link tap target (.ppaper__cover), so nothing depends
+   on hover to be usable. Hover is deliberately quiet: the
+   headline underlines in the section accent, nothing moves.
+   Section accents: clay for the band, cobalt for the briefs.
    ============================================================ */
-.pindex {
+.ppaper {
     display: block;
 }
 
-.pindex__head {
+/* Dateline masthead: thick-over-thin double rule, mono edition line */
+.ppaper__mast {
     display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-}
-
-.pindex__cat {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.5rem;
+    padding: 0.6rem 0.1rem;
+    border-top: 3px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
     font-family: 'Space Mono', monospace;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    font-size: 0.64rem;
     color: var(--stone);
 }
 
-.pindex__rule {
-    flex: 1;
-    height: 1.5px;
-    background: rgba(28, 26, 23, 0.16);
+/* Section head: full-width accent-ruled title line */
+.ppaper__sechead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 3px solid var(--acc);
 }
 
-.pindex__count {
+.ppaper__sectitle {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    line-height: 1.1;
+    color: var(--ink);
+}
+
+.ppaper__seccount {
     font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: var(--stone);
+    white-space: nowrap;
 }
 
-.pindex__count::before {
+.ppaper__seccount::before {
     content: '/ ';
 }
 
-.pindex__row {
+/* ---- Top-stories band (professional) ---- */
+.ppaper__band {
+    margin-top: 1.9rem;
+}
+
+.ppaper__band-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+/* Tablet: splash runs full width over a two-column row of stories */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .ppaper__band-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ppaper__story--splash {
+        grid-column: 1 / -1;
+    }
+
+    .ppaper__band-grid .ppaper__story:not(.ppaper__story--splash) {
+        border-bottom: none;
+        padding-right: 1.4rem;
+    }
+
+    /* Odd children beyond the splash sit in the second column */
+    .ppaper__band-grid .ppaper__story:nth-child(odd):not(.ppaper__story--splash) {
+        border-left: 1px solid rgba(28, 26, 23, 0.22);
+        padding-left: 1.4rem;
+        padding-right: 0;
+    }
+
+    .ppaper__band-grid .ppaper__story:nth-child(n+4) {
+        border-top: 1px solid rgba(28, 26, 23, 0.18);
+    }
+}
+
+/* Desktop: splash column plus one ruled column per remaining story */
+@media (min-width: 1024px) {
+    .ppaper__band-grid {
+        grid-template-columns: minmax(0, 2.35fr) repeat(3, minmax(0, 1fr));
+    }
+
+    .ppaper__band-grid .ppaper__story {
+        border-bottom: none;
+        padding-right: 1.5rem;
+    }
+
+    .ppaper__band-grid .ppaper__story + .ppaper__story {
+        border-left: 1px solid rgba(28, 26, 23, 0.22);
+        padding-left: 1.5rem;
+    }
+
+    .ppaper__band-grid .ppaper__story:last-child {
+        padding-right: 0;
+    }
+}
+
+/* ---- Inside-pages briefs (passion) ---- */
+.ppaper__inside {
+    margin-top: 3rem;
+}
+
+.ppaper__briefs {
+    margin-top: 0.4rem;
+    columns: 1;
+    column-gap: 2.6rem;
+    column-rule: 1px solid rgba(28, 26, 23, 0.22);
+}
+
+@media (min-width: 768px) {
+    .ppaper__briefs {
+        columns: 2;
+    }
+}
+
+@media (min-width: 1024px) {
+    .ppaper__briefs {
+        columns: 3;
+    }
+}
+
+/* ---- Stories ---- */
+.ppaper__story {
     position: relative;
     isolation: isolate;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 1.25rem;
-    padding: 1.15rem 0.9rem 1.15rem 0.35rem;
-    border-bottom: 1.5px solid rgba(28, 26, 23, 0.16);
-    transition: border-color 0.3s ease;
+    padding: 1rem 0.1rem 1.1rem;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.18);
 }
 
-.pindex__row--hidden {
-    display: none;
+.ppaper__story--brief {
+    break-inside: avoid;
+    padding: 0.85rem 0.1rem 0.95rem;
 }
 
-.pindex__row:hover,
-.pindex__row:focus-within {
-    border-bottom-color: var(--acc);
-}
-
-/* Stretched link: the row's single tap target. Text layers above it
-   are pointer-events:none so clicks fall through; chips opt back in. */
-.pindex__cover {
+/* Stretched link: the story's single tap target. Text layers above it
+   are pointer-events:none so clicks fall through; refs opt back in. */
+.ppaper__cover {
     position: absolute;
     inset: 0;
     z-index: 1;
 }
 
-.pindex__body,
-.pindex__meta {
+.ppaper__headline,
+.ppaper__deck,
+.ppaper__refs {
     position: relative;
     z-index: 2;
     pointer-events: none;
 }
 
-.pindex__body {
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.pindex__title {
+.ppaper__headline {
     font-family: 'Bricolage Grotesque', sans-serif;
     font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
-    font-size: clamp(1.25rem, 2.4vw, 1.85rem);
-    line-height: 1.08;
+    letter-spacing: -0.015em;
+    font-size: 1.06rem;
+    line-height: 1.18;
     color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color 0.2s ease;
 }
 
-/* Accent wipe: the title is painted by an oversized two-stop gradient
-   clipped to the glyphs; hover slides it so the letters flood with the
-   row accent, left to right. box-decoration-break keeps the sweep
-   continuous when a long title wraps. */
-.pindex__title-text {
-    background-image: linear-gradient(90deg, var(--acc) 0 50%, var(--ink) 50% 100%);
-    background-size: 205% 100%;
-    background-position: 100% 0;
-    background-repeat: no-repeat;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-box-decoration-break: slice;
-    box-decoration-break: slice;
-    transition: background-position 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+.ppaper__story--splash .ppaper__headline {
+    font-size: clamp(1.6rem, 2.6vw, 2.35rem);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
 }
 
-.pindex__row:hover .pindex__title-text,
-.pindex__row:focus-within .pindex__title-text {
-    background-position: 0 0;
+.ppaper__story--brief .ppaper__headline {
+    font-size: 0.98rem;
 }
 
-.pindex__badge {
+/* The one hover effect: headline underlines in the column accent.
+   Keyboard focus and a touch press get the same treatment. */
+.ppaper__story:hover .ppaper__headline,
+.ppaper__story:focus-within .ppaper__headline,
+.ppaper__story:active .ppaper__headline {
+    text-decoration-color: var(--acc);
+}
+
+.ppaper__badge {
     display: inline-block;
-    vertical-align: 0.35em;
-    margin-left: 0.7rem;
-    padding: 0.22em 0.6em;
+    vertical-align: 0.25em;
+    margin-left: 0.35rem;
+    padding: 0.24em 0.6em;
     background: var(--ink);
     color: var(--paper);
     font-family: 'Space Mono', monospace;
     font-weight: 700;
-    font-size: 0.52rem;
+    font-size: 0.5rem;
     letter-spacing: 0.14em;
-    transition: background 0.25s ease, color 0.25s ease;
+    text-transform: uppercase;
 }
 
-.pindex__desc {
-    margin-top: 0.4rem;
-    max-width: 62ch;
-    font-size: 0.92rem;
+.ppaper__deck {
+    margin-top: 0.45rem;
+    font-size: 0.86rem;
     line-height: 1.5;
     color: var(--stone);
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    transition: color 0.25s ease;
 }
 
-.pindex__meta {
+.ppaper__story--splash .ppaper__deck {
+    font-size: 0.95rem;
+    -webkit-line-clamp: 6;
+}
+
+.ppaper__story--brief .ppaper__deck {
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
+    -webkit-line-clamp: 2;
+}
+
+/* Cross-reference links under a story (everything beyond the primary) */
+.ppaper__refs {
     display: flex;
-    align-items: center;
-    gap: 0.9rem;
-}
-
-.pindex__chip {
-    pointer-events: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45em;
-    padding: 0.42em 0.8em;
-    border: 1.5px solid rgba(28, 26, 23, 0.45);
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.6em;
+    margin-top: 0.55rem;
     font-family: 'Space Mono', monospace;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.62rem;
-    color: var(--ink);
-    text-decoration: none;
-    background: transparent;
-    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    letter-spacing: 0.1em;
+    font-size: 0.6rem;
 }
 
-.pindex__chip:hover {
-    background: var(--paper);
-    border-color: var(--paper);
+.ppaper__ref {
+    pointer-events: auto;
     color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: rgba(28, 26, 23, 0.35);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.3em;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
 }
 
-.pindex__arrow {
-    font-family: 'Bricolage Grotesque', sans-serif;
-    font-weight: 800;
-    font-size: 1.5rem;
-    line-height: 1;
+.ppaper__ref:hover {
     color: var(--acc);
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.25s ease;
+    text-decoration-color: var(--acc);
 }
 
-/* Hover / keyboard-focus: letters wipe to accent, body nudges right,
-   arrow springs. Quiet everywhere else. */
-.pindex__row:hover .pindex__body,
-.pindex__row:focus-within .pindex__body {
-    transform: translateX(0.45rem);
+.ppaper__ref-sep {
+    color: var(--stone);
 }
 
-.pindex__row:hover .pindex__badge,
-.pindex__row:focus-within .pindex__badge {
-    background: var(--acc);
-}
-
-.pindex__row:hover .pindex__arrow,
-.pindex__row:focus-within .pindex__arrow {
-    transform: translate(4px, -4px);
-}
-
-/* Touch: a quick accent wipe while the row is pressed */
-@media (hover: none) {
-    .pindex__title-text {
-        transition-duration: 0.18s;
-    }
-
-    .pindex__row:active .pindex__title-text { background-position: 0 0; }
-    .pindex__row:active { border-bottom-color: var(--acc); }
-}
-
-/* Show More toggle (created by projects-index.js) */
-.pindex__more {
-    display: inline-flex;
+/* Phone fold toggle: hidden on wider viewports (every story prints);
+   the mobile block below turns it on and hides folded stories. */
+.ppaper__more {
+    display: none;
     align-items: baseline;
     gap: 0.6em;
     margin-top: 1.1rem;
@@ -617,67 +685,65 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--ink);
 }
 
-.pindex__more i {
+.ppaper__more i {
     font-style: normal;
-    color: var(--clay);
+    color: var(--acc);
 }
 
-.pindex__more::after {
+.ppaper__more::after {
     content: '';
     position: absolute;
     left: 0;
     bottom: 0;
     height: 1.5px;
     width: 100%;
-    background: var(--clay);
+    background: var(--acc);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.3s ease;
 }
 
-.pindex__more:hover::after {
+.ppaper__more:hover::after,
+.ppaper__more:focus-visible::after {
     transform: scaleX(1);
 }
 
-/* Cursor stamp: outer element is positioned each frame by JS, the
-   inner card owns the CSS show/hide transition so the two never
-   fight over `transform`. */
-.pindex-stamp {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 60;
-    pointer-events: none;
-}
-
-.pindex-stamp__card {
+/* Foot of the paper: cross-reference to the academic work on the
+   about page, set like a "continued inside" line under a heavy rule */
+.ppaper__crossref {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 74px;
-    height: 74px;
-    margin: 1.4rem 0 0 1.6rem;
-    /* Paper card, accent icon: the row underneath is always flooded with
-       the accent while the stamp shows, so paper guarantees contrast. */
-    background: var(--paper);
-    color: var(--acc, var(--clay));
-    border: 2px solid var(--ink);
-    border-radius: 3px;
-    box-shadow: 6px 6px 0 rgba(28, 26, 23, 0.85);
-    font-size: 1.7rem;
-    opacity: 0;
-    transform: rotate(-8deg) scale(0.55);
-    transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-                background 0.2s ease;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.3em 0.55em;
+    margin-top: 2.8rem;
+    padding: 0.65rem 0.1rem 0;
+    border-top: 3px solid var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.66rem;
+    color: var(--stone);
+    text-decoration: none;
 }
 
-.pindex-stamp.is-on .pindex-stamp__card {
-    opacity: 1;
-    transform: rotate(-8deg) scale(1);
+.ppaper__crossref-label {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.3em;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.ppaper__crossref:hover .ppaper__crossref-label,
+.ppaper__crossref:focus-visible .ppaper__crossref-label {
+    color: var(--clay);
+    text-decoration-color: var(--clay);
 }
 
 /* ============================================================
@@ -872,47 +938,39 @@ html:has(body.kinetic)::-webkit-scrollbar-corner {
 
 /* ============================================================
    MOBILE COMPOSITION
-   Index rows compress: tighter grid, chips tuck under the arrow.
-   No hover anywhere on phones; the :active accent wipe above is
+   The front page stacks: the band and the briefs become one
+   rule-separated column each; the :active underline above is
    the whole touch story.
    ============================================================ */
+@media (max-width: 767px) {
+    .ppaper__band {
+        margin-top: 1.6rem;
+    }
+
+    .ppaper__inside {
+        margin-top: 2.4rem;
+    }
+
+    .ppaper__story--splash .ppaper__headline {
+        font-size: 1.45rem;
+    }
+
+    /* The phone fold: at most MOBILE_VISIBLE stories per section until
+       the section's "More stories" line unfolds it */
+    .ppaper__story--fold {
+        display: none;
+    }
+
+    .ppaper__sec--unfolded .ppaper__story--fold {
+        display: block;
+    }
+
+    .ppaper__more {
+        display: inline-flex;
+    }
+}
+
 @media (max-width: 640px) {
-    .pindex__row {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 0.7rem;
-        padding: 0.9rem 0.2rem;
-    }
-
-    .pindex__title {
-        font-size: 1.05rem;
-    }
-
-    .pindex__badge {
-        margin-left: 0.45rem;
-        font-size: 0.46rem;
-    }
-
-    .pindex__desc {
-        font-size: 0.78rem;
-        line-height: 1.45;
-        margin-top: 0.3rem;
-    }
-
-    .pindex__meta {
-        flex-direction: column-reverse;
-        align-items: flex-end;
-        gap: 0.55rem;
-    }
-
-    .pindex__chip {
-        font-size: 0.54rem;
-        padding: 0.35em 0.6em;
-    }
-
-    .pindex__arrow {
-        font-size: 1.15rem;
-    }
-
     .kinetic-info {
         min-height: 0;
         gap: 1.4rem;
@@ -946,14 +1004,10 @@ html:has(body.kinetic)::-webkit-scrollbar-corner {
         opacity: 0.32 !important;
     }
 
-    .pindex__title-text,
-    .pindex__body,
-    .pindex__arrow {
+    .ppaper__headline,
+    .ppaper__ref,
+    .ppaper__crossref-label,
+    .ppaper__more::after {
         transition: none !important;
-    }
-
-    /* projects-index.js also never creates the stamp under reduced motion */
-    .pindex-stamp {
-        display: none !important;
     }
 }

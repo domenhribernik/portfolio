@@ -1,5 +1,14 @@
-/* Pricing Calculator — Tailwind handles layout/colors/typography.
-   This file carries only what Tailwind cannot cleanly express. */
+/* Pricing Calculator — editorial theme (see root CLAUDE.md "my style":
+   paper/ink/clay identity, applied here with the calculator's own
+   parchment/ember palette rather than swapping colors). Tailwind handles
+   layout/colors/typography in index.html; this file carries only what
+   Tailwind can't cleanly express. */
+
+/* base-style.css paints body with a navy gradient background-image, which
+   overrides any Tailwind bg-* color utility (see root CLAUDE.md gotcha). */
+body {
+    background: #f5ecd1;
+}
 
 /* ─── Parchment paper texture ─── */
 .parchment-bg {
@@ -10,45 +19,35 @@
     background-size: 22px 22px, 44px 44px, 100% 100%;
 }
 
-/* ─── Hero frame ornament ─── */
-.hero-frame {
-    border: 2px dashed rgba(42, 29, 16, 0.25);
-    border-radius: 4px;
-    background: linear-gradient(145deg, rgba(184, 154, 92, 0.06), rgba(200, 116, 26, 0.03));
+/* ─── Page-load reveal (masthead, hero, packages, questionnaire) ─── */
+.reveal {
+    opacity: 0;
+    animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.reveal-1 { animation-delay: 0.02s; }
+.reveal-2 { animation-delay: 0.1s; }
+.reveal-3 { animation-delay: 0.2s; }
+.reveal-4 { animation-delay: 0.3s; }
+@keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.corner-glyph {
+/* ─── "Most popular" tag on the PLUS card ─── */
+.stamp-badge {
     position: absolute;
-    font-size: 18px;
-    color: #b89a5c;
-    background: #f5ecd1;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    line-height: 1;
-}
-.corner-glyph.tl { top: -10px; left: -10px; }
-.corner-glyph.tr { top: -10px; right: -10px; }
-.corner-glyph.bl { bottom: -10px; left: -10px; }
-.corner-glyph.br { bottom: -10px; right: -10px; }
-
-/* ─── Marquee ─── */
-.marquee-track {
-    display: flex;
+    top: -10px;
+    right: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fdf6e8;
+    background: #c8741a;
+    border-radius: 2px;
+    padding: 3px 8px;
     white-space: nowrap;
-    overflow: hidden;
-}
-.marquee-content {
-    display: inline-flex;
-    animation: marqueeScroll 28s linear infinite;
-    will-change: transform;
-}
-@keyframes marqueeScroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
 }
 
 /* ─── Package cards ─── */
@@ -56,71 +55,31 @@
     transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.3s ease;
 }
 .package-card.dimmed {
-    opacity: 0.35;
-    transform: scale(0.97);
+    opacity: 0.4;
+    transform: scale(0.98);
 }
 .package-card.highlighted {
     animation: cardPulse 0.5s ease;
 }
 @keyframes cardPulse {
     0%   { transform: scale(1); }
-    40%  { transform: scale(1.03); }
+    40%  { transform: scale(1.025); }
     100% { transform: scale(1); }
 }
 
-.plus-hero {
-    position: relative;
-}
-
-/* Rotated "MOST POPULAR" rubber-stamp badge */
-.stamp-badge {
-    position: absolute;
-    top: -12px;
-    right: -8px;
-    font-family: 'Special Elite', 'Courier New', monospace;
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #c8741a;
-    background: #f5ecd1;
-    border: 2px solid #c8741a;
-    padding: 3px 7px;
-    transform: rotate(4deg);
-    white-space: nowrap;
-    box-shadow: 2px 2px 0 #a05a10;
-    animation: stampPulse 3s ease-in-out infinite;
-}
-@keyframes stampPulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.75; }
-}
-
-/* ─── Form elements ─── */
+/* ─── Form sections ─── */
 .form-section {
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.form-section:focus-within {
+    border-color: rgba(200, 116, 26, 0.45);
 }
 
-.section-label {
-    font-family: 'Special Elite', 'Courier New', monospace;
-    font-size: 0.85rem;
-    letter-spacing: 0.05em;
-    color: #2a1d10;
-    margin-bottom: 0.75rem;
-}
-
-.section-sublabel {
-    font-family: 'Special Elite', 'Courier New', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #4a3828;
-}
-
-/* Radio options */
+/* Radio options: the input stays in the DOM (for :checked and form
+   semantics) but is visually hidden; .radio-box carries all the styling. */
 .radio-option {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    align-items: stretch;
     cursor: pointer;
 }
 .radio-option input[type="radio"] {
@@ -135,25 +94,32 @@
     align-items: center;
     width: 100%;
     padding: 10px 14px;
-    border: 2px solid rgba(42, 29, 16, 0.25);
-    background: #fdf6e8;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.82rem;
-    color: #2a1d10;
+    border: 1px solid rgba(42, 29, 16, 0.14);
+    border-radius: 3px;
+    background: rgba(253, 246, 232, 0.6);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.85rem;
+    color: #4a3828;
     cursor: pointer;
-    transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+    transition: border-color 0.12s, background 0.12s, box-shadow 0.12s, color 0.12s;
     line-height: 1.4;
 }
 .radio-option input[type="radio"]:checked + .radio-box {
     border-color: #2a1d10;
-    background: #f5ecd1;
-    box-shadow: 3px 3px 0 #2a1d10;
+    background: #ecdfc0;
+    color: #2a1d10;
+    box-shadow: 0 2px 8px rgba(42, 29, 16, 0.12);
+}
+.radio-option input[type="radio"]:focus-visible + .radio-box {
+    outline: 2px solid #c8741a;
+    outline-offset: 2px;
 }
 .radio-box:hover {
-    border-color: #c8741a;
+    border-color: rgba(200, 116, 26, 0.5);
 }
 
-/* Checkbox options */
+/* Checkbox options: same hidden-input approach; the checkmark is a
+   FontAwesome glyph faded/scaled in on :checked rather than hand-drawn. */
 .check-option {
     display: flex;
     align-items: flex-start;
@@ -171,52 +137,65 @@
     width: 20px;
     height: 20px;
     min-width: 20px;
-    border: 2px solid rgba(42, 29, 16, 0.4);
-    background: #fdf6e8;
+    border: 1px solid rgba(42, 29, 16, 0.3);
+    border-radius: 3px;
+    background: rgba(253, 246, 232, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-top: 1px;
     transition: background 0.12s, border-color 0.12s;
     cursor: pointer;
-    position: relative;
 }
-.check-box::after {
-    content: '';
-    width: 10px;
-    height: 6px;
-    border-left: 2px solid #fdf6e8;
-    border-bottom: 2px solid #fdf6e8;
-    transform: rotate(-45deg) translateY(-1px);
+.check-icon {
+    font-size: 10px;
+    color: #fdf6e8;
     opacity: 0;
-    transition: opacity 0.1s;
-    margin-top: -2px;
+    transform: scale(0.5);
+    transition: opacity 0.12s, transform 0.12s;
 }
 .check-option input[type="checkbox"]:checked + .check-box {
     background: #2a1d10;
     border-color: #2a1d10;
 }
-.check-option input[type="checkbox"]:checked + .check-box::after {
+.check-option input[type="checkbox"]:checked + .check-box .check-icon {
     opacity: 1;
+    transform: scale(1);
+}
+.check-option input[type="checkbox"]:focus-visible + .check-box {
+    outline: 2px solid #c8741a;
+    outline-offset: 2px;
+}
+.check-option:hover .check-box {
+    border-color: rgba(200, 116, 26, 0.6);
 }
 .check-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.82rem;
-    color: #2a1d10;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.85rem;
+    color: #4a3828;
     line-height: 1.5;
     padding-top: 1px;
     cursor: pointer;
 }
-.check-option:hover .check-box {
-    border-color: #c8741a;
+
+/* Small "(+€N)" / "(from €N)" chips next to a question option; filled in by
+   script.js's formatPriceElements() so the symbol side matches the language. */
+.price-chip {
+    color: #c8741a;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72em;
+    white-space: nowrap;
+    /* .radio-box is a flex container, which drops the whitespace text node
+       between two inline children; an explicit margin doesn't depend on it. */
+    margin-left: 0.35em;
 }
 
 /* ─── Terminal window (loading state) ─── */
 .terminal-window {
     background: #1a1208;
-    border: 3px solid #b89a5c;
-    box-shadow: 8px 8px 0 #2a1d10;
+    border: 1px solid rgba(184, 154, 92, 0.4);
     border-radius: 6px;
+    box-shadow: 0 24px 60px rgba(20, 14, 6, 0.45);
     overflow: hidden;
 }
 .terminal-titlebar {
@@ -237,15 +216,15 @@
 .dot-green  { background: #28c840; }
 .terminal-title {
     margin-left: 8px;
-    font-family: 'Special Elite', monospace;
+    font-family: 'Space Mono', monospace;
     font-size: 11px;
     color: rgba(245, 236, 209, 0.5);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
 }
 .terminal-body {
     padding: 20px 20px 24px;
     color: #d4b876;
-    font-family: 'Special Elite', 'Courier New', monospace;
+    font-family: 'Space Mono', monospace;
     font-size: 0.8rem;
     min-height: 180px;
     line-height: 1.8;
@@ -258,9 +237,6 @@
 }
 .terminal-line {
     color: #b89a5c;
-}
-.terminal-line.dim {
-    color: rgba(184, 154, 92, 0.45);
 }
 
 /* Blinking cursor */
@@ -277,9 +253,8 @@
 
 /* ─── Receipt panel ─── */
 .receipt-panel {
-    font-family: 'Special Elite', 'Courier New', monospace;
+    font-family: 'Space Mono', monospace;
 }
-
 .receipt-line-item {
     display: flex;
     justify-content: space-between;
@@ -298,7 +273,6 @@
 }
 .receipt-line-item .item-price {
     color: #2a1d10;
-    font-weight: normal;
     white-space: nowrap;
 }
 .receipt-line-item.item-base .item-name {
@@ -314,16 +288,16 @@
     animation: totalReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes totalReveal {
-    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    from { opacity: 0; transform: translateY(10px) scale(0.96); }
     to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
 /* Results state entrance */
 #state-results {
-    animation: stateReveal 0.45s ease both;
+    animation: stateReveal 0.4s ease both;
 }
 @keyframes stateReveal {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -334,22 +308,13 @@
 .package-result-badge.badge-PREMIUM { background: #b89a5c; color: #2a1d10; border-color: #2a1d10; }
 .package-result-badge.badge-CUSTOM  { background: #c8741a; color: #f5ecd1; border-color: #a05a10; }
 
-/* ─── À-la-carte table ─── */
-#alacContent table {
-    border: 2px solid #2a1d10;
-}
-#alacContent td, #alacContent th {
-    border-right: 1px solid rgba(42, 29, 16, 0.15);
-}
-
 /* ─── Respect reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
-    .marquee-content,
+    .reveal,
     .cursor,
-    .stamp-badge,
     .package-card,
     .result-total-reveal,
-    #state-results { animation: none !important; }
+    #state-results { animation: none !important; opacity: 1 !important; }
 }
 
 /* ─── Mobile sticky submit ─── */

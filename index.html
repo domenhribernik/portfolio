@@ -229,14 +229,11 @@
                         </div>
                         <h2 class="reveal kinetic-heading uppercase text-5xl md:text-8xl text-ink mb-16">Projects</h2>
 
-                        <!-- Editorial index: <projects-index> renders numbered rows straight
-                             from project-data.js; numbering and accents run continuously
-                             across the three groups. The about page keeps the card grid. -->
-                        <projects-index class="mb-16 md:mb-20" category="professional"
-                            label="Professional &amp; Freelance"></projects-index>
-                        <projects-index class="mb-16 md:mb-20" category="academic"
-                            label="Academic &amp; Research"></projects-index>
-                        <projects-index category="passion" label="Passion Projects"></projects-index>
+                        <!-- Newspaper front page: <projects-paper> renders professional work as
+                             the top-stories band and passion projects as multicol briefs, straight
+                             from project-data.js. Academic entries are not carried here; the
+                             paper's foot line cross-references views/about. -->
+                        <projects-paper></projects-paper>
                     </div>
                 </div>
             </section>
@@ -354,7 +351,7 @@
     </div><!-- /.book -->
 
     <script type="module" src="components/main-navbar.js"></script>
-    <script type="module" src="components/projects-index.js"></script>
+    <script type="module" src="components/projects-paper/projects-paper.js"></script>
     <script src="views/homepage/homepage-proxy.js"></script>
     <script type="module" src="views/homepage/apod.js"></script>
     <script src="views/homepage/script.js"></script>

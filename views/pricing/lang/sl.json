@@ -1,0 +1,263 @@
+{
+    "locale": "sl-SI",
+    "currency": "{n} €",
+    "meta": {
+        "title": "Cenik spletnega razvoja · Domen Hribernik",
+        "description": "Takoj pridobi oceno cene za svoj spletni projekt. Brez dolgega usklajevanja, brez presenečenj."
+    },
+    "a11y": {
+        "back": "Nazaj na portfolio",
+        "language": "Jezik"
+    },
+    "nav": {
+        "back": "nazaj na portfolio",
+        "title": "Cenik"
+    },
+    "hero": {
+        "eyebrow": "Spletni razvoj",
+        "headline1": "Spoznaj svojo ceno",
+        "headline2": "še preden pokličeš.",
+        "sub": "Izpolni, kaj potrebuješ, ceno izračunam takoj: brez obrazcev, čakanja ali pogajanj.",
+        "note": "traja približno 2 minuti"
+    },
+    "packagesSection": {
+        "heading": "paketi na kratko",
+        "collapse": "skrij",
+        "expand": "prikaži",
+        "from": "od",
+        "mostPopular": "najbolj priljubljen",
+        "plusNote": "+400 € nad Basic · ~650 € v dodatkih"
+    },
+    "packages": {
+        "MINI": {
+            "description": "Enostranska spletna predstavitev: pregledna, hitra in narejena.",
+            "items": ["Enostranska spletna stran", "Oblikovanje po predlogi", "Prilagojeno mobilnim napravam", "SSL certifikat + kontaktni obrazec"]
+        },
+        "BASIC": {
+            "description": "Temelj, ki ga potrebuje vsako malo podjetje.",
+            "items": ["Do 3 podstrani", "Oblikovanje po predlogi", "Osnovna SEO optimizacija + prijava v iskalnike", "Domena + gostovanje (1 leto)", "Kontaktni obrazec"]
+        },
+        "PLUS": {
+            "description": "Vse, kar predstavitvena spletna stran za podjetje resnično potrebuje.",
+            "items": ["Do 6 podstrani", "Delno prilagojeno oblikovanje", "Logotip vključen", "Blog / novice", "Napredna SEO optimizacija + analitika", "Domena + gostovanje (1 leto)"]
+        },
+        "PREMIUM": {
+            "description": "Resna prisotnost, večjezična in samostojno upravljiva.",
+            "items": ["Do 12 podstrani", "Popolnoma prilagojeno oblikovanje", "Večjezično (1 dodaten jezik)", "CMS za samostojno urejanje", "Napredna SEO optimizacija", "Pohitritev + utrjena varnost"]
+        },
+        "CUSTOM": {
+            "description": "Brez omejitev. Zgrajeno natanko po tvojih zahtevah.",
+            "items": ["Neomejeno podstrani", "Spletna trgovina / aplikacija", "Sistem za rezervacije", "API integracije", "Cena po dogovoru"]
+        }
+    },
+    "questions": {
+        "heading": "sestavi svojo ponudbo",
+        "purpose": {
+            "label": "1. Čemu bo stran namenjena?",
+            "hint": "Izberi vse, kar velja.",
+            "options": {
+                "business": "Predstavitev podjetja / portfolio",
+                "blog": "Blog / vsebinska stran",
+                "shop": "Spletna trgovina",
+                "app": "Spletna aplikacija (prijave, nadzorne plošče)"
+            }
+        },
+        "pages": {
+            "label": "2. Koliko podstrani potrebuješ?",
+            "hint": "Podstrani, vključene v paket; dodatne se zaračunajo po {price} vsaka.",
+            "options": {
+                "1": "1",
+                "2-3": "2 – 3",
+                "4-6": "4 – 6",
+                "7-12": "7 – 12",
+                "13+": "13 ali več"
+            }
+        },
+        "content": {
+            "label": "3. Kdo napiše vsebino?",
+            "hint": "Besedila, opisi in vsebina podstrani.",
+            "options": {
+                "own": "Vsebino zagotovim sam/a",
+                "written": "Naj jo napiše Domen"
+            }
+        },
+        "design": {
+            "label": "4. Kakšno oblikovanje želiš?",
+            "options": {
+                "template": "Oblikovanje po predlogi: pregledno, hitro, preizkušeno",
+                "semi": "Delno prilagojeno, ujemajoče se z blagovno znamko",
+                "full": "Popolnoma prilagojeno, oblikovano od začetka"
+            }
+        },
+        "logo": {
+            "label": "Potrebujem tudi oblikovanje logotipa"
+        },
+        "languages": {
+            "label": "5. Koliko jezikov potrebuješ?",
+            "hint": "Vsak dodaten jezik poleg prvega: {price}.",
+            "options": { "1": "1", "2": "2", "3+": "3+" }
+        },
+        "cms": {
+            "label": "6. Ali želiš vsebino urejati sam/a?",
+            "options": {
+                "no": "Ne, posodobitve prevzame Domen",
+                "yes": "Da, želim CMS za samostojno urejanje"
+            }
+        },
+        "features": {
+            "label": "7. Katere funkcije potrebuješ?",
+            "hint": "Izberi vse, kar velja."
+        },
+        "shop": {
+            "label": "8. Podrobnosti spletne trgovine",
+            "hint": "Pomembno le, če si zgoraj izbral/a \"Spletna trgovina\".",
+            "extraProductsLabel": "Dodatni izdelki nad 20"
+        },
+        "marketing": {
+            "label": "9. Trženje in zmogljivost"
+        },
+        "hosting": {
+            "label": "10. Domena in gostovanje",
+            "options": {
+                "included": "Vključi domeno + gostovanje za 1 leto",
+                "own": "Gostovanje že imam, samo izdelaj stran"
+            },
+            "includedHint": "vključeno v Basic in več"
+        },
+        "special": {
+            "label": "Še kaj, kar bi moral vedeti?",
+            "hint": "Posebne zahteve, povezave za navdih, rok, proračunske omejitve: vse je dobrodošlo.",
+            "placeholder": "npr. potrebujem do junija, barve znamke so temno zelena in zlata, všeč mi je ta stran: ..."
+        },
+        "submit": "Ustvari mojo ponudbo"
+    },
+    "errors": {
+        "pages": "Prosim, izberi, koliko podstrani potrebuješ (vprašanje 2).",
+        "content": "Prosim, izberi, kdo napiše vsebino (vprašanje 3).",
+        "design": "Prosim, izberi slog oblikovanja (vprašanje 4).",
+        "languages": "Prosim, izberi število jezikov (vprašanje 5).",
+        "cms": "Prosim, izberi, ali želiš CMS (vprašanje 6).",
+        "hosting": "Prosim, izberi možnost gostovanja (vprašanje 10)."
+    },
+    "items": {
+        "base": "Osnova (paket {tier})",
+        "designSemi": "Delno prilagojeno oblikovanje",
+        "designFull": "Popolnoma prilagojeno oblikovanje",
+        "logo": "Oblikovanje logotipa",
+        "extraPages": "Dodatne podstrani ({count} × {unit})",
+        "copywriting": "Pisanje vsebin ({count} podstrani × {unit})",
+        "copywritingUnit": "Pisanje vsebin",
+        "languages2": "Večjezično (1 dodaten jezik)",
+        "languages3plus": "Večjezično (2+ dodatnih jezikov)",
+        "cms": "CMS za samostojno urejanje",
+        "map": "Interaktivni zemljevid",
+        "gallery": "Galerija slik",
+        "blog": "Blog / novice",
+        "newsletter": "Prijava na e-novice",
+        "chat": "Klepet v živo / klepetalni robot",
+        "booking": "Sistem za rezervacije",
+        "accounts": "Uporabniški računi / nadzorna plošča",
+        "api": "API / povezava s tretjimi ponudniki",
+        "shopSetup": "Postavitev trgovine (do 20 izdelkov)",
+        "payments": "Integracija plačil",
+        "orders": "Upravljanje naročil / zalog",
+        "extraProducts": "Dodatni izdelki ({count} × {unit})",
+        "seo": "Napredna SEO optimizacija",
+        "analytics": "Analitika in sledenje obiskovalcem",
+        "speed": "Pohitritev delovanja",
+        "security": "Utrditev varnosti",
+        "minimumSuffix": "{name} (najmanj)"
+    },
+    "table": {
+        "heading": "celoten cenik po postavkah",
+        "show": "prikaži",
+        "hide": "skrij",
+        "itemHeader": "Postavka",
+        "priceHeader": "Cena",
+        "sections": {
+            "design": "Oblikovanje",
+            "content": "Vsebina",
+            "features": "Funkcije",
+            "shop": "Trgovina",
+            "marketing": "Trženje in zmogljivost"
+        },
+        "extraPageLabel": "Dodatna podstran",
+        "languageLabel": "Večjezičnost (na jezik)",
+        "extraProductLabel": "Dodaten izdelek (nad 20)",
+        "perPage": " / stran",
+        "each": " vsaka",
+        "fromPrefix": "od"
+    },
+    "loading": {
+        "title": "generator-ponudb · domen@portfolio",
+        "calculating": "izračunavanje",
+        "pleaseWait": "prosim počakaj, to traja trenutek...",
+        "steps": {
+            "analysing": "$ analiziram tvoje zahteve...",
+            "readingScope": "berem obseg projekta...",
+            "checkingDeps": "preverjam odvisnosti funkcij...",
+            "selecting": "$ izbiram optimalen paket...",
+            "comparing": "primerjam 5 paketov...",
+            "escalation": "uporabljam pravila nadgradnje paketov...",
+            "calculatingBreakdown": "$ izračunavam razčlenitev cene...",
+            "summing": "seštevam dodatne postavke...",
+            "minimums": "uporabljam minimume paketov...",
+            "finalising": "$ dokončujem tvojo ponudbo...",
+            "receipt": "ustvarjam račun...",
+            "done": "✓ ponudba je pripravljena."
+        }
+    },
+    "results": {
+        "ready": "tvoja ponudba je pripravljena",
+        "title": "Takole je videti.",
+        "sub": "Na podlagi tvojih izbir. Vse cene so ocene brez davka (+ DDV).",
+        "receiptHeader": "Domen Hribernik · Spletni razvoj",
+        "receiptTitle": "OCENA CENE",
+        "suggestedPackage": "Predlagani paket",
+        "customNote": "Nekatere funkcije potrebujejo ponudbo po meri, označene z ⚡. Prikazana osnovna ocena je minimum.",
+        "totalEstimate": "Skupna ocena",
+        "exclVat": "brez DDV",
+        "preferMonthly": "Raje mesečno plačevanje?",
+        "rentalFor": "/mes. za {months} mesecev",
+        "maintenanceNote": "nato ~{price}/mes. vzdrževanje",
+        "edit": "← Uredi svoje izbire",
+        "yourPackage": "tvoj paket",
+        "ongoingSupport": "Stalna podpora",
+        "supportNone": "Ne, hvala, znajdem se sam/a",
+        "supportBasic": "Osnovna podpora ({price}/mes.): gostovanje, varnostne kopije, varnostne posodobitve",
+        "supportAdvanced": "Napredna podpora ({price}/mes.): vse iz osnovne + posodobitve vsebin + prednostna podpora",
+        "interested": "Te zanima?",
+        "interestedHint": "Pusti svoje podatke in se ti oglasim. Vsa polja so neobvezna, lahko mi pišeš tudi neposredno.",
+        "yourName": "Tvoje ime",
+        "namePlaceholder": "npr. Ana Novak",
+        "emailAddress": "E-poštni naslov",
+        "emailPlaceholder": "ana@podjetje.si",
+        "anythingToAdd": "Bi še kaj dodal/a?",
+        "messagePlaceholder": "Rok, vprašanja, karkoli...",
+        "sendButton": "Pošlji Domnu to ponudbo",
+        "sendCaption": "odpre tvoj e-poštni program s pripravljeno ponudbo",
+        "sendError": "Pri shranjevanju ponudbe je prišlo do napake. Vseeno mi lahko pišeš neposredno na contact@domenhribernik.com"
+    },
+    "mailto": {
+        "subject": "Ponudba za spletni razvoj: paket {tier}",
+        "greeting": "Pozdravljen Domen,",
+        "intro": "Uporabil/a sem tvoj kalkulator cen in rad/a bi se pogovoril/a o projektu.",
+        "quoteSummary": "POVZETEK PONUDBE",
+        "suggestedPackageLabel": "Predlagani paket",
+        "estimatedTotalLabel": "Ocenjena skupna cena",
+        "exclVatParen": "(brez DDV)",
+        "ongoingSupportLabel": "Stalna podpora",
+        "supportNone": "Brez",
+        "supportBasic": "Osnovna podpora (+{price}/mes.)",
+        "supportAdvanced": "Napredna podpora (+{price}/mes.)",
+        "breakdown": "RAZČLENITEV",
+        "specialRequests": "POSEBNE ZAHTEVE",
+        "nameLabel": "Ime",
+        "emailLabel": "E-pošta",
+        "messageLabel": "Sporočilo",
+        "footer": "Ponudba #{id} · ustvarjena {date}"
+    },
+    "footer": {
+        "tagline": "spletni razvoj · celje, slovenija"
+    }
+}

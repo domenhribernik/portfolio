@@ -1,0 +1,263 @@
+{
+    "locale": "en-GB",
+    "currency": "€{n}",
+    "meta": {
+        "title": "Web Development Pricing · Domen Hribernik",
+        "description": "Get an instant price estimate for your web development project. No back-and-forth, no surprises."
+    },
+    "a11y": {
+        "back": "Back to portfolio",
+        "language": "Language"
+    },
+    "nav": {
+        "back": "back to portfolio",
+        "title": "Price list"
+    },
+    "hero": {
+        "eyebrow": "Web development",
+        "headline1": "Know your price",
+        "headline2": "before you call.",
+        "sub": "Fill out what you need. I'll calculate your quote on the spot: no forms, no waiting, no negotiating.",
+        "note": "takes about 2 minutes"
+    },
+    "packagesSection": {
+        "heading": "packages at a glance",
+        "collapse": "collapse",
+        "expand": "expand",
+        "from": "from",
+        "mostPopular": "most popular",
+        "plusNote": "+€400 over Basic · ~€650 in extras"
+    },
+    "packages": {
+        "MINI": {
+            "description": "A single-page online presence, clean, fast, and done.",
+            "items": ["1-page site", "Template design", "Mobile-friendly", "SSL + contact form"]
+        },
+        "BASIC": {
+            "description": "The foundation every small business needs.",
+            "items": ["Up to 3 pages", "Template design", "Basic SEO + search registration", "Domain + hosting (1 year)", "Contact form"]
+        },
+        "PLUS": {
+            "description": "Everything a business presentation site genuinely needs.",
+            "items": ["Up to 6 pages", "Semi-custom design", "Logo included", "Blog / news section", "Advanced SEO & analytics", "Domain + hosting (1 year)"]
+        },
+        "PREMIUM": {
+            "description": "Serious presence, multilingual, and independently manageable.",
+            "items": ["Up to 12 pages", "Fully custom design", "Multilingual (1 extra language)", "CMS for self-editing", "Advanced SEO", "Speed & security hardening"]
+        },
+        "CUSTOM": {
+            "description": "No ceiling. Built exactly to your requirements.",
+            "items": ["Unlimited pages", "Web shop / app", "Booking / reservation system", "API integrations", "Price by agreement"]
+        }
+    },
+    "questions": {
+        "heading": "build your quote",
+        "purpose": {
+            "label": "1. What is the site for?",
+            "hint": "Select all that apply.",
+            "options": {
+                "business": "Business / portfolio presentation",
+                "blog": "Blog / content site",
+                "shop": "Online shop",
+                "app": "Web application (logins, dashboards)"
+            }
+        },
+        "pages": {
+            "label": "2. How many pages do you need?",
+            "hint": "Pages included in package; extras billed at {price} each.",
+            "options": {
+                "1": "1",
+                "2-3": "2 – 3",
+                "4-6": "4 – 6",
+                "7-12": "7 – 12",
+                "13+": "13 or more"
+            }
+        },
+        "content": {
+            "label": "3. Who writes the content?",
+            "hint": "Text, copy, and page descriptions.",
+            "options": {
+                "own": "I provide my own content",
+                "written": "Write it for me"
+            }
+        },
+        "design": {
+            "label": "4. What kind of design?",
+            "options": {
+                "template": "Template design, clean, fast, proven",
+                "semi": "Semi-custom, adapted to your brand",
+                "full": "Fully custom, designed from scratch"
+            }
+        },
+        "logo": {
+            "label": "I also need a logo designed"
+        },
+        "languages": {
+            "label": "5. How many languages?",
+            "hint": "Each additional language beyond the first: {price}.",
+            "options": { "1": "1", "2": "2", "3+": "3+" }
+        },
+        "cms": {
+            "label": "6. Do you want to edit content yourself?",
+            "options": {
+                "no": "No, Domen handles updates",
+                "yes": "Yes, give me a CMS to edit it myself"
+            }
+        },
+        "features": {
+            "label": "7. Which features do you need?",
+            "hint": "Select everything that applies."
+        },
+        "shop": {
+            "label": "8. Online shop details",
+            "hint": "Only relevant if you selected \"Online shop\" above.",
+            "extraProductsLabel": "Extra products beyond 20"
+        },
+        "marketing": {
+            "label": "9. Marketing & performance"
+        },
+        "hosting": {
+            "label": "10. Domain & hosting",
+            "options": {
+                "included": "Include domain + hosting for 1 year",
+                "own": "I already have hosting, just build the site"
+            },
+            "includedHint": "included in Basic+"
+        },
+        "special": {
+            "label": "Anything else I should know?",
+            "hint": "Special requirements, inspiration links, deadline, budget constraints, anything goes.",
+            "placeholder": "e.g. I need it done by June, the brand colours are forest green and gold, here's a site I like: ..."
+        },
+        "submit": "Generate my quote"
+    },
+    "errors": {
+        "pages": "Please select how many pages you need (question 2).",
+        "content": "Please choose who writes the content (question 3).",
+        "design": "Please choose a design style (question 4).",
+        "languages": "Please select the number of languages (question 5).",
+        "cms": "Please choose whether you want a CMS (question 6).",
+        "hosting": "Please choose a hosting option (question 10)."
+    },
+    "items": {
+        "base": "Base ({tier} package)",
+        "designSemi": "Semi-custom design",
+        "designFull": "Fully custom design",
+        "logo": "Logo design",
+        "extraPages": "Extra pages ({count} × {unit})",
+        "copywriting": "Copywriting ({count} pages × {unit})",
+        "copywritingUnit": "Copywriting",
+        "languages2": "Multilingual (1 extra language)",
+        "languages3plus": "Multilingual (2+ extra languages)",
+        "cms": "CMS for self-editing",
+        "map": "Interactive map",
+        "gallery": "Image gallery",
+        "blog": "Blog / news section",
+        "newsletter": "Newsletter signup",
+        "chat": "Live chat / chatbot",
+        "booking": "Booking / reservation system",
+        "accounts": "User accounts / dashboard",
+        "api": "API / third-party integration",
+        "shopSetup": "Shop setup (up to 20 products)",
+        "payments": "Payment integration",
+        "orders": "Order / inventory management",
+        "extraProducts": "Extra products ({count} × {unit})",
+        "seo": "Advanced SEO optimisation",
+        "analytics": "Analytics & visitor tracking",
+        "speed": "Speed optimisation",
+        "security": "Security hardening",
+        "minimumSuffix": "{name} (minimum)"
+    },
+    "table": {
+        "heading": "full à-la-carte price reference",
+        "show": "show",
+        "hide": "hide",
+        "itemHeader": "Item",
+        "priceHeader": "Price",
+        "sections": {
+            "design": "Design",
+            "content": "Content",
+            "features": "Features",
+            "shop": "Shop",
+            "marketing": "Marketing & performance"
+        },
+        "extraPageLabel": "Additional subpage",
+        "languageLabel": "Multilingual (per language)",
+        "extraProductLabel": "Extra product (beyond 20)",
+        "perPage": " / page",
+        "each": " each",
+        "fromPrefix": "from"
+    },
+    "loading": {
+        "title": "quote-generator · domen@portfolio",
+        "calculating": "calculating",
+        "pleaseWait": "please wait, this takes a moment...",
+        "steps": {
+            "analysing": "$ analysing your requirements...",
+            "readingScope": "reading scope...",
+            "checkingDeps": "checking feature dependencies...",
+            "selecting": "$ selecting optimal package...",
+            "comparing": "comparing 5 packages...",
+            "escalation": "applying tier escalation rules...",
+            "calculatingBreakdown": "$ calculating price breakdown...",
+            "summing": "summing à-la-carte items...",
+            "minimums": "applying package minimums...",
+            "finalising": "$ finalising your quote...",
+            "receipt": "generating receipt...",
+            "done": "✓ quote ready."
+        }
+    },
+    "results": {
+        "ready": "your quote is ready",
+        "title": "Here's what it looks like.",
+        "sub": "Based on your selections. All prices are estimates before tax (+ VAT).",
+        "receiptHeader": "Domen Hribernik · Web Development",
+        "receiptTitle": "PRICE ESTIMATE",
+        "suggestedPackage": "Suggested package",
+        "customNote": "Some features need a custom quote, marked with ⚡. The base estimate shown is a minimum.",
+        "totalEstimate": "Total estimate",
+        "exclVat": "excl. VAT",
+        "preferMonthly": "Prefer monthly payments?",
+        "rentalFor": "/mo for {months} months",
+        "maintenanceNote": "then ~{price}/mo maintenance",
+        "edit": "← Edit my selections",
+        "yourPackage": "your package",
+        "ongoingSupport": "Ongoing support",
+        "supportNone": "No thanks, I'm self-sufficient",
+        "supportBasic": "Basic support ({price}/mo): hosting, backups, security updates",
+        "supportAdvanced": "Advanced support ({price}/mo): all of basic + content updates + priority fixes",
+        "interested": "Interested?",
+        "interestedHint": "Leave your details and I'll get back to you. All fields are optional, you can also just email me directly.",
+        "yourName": "Your name",
+        "namePlaceholder": "e.g. Ana Novak",
+        "emailAddress": "Email address",
+        "emailPlaceholder": "ana@company.com",
+        "anythingToAdd": "Anything to add?",
+        "messagePlaceholder": "Timeline, questions, anything...",
+        "sendButton": "Send Domen this quote",
+        "sendCaption": "opens your email app with the quote pre-filled",
+        "sendError": "Something went wrong saving the quote. You can still email me directly at contact@domenhribernik.com"
+    },
+    "mailto": {
+        "subject": "Web development quote: {tier} package",
+        "greeting": "Hi Domen,",
+        "intro": "I used your pricing calculator and I'd like to discuss a project.",
+        "quoteSummary": "QUOTE SUMMARY",
+        "suggestedPackageLabel": "Suggested package",
+        "estimatedTotalLabel": "Estimated total",
+        "exclVatParen": "(excl. VAT)",
+        "ongoingSupportLabel": "Ongoing support",
+        "supportNone": "None",
+        "supportBasic": "Basic support (+{price}/mo)",
+        "supportAdvanced": "Advanced support (+{price}/mo)",
+        "breakdown": "BREAKDOWN",
+        "specialRequests": "SPECIAL REQUESTS",
+        "nameLabel": "Name",
+        "emailLabel": "E-mail",
+        "messageLabel": "Message",
+        "footer": "Quote #{id} · generated on {date}"
+    },
+    "footer": {
+        "tagline": "web development · celje, slovenia"
+    }
+}

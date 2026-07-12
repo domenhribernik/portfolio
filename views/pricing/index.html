@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Development Pricing — Domen Hribernik</title>
+    <!-- English fallback for crawlers only: script.js swaps title, description
+         and the lang attribute to the active language on load, same as
+         views/nebo. -->
+    <title>Web Development Pricing · Domen Hribernik</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <meta name="description" content="Get an instant price estimate for your web development project. No back-and-forth, no surprises.">
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Special+Elite&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
     tailwind.config = {
         theme: {
             extend: {
                 fontFamily: {
-                    sans:    ['Inter', 'system-ui', 'sans-serif'],
-                    display: ['"Special Elite"', '"Courier New"', 'monospace'],
-                    script:  ['Caveat', 'cursive'],
+                    sans:    ['"IBM Plex Sans"', 'sans-serif'],
+                    display: ['Fraunces', 'Georgia', 'serif'],
+                    mono:    ['"Space Mono"', 'monospace'],
                 },
                 colors: {
                     parchment: '#f5ecd1',
                     'parchment-dark': '#ecdfc0',
+                    cream:  '#fdf6e8',
                     ink:    '#2a1d10',
                     'ink-soft': '#4a3828',
                     gold:   '#b89a5c',
@@ -30,14 +34,13 @@
                     ember:  '#c8741a',
                     'ember-dark': '#a05a10',
                     sage:   '#7a8a5a',
-                    cream:  '#fdf6e8',
+                },
+                borderColor: {
+                    hairline: 'rgba(42, 29, 16, 0.14)',
                 },
                 boxShadow: {
-                    stamp:    '5px 5px 0px 0px #2a1d10',
-                    'stamp-sm': '3px 3px 0px 0px #2a1d10',
-                    'stamp-lg': '8px 8px 0px 0px #2a1d10',
-                    'stamp-gold': '5px 5px 0px 0px #b89a5c',
-                    'stamp-ember': '5px 5px 0px 0px #a05a10',
+                    soft: '0 8px 24px rgba(42, 29, 16, 0.07)',
+                    lift: '0 20px 45px rgba(42, 29, 16, 0.16)',
                 },
             },
         },
@@ -49,42 +52,21 @@
     <!-- ═══════════════════════════════════════════════
          HEADER
     ═══════════════════════════════════════════════ -->
-    <header class="border-b-4 border-ink bg-parchment-dark sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
-            <div class="flex-1 min-w-0">
-                <a href="../../" class="text-ink no-underline hover:text-ember transition-colors inline-flex items-center gap-2 font-medium text-sm">
-                    <i class="fas fa-arrow-left"></i>
-                    <span class="hidden sm:inline">back to portfolio</span>
-                </a>
-            </div>
-            <h1 class="font-display text-lg sm:text-xl tracking-wide flex items-center gap-2 text-ink">
-                <span>price list</span>
-            </h1>
-            <div class="flex-1 flex justify-end">
-                <div class="gtranslate_wrapper"></div>
-            </div>
+    <header class="reveal reveal-1 border-b border-hairline bg-parchment/90 backdrop-blur-[2px] sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <a id="back-link" href="../../" class="justify-self-start text-ink-soft no-underline hover:text-ember transition-colors inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest" data-i18n-attr="aria-label:a11y.back">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                <span class="hidden sm:inline" data-i18n="nav.back">back to portfolio</span>
+            </a>
+            <h1 class="text-center font-display font-medium text-lg sm:text-xl tracking-wide text-ink" data-i18n="nav.title">Price list</h1>
+            <select id="langSelect" class="justify-self-end font-mono text-[0.68rem] uppercase tracking-widest text-ink-soft bg-transparent border border-hairline rounded-[3px] px-2 py-1.5 cursor-pointer focus:outline-none focus:border-ember" data-i18n-attr="aria-label:a11y.language">
+                <option value="en">EN</option>
+                <option value="sl">SLO</option>
+            </select>
         </div>
     </header>
 
-    <!-- Marquee trust banner -->
-    <div class="border-b-2 border-ink/20 bg-ink overflow-hidden py-2">
-        <div class="marquee-track text-parchment/70 text-xs tracking-widest font-display uppercase">
-            <span class="marquee-content">
-                <span class="mx-8 text-gold">✦</span> fixed scope, no surprises
-                <span class="mx-8 text-gold">✦</span> transparent pricing
-                <span class="mx-8 text-gold">✦</span> made in Slovenia
-                <span class="mx-8 text-gold">✦</span> no monthly fees unless you want them
-                <span class="mx-8 text-gold">✦</span> you own what you pay for
-                <span class="mx-8 text-gold">✦</span> fixed scope, no surprises
-                <span class="mx-8 text-gold">✦</span> transparent pricing
-                <span class="mx-8 text-gold">✦</span> made in Slovenia
-                <span class="mx-8 text-gold">✦</span> no monthly fees unless you want them
-                <span class="mx-8 text-gold">✦</span> you own what you pay for
-            </span>
-        </div>
-    </div>
-
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
 
         <!-- ═══════════════════════════════════════════════
              STATE A — FORM
@@ -92,104 +74,94 @@
         <div id="state-form">
 
             <!-- Hero -->
-            <div class="hero-frame relative p-6 sm:p-8 mb-10 sm:mb-14">
-                <span class="corner-glyph tl">❋</span>
-                <span class="corner-glyph tr">❋</span>
-                <span class="corner-glyph bl">❋</span>
-                <span class="corner-glyph br">❋</span>
-                <div class="text-center max-w-2xl mx-auto">
-                    <p class="text-ember font-display text-xs sm:text-sm uppercase tracking-[0.3em] mb-3">web development</p>
-                    <h2 class="font-display text-3xl sm:text-4xl md:text-5xl text-ink leading-tight mb-4">
-                        Know your price<br>before you call.
-                    </h2>
-                    <p class="text-ink-soft text-base sm:text-lg leading-relaxed mb-2">
-                        Fill out what you need. I'll calculate your quote on the spot — no forms, no waiting, no negotiating.
-                    </p>
-                    <div class="inline-flex items-center gap-2 mt-3">
-                        <span class="font-script text-gold text-xl rotate-[-3deg] inline-block">takes about 2 minutes ↓</span>
-                    </div>
-                </div>
+            <div class="reveal reveal-2 max-w-2xl mx-auto text-center mb-14 sm:mb-16">
+                <p class="font-mono text-[0.68rem] sm:text-xs uppercase tracking-[0.3em] text-ember mb-4" data-i18n="hero.eyebrow">Web development</p>
+                <h2 class="font-display font-medium text-[clamp(2.1rem,6vw,3.4rem)] leading-[1.1] text-ink mb-5">
+                    <span data-i18n="hero.headline1">Know your price</span><br>
+                    <span data-i18n="hero.headline2">before you call.</span>
+                </h2>
+                <p class="text-ink-soft text-base sm:text-lg leading-relaxed" data-i18n="hero.sub">Fill out what you need. I'll calculate your quote on the spot: no forms, no waiting, no negotiating.</p>
+                <p class="font-display italic text-ember/80 text-base mt-4" data-i18n="hero.note">takes about 2 minutes</p>
             </div>
 
             <!-- Packages reference (collapsible on mobile) -->
-            <div class="mb-10">
-                <button id="packagesToggle" class="w-full flex items-center justify-between gap-3 mb-4 group" aria-expanded="true">
-                    <h2 class="font-display text-base sm:text-lg tracking-wider text-ember flex items-center gap-2">
-                        <span class="text-xl">📋</span> packages at a glance
-                    </h2>
-                    <span class="text-ink-soft group-hover:text-ember transition-colors text-sm font-display tracking-wider flex items-center gap-1">
+            <div class="reveal reveal-3 mb-12">
+                <button id="packagesToggle" type="button" class="w-full flex items-baseline gap-3 mb-5 group" aria-expanded="true">
+                    <h2 class="font-mono text-[0.7rem] sm:text-xs uppercase tracking-[0.25em] text-ink-soft whitespace-nowrap" data-i18n="packagesSection.heading">packages at a glance</h2>
+                    <span class="flex-1 border-b border-dotted border-hairline"></span>
+                    <span class="text-ink-soft group-hover:text-ember transition-colors text-xs font-mono tracking-wider flex items-center gap-1.5 whitespace-nowrap">
                         <span class="packages-toggle-label">collapse</span>
-                        <i class="fas fa-chevron-up packages-chevron transition-transform"></i>
+                        <i class="fas fa-chevron-up packages-chevron transition-transform text-[0.65em]"></i>
                     </span>
                 </button>
 
                 <div id="packagesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
 
                     <!-- MINI -->
-                    <div class="package-card relative bg-cream border-4 border-ink shadow-stamp p-4" data-package="MINI">
-                        <div class="font-display text-xs tracking-widest text-ink/50 mb-1">FROM</div>
-                        <div class="font-display text-2xl text-ink mb-0.5">€300</div>
-                        <div class="font-display text-sm tracking-wider text-ink mb-3 border-b-2 border-ink/20 pb-2">MINI</div>
-                        <ul class="text-xs text-ink-soft space-y-1">
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> 1-page site</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Template design</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Mobile-friendly</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> SSL + contact form</li>
+                    <div class="package-card relative bg-cream border border-hairline rounded-[3px] shadow-soft p-4" data-package="MINI">
+                        <div class="font-mono text-[0.62rem] tracking-widest text-ink-soft/70 uppercase mb-1" data-i18n="packagesSection.from">from</div>
+                        <div class="price-cell font-display text-2xl text-ink mb-0.5" data-amount="300">€300</div>
+                        <div class="font-mono text-xs tracking-wider text-ink mb-3 border-b border-hairline pb-2">MINI</div>
+                        <ul class="text-xs text-ink-soft space-y-1.5">
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.MINI.items.0">1-page site</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.MINI.items.1">Template design</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.MINI.items.2">Mobile-friendly</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.MINI.items.3">SSL + contact form</span></li>
                         </ul>
                     </div>
 
                     <!-- BASIC -->
-                    <div class="package-card relative bg-cream border-4 border-ink shadow-stamp p-4" data-package="BASIC">
-                        <div class="font-display text-xs tracking-widest text-ink/50 mb-1">FROM</div>
-                        <div class="font-display text-2xl text-ink mb-0.5">€490</div>
-                        <div class="font-display text-sm tracking-wider text-ink mb-3 border-b-2 border-ink/20 pb-2">BASIC</div>
-                        <ul class="text-xs text-ink-soft space-y-1">
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Up to 3 pages</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Template design</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Basic SEO</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Domain + hosting 1yr</li>
+                    <div class="package-card relative bg-cream border border-hairline rounded-[3px] shadow-soft p-4" data-package="BASIC">
+                        <div class="font-mono text-[0.62rem] tracking-widest text-ink-soft/70 uppercase mb-1" data-i18n="packagesSection.from">from</div>
+                        <div class="price-cell font-display text-2xl text-ink mb-0.5" data-amount="490">€490</div>
+                        <div class="font-mono text-xs tracking-wider text-ink mb-3 border-b border-hairline pb-2">BASIC</div>
+                        <ul class="text-xs text-ink-soft space-y-1.5">
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.BASIC.items.0">Up to 3 pages</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.BASIC.items.1">Template design</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.BASIC.items.2">Basic SEO + search registration</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.BASIC.items.3">Domain + hosting (1 year)</span></li>
                         </ul>
                     </div>
 
                     <!-- PLUS (hero) -->
-                    <div class="package-card plus-hero relative bg-ink border-4 border-ink shadow-stamp-ember p-4 lg:-mt-2 lg:-mb-2" data-package="PLUS">
-                        <div class="stamp-badge">MOST POPULAR</div>
-                        <div class="font-display text-xs tracking-widest text-parchment/50 mb-1">FROM</div>
-                        <div class="font-display text-2xl text-gold-bright mb-0.5">€890</div>
-                        <div class="font-display text-sm tracking-wider text-parchment mb-3 border-b-2 border-parchment/20 pb-2">PLUS</div>
-                        <ul class="text-xs text-parchment/80 space-y-1">
-                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span> Up to 6 pages</li>
-                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span> Custom design</li>
-                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span> Logo included</li>
-                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span> Blog + analytics</li>
-                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span> SEO optimized</li>
+                    <div class="package-card plus-hero relative bg-ink border border-ink rounded-[3px] shadow-lift p-4 lg:-mt-2 lg:-mb-2" data-package="PLUS">
+                        <div class="stamp-badge" data-i18n="packagesSection.mostPopular">most popular</div>
+                        <div class="font-mono text-[0.62rem] tracking-widest text-parchment/50 uppercase mb-1" data-i18n="packagesSection.from">from</div>
+                        <div class="price-cell font-display text-2xl text-gold-bright mb-0.5" data-amount="890">€890</div>
+                        <div class="font-mono text-xs tracking-wider text-parchment mb-3 border-b border-parchment/20 pb-2">PLUS</div>
+                        <ul class="text-xs text-parchment/80 space-y-1.5">
+                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span><span data-i18n="packages.PLUS.items.0">Up to 6 pages</span></li>
+                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span><span data-i18n="packages.PLUS.items.1">Semi-custom design</span></li>
+                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span><span data-i18n="packages.PLUS.items.2">Logo included</span></li>
+                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span><span data-i18n="packages.PLUS.items.3">Blog / news section</span></li>
+                            <li class="flex gap-1.5"><span class="text-gold mt-0.5">✓</span><span data-i18n="packages.PLUS.items.4">Advanced SEO & analytics</span></li>
                         </ul>
-                        <div class="mt-3 text-[10px] font-display text-gold/60 tracking-wider">+€400 over Basic · ~€650 in extras</div>
+                        <div class="mt-3 text-[10px] font-mono text-gold/60 tracking-wider" data-i18n="packagesSection.plusNote">+€400 over Basic · ~€650 in extras</div>
                     </div>
 
                     <!-- PREMIUM -->
-                    <div class="package-card relative bg-cream border-4 border-ink shadow-stamp p-4" data-package="PREMIUM">
-                        <div class="font-display text-xs tracking-widest text-ink/50 mb-1">FROM</div>
-                        <div class="font-display text-2xl text-ink mb-0.5">€1,600</div>
-                        <div class="font-display text-sm tracking-wider text-ink mb-3 border-b-2 border-ink/20 pb-2">PREMIUM</div>
-                        <ul class="text-xs text-ink-soft space-y-1">
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Up to 12 pages</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Full custom design</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Multilingual</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> CMS for self-editing</li>
+                    <div class="package-card relative bg-cream border border-hairline rounded-[3px] shadow-soft p-4" data-package="PREMIUM">
+                        <div class="font-mono text-[0.62rem] tracking-widest text-ink-soft/70 uppercase mb-1" data-i18n="packagesSection.from">from</div>
+                        <div class="price-cell font-display text-2xl text-ink mb-0.5" data-amount="1600">€1,600</div>
+                        <div class="font-mono text-xs tracking-wider text-ink mb-3 border-b border-hairline pb-2">PREMIUM</div>
+                        <ul class="text-xs text-ink-soft space-y-1.5">
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.PREMIUM.items.0">Up to 12 pages</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.PREMIUM.items.1">Fully custom design</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.PREMIUM.items.2">Multilingual (1 extra language)</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.PREMIUM.items.3">CMS for self-editing</span></li>
                         </ul>
                     </div>
 
                     <!-- CUSTOM -->
-                    <div class="package-card relative bg-cream border-4 border-ink shadow-stamp p-4" data-package="CUSTOM">
-                        <div class="font-display text-xs tracking-widest text-ink/50 mb-1">FROM</div>
-                        <div class="font-display text-2xl text-ink mb-0.5">€2,500</div>
-                        <div class="font-display text-sm tracking-wider text-ink mb-3 border-b-2 border-ink/20 pb-2">CUSTOM</div>
-                        <ul class="text-xs text-ink-soft space-y-1">
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Unlimited pages</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Web shop / app</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> API integrations</li>
-                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span> Price on request</li>
+                    <div class="package-card relative bg-cream border border-hairline rounded-[3px] shadow-soft p-4" data-package="CUSTOM">
+                        <div class="font-mono text-[0.62rem] tracking-widest text-ink-soft/70 uppercase mb-1" data-i18n="packagesSection.from">from</div>
+                        <div class="price-cell font-display text-2xl text-ink mb-0.5" data-amount="2500">€2,500</div>
+                        <div class="font-mono text-xs tracking-wider text-ink mb-3 border-b border-hairline pb-2">CUSTOM</div>
+                        <ul class="text-xs text-ink-soft space-y-1.5">
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.CUSTOM.items.0">Unlimited pages</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.CUSTOM.items.1">Web shop / app</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.CUSTOM.items.2">Booking / reservation system</span></li>
+                            <li class="flex gap-1.5"><span class="text-sage mt-0.5">✓</span><span data-i18n="packages.CUSTOM.items.3">API integrations</span></li>
                         </ul>
                     </div>
 
@@ -197,281 +169,279 @@
             </div>
 
             <!-- ─── QUESTIONNAIRE ─── -->
-            <div class="mb-6">
-                <h2 class="font-display text-base sm:text-lg tracking-wider text-ember flex items-center gap-2 mb-6">
-                    <span class="text-xl">🖊️</span> build your quote
-                </h2>
+            <div class="reveal reveal-4 mb-6">
+                <h2 class="font-mono text-[0.7rem] sm:text-xs uppercase tracking-[0.25em] text-ember mb-6" data-i18n="questions.heading">build your quote</h2>
 
-                <form id="quoteForm" class="space-y-6" novalidate>
+                <form id="quoteForm" class="space-y-5" novalidate>
 
                     <!-- Q1: Purpose -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">1. What is the site for?</div>
-                        <p class="text-xs text-ink-soft mb-4">Select all that apply.</p>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.purpose.label">1. What is the site for?</div>
+                        <p class="text-xs text-ink-soft mb-4" data-i18n="questions.purpose.hint">Select all that apply.</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <label class="check-option">
                                 <input type="checkbox" name="purpose" value="business">
-                                <span class="check-box"></span>
-                                <span class="check-label">Business / portfolio presentation</span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label" data-i18n="questions.purpose.options.business">Business / portfolio presentation</span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="purpose" value="blog">
-                                <span class="check-box"></span>
-                                <span class="check-label">Blog / content site</span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label" data-i18n="questions.purpose.options.blog">Blog / content site</span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="purpose" value="shop">
-                                <span class="check-box"></span>
-                                <span class="check-label">Online shop</span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label" data-i18n="questions.purpose.options.shop">Online shop</span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="purpose" value="app">
-                                <span class="check-box"></span>
-                                <span class="check-label">Web application (logins, dashboards)</span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label" data-i18n="questions.purpose.options.app">Web application (logins, dashboards)</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Q2: Pages -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">2. How many pages do you need?</div>
-                        <p class="text-xs text-ink-soft mb-4">Pages included in package; extras billed at €40 each.</p>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.pages.label">2. How many pages do you need?</div>
+                        <p class="text-xs text-ink-soft mb-4" id="pagesHint" data-price="40" data-i18n-template="questions.pages.hint">Pages included in package; extras billed at €40 each.</p>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <label class="radio-option">
                                 <input type="radio" name="pages" value="1" required>
-                                <span class="radio-box font-display">1</span>
+                                <span class="radio-box font-mono" data-i18n="questions.pages.options.1">1</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="pages" value="2-3">
-                                <span class="radio-box font-display">2 – 3</span>
+                                <span class="radio-box font-mono" data-i18n="questions.pages.options.2-3">2 – 3</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="pages" value="4-6">
-                                <span class="radio-box font-display">4 – 6</span>
+                                <span class="radio-box font-mono" data-i18n="questions.pages.options.4-6">4 – 6</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="pages" value="7-12">
-                                <span class="radio-box font-display">7 – 12</span>
+                                <span class="radio-box font-mono" data-i18n="questions.pages.options.7-12">7 – 12</span>
                             </label>
                             <label class="radio-option col-span-2 sm:col-span-4">
                                 <input type="radio" name="pages" value="13+">
-                                <span class="radio-box font-display">13 or more</span>
+                                <span class="radio-box font-mono" data-i18n="questions.pages.options.13+">13 or more</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Q3: Content -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">3. Who writes the content?</div>
-                        <p class="text-xs text-ink-soft mb-4">Text, copy, and page descriptions.</p>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.content.label">3. Who writes the content?</div>
+                        <p class="text-xs text-ink-soft mb-4" data-i18n="questions.content.hint">Text, copy, and page descriptions.</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <label class="radio-option">
                                 <input type="radio" name="content" value="own" required>
-                                <span class="radio-box">I provide my own content</span>
+                                <span class="radio-box" data-i18n="questions.content.options.own">I provide my own content</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="content" value="written">
-                                <span class="radio-box">Write it for me <span class="text-ember text-xs">(+€40/page)</span></span>
+                                <span class="radio-box"><span data-i18n="questions.content.options.written">Write it for me</span> <span class="price-chip" data-amount="40" data-format="perPage"></span></span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Q4: Design -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">4. What kind of design?</div>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.design.label">4. What kind of design?</div>
                         <div class="space-y-2">
                             <label class="radio-option">
                                 <input type="radio" name="design" value="template" required>
-                                <span class="radio-box">Template design — clean, fast, proven</span>
+                                <span class="radio-box" data-i18n="questions.design.options.template">Template design, clean, fast, proven</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="design" value="semi">
-                                <span class="radio-box">Semi-custom — adapted to your brand <span class="text-ember text-xs">(+€180)</span></span>
+                                <span class="radio-box"><span data-i18n="questions.design.options.semi">Semi-custom, adapted to your brand</span> <span class="price-chip" data-amount="180" data-format="delta"></span></span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="design" value="full">
-                                <span class="radio-box">Fully custom — designed from scratch <span class="text-ember text-xs">(+€350)</span></span>
+                                <span class="radio-box"><span data-i18n="questions.design.options.full">Fully custom, designed from scratch</span> <span class="price-chip" data-amount="350" data-format="delta"></span></span>
                             </label>
-                            <label class="check-option mt-3 pt-3 border-t-2 border-ink/10">
+                            <label class="check-option mt-3 pt-3 border-t border-hairline">
                                 <input type="checkbox" name="logo" value="yes">
-                                <span class="check-box"></span>
-                                <span class="check-label">I also need a logo designed <span class="text-ember text-xs">(+€120)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="questions.logo.label">I also need a logo designed</span> <span class="price-chip" data-amount="120" data-format="delta"></span></span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Q5: Languages -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">5. How many languages?</div>
-                        <p class="text-xs text-ink-soft mb-4">Each additional language beyond the first: +€120.</p>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.languages.label">5. How many languages?</div>
+                        <p class="text-xs text-ink-soft mb-4" id="languagesHint" data-price="120" data-i18n-template="questions.languages.hint">Each additional language beyond the first: +€120.</p>
                         <div class="grid grid-cols-3 gap-2">
                             <label class="radio-option">
                                 <input type="radio" name="languages" value="1" required>
-                                <span class="radio-box font-display">1</span>
+                                <span class="radio-box font-mono" data-i18n="questions.languages.options.1">1</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="languages" value="2">
-                                <span class="radio-box font-display">2</span>
+                                <span class="radio-box font-mono" data-i18n="questions.languages.options.2">2</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="languages" value="3+">
-                                <span class="radio-box font-display">3+</span>
+                                <span class="radio-box font-mono" data-i18n="questions.languages.options.3+">3+</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Q6: Administration -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">6. Do you want to edit content yourself?</div>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.cms.label">6. Do you want to edit content yourself?</div>
                         <div class="space-y-2">
                             <label class="radio-option">
                                 <input type="radio" name="cms" value="no" required>
-                                <span class="radio-box">No — Domen handles updates</span>
+                                <span class="radio-box" data-i18n="questions.cms.options.no">No, Domen handles updates</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="cms" value="yes">
-                                <span class="radio-box">Yes — give me a CMS to edit it myself <span class="text-ember text-xs">(+€180)</span></span>
+                                <span class="radio-box"><span data-i18n="questions.cms.options.yes">Yes, give me a CMS to edit it myself</span> <span class="price-chip" data-amount="180" data-format="delta"></span></span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Q7: Features -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">7. Which features do you need?</div>
-                        <p class="text-xs text-ink-soft mb-4">Select everything that applies.</p>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.features.label">7. Which features do you need?</div>
+                        <p class="text-xs text-ink-soft mb-4" data-i18n="questions.features.hint">Select everything that applies.</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <label class="check-option">
                                 <input type="checkbox" name="features" value="map">
-                                <span class="check-box"></span>
-                                <span class="check-label">Interactive map <span class="text-ember text-xs">(+€30)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.map">Interactive map</span> <span class="price-chip" data-amount="30" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="features" value="gallery">
-                                <span class="check-box"></span>
-                                <span class="check-label">Image gallery <span class="text-ember text-xs">(+€60)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.gallery">Image gallery</span> <span class="price-chip" data-amount="60" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="features" value="blog">
-                                <span class="check-box"></span>
-                                <span class="check-label">Blog / news section <span class="text-ember text-xs">(+€150)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.blog">Blog / news section</span> <span class="price-chip" data-amount="150" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="features" value="newsletter">
-                                <span class="check-box"></span>
-                                <span class="check-label">Newsletter signup <span class="text-ember text-xs">(+€60)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.newsletter">Newsletter signup</span> <span class="price-chip" data-amount="60" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="features" value="chat">
-                                <span class="check-box"></span>
-                                <span class="check-label">Live chat / chatbot <span class="text-ember text-xs">(+€50)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.chat">Live chat / chatbot</span> <span class="price-chip" data-amount="50" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="features" value="booking">
-                                <span class="check-box"></span>
-                                <span class="check-label">Booking / reservation system <span class="text-ember text-xs">(from +€400)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.booking">Booking / reservation system</span> <span class="price-chip" data-amount="400" data-format="from"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="features" value="accounts">
-                                <span class="check-box"></span>
-                                <span class="check-label">User accounts / dashboard <span class="text-ember text-xs">(from +€500)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.accounts">User accounts / dashboard</span> <span class="price-chip" data-amount="500" data-format="from"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="features" value="api">
-                                <span class="check-box"></span>
-                                <span class="check-label">API / third-party integration <span class="text-ember text-xs">(from +€250)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.api">API / third-party integration</span> <span class="price-chip" data-amount="250" data-format="from"></span></span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Q8: Shop -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6" id="shopSection">
-                        <div class="section-label">8. Online shop details</div>
-                        <p class="text-xs text-ink-soft mb-4">Only relevant if you selected "Online shop" above.</p>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6" id="shopSection">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.shop.label">8. Online shop details</div>
+                        <p class="text-xs text-ink-soft mb-4" data-i18n="questions.shop.hint">Only relevant if you selected "Online shop" above.</p>
                         <div class="space-y-2">
                             <label class="check-option">
                                 <input type="checkbox" name="shop" value="setup">
-                                <span class="check-box"></span>
-                                <span class="check-label">Shop setup up to 20 products <span class="text-ember text-xs">(+€600)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.shopSetup">Shop setup (up to 20 products)</span> <span class="price-chip" data-amount="600" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="shop" value="payments">
-                                <span class="check-box"></span>
-                                <span class="check-label">Payment integration <span class="text-ember text-xs">(+€150)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.payments">Payment integration</span> <span class="price-chip" data-amount="150" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="shop" value="orders">
-                                <span class="check-box"></span>
-                                <span class="check-label">Order / inventory management <span class="text-ember text-xs">(+€200)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.orders">Order / inventory management</span> <span class="price-chip" data-amount="200" data-format="delta"></span></span>
                             </label>
                         </div>
                         <div class="mt-4">
-                            <label class="section-sublabel" for="extraProducts">Extra products beyond 20 <span class="text-ember">(+€3 each)</span></label>
+                            <label class="block font-mono text-[0.68rem] uppercase tracking-wider text-ink-soft" for="extraProducts"><span data-i18n="questions.shop.extraProductsLabel">Extra products beyond 20</span> <span class="price-chip" data-amount="3" data-format="delta"></span></label>
                             <input type="number" id="extraProducts" name="extra_products" min="0" max="9999" placeholder="0"
-                                   class="mt-1 w-24 px-3 py-2 bg-parchment border-2 border-ink font-display text-base focus:outline-none focus:bg-cream">
+                                   class="mt-1.5 w-24 px-3 py-2 bg-parchment border border-hairline rounded-[3px] font-mono text-base focus:outline-none focus:border-ember">
                         </div>
                     </div>
 
                     <!-- Q9: Marketing -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">9. Marketing &amp; performance</div>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.marketing.label">9. Marketing &amp; performance</div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <label class="check-option">
                                 <input type="checkbox" name="marketing" value="seo">
-                                <span class="check-box"></span>
-                                <span class="check-label">Advanced SEO optimisation <span class="text-ember text-xs">(+€180)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.seo">Advanced SEO optimisation</span> <span class="price-chip" data-amount="180" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="marketing" value="analytics">
-                                <span class="check-box"></span>
-                                <span class="check-label">Analytics &amp; visitor tracking <span class="text-ember text-xs">(+€60)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.analytics">Analytics &amp; visitor tracking</span> <span class="price-chip" data-amount="60" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="marketing" value="speed">
-                                <span class="check-box"></span>
-                                <span class="check-label">Speed optimisation <span class="text-ember text-xs">(+€100)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.speed">Speed optimisation</span> <span class="price-chip" data-amount="100" data-format="delta"></span></span>
                             </label>
                             <label class="check-option">
                                 <input type="checkbox" name="marketing" value="security">
-                                <span class="check-box"></span>
-                                <span class="check-label">Security hardening <span class="text-ember text-xs">(+€80)</span></span>
+                                <span class="check-box"><i class="fas fa-check check-icon" aria-hidden="true"></i></span>
+                                <span class="check-label"><span data-i18n="items.security">Security hardening</span> <span class="price-chip" data-amount="80" data-format="delta"></span></span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Q10: Hosting -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">10. Domain &amp; hosting</div>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.hosting.label">10. Domain &amp; hosting</div>
                         <div class="space-y-2">
                             <label class="radio-option">
                                 <input type="radio" name="hosting" value="included" required>
-                                <span class="radio-box">Include domain + hosting for 1 year <span class="text-sage text-xs">(included in Basic+)</span></span>
+                                <span class="radio-box"><span data-i18n="questions.hosting.options.included">Include domain + hosting for 1 year</span> <span class="text-sage text-xs" data-i18n="questions.hosting.includedHint">included in Basic+</span></span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="hosting" value="own">
-                                <span class="radio-box">I already have hosting — just build the site</span>
+                                <span class="radio-box" data-i18n="questions.hosting.options.own">I already have hosting, just build the site</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Special requests -->
-                    <div class="form-section bg-cream border-4 border-ink shadow-stamp p-5 sm:p-6">
-                        <div class="section-label">Anything else I should know?</div>
-                        <p class="text-xs text-ink-soft mb-4">Special requirements, inspiration links, deadline, budget constraints — anything goes.</p>
+                    <div class="form-section bg-cream border border-hairline rounded-[3px] shadow-soft p-5 sm:p-6">
+                        <div class="font-mono font-bold text-sm text-ink mb-2" data-i18n="questions.special.label">Anything else I should know?</div>
+                        <p class="text-xs text-ink-soft mb-4" data-i18n="questions.special.hint">Special requirements, inspiration links, deadline, budget constraints, anything goes.</p>
                         <textarea id="specialRequests" name="special_requests" rows="4"
-                                  placeholder="e.g. &quot;I need it done by June, the brand colours are forest green and gold, here's a site I like: ...&quot;"
-                                  class="w-full px-4 py-3 bg-parchment border-2 border-ink font-sans text-sm focus:outline-none focus:bg-cream resize-none leading-relaxed"></textarea>
+                                  data-i18n-attr="placeholder:questions.special.placeholder"
+                                  class="w-full px-4 py-3 bg-parchment border border-hairline rounded-[3px] font-sans text-sm focus:outline-none focus:border-ember resize-none leading-relaxed"></textarea>
                     </div>
 
                     <!-- Validation error -->
-                    <div id="formError" class="hidden border-4 border-ember bg-ember/10 text-ember p-4 font-display tracking-wider text-sm"></div>
+                    <div id="formError" class="hidden border border-ember bg-ember/10 text-ember-dark rounded-[3px] p-4 font-mono tracking-wide text-sm"></div>
 
                     <!-- Submit -->
                     <div class="flex justify-center pt-2 pb-4">
                         <button type="submit" id="generateBtn"
-                                class="group relative bg-ink text-parchment font-display tracking-widest text-base sm:text-lg px-8 sm:px-12 py-4 border-4 border-ink shadow-stamp-ember hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all uppercase">
+                                class="group relative bg-ink text-parchment font-display tracking-wide text-base sm:text-lg px-8 sm:px-12 py-4 rounded-[3px] shadow-soft hover:shadow-lift hover:-translate-y-0.5 transition-all">
                             <span class="relative z-10 flex items-center gap-3">
                                 <i class="fas fa-calculator text-gold"></i>
-                                Generate my quote
+                                <span data-i18n="questions.submit">Generate my quote</span>
                                 <span class="text-ember">→</span>
                             </span>
                         </button>
@@ -481,53 +451,53 @@
             </div>
 
             <!-- À-la-carte reference (collapsible) -->
-            <div class="mt-10 border-t-4 border-ink/20 pt-8">
-                <button id="alacToggle" class="w-full flex items-center justify-between gap-3 mb-4 group">
-                    <h2 class="font-display text-sm sm:text-base tracking-wider text-ink-soft flex items-center gap-2">
-                        <span>📌</span> full à-la-carte price reference
+            <div class="mt-10 border-t border-hairline pt-8">
+                <button id="alacToggle" type="button" class="w-full flex items-center justify-between gap-3 mb-4 group">
+                    <h2 class="font-mono text-[0.68rem] sm:text-xs uppercase tracking-[0.2em] text-ink-soft flex items-center gap-2">
+                        <span data-i18n="table.heading">full à-la-carte price reference</span>
                     </h2>
-                    <span class="text-ink-soft group-hover:text-ember transition-colors text-xs font-display tracking-wider flex items-center gap-1">
+                    <span class="text-ink-soft group-hover:text-ember transition-colors text-xs font-mono tracking-wider flex items-center gap-1.5">
                         <span class="alac-label">show</span>
-                        <i class="fas fa-chevron-down alac-chevron transition-transform"></i>
+                        <i class="fas fa-chevron-down alac-chevron transition-transform text-[0.65em]"></i>
                     </span>
                 </button>
                 <div id="alacContent" class="hidden overflow-x-auto">
                     <table class="w-full text-xs sm:text-sm border-collapse font-sans">
                         <thead>
                             <tr class="bg-ink text-parchment">
-                                <th class="text-left px-4 py-2 font-display tracking-wider">Item</th>
-                                <th class="text-right px-4 py-2 font-display tracking-wider">Price</th>
+                                <th class="text-left px-4 py-2 font-mono tracking-wider" data-i18n="table.itemHeader">Item</th>
+                                <th class="text-right px-4 py-2 font-mono tracking-wider" data-i18n="table.priceHeader">Price</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y-2 divide-ink/10">
-                            <tr class="bg-cream/50"><td colspan="2" class="px-4 py-1.5 font-display text-xs tracking-widest text-ink-soft uppercase">Design</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Semi-custom design</td><td class="px-4 py-2 text-right font-display">€180</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Fully custom design</td><td class="px-4 py-2 text-right font-display">€350</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Logo design</td><td class="px-4 py-2 text-right font-display">€120</td></tr>
-                            <tr class="bg-cream/50"><td colspan="2" class="px-4 py-1.5 font-display text-xs tracking-widest text-ink-soft uppercase">Content</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Copywriting</td><td class="px-4 py-2 text-right font-display">€40 / page</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Additional subpage</td><td class="px-4 py-2 text-right font-display">€40 each</td></tr>
-                            <tr class="bg-cream/50"><td colspan="2" class="px-4 py-1.5 font-display text-xs tracking-widest text-ink-soft uppercase">Features</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Interactive map</td><td class="px-4 py-2 text-right font-display">€30</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Image gallery</td><td class="px-4 py-2 text-right font-display">€60</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Blog / news section</td><td class="px-4 py-2 text-right font-display">€150</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Newsletter signup</td><td class="px-4 py-2 text-right font-display">€60</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Live chat</td><td class="px-4 py-2 text-right font-display">€50</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Multilingual (per language)</td><td class="px-4 py-2 text-right font-display">€120</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">CMS for self-editing</td><td class="px-4 py-2 text-right font-display">€180</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Booking / reservation system</td><td class="px-4 py-2 text-right font-display">from €400</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">User accounts / dashboard</td><td class="px-4 py-2 text-right font-display">from €500</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">API / third-party integration</td><td class="px-4 py-2 text-right font-display">from €250</td></tr>
-                            <tr class="bg-cream/50"><td colspan="2" class="px-4 py-1.5 font-display text-xs tracking-widest text-ink-soft uppercase">Shop</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Shop setup (up to 20 products)</td><td class="px-4 py-2 text-right font-display">€600</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Payment integration</td><td class="px-4 py-2 text-right font-display">€150</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Order / inventory management</td><td class="px-4 py-2 text-right font-display">€200</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Extra product (beyond 20)</td><td class="px-4 py-2 text-right font-display">€3 each</td></tr>
-                            <tr class="bg-cream/50"><td colspan="2" class="px-4 py-1.5 font-display text-xs tracking-widest text-ink-soft uppercase">Marketing &amp; Performance</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Advanced SEO</td><td class="px-4 py-2 text-right font-display">€180</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Analytics &amp; tracking</td><td class="px-4 py-2 text-right font-display">€60</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Speed optimisation</td><td class="px-4 py-2 text-right font-display">€100</td></tr>
-                            <tr class="hover:bg-parchment-dark/50"><td class="px-4 py-2">Security hardening</td><td class="px-4 py-2 text-right font-display">€80</td></tr>
+                        <tbody class="divide-y divide-hairline">
+                            <tr class="bg-parchment/40"><td colspan="2" class="px-4 py-1.5 font-mono text-xs tracking-widest text-ink-soft uppercase" data-i18n="table.sections.design">Design</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.designSemi">Semi-custom design</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="180">€180</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.designFull">Fully custom design</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="350">€350</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.logo">Logo design</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="120">€120</td></tr>
+                            <tr class="bg-parchment/40"><td colspan="2" class="px-4 py-1.5 font-mono text-xs tracking-widest text-ink-soft uppercase" data-i18n="table.sections.content">Content</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.copywritingUnit">Copywriting</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="40" data-suffix="perPage">€40 / page</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="table.extraPageLabel">Additional subpage</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="40" data-suffix="each">€40 each</td></tr>
+                            <tr class="bg-parchment/40"><td colspan="2" class="px-4 py-1.5 font-mono text-xs tracking-widest text-ink-soft uppercase" data-i18n="table.sections.features">Features</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.map">Interactive map</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="30">€30</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.gallery">Image gallery</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="60">€60</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.blog">Blog / news section</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="150">€150</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.newsletter">Newsletter signup</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="60">€60</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.chat">Live chat / chatbot</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="50">€50</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="table.languageLabel">Multilingual (per language)</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="120">€120</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.cms">CMS for self-editing</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="180">€180</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.booking">Booking / reservation system</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="400" data-prefix="from">from €400</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.accounts">User accounts / dashboard</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="500" data-prefix="from">from €500</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.api">API / third-party integration</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="250" data-prefix="from">from €250</td></tr>
+                            <tr class="bg-parchment/40"><td colspan="2" class="px-4 py-1.5 font-mono text-xs tracking-widest text-ink-soft uppercase" data-i18n="table.sections.shop">Shop</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.shopSetup">Shop setup (up to 20 products)</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="600">€600</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.payments">Payment integration</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="150">€150</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.orders">Order / inventory management</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="200">€200</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="table.extraProductLabel">Extra product (beyond 20)</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="3" data-suffix="each">€3 each</td></tr>
+                            <tr class="bg-parchment/40"><td colspan="2" class="px-4 py-1.5 font-mono text-xs tracking-widest text-ink-soft uppercase" data-i18n="table.sections.marketing">Marketing &amp; Performance</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.seo">Advanced SEO</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="180">€180</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.analytics">Analytics &amp; tracking</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="60">€60</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.speed">Speed optimisation</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="100">€100</td></tr>
+                            <tr class="hover:bg-parchment-dark/40"><td class="px-4 py-2" data-i18n="items.security">Security hardening</td><td class="price-cell px-4 py-2 text-right font-mono" data-amount="80">€80</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -546,22 +516,22 @@
                         <span class="terminal-dot dot-red"></span>
                         <span class="terminal-dot dot-yellow"></span>
                         <span class="terminal-dot dot-green"></span>
-                        <span class="terminal-title">quote-generator — domen@portfolio</span>
+                        <span class="terminal-title" data-i18n="loading.title">quote-generator · domen@portfolio</span>
                     </div>
-                    <div class="terminal-body font-display text-sm leading-loose" id="terminalOutput">
-                        <div class="terminal-prompt">$ analysing requirements<span class="cursor">▊</span></div>
+                    <div class="terminal-body font-mono text-sm leading-loose" id="terminalOutput">
+                        <div class="terminal-prompt">$ <span class="cursor">▊</span></div>
                     </div>
                 </div>
                 <div class="mt-8 w-full max-w-xl">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-display text-xs tracking-widest text-ink-soft uppercase">calculating</span>
-                        <span class="font-display text-xs text-ember" id="loadingPct">0%</span>
+                        <span class="font-mono text-xs tracking-widest text-ink-soft uppercase" data-i18n="loading.calculating">calculating</span>
+                        <span class="font-mono text-xs text-ember" id="loadingPct">0%</span>
                     </div>
-                    <div class="h-3 bg-ink/10 border-2 border-ink overflow-hidden">
-                        <div id="loadingBar" class="h-full bg-ember transition-all duration-300" style="width:0%"></div>
+                    <div class="h-2.5 bg-ink/10 rounded-full overflow-hidden">
+                        <div id="loadingBar" class="h-full bg-ember transition-all duration-300 rounded-full" style="width:0%"></div>
                     </div>
                 </div>
-                <p class="mt-6 font-script text-gold text-lg opacity-70">please wait, this takes a moment...</p>
+                <p class="mt-6 font-display italic text-ember/80 text-base" data-i18n="loading.pleaseWait">please wait, this takes a moment...</p>
             </div>
         </div><!-- /state-loading -->
 
@@ -573,27 +543,27 @@
 
             <!-- Results header -->
             <div class="text-center mb-8 sm:mb-12">
-                <p class="font-display text-xs sm:text-sm tracking-[0.3em] text-ember uppercase mb-2">your quote is ready</p>
-                <h2 class="font-display text-3xl sm:text-4xl text-ink mb-2">Here's what it looks like.</h2>
-                <p class="text-ink-soft text-sm">Based on your selections. All prices are estimates before tax (+ VAT).</p>
+                <p class="font-mono text-xs sm:text-sm tracking-[0.3em] text-ember uppercase mb-2" data-i18n="results.ready">your quote is ready</p>
+                <h2 class="font-display font-medium text-3xl sm:text-4xl text-ink mb-2" data-i18n="results.title">Here's what it looks like.</h2>
+                <p class="text-ink-soft text-sm" data-i18n="results.sub">Based on your selections. All prices are estimates before tax (+ VAT).</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
 
                 <!-- Receipt panel -->
                 <div class="lg:col-span-3">
-                    <div class="receipt-panel bg-cream border-4 border-ink shadow-stamp-lg p-6 sm:p-8">
+                    <div class="receipt-panel bg-cream border border-hairline rounded-[3px] shadow-lift p-6 sm:p-8">
                         <!-- Receipt header -->
-                        <div class="text-center border-b-2 border-dashed border-ink/30 pb-5 mb-5">
-                            <div class="font-display text-xs tracking-[0.4em] text-ink/50 uppercase mb-1">Domen Hribernik · Web Development</div>
-                            <div class="font-display text-xl sm:text-2xl text-ink">PRICE ESTIMATE</div>
-                            <div class="font-script text-gold text-base mt-1" id="receiptDate"></div>
+                        <div class="text-center border-b border-dashed border-hairline pb-5 mb-5">
+                            <div class="font-mono text-xs tracking-[0.3em] text-ink/50 uppercase mb-1" data-i18n="results.receiptHeader">Domen Hribernik · Web Development</div>
+                            <div class="font-display text-xl sm:text-2xl text-ink" data-i18n="results.receiptTitle">PRICE ESTIMATE</div>
+                            <div class="font-display italic text-ember/80 text-base mt-1" id="receiptDate"></div>
                         </div>
 
                         <!-- Package badge -->
-                        <div class="flex items-center justify-between mb-5 pb-4 border-b-2 border-ink/20">
-                            <span class="font-display text-xs tracking-widest text-ink-soft uppercase">Suggested Package</span>
-                            <span id="resultPackageBadge" class="package-result-badge font-display text-sm tracking-widest px-3 py-1 border-2 border-ink bg-ink text-parchment shadow-stamp-sm">PLUS</span>
+                        <div class="flex items-center justify-between mb-5 pb-4 border-b border-hairline">
+                            <span class="font-mono text-xs tracking-widest text-ink-soft uppercase" data-i18n="results.suggestedPackage">Suggested package</span>
+                            <span id="resultPackageBadge" class="package-result-badge font-mono text-sm tracking-widest px-3 py-1 rounded-[3px] border border-ink bg-ink text-parchment">PLUS</span>
                         </div>
 
                         <!-- Line items -->
@@ -602,33 +572,29 @@
                         </div>
 
                         <!-- Extras note -->
-                        <div id="customNote" class="hidden mb-4 p-3 border-2 border-dashed border-ember/40 bg-ember/5 text-ember text-xs font-display tracking-wider">
-                            ✦ Some features need a custom quote — marked with "contact". The base estimate shown is a minimum.
-                        </div>
+                        <div id="customNote" class="hidden mb-4 p-3 border border-dashed border-ember/40 bg-ember/5 rounded-[3px] text-ember-dark text-xs font-mono tracking-wide" data-i18n="results.customNote">Some features need a custom quote, marked with ⚡. The base estimate shown is a minimum.</div>
 
                         <!-- Total -->
-                        <div class="border-t-4 border-ink pt-4 mt-4">
+                        <div class="border-t border-ink pt-4 mt-4">
                             <div class="flex items-baseline justify-between">
-                                <span class="font-display text-sm tracking-widest uppercase text-ink-soft">Total estimate</span>
+                                <span class="font-mono text-sm tracking-widest uppercase text-ink-soft" data-i18n="results.totalEstimate">Total estimate</span>
                                 <div class="text-right">
                                     <div id="resultTotal" class="font-display text-3xl sm:text-4xl text-ink result-total-reveal">€0</div>
-                                    <div class="text-xs text-ink-soft mt-0.5">excl. VAT</div>
+                                    <div class="text-xs text-ink-soft mt-0.5" data-i18n="results.exclVat">excl. VAT</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Monthly rental option -->
-                        <div class="mt-5 pt-4 border-t-2 border-dashed border-ink/20 text-center">
-                            <p class="text-xs text-ink-soft mb-1">Prefer monthly payments?</p>
-                            <div id="rentalPrice" class="font-display text-base text-ember">~€0/mo for 18 months</div>
-                            <p class="text-xs text-ink/50 mt-0.5">then ~€19/mo maintenance</p>
+                        <div class="mt-5 pt-4 border-t border-dashed border-hairline text-center">
+                            <p class="text-xs text-ink-soft mb-1" data-i18n="results.preferMonthly">Prefer monthly payments?</p>
+                            <div id="rentalPrice" class="font-display text-base text-ember"></div>
+                            <p class="text-xs text-ink/50 mt-0.5" id="maintenanceNote"></p>
                         </div>
 
                         <!-- Edit link -->
                         <div class="mt-5 text-center">
-                            <button id="editSelectionsBtn" class="text-xs font-display tracking-wider text-ink-soft hover:text-ember transition-colors underline underline-offset-2">
-                                ← Edit my selections
-                            </button>
+                            <button id="editSelectionsBtn" type="button" class="text-xs font-mono tracking-wider text-ink-soft hover:text-ember transition-colors underline underline-offset-2" data-i18n="results.edit">← Edit my selections</button>
                         </div>
                     </div>
                 </div>
@@ -637,66 +603,66 @@
                 <div class="lg:col-span-2 space-y-5">
 
                     <!-- Package context card -->
-                    <div id="packageContextCard" class="bg-ink text-parchment border-4 border-ink shadow-stamp-ember p-5">
-                        <div class="font-display text-xs tracking-[0.3em] text-gold/60 uppercase mb-1">you're in the</div>
+                    <div id="packageContextCard" class="bg-ink text-parchment rounded-[3px] shadow-lift p-5">
+                        <div class="font-mono text-xs tracking-[0.3em] text-gold/60 uppercase mb-1" data-i18n="results.yourPackage">your package</div>
                         <div id="packageContextName" class="font-display text-2xl text-gold-bright mb-1">PLUS</div>
-                        <p id="packageContextDesc" class="text-parchment/70 text-xs leading-relaxed mb-4">Everything a business presentation site genuinely needs.</p>
+                        <p id="packageContextDesc" class="text-parchment/70 text-xs leading-relaxed mb-4"></p>
                         <div id="packageContextItems" class="space-y-1 text-xs">
                             <!-- Populated by JS -->
                         </div>
                     </div>
 
                     <!-- Support packages -->
-                    <div class="bg-cream border-4 border-ink shadow-stamp p-5">
-                        <div class="font-display text-xs tracking-widest text-ink-soft uppercase mb-3">Ongoing support</div>
+                    <div class="bg-cream border border-hairline rounded-[3px] shadow-soft p-5">
+                        <div class="font-mono text-xs tracking-widest text-ink-soft uppercase mb-3" data-i18n="results.ongoingSupport">Ongoing support</div>
                         <div class="space-y-3">
                             <label class="radio-option">
                                 <input type="radio" name="support" value="none">
-                                <span class="radio-box text-xs">No thanks — I'm self-sufficient</span>
+                                <span class="radio-box text-xs" data-i18n="results.supportNone">No thanks, I'm self-sufficient</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="support" value="basic">
-                                <span class="radio-box text-xs">Basic support <span class="text-ember">(€25/mo)</span> — hosting, backups, security updates</span>
+                                <span class="radio-box text-xs" id="supportBasicLabel" data-price="25" data-i18n-template="results.supportBasic">Basic support (€25/mo): hosting, backups, security updates</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="support" value="advanced">
-                                <span class="radio-box text-xs">Advanced support <span class="text-ember">(€60/mo)</span> — all of basic + content updates + priority fixes</span>
+                                <span class="radio-box text-xs" id="supportAdvancedLabel" data-price="60" data-i18n-template="results.supportAdvanced">Advanced support (€60/mo): all of basic + content updates + priority fixes</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Contact form -->
-                    <div class="bg-cream border-4 border-ink shadow-stamp p-5">
-                        <div class="font-display text-xs tracking-widest text-ink-soft uppercase mb-1">Interested?</div>
-                        <p class="text-xs text-ink-soft mb-4">Leave your details and I'll get back to you. All fields optional — you can also just email me directly.</p>
+                    <div class="bg-cream border border-hairline rounded-[3px] shadow-soft p-5">
+                        <div class="font-mono text-xs tracking-widest text-ink-soft uppercase mb-1" data-i18n="results.interested">Interested?</div>
+                        <p class="text-xs text-ink-soft mb-4" data-i18n="results.interestedHint">Leave your details and I'll get back to you. All fields are optional, you can also just email me directly.</p>
                         <div class="space-y-3">
                             <div>
-                                <label class="section-sublabel" for="contactName">Your name</label>
-                                <input type="text" id="contactName" placeholder="e.g. Ana Novak"
-                                       class="mt-1 w-full px-3 py-2 bg-parchment border-2 border-ink/50 font-sans text-sm focus:outline-none focus:border-ink">
+                                <label class="block font-mono text-[0.68rem] uppercase tracking-wider text-ink-soft" for="contactName" data-i18n="results.yourName">Your name</label>
+                                <input type="text" id="contactName" data-i18n-attr="placeholder:results.namePlaceholder"
+                                       class="mt-1 w-full px-3 py-2 bg-parchment border border-hairline rounded-[3px] font-sans text-sm focus:outline-none focus:border-ember">
                             </div>
                             <div>
-                                <label class="section-sublabel" for="contactEmail">Email address</label>
-                                <input type="email" id="contactEmail" placeholder="ana@company.com"
-                                       class="mt-1 w-full px-3 py-2 bg-parchment border-2 border-ink/50 font-sans text-sm focus:outline-none focus:border-ink">
+                                <label class="block font-mono text-[0.68rem] uppercase tracking-wider text-ink-soft" for="contactEmail" data-i18n="results.emailAddress">Email address</label>
+                                <input type="email" id="contactEmail" data-i18n-attr="placeholder:results.emailPlaceholder"
+                                       class="mt-1 w-full px-3 py-2 bg-parchment border border-hairline rounded-[3px] font-sans text-sm focus:outline-none focus:border-ember">
                             </div>
                             <div>
-                                <label class="section-sublabel" for="contactMessage">Anything to add?</label>
-                                <textarea id="contactMessage" rows="3" placeholder="Timeline, questions, anything..."
-                                          class="mt-1 w-full px-3 py-2 bg-parchment border-2 border-ink/50 font-sans text-sm focus:outline-none focus:border-ink resize-none"></textarea>
+                                <label class="block font-mono text-[0.68rem] uppercase tracking-wider text-ink-soft" for="contactMessage" data-i18n="results.anythingToAdd">Anything to add?</label>
+                                <textarea id="contactMessage" rows="3" data-i18n-attr="placeholder:results.messagePlaceholder"
+                                          class="mt-1 w-full px-3 py-2 bg-parchment border border-hairline rounded-[3px] font-sans text-sm focus:outline-none focus:border-ember resize-none"></textarea>
                             </div>
                         </div>
 
-                        <div id="sendError" class="hidden mt-3 text-xs text-ember font-display tracking-wider"></div>
+                        <div id="sendError" class="hidden mt-3 text-xs text-ember-dark font-mono tracking-wide"></div>
 
-                        <button id="sendQuoteBtn"
-                                class="mt-4 w-full bg-ember text-parchment font-display tracking-widest text-sm py-3 border-4 border-ink shadow-stamp hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all uppercase flex items-center justify-center gap-2">
+                        <button id="sendQuoteBtn" type="button"
+                                class="mt-4 w-full bg-ember text-cream font-mono tracking-widest text-sm py-3 rounded-[3px] shadow-soft hover:shadow-lift hover:-translate-y-0.5 transition-all uppercase flex items-center justify-center gap-2">
                             <i class="fas fa-paper-plane"></i>
-                            <span class="btn-send-text">Send Domen this quote</span>
+                            <span class="btn-send-text" data-i18n="results.sendButton">Send Domen this quote</span>
                             <span class="btn-send-loading hidden"><i class="fas fa-spinner fa-spin"></i></span>
                         </button>
 
-                        <p class="text-center text-xs text-ink/40 mt-2 font-display">opens your email app with the quote pre-filled</p>
+                        <p class="text-center text-xs text-ink/40 mt-2 font-mono" data-i18n="results.sendCaption">opens your email app with the quote pre-filled</p>
                     </div>
 
                 </div>
@@ -707,16 +673,16 @@
     </main>
 
     <!-- Footer -->
-    <footer class="border-t-4 border-ink/20 mt-12 py-6 bg-parchment-dark">
+    <footer class="border-t border-hairline mt-12 py-6 bg-parchment-dark/60">
         <div class="max-w-5xl mx-auto px-6 text-center">
-            <div class="font-script text-gold text-xl mb-1">Domen Hribernik</div>
-            <div class="font-display text-xs text-ink/40 tracking-widest uppercase">web development · celje, slovenia</div>
+            <div class="font-display italic text-ember/80 text-xl mb-1">Domen Hribernik</div>
+            <div class="font-mono text-xs text-ink/40 tracking-widest uppercase" data-i18n="footer.tagline">web development · celje, slovenia</div>
             <div class="mt-3 text-xs text-ink/50">
                 <a href="mailto:contact@domenhribernik.com" class="hover:text-ember transition-colors">contact@domenhribernik.com</a>
             </div>
         </div>
     </footer>
-    <script src="../../components/gtranslate.js" data-color="#111111"></script>
-    <script src="script.js"></script>
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
