@@ -1,4 +1,5 @@
 import { projects } from './project-data.js';
+import { resolveLink } from './project-links.js';
 
 class ProjectCard extends HTMLElement {
   connectedCallback() {
@@ -7,6 +8,7 @@ class ProjectCard extends HTMLElement {
 
   render() {
     const key = this.getAttribute('project');
+    const site = this.getAttribute('site') || '';
     const data = projects[key];
 
     if (!data) {
@@ -22,7 +24,7 @@ class ProjectCard extends HTMLElement {
 
     if (data.links && data.links.visitSite && data.links.visitSite.trim()) {
       projectLinks.push(`
-        <a href="${data.links.visitSite}" class="project-link" target="_blank">
+        <a href="${resolveLink(data.links.visitSite, site)}" class="project-link" target="_blank">
           <i class="fas fa-external-link-alt"></i> Website
         </a>
       `);
@@ -30,7 +32,7 @@ class ProjectCard extends HTMLElement {
 
     if (data.links && data.links.readMore && data.links.readMore.trim()) {
       projectLinks.push(`
-        <a href="${data.links.readMore}" class="project-link" ${data.noTarget ? "" : 'target="_blank"'}>
+        <a href="${resolveLink(data.links.readMore, site)}" class="project-link" ${data.noTarget ? "" : 'target="_blank"'}>
           <i class="fas fa-external-link-alt"></i> Read More
         </a>
       `);
@@ -38,7 +40,7 @@ class ProjectCard extends HTMLElement {
     
     if (data.links && data.links.code && data.links.code.trim()) {
       projectLinks.push(`
-        <a href="${data.links.code}" class="project-link" target="_blank">
+        <a href="${resolveLink(data.links.code, site)}" class="project-link" target="_blank">
           <i class="fab fa-github"></i> Code
         </a>
       `);
@@ -46,7 +48,7 @@ class ProjectCard extends HTMLElement {
     
     if (data.links && data.links.demo && data.links.demo.trim()) {
       projectLinks.push(`
-        <a href="${data.links.demo}" class="project-link" target="_blank">
+        <a href="${resolveLink(data.links.demo, site)}" class="project-link" target="_blank">
           <i class="fas fa-play"></i> Live Demo
         </a>
       `);
