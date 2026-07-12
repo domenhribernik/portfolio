@@ -35,8 +35,26 @@
         "now": "◎ Zdaj",
         "figures": "liki",
         "names": "imena",
-        "grid": "mreža",
-        "mySky": "◉ moje nebo"
+        "grid": "mreža"
+    },
+    "location": {
+        "button": "◉ lokacija",
+        "title": "Nastavi svoj kraj",
+        "intro": "Povleci zemljevid, da bo bucika nad tabo, ali poišči kraj.",
+        "searchPlaceholder": "Poišči mesto ali kraj",
+        "search": "Išči",
+        "useMine": "◉ uporabi mojo lokacijo",
+        "confirm": "Uporabi ta kraj",
+        "close": "Zapri",
+        "loading": "Nalagam zemljevid…",
+        "mapFailed": "Zemljevida ni bilo mogoče naložiti; preveri povezavo.",
+        "picking": "Poimenujem to točko…",
+        "locating": "Iščem te…",
+        "geoFailed": "Tvoje lokacije ni bilo mogoče prebrati.",
+        "geoUnavailable": "Ta brskalnik ne podpira geolokacije.",
+        "searching": "Iščem…",
+        "notFound": "Kraja s tem imenom ni bilo mogoče najti.",
+        "searchFailed": "Iskanje trenutno ni na voljo."
     },
     "ledger": {
         "title": "Nočni zapisnik",

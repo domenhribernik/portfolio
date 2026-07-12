@@ -35,8 +35,26 @@
         "now": "◎ Now",
         "figures": "figures",
         "names": "names",
-        "grid": "grid",
-        "mySky": "◉ my sky"
+        "grid": "grid"
+    },
+    "location": {
+        "button": "◉ location",
+        "title": "Set your place",
+        "intro": "Drag the map so the pin sits over you, or search a place.",
+        "searchPlaceholder": "Search a city or place",
+        "search": "Search",
+        "useMine": "◉ use my location",
+        "confirm": "Use this place",
+        "close": "Close",
+        "loading": "Loading the map…",
+        "mapFailed": "The map could not load; check your connection.",
+        "picking": "Naming this spot…",
+        "locating": "Finding you…",
+        "geoFailed": "Could not read your location.",
+        "geoUnavailable": "Geolocation is not available in this browser.",
+        "searching": "Searching…",
+        "notFound": "No place found by that name.",
+        "searchFailed": "Search is unavailable right now."
     },
     "ledger": {
         "title": "The night's ledger",

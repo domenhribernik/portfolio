@@ -10,6 +10,8 @@ import {
 } from './logic.js';
 import { drawSky, PLANET_STYLE } from './render.js';
 import { zoomAt, clampPan, clampZoom, screenToWorld } from './zoom.js';
+import { formatCoords } from './geo.js';
+import { openLocationPicker } from './location-map.js';
 import {
     pickLanguage, lookup, format, loadDictionary, applyTranslations,
     FALLBACK, STORAGE_KEY,
@@ -27,7 +29,8 @@ const tooltip = $('tooltip');
 const state = {
     lat: LJUBLJANA.lat,
     lon: LJUBLJANA.lon,
-    placeKey: 'home',  // 'home' = the Ljubljana default, 'yours' = geolocated
+    placeKey: 'home',  // 'home' = the Ljubljana default, 'picked' = chosen on the map
+    placeName: null,   // reverse-geocoded label for a picked place, when we have one
     anchor: null,      // Date chosen via the date input; null = anchored to now
     offsetMin: 0,      // slider offset in minutes
     showLines: true,
@@ -55,6 +58,15 @@ function isLive() {
     return !state.anchor && state.offsetMin === 0;
 }
 
+// The date input shows today by default (local YYYY-MM-DD) instead of an empty
+// mm/dd/yyyy placeholder. This is cosmetic: the chart stays live until another
+// day is actually picked, and "Now" resets the field back here.
+function todayInputValue() {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
 // ---------------------------------------------------------------- language
 
 const t = (key, params) => (params ? format(lookup(state.dict, key), params) : lookup(state.dict, key));
@@ -67,15 +79,13 @@ function compass(az) {
     return points[Math.round(az / 22.5) % 16];
 }
 
-// The place chip is written from state, not data-i18n, because geolocation
+// The place chip is written from state, not data-i18n, because the map picker
 // can replace it; a language switch re-renders whichever variant is showing.
 function updatePlateChips() {
-    if (state.placeKey === 'yours') {
-        $('platePlace').textContent = t('plate.yourSky');
+    if (state.placeKey === 'picked') {
         const cardinals = state.dict?.sky?.cardinals ?? ['N', 'S', 'E', 'W'];
-        const ns = state.lat >= 0 ? cardinals[0] : cardinals[1];
-        const ew = state.lon >= 0 ? cardinals[2] : cardinals[3];
-        $('plateCoords').textContent = `${Math.abs(state.lat).toFixed(2)}° ${ns} · ${Math.abs(state.lon).toFixed(2)}° ${ew}`;
+        $('platePlace').textContent = state.placeName || t('plate.yourSky');
+        $('plateCoords').textContent = formatCoords(state.lat, state.lon, cardinals);
     } else {
         $('platePlace').textContent = t('plate.place');
         $('plateCoords').textContent = t('plate.coords');
@@ -327,7 +337,7 @@ $('nowBtn').addEventListener('click', () => {
     state.anchor = null;
     state.offsetMin = 0;
     $('timeSlider').value = 0;
-    $('dateInput').value = '';
+    $('dateInput').value = todayInputValue();
     clearHover();
     refresh();
 });
@@ -354,15 +364,31 @@ for (const btn of document.querySelectorAll('.chip-toggle')) {
     });
 }
 
-$('geoBtn').addEventListener('click', () => {
-    if (!navigator.geolocation) { showError(t('errors.noGeolocation')); return; }
-    navigator.geolocation.getCurrentPosition((pos) => {
-        state.lat = pos.coords.latitude;
-        state.lon = pos.coords.longitude;
-        state.placeKey = 'yours';
-        updatePlateChips();
-        refresh();
-    }, () => showError(t('errors.geolocationFailed')));
+$('placeBtn').addEventListener('click', () => {
+    openLocationPicker({
+        lat: state.lat,
+        lon: state.lon,
+        cardinals: state.dict?.sky?.cardinals ?? ['N', 'S', 'E', 'W'],
+        strings: {
+            loading: t('location.loading'),
+            mapFailed: t('location.mapFailed'),
+            picking: t('location.picking'),
+            locating: t('location.locating'),
+            geoFailed: t('location.geoFailed'),
+            geoUnavailable: t('location.geoUnavailable'),
+            searching: t('location.searching'),
+            notFound: t('location.notFound'),
+            searchFailed: t('location.searchFailed'),
+        },
+        onPick: ({ lat, lon, name }) => {
+            state.lat = lat;
+            state.lon = lon;
+            state.placeKey = 'picked';
+            state.placeName = name || null;
+            updatePlateChips();
+            refresh();
+        },
+    });
 });
 
 $('langSelect').addEventListener('change', (event) => {
@@ -490,6 +516,7 @@ setLanguage(pickLanguage(savedLang, systemLanguages)).catch(() => {
     setLanguage(FALLBACK).catch(() => {});
 });
 
+$('dateInput').value = todayInputValue(); // show today rather than an empty field
 new ResizeObserver(resizeCanvas).observe(canvas);
 resizeCanvas();
 updateClock();

@@ -2,7 +2,7 @@
 // cached shell makes it work with no signal at all: the right tool under a
 // dark-site sky. HTML goes network-first (updates propagate), everything else
 // stale-while-revalidate.
-const CACHE = 'nebo-v2';
+const CACHE = 'nebo-v3';
 const SHELL = [
     './',
     'style.css',
@@ -10,6 +10,9 @@ const SHELL = [
     'logic.js',
     'render.js',
     'i18n.js',
+    'zoom.js',
+    'geo.js',
+    'location-map.js',
     'lang/en.json',
     'lang/sl.json',
     'stars.json',

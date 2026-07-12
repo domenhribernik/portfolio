@@ -268,6 +268,48 @@ input[type="date"] {
     }
 }
 
+/* ---- Location picker ---- */
+/* fixed teardrop over the map centre: its tip marks the chosen point, and the
+   map pans underneath it (touch-first: no precise tapping needed) */
+.loc-pin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -100%);
+    z-index: 500;
+    pointer-events: none;
+    filter: drop-shadow(0 3px 4px rgba(3, 5, 16, 0.6));
+}
+
+/* Leaflet's own CSS is injected after this file, so its defaults are dark-themed
+   here with !important rather than by source order. The tiles cover the plate,
+   the container colour only shows for the instant before they paint. */
+.leaflet-container {
+    background: #0e1430 !important;
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.leaflet-bar a,
+.leaflet-bar a:hover {
+    background: #101838 !important;
+    color: #e7eaf8 !important;
+    border-bottom-color: rgba(231, 234, 248, 0.14) !important;
+}
+
+.leaflet-bar a:hover {
+    background: #172150 !important;
+}
+
+.leaflet-control-attribution {
+    background: rgba(11, 16, 42, 0.72) !important;
+    color: #98a0c4 !important;
+    font-size: 0.6rem;
+}
+
+.leaflet-control-attribution a {
+    color: #b7c0e4 !important;
+}
+
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
     .reveal {
