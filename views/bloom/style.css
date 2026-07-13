@@ -1,0 +1,622 @@
+/* views/bloom : layout for the Everbloom storefront.
+   The flower skins, scene atmosphere, film grain, autospin and reveal
+   keyframes all come from ../flowers/style.css (loaded before this file);
+   this file only lays out the shop. Hand-written instead of Tailwind on
+   purpose, same reasoning as views/flowers/share: a conversion page must
+   open fast cold, and the runtime CDN compiler is the biggest skippable
+   cost. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: 'Albert Sans', sans-serif;
+  font-weight: 300;
+  color: var(--cream);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--rose);
+  color: var(--night);
+}
+
+/* ==========================================================================
+   Shared voice: kickers, headlines, buttons
+   ========================================================================== */
+
+.kicker {
+  margin: 0;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--rose);
+}
+
+h1, h2 {
+  margin: 0.9rem 0 0;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+}
+
+h1 { font-size: clamp(2.4rem, 6vw, 4.2rem); }
+h2 { font-size: clamp(1.8rem, 4.2vw, 2.9rem); }
+
+h1 i, h2 i { color: var(--rose); }
+
+.btn {
+  display: inline-block;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.8rem 1.7rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.btn-solid {
+  color: var(--night);
+  background: var(--rose);
+  border: 1px solid var(--rose);
+}
+
+.btn-solid:hover {
+  background: var(--cream);
+  border-color: var(--cream);
+}
+
+.btn-ghost {
+  color: var(--cream);
+  background: transparent;
+  border: 1px solid var(--hairline);
+}
+
+.btn-ghost:hover {
+  border-color: var(--rose);
+  color: var(--rose);
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem clamp(1.25rem, 4vw, 2.5rem) 0;
+}
+
+.wordmark {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1.25rem;
+  color: var(--cream);
+  text-decoration: none;
+}
+
+.wordmark i { color: var(--rose); }
+
+.topnav {
+  display: flex;
+  gap: 1.4rem;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.topnav a {
+  color: var(--sage);
+  text-decoration: none;
+}
+
+.topnav a:hover { color: var(--cream); }
+
+.topnav .toplink-cta { color: var(--rose); }
+
+/* ==========================================================================
+   Hero: copy beside the living bouquet
+   ========================================================================== */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: center;
+  gap: 1rem;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vh, 4rem) clamp(1.25rem, 4vw, 2.5rem) 0;
+}
+
+.lede {
+  margin: 1.2rem 0 0;
+  max-width: 34rem;
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.65;
+  color: var(--sage);
+}
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1.8rem;
+}
+
+.hero-fine {
+  margin: 1.1rem 0 0;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+}
+
+/* ../flowers/style.css sizes .scene for the builder and blocks touch on it;
+   here it fits the hero column and keeps vertical panning free so the page
+   still scrolls on phones (the orbit reads only horizontal drags). */
+.scene {
+  position: relative;
+  width: 100%;
+  height: clamp(380px, 62vh, 640px);
+  touch-action: pan-y;
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0.6rem;
+  z-index: 10;
+  margin: 0;
+  pointer-events: none;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(159, 174, 151, 0.6);
+}
+
+/* ==========================================================================
+   Bands: every section below the hero
+   ========================================================================== */
+
+.band {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(3rem, 9vh, 5.5rem) clamp(1.25rem, 4vw, 2.5rem) 0;
+}
+
+.band > h2 { max-width: 22ch; }
+
+.band-fine {
+  margin: 1.6rem 0 0;
+  max-width: 46rem;
+  line-height: 1.65;
+  color: var(--sage);
+}
+
+/* ==========================================================================
+   Compare table
+   ========================================================================== */
+
+.compare-scroll {
+  margin-top: 2rem;
+  overflow-x: auto;
+}
+
+.compare {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.compare th, .compare td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.compare thead th {
+  font-family: 'Fragment Mono', monospace;
+  font-weight: 400;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sage);
+}
+
+.compare tbody th {
+  font-family: 'Fragment Mono', monospace;
+  font-weight: 400;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sage);
+  white-space: nowrap;
+}
+
+.compare td { color: var(--sage); }
+
+.compare .us { color: var(--cream); }
+
+.compare thead .us { color: var(--rose); }
+
+/* ==========================================================================
+   Steps
+   ========================================================================== */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--hairline);
+  border: 1px solid var(--hairline);
+}
+
+.steps li {
+  padding: 1.6rem 1.4rem 1.8rem;
+  background: var(--night);
+}
+
+.step-no {
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+}
+
+.steps h3 {
+  margin: 0.7rem 0 0;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  font-size: 1.35rem;
+}
+
+.steps p {
+  margin: 0.6rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--sage);
+}
+
+/* ==========================================================================
+   Pricing tiers
+   ========================================================================== */
+
+.tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+  align-items: stretch;
+}
+
+.tier {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.7rem 1.5rem 1.8rem;
+  border: 1px solid var(--hairline);
+  background: var(--moss);
+}
+
+.tier-featured {
+  border-color: var(--rose);
+}
+
+.tier-flag {
+  position: absolute;
+  top: -0.62rem;
+  left: 1.3rem;
+  margin: 0;
+  padding: 0.15rem 0.6rem;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--night);
+  background: var(--rose);
+  border-radius: 999px;
+}
+
+.tier h3 {
+  margin: 0;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.price {
+  margin: 0.8rem 0 0;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.price span {
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sage);
+}
+
+.tier-tag {
+  margin: 0.5rem 0 0;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.tier ul {
+  flex: 1;
+  margin: 1.1rem 0 1.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.tier li {
+  position: relative;
+  padding: 0.45rem 0 0.45rem 1.2rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--sage);
+  border-top: 1px solid var(--hairline);
+}
+
+.tier li::before {
+  content: '\2022';
+  position: absolute;
+  left: 0;
+  color: var(--rose);
+}
+
+.tier .btn { text-align: center; }
+
+.guarantee {
+  margin: 2rem auto 0;
+  max-width: 42rem;
+  padding: 1.2rem 1.4rem;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--sage);
+  border: 1px dashed var(--hairline);
+}
+
+.guarantee strong {
+  font-weight: 500;
+  color: var(--cream);
+}
+
+/* ==========================================================================
+   FAQ
+   ========================================================================== */
+
+.faq {
+  margin-top: 2rem;
+  max-width: 46rem;
+  border-top: 1px solid var(--hairline);
+}
+
+.faq details {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.faq summary {
+  padding: 1.05rem 2rem 1.05rem 0;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1.2rem;
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+}
+
+.faq summary::-webkit-details-marker { display: none; }
+
+.faq summary::after {
+  content: '+';
+  position: absolute;
+  right: 0.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Fragment Mono', monospace;
+  color: var(--rose);
+  transition: transform 0.2s ease;
+}
+
+.faq details[open] summary::after {
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.faq details p {
+  margin: 0 0 1.2rem;
+  max-width: 60ch;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--sage);
+}
+
+/* ==========================================================================
+   Join form
+   ========================================================================== */
+
+#join-form {
+  margin-top: 2rem;
+  max-width: 32rem;
+}
+
+.field {
+  margin: 0 0 1.3rem;
+  padding: 0;
+  border: 0;
+}
+
+.field label, .field legend {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sage);
+}
+
+.field label span { color: var(--gold); text-transform: none; letter-spacing: 0.05em; }
+
+.field input[type="email"],
+.field textarea {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--cream);
+  background: var(--moss);
+  border: 1px solid var(--hairline);
+  border-radius: 0;
+  resize: vertical;
+}
+
+.field input:focus-visible,
+.field textarea:focus-visible {
+  outline: none;
+  border-color: var(--rose);
+}
+
+.plans {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.plan {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--hairline);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.plan:has(input:checked) {
+  border-color: var(--rose);
+  color: var(--cream);
+}
+
+.plan input { accent-color: var(--rose); }
+
+.field-error {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--rose);
+}
+
+/* Honeypot: parked off-canvas, never display:none (some bots skip hidden inputs). */
+.nectar {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.form-fine {
+  margin: 0.9rem 0 0;
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  color: var(--sage);
+}
+
+.form-status {
+  margin: 0.9rem 0 0;
+  font-size: 0.9rem;
+  color: var(--rose);
+}
+
+#jf-submit[disabled] {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.joined {
+  margin-top: 2rem;
+  padding: 1.6rem;
+  max-width: 32rem;
+  border: 1px solid var(--rose);
+}
+
+.joined-note {
+  margin: 0.8rem 0 0;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1.4;
+}
+
+.joined-note a {
+  color: var(--rose);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.foot {
+  margin-top: clamp(3rem, 9vh, 5.5rem);
+  padding: 1.4rem clamp(1.25rem, 4vw, 2.5rem) calc(1.6rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--hairline);
+  font-family: 'Fragment Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--sage);
+}
+
+.foot a {
+  color: var(--cream);
+  text-decoration: none;
+}
+
+.foot a:hover { color: var(--rose); }
+
+/* ==========================================================================
+   Phones
+   ========================================================================== */
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero-copy .lede { margin-left: auto; margin-right: auto; }
+
+  .hero-ctas { justify-content: center; }
+
+  .scene { height: clamp(320px, 48vh, 460px); }
+
+  .steps, .tiers { grid-template-columns: 1fr; }
+
+  .tier-featured { order: -1; }
+
+  .topnav a:not(.toplink-cta) { display: none; }
+}

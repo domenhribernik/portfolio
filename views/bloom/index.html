@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Everbloom · Flowers that never wilt</title>
+    <meta name="description" content="Send a handcrafted 3D bouquet that blooms when they open it. Delivered by link, anywhere on earth, in one second. It never wilts.">
+    <meta property="og:title" content="Everbloom · Flowers that never wilt">
+    <meta property="og:description" content="A bouquet built petal by petal, delivered by link on the date that matters. It blooms when they open it, and it never dies.">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Same font URL as the flowers builder, so the two share one cache entry. -->
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Albert+Sans:wght@300;400;500;600&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+    <!-- No Tailwind CDN here, same reasoning as views/flowers/share: this page
+         must open fast cold, and the flowers stylesheets already ARE the
+         design system (skins, scene atmosphere, grain, reveal keyframes). -->
+    <link rel="stylesheet" href="../flowers/css3d.css">
+    <link rel="stylesheet" href="../flowers/style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="modulepreload" href="../flowers/flowers.js">
+    <link rel="modulepreload" href="../flowers/logic.js">
+    <link rel="modulepreload" href="../flowers/css3d.js">
+    <link rel="modulepreload" href="logic.js">
+</head>
+<body>
+
+    <header class="top">
+        <a class="wordmark" href="./">Ever<i>bloom</i></a>
+        <nav class="topnav">
+            <a href="../flowers/">the free stall</a>
+            <a class="toplink-cta" href="#join">reserve a spot</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- ============================== Hero ============================== -->
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="kicker reveal reveal-1">the florist that never closes</p>
+                <h1 class="reveal reveal-2">Send flowers that <i>never wilt.</i></h1>
+                <p class="lede reveal reveal-3">
+                    A bouquet built petal by petal, delivered by link on the date that
+                    matters. It blooms when they open it. It crosses any border in one
+                    second. And it never dies in a vase.
+                </p>
+                <div class="hero-ctas reveal reveal-4">
+                    <a class="btn btn-solid" href="#join">Reserve a founding spot</a>
+                    <a class="btn btn-ghost" href="../flowers/">Try the stall, free</a>
+                </div>
+                <p class="hero-fine reveal reveal-4" id="spots-line">100 founding spots. 4 EUR/mo, locked for life.</p>
+            </div>
+            <div id="scene" class="scene c3d-scene">
+                <div id="stage" class="c3d" style="--bloom:0">
+                    <div class="c3d autospin">
+                        <div id="bouquet-root" class="c3d"></div>
+                    </div>
+                </div>
+                <p class="hint">drag to turn it</p>
+            </div>
+        </section>
+
+        <!-- ============================ Compare ============================ -->
+        <section class="band">
+            <p class="kicker">why not real ones?</p>
+            <h2>Real flowers are a race<br><i>against the vase.</i></h2>
+            <div class="compare-scroll">
+                <table class="compare">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>a delivered bouquet</th>
+                            <th class="us">an everbloom</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><th>price</th><td>40&ndash;60 EUR</td><td class="us">from 0 EUR</td></tr>
+                        <tr><th>arrives in</th><td>1&ndash;3 days, borders permitting</td><td class="us">one second, anywhere</td></tr>
+                        <tr><th>lasts</th><td>about five days</td><td class="us">forever</td></tr>
+                        <tr><th>the note</th><td>scribbled by a courier</td><td class="us">your words, typeset, kept</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="band-fine">
+                Nothing replaces real flowers in the same room. Everbloom is for when you
+                are not in the same room: the long-distance months, the border between
+                you, the birthday you remembered at 23:40.
+            </p>
+        </section>
+
+        <!-- ============================ How it works ======================== -->
+        <section class="band">
+            <p class="kicker">how it works</p>
+            <h2>Three minutes, <i>start to bloom.</i></h2>
+            <ol class="steps">
+                <li>
+                    <span class="step-no">01</span>
+                    <h3>Pick the stems</h3>
+                    <p>Ten species, every one built from flat divs and grown by hand: roses, peonies, poppies, lavender. Arrange up to twelve.</p>
+                </li>
+                <li>
+                    <span class="step-no">02</span>
+                    <h3>Write the note</h3>
+                    <p>Their name, your words, and the date it should arrive. Tomorrow morning, your anniversary, the exact minute they land.</p>
+                </li>
+                <li>
+                    <span class="step-no">03</span>
+                    <h3>They open a link</h3>
+                    <p>No app, no account, no tracking number. The page opens, the bouquet blooms, your note is on the card. It stays in bloom forever.</p>
+                </li>
+            </ol>
+        </section>
+
+        <!-- ============================ Pricing ============================ -->
+        <section class="band" id="pricing">
+            <p class="kicker">the price list</p>
+            <h2>Cheaper than a vase. <i>Outlives the garden.</i></h2>
+            <div class="tiers">
+                <article class="tier">
+                    <h3>The Stall</h3>
+                    <p class="price">0 <span>EUR, forever</span></p>
+                    <p class="tier-tag">already open</p>
+                    <ul>
+                        <li>The full bouquet builder, all ten species</li>
+                        <li>Share any bouquet by link</li>
+                        <li>Links wilt after 7 days, like the real thing</li>
+                    </ul>
+                    <a class="btn btn-ghost" href="../flowers/">Start picking</a>
+                </article>
+                <article class="tier tier-featured">
+                    <p class="tier-flag">recommended</p>
+                    <h3>Petal Post</h3>
+                    <p class="price">4 <span>EUR/mo founding &middot; 6 after launch</span></p>
+                    <p class="tier-tag">or 36 EUR/yr, 25% off</p>
+                    <ul>
+                        <li>All your dates, scheduled once, delivered on time every year</li>
+                        <li>Every bouquet you send stays in bloom, permanently</li>
+                        <li>New seasonal species land in your stall first</li>
+                        <li>One surprise &ldquo;just because&rdquo; delivery a month</li>
+                    </ul>
+                    <a class="btn btn-solid" href="#join" data-plan="petal-post">Reserve founding price</a>
+                </article>
+                <article class="tier">
+                    <h3>Forever Bouquet</h3>
+                    <p class="price">9 <span>EUR, one bouquet</span></p>
+                    <p class="tier-tag">for the one big day</p>
+                    <ul>
+                        <li>One bouquet, personalized with their name and your note</li>
+                        <li>Delivered by email on the date you pick</li>
+                        <li>Permanent link plus a printable botanical postcard</li>
+                    </ul>
+                    <a class="btn btn-ghost" href="#join" data-plan="forever">Reserve one</a>
+                </article>
+            </div>
+            <p class="guarantee">
+                <strong>The Smile Guarantee.</strong> If it does not land, reply to the
+                delivery email within 7 days and I refund it in full, no questions.
+                The bouquet stays in bloom either way.
+            </p>
+        </section>
+
+        <!-- ============================== FAQ ============================== -->
+        <section class="band">
+            <p class="kicker">fair questions</p>
+            <h2>Asked before, <i>answered honestly.</i></h2>
+            <div class="faq">
+                <details>
+                    <summary>Why would I pay for a web page?</summary>
+                    <p>You are not paying for a page, you are paying for the moment: the right
+                    date, their name on the card, and a bouquet that is still there on your
+                    tenth anniversary. A real bouquet costs ten times more and is compost by
+                    Friday. If the moment does not land, the guarantee above applies.</p>
+                </details>
+                <details>
+                    <summary>Is it really forever?</summary>
+                    <p>Every paid bouquet stays live for as long as this site exists, and every
+                    one comes with a printable botanical postcard, so even if the internet
+                    ends you keep the flowers. I will never quietly delete a paid bouquet.</p>
+                </details>
+                <details>
+                    <summary>When does the shop open?</summary>
+                    <p>The builder is live today, free. Paid bouquets and Petal Post are being
+                    grown now; the founding list gets first access and keeps the 4 EUR/mo
+                    price for life. One email when it opens, nothing else.</p>
+                </details>
+                <details>
+                    <summary>What happens if I cancel Petal Post?</summary>
+                    <p>Scheduled deliveries stop. Every bouquet you already sent stays in bloom.
+                    Nothing you gave someone is ever taken back.</p>
+                </details>
+                <details>
+                    <summary>Can I gift a subscription?</summary>
+                    <p>That is planned for launch: a year of Petal Post as a gift code. Tell me
+                    in the note below if you would want that, it moves it up the list.</p>
+                </details>
+            </div>
+        </section>
+
+        <!-- ============================== Join ============================= -->
+        <section class="band" id="join">
+            <p class="kicker">the founding list</p>
+            <h2>Plant your flag <i>before the crowd.</i></h2>
+            <form id="join-form" novalidate>
+                <div class="field">
+                    <label for="jf-email">Your email</label>
+                    <input id="jf-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+                    <p class="field-error" id="err-email" hidden></p>
+                </div>
+                <fieldset class="field">
+                    <legend>What would you reserve?</legend>
+                    <div class="plans">
+                        <label class="plan"><input type="radio" name="plan" value="petal-post" checked><span>Petal Post, 4 EUR/mo founding</span></label>
+                        <label class="plan"><input type="radio" name="plan" value="forever"><span>A Forever Bouquet, 9 EUR</span></label>
+                        <label class="plan"><input type="radio" name="plan" value="curious"><span>Just curious for now</span></label>
+                    </div>
+                    <p class="field-error" id="err-plan" hidden></p>
+                </fieldset>
+                <div class="field">
+                    <label for="jf-note">Who would get your first bouquet? <span>(optional)</span></label>
+                    <textarea id="jf-note" name="note" rows="2" placeholder="my girlfriend, three time zones away"></textarea>
+                    <p class="field-error" id="err-note" hidden></p>
+                </div>
+                <!-- Honeypot: humans never see or fill this. -->
+                <div class="nectar" aria-hidden="true">
+                    <label for="jf-website">Website</label>
+                    <input id="jf-website" name="website" type="text" tabindex="-1" autocomplete="off">
+                </div>
+                <button class="btn btn-solid" type="submit" id="jf-submit">Reserve my spot</button>
+                <p class="form-fine">One email when the shop opens. No newsletter, no drip, no nonsense.</p>
+                <p class="form-status" id="jf-status" hidden></p>
+            </form>
+            <div class="joined" id="joined" hidden>
+                <p class="kicker">you're in</p>
+                <p class="joined-note">Your spot is saved. While you wait,
+                <a href="../flowers/">pick someone a free bouquet</a>, the stall never closes.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="foot">
+        <p>Grown in the same garden as <a href="../flowers/">Paper Flowers</a>.
+        Tended by <a href="../../">Domen Hribernik</a>.</p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
