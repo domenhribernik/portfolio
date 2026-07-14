@@ -4,7 +4,8 @@
    render of it. */
 
 import { buildBouquet } from '../flowers/flowers.js';
-import { easeOutCubic } from '../flowers/logic.js';
+import { easeOutCubic, renderTier } from '../flowers/logic.js';
+import { attachOrbit, pauseOffscreen } from '../flowers/orbit.js';
 import { HERO_ORDER, validateSignup, spotsLine } from './logic.js';
 
 const PROXY = '../../app/proxys/bloom.php';
@@ -19,7 +20,8 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
    The hero bouquet: build, bloom, orbit.
    ========================================================================== */
 
-buildBouquet(bouquetRoot, HERO_ORDER);
+const tier = renderTier({ coarse: matchMedia('(pointer: coarse)').matches });
+buildBouquet(bouquetRoot, HERO_ORDER, { tier });
 
 const setBloom = (v) => stage.style.setProperty('--bloom', v);
 
@@ -51,31 +53,10 @@ bloom();
 
 /* Orbit: horizontal drags only, so the page still scrolls on touch. The
    autospin wrapper sits inside the stage, so user orbit and idle spin
-   compose instead of fighting. */
-let dragging = false;
-let lastX = 0;
-let ry = 0;
-
-scene.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    lastX = e.clientX;
-    scene.classList.add('grabbing');
-    scene.setPointerCapture(e.pointerId);
-});
-
-scene.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    ry += (e.clientX - lastX) * 0.4;
-    lastX = e.clientX;
-    stage.style.setProperty('--ry', `${ry}deg`);
-});
-
-const endDrag = () => {
-    dragging = false;
-    scene.classList.remove('grabbing');
-};
-scene.addEventListener('pointerup', endDrag);
-scene.addEventListener('pointercancel', endDrag);
+   compose instead of fighting. Shared driver (rAF-coalesced, now with the
+   same release inertia as the other pages); pause it while scrolled away. */
+attachOrbit(scene, stage, { axes: 'x', rx0: 0 });
+pauseOffscreen(scene);
 
 /* ==========================================================================
    Founding-spots line: only ever prints what the server actually counted.
@@ -153,3 +134,7 @@ form.addEventListener('submit', async (e) => {
         submitBtn.disabled = false;
     }
 });
+
+/* Opt-in on-screen FPS meter for on-device checks (?fps=1). Dynamically
+   imported so the cold open stays untouched. */
+if (new URLSearchParams(location.search).has('fps')) import('../flowers/fps.js').then((m) => m.mount());

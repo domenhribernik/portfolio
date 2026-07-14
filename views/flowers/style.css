@@ -69,6 +69,20 @@ body::after {
   animation-play-state: paused;
 }
 
+/* While dragging, freeze the per-flower sway too: the whole scene is already
+   being invalidated by the orbit, and the extra sway churn just fights it. */
+.grabbing .sway {
+  animation-play-state: paused;
+}
+
+/* Scrolled out of view (pauseOffscreen in orbit.js toggles .offstage): stop
+   animating a bouquet nobody is looking at, so it stops stealing frames from
+   the rest of the page. */
+.offstage .autospin,
+.offstage .sway {
+  animation-play-state: paused;
+}
+
 @keyframes turn {
   from { rotate: y 0deg; }
   to { rotate: y 360deg; }
@@ -84,6 +98,26 @@ body::after {
 @keyframes sway {
   from { rotate: z -1.4deg; }
   to { rotate: z 1.4deg; }
+}
+
+/* Lite tier for coarse-pointer devices (phones, tablets). The scene is one
+   deep preserve-3d context of hundreds of intersecting planes, so anything
+   that repaints it every frame is expensive here. Drop the idle sway (the
+   autospin alone carries the motion), the full-screen film grain, and the
+   heavy key-light half of the vignette. The bouquet itself is thinned in JS
+   (fewer petals) via the render tier. */
+@media (pointer: coarse) {
+  .sway {
+    animation: none;
+  }
+
+  body::after {
+    display: none;
+  }
+
+  .scene::before {
+    background: radial-gradient(130% 110% at 50% 50%, transparent 62%, rgba(4, 7, 5, 0.35) 100%);
+  }
 }
 
 /* ==========================================================================

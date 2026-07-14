@@ -6,7 +6,8 @@
    or malformed wilts gracefully. */
 
 import { buildBouquet, FLOWER_TYPES } from '../flowers.js';
-import { clamp, easeOutCubic, normalizeShareOrder } from '../logic.js';
+import { clamp, easeOutCubic, normalizeShareOrder, renderTier } from '../logic.js';
+import { attachOrbit, pauseOffscreen } from '../orbit.js';
 
 const scene = document.getElementById('scene');
 const stage = document.getElementById('stage');
@@ -53,52 +54,10 @@ function fit() {
 }
 addEventListener('resize', fit);
 
-/* ==========================================================================
-   Orbit: horizontal drag only, so vertical swipes keep scrolling the page
-   (the scene allows touch-action: pan-y). A little inertia on release.
-   ========================================================================== */
-
-let ry = 0;
-let vy = 0;
-let dragging = false;
-let lastX = 0;
-
-function applyOrbit() {
-  stage.style.setProperty('--ry', `${ry.toFixed(2)}deg`);
-}
-stage.style.setProperty('--rx', '-10deg');
-
-scene.addEventListener('pointerdown', (e) => {
-  dragging = true;
-  vy = 0;
-  lastX = e.clientX;
-  scene.classList.add('grabbing');
-  scene.setPointerCapture(e.pointerId);
-});
-
-scene.addEventListener('pointermove', (e) => {
-  if (!dragging) return;
-  const dx = e.clientX - lastX;
-  lastX = e.clientX;
-  ry += dx * 0.4;
-  vy = dx * 0.4;
-  applyOrbit();
-});
-
-function release() {
-  if (!dragging) return;
-  dragging = false;
-  scene.classList.remove('grabbing');
-  (function coast() {
-    if (dragging || Math.abs(vy) < 0.05) return;
-    ry += vy;
-    vy *= 0.94;
-    applyOrbit();
-    requestAnimationFrame(coast);
-  })();
-}
-scene.addEventListener('pointerup', release);
-scene.addEventListener('pointercancel', release);
+/* Orbit: horizontal drag only, so vertical swipes keep scrolling the page
+   (the scene allows touch-action: pan-y). Shared driver, rAF-coalesced. */
+attachOrbit(scene, stage, { axes: 'x', rx0: -10 });
+pauseOffscreen(scene);
 
 /* ==========================================================================
    Load the bouquet
@@ -129,7 +88,7 @@ async function init() {
       messageEl.classList.add('reveal', 'reveal-2');
     }
 
-    buildBouquet(bouquetRoot, order);
+    buildBouquet(bouquetRoot, order, { tier: renderTier({ coarse: matchMedia('(pointer: coarse)').matches }) });
     fit();
     bloom();
   } catch {
@@ -137,3 +96,6 @@ async function init() {
   }
 }
 init();
+
+/* Opt-in on-screen FPS meter for on-device checks (?fps=1). */
+if (new URLSearchParams(location.search).has('fps')) import('../fps.js').then((m) => m.mount());

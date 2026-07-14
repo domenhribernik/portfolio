@@ -11,16 +11,24 @@ the contract below.
   the DOM helpers (`node`, `face`, `seg`, `ring`). Keep these two files free of anything
   flower-specific so they stay liftable.
 - `logic.js`: pure math and state, no DOM (petal spec functions for all ten species, cone
-  geometry, sphere point spread, `bouquetSeats` dome arrangement, the rim's `waveEdgePoints`
-  scallop, the stall's order logic `stepCount`/`orderTotal`/`surpriseCounts`, deterministic
-  `jitter`). Tested by `node --test tests/flowers-logic.test.mjs`.
+  geometry, sphere point spread, `domeProfile` + `bouquetSeats` collision-free dome
+  arrangement, `seatPoint`/`stemPath` curved-stem geometry, `renderTier`/`tierPetals` device
+  tiering, `mixHex`, the rim's `waveEdgePoints` scallop, the stall's order logic
+  `stepCount`/`orderTotal`/`surpriseCounts`, deterministic `jitter`). Tested by
+  `node --test tests/flowers-logic.test.mjs`.
 - `flowers.js`: turns logic.js specs into toolkit DOM. Exports one builder per species,
-  the `FLOWER_TYPES` registry the menu renders from, and `buildBouquet(root, order)` where
-  `order` is `[{type, count}]`. All paint lives in style.css classes.
-- `script.js`: page wiring only (the stall menu + steppers + generate, orbit drag, bloom
-  slider, x-ray toggle, share panel, responsive fit).
+  the `FLOWER_TYPES` registry the menu renders from, and `buildBouquet(root, order, opts)`
+  where `order` is `[{type, count}]` and `opts` is `{ greens?, tier? }`. All paint lives in
+  style.css classes.
+- `script.js`: page wiring only (the stall menu + steppers + generate, bloom slider, x-ray
+  toggle, share panel, responsive fit; orbit is delegated to orbit.js).
+- `orbit.js`: the shared drag-to-turn driver (`attachOrbit`) and offscreen pause
+  (`pauseOffscreen`), imported by all three pages (builder, share, bloom) so they stop
+  carrying near-identical copies. rAF-coalesced writes; `axes: 'x'` for the scrolling pages.
+- `fps.js`: opt-in on-screen frame meter (`mount`), dynamically imported only on `?fps=1`,
+  for checking rotation smoothness on a real phone.
 - `style.css`: skins (petal gradients, wrap, ribbon), scene atmosphere, stall menu states,
-  doc mini-demos.
+  doc mini-demos, and the `@media (pointer: coarse)` lite-tier overrides.
 - `share/`: the shared-bouquet page (see "Sharing" below). Reuses `../css3d.css` and
   `../style.css` (skins + atmosphere) plus its own hand-written layout CSS; deliberately
   no Tailwind CDN, so a share link opens fast on phones.
@@ -33,14 +41,37 @@ card per entry with a live 3D preview built by the SAME builder as the bouquet (
 paused and spin on card hover). Generate clears `#bouquet-root`, calls
 `buildBouquet(root, order)`, and replays the bloom.
 
-- `bouquetSeats(n)` (logic.js) returns dome seats center-out; `orderToInstances` round-robins
-  across types so neighbours differ and promotes a `focal` flower to the center seat.
+- `bouquetSeats(n, sizes)` (logic.js) returns collision-free dome seats. n=1..3 stay literal;
+  n>=4 seed on a golden-angle spiral, then a deterministic repulsion relaxation pushes heads
+  apart by their `sizes` (per-instance `HEAD_RADII` at scale 1, passed by `buildBouquet`).
+  Seat 0 is the pinned focal center (no longer "center-out ordered": relaxation binds seat i
+  to instance i, so seats can't be re-sorted by radius). Two heads may sit `PACK_FACTOR` (0.6)
+  of their summed radii apart, so they kiss and interleave rather than reading as gappy; a
+  final one-shot scale-down (`SHRINK_FLOOR` 0.75) guarantees the no-overlap invariant even for
+  12 big heads. Height/tilt/scale come from `domeProfile(r)` (a radius->silhouette table) plus
+  a small golden low-discrepancy upward-only stagger, so co-radius heads never share a plane.
+  `orderToInstances` still round-robins types and promotes a `focal` flower to seat 0.
+  The no-overlap and dome-silhouette invariants are unit-tested against the exported constants,
+  so calibrating the constants can't silently break them.
 - Variants cycle per instance (`i % variants.length`), so three roses come in three colorways.
 - `MAX_STEMS` (12) caps the order; the UI enforces it in the steppers.
-- Tall self-stemmed species (dandelion, lavender) carry `seatAdjust` to sink their seat so the
-  head lines up with the dome. Every other head gets a stem cross drawn INSIDE its tilted
-  seat (in `buildBouquet`), so stems lean with their flower and converge into the wrap;
-  lengths divide by the seat scale to land at wrap level.
+- **Stems curve into a hand-tied bundle.** `stemPath(seat, {segments, seed, footY})` (logic.js)
+  is one quadratic Bezier from a head's base down to a jittered bind point near the axis inside
+  the wrap throat (`STEM_BIND`), sampled into straight chords. It starts along the head's own
+  tilt (so the stem grows cleanly out of the flower) and gathers inward; `seatPoint` projects
+  the seat-local start into the bouquet frame. `buildBouquet`'s `plantStemmed` hangs each chord
+  on the flower's SWAY node (a sibling of the seat, in the seat's azimuth plane), so the stem
+  leans and sways with its flower but is NOT scaled by the seat (stemPath already works in
+  bouquet-frame units, unlike the old scale-divided straight stem). Chords emit a seat-convention
+  `tilt` (positive = leans outward); the builder writes `rx: -tilt`, matching `plant()`. Each
+  chord wears a slice of the stem gradient (`mixHex`) so the chain reads as one stalk; heads run
+  light->dark, spine species (dandelion, lavender, greens) run dark->dark so the joint with their
+  own spine doesn't band. The bind sits below the rim, hidden by the paper. There is no separate
+  decorative throat-stem ring any more; the real stems fill the throat. `footY` starts the curve
+  at a self-stemmed species' spine foot (`stemFoot` in `FLOWER_TYPES`: dandelion 6, lavender 10;
+  greens pass their own).
+- Tall self-stemmed species (dandelion, lavender) also carry `seatAdjust` to sink their seat so
+  the head lines up with the dome.
 - The wrap rim is `scallopClip` in flowers.js over `waveEdgePoints`: one smooth cosine arc
   per facet, with the liner half a phase offset so its crests peek through the outer dips.
   Integer wave counts keep the edge continuous across facet seams.
@@ -132,12 +163,10 @@ normal). Specs in logic.js keep openness positive; flowers.js multiplies by `-1`
 - **Keep dense flower heads split-friendly**: petals in a packed ball (carnation) need
   gentle twist (|rz| <= ~8deg) and a per-petal `lift`/`push` so the planes fan instead of
   all crossing at one shared origin. Every avoided petal-through-petal crossing is a
-  compositor plane-split saved; this is why `bouquetSeats` staggers ring heads UP (never
-  down into the tissue collar). Per-head stems run the FULL seat height so each end lands
-  inside the wrap (a stem stopping short reads as a cut-off floating stick; the cost of
-  crossing the tissue planes was measured and stayed near baseline). The decorative
-  throat stems keep their tops below the rim line (y >= -14 vs rim -18) so they never end
-  against open sky.
+  compositor plane-split saved; this is why `bouquetSeats` staggers heads UP only (never
+  down into the tissue collar) and spreads their heights with a low-discrepancy stagger so
+  neighbours don't share a plane. Stems curve into the throat (`stemPath`) and their bind
+  ends sit below the rim, hidden by the paper.
 - **Flat flowers' cores ride the bloom.** The sunflower and daisy seed cores set `--y`
   through `bloomY(open, closed)` (flowers.js): the core caps the closed bud, then settles
   onto the petal disc as the petals fold flat. A fixed-height core hovers in mid-air at
@@ -146,8 +175,10 @@ normal). Specs in logic.js keep openness positive; flowers.js multiplies by `-1`
   anchored at `50% 0` (apex on the tile's top edge, full-width at the bottom) so the band
   fuses with the petal body and the sawtooth is the silhouette. Anchoring at `50% 100%`
   renders the opposite: a detached flat strip with the notches facing into the petal.
-- **JS-driven camera**: drag sets `--ry`/`--rx` on the stage node; the autospin wrapper sits
-  INSIDE the stage so user orbit and idle spin compose instead of fighting.
+- **JS-driven camera**: `attachOrbit` (orbit.js) sets `--ry`/`--rx` on the stage node; the
+  autospin wrapper sits INSIDE the stage so user orbit and idle spin compose instead of
+  fighting. Writes are coalesced to one per rAF (a 120Hz digitizer fires several moves a
+  frame, and each write invalidates the whole preserve-3d scene).
 - Planes are double-sided by default; fake depth with left/right darkening gradient layers.
   `.c3d-oneside` (backface-visibility) exists for true two-sided skins.
 - Keep total plane count in the low hundreds and avoid box-shadow/filter on per-petal
@@ -163,7 +194,31 @@ normal). Specs in logic.js keep openness positive; flowers.js multiplies by `-1`
    colors ONLY as a variant class (e.g. `rose--blush` defines `--c1/--c2/--c3` in style.css;
    petal classes read them, so a new colorway is 1 CSS line).
 3. Register it in `FLOWER_TYPES` so the stall can sell it; `buildBouquet` seats it via
-   `bouquetSeats` automatically.
+   `bouquetSeats` automatically. Give it a `HEAD_RADII` entry (logic.js) so the pack spaces
+   it by its real footprint; without one it falls back to `DEFAULT_HEAD_R` (30). If it is
+   dense, route its petal count through `tierPetals(tier, count)` in its `build` fn so it
+   thins on phones.
+
+## Performance and the lite tier
+
+The whole bouquet is one `preserve-3d` context of hundreds of intersecting gradient planes,
+and every frame of rotation re-sorts and plane-splits them, so the cost scales with plane
+count and with how often the scene is invalidated. The mitigations, all keyed off the render
+tier:
+
+- `renderTier({ coarse })` returns `'lite'` on coarse-pointer devices (phones, tablets),
+  `'full'` otherwise. Each page computes it once (`matchMedia('(pointer: coarse)')`) and threads
+  it into `buildBouquet({ tier })`; `FLOWER_TYPES` `build` fns take it as a 4th arg.
+- Lite tier: dense species drop to ~2/3 petals (`tierPetals`), stems use 3 chords instead of 4,
+  and CSS under `@media (pointer: coarse)` turns off the per-flower `.sway`, drops the
+  full-screen film grain, and lightens the vignette. `.grabbing .sway` (all devices) also
+  freezes sway during a drag, and `.offstage` (toggled by `pauseOffscreen`) freezes autospin +
+  sway while the scene is scrolled out of view.
+- The stall menu builds its ten preview flowers lazily on coarse pointers (an
+  IntersectionObserver builds each as it nears the viewport) so the mobile page does not do a
+  ~360-plane synchronous dump up front.
+- Reduced motion is a separate axis from the tier: it is handled purely in CSS (existing rules
+  kill autospin/sway) and does NOT flip a fine-pointer device to lite.
 
 ## Verifying
 
@@ -180,3 +235,17 @@ load (or trigger your own generate and wait it out) before pinning `--bloom`; (2
 headline is an overlay SIBLING of `#scene`, so element screenshots of the scene include it.
 Hide `#scene ~ *` and `header` before pixel analysis: the sage copy color classifies as
 stem green.
+
+**Headless renders the FULL tier by default.** `--headless=new` reports `pointer: fine`, so an
+unspoofed page loads the full-fidelity tier. To screenshot or trace the lite (mobile) tier,
+force a coarse pointer:
+`--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2`
+(and the fine spoof for full is `...HoverType=2,...PointerType=4`). Note this corrects an older
+note elsewhere that assumed headless is coarse by default.
+
+**Headless runs the heavy scene at ~1fps**, which starves rAF and IntersectionObserver
+callbacks: drag inertia barely advances, and `pauseOffscreen`/lazy previews look like they do
+not fire. They do; pause the spin (`scene.classList.add('spin-paused')`) to free the main
+thread when verifying those, or trust that they work on real hardware. For frame timing, drive
+`page.emulateCPUThrottling(4)` and parse `DrawFrame` deltas, or open any page with `?fps=1` on a
+real device for the on-screen meter.

@@ -10,7 +10,14 @@ import {
   rosePetals, tulipPetals, daisyPetals, sunflowerPetals, peonyPetals,
   poppyPetals, lilyPetals, carnationPetals, lavenderWhorls, spherePoints,
   coneFaces, bouquetSeats, waveEdgePoints, jitter, MAX_STEMS,
+  HEAD_RADII, DEFAULT_HEAD_R, stemPath, mixHex, tierPetals,
 } from './logic.js';
+
+/* Stem gradient ends (match .stem in style.css). Ordinary heads run light at
+   the flower to dark at the tie; species with their own dark spine run
+   dark-to-dark so the chain does not band where it meets the spine. */
+const STEM_LIGHT = '#6f9457';
+const STEM_DARK = '#35522e';
 
 export { MAX_STEMS };
 
@@ -81,9 +88,9 @@ export function daisy(parent, variant = 'daisy--white', petals = 15) {
   return g;
 }
 
-export function sunflower(parent, variant = 'sunflower--gold') {
+export function sunflower(parent, variant = 'sunflower--gold', outer = 14, inner = 11) {
   const g = node(parent, {}, `flower sunflower ${variant}`);
-  for (const spec of sunflowerPetals()) {
+  for (const spec of sunflowerPetals(outer, inner)) {
     petal(g, spec, 'p-sun', { w: 12, h: 22, tipH: 16, push: 13 });
   }
   sized(face(g, { rx: '90deg', y: bloomY(-1, -6) }, 'sun-core'), 34, 34);
@@ -94,9 +101,9 @@ export function sunflower(parent, variant = 'sunflower--gold') {
   return g;
 }
 
-export function peony(parent, variant = 'peony--pink') {
+export function peony(parent, variant = 'peony--pink', petals = 24) {
   const g = node(parent, {}, `flower peony ${variant}`);
-  for (const spec of peonyPetals(24)) {
+  for (const spec of peonyPetals(petals)) {
     petal(g, spec, 'p-peony', { w: 42, h: 26, tipH: 24 });
   }
   sized(face(g, { rx: '90deg', y: '-4px' }, 'peony-core'), 12, 12);
@@ -137,9 +144,9 @@ export function lily(parent, variant = 'lily--white') {
   return g;
 }
 
-export function carnation(parent, variant = 'carnation--crimson') {
+export function carnation(parent, variant = 'carnation--crimson', petals = 24) {
   const g = node(parent, {}, `flower carnation ${variant}`);
-  for (const spec of carnationPetals(24)) {
+  for (const spec of carnationPetals(petals)) {
     /* push 6 keeps the twisted petal planes off the shared center axis,
        where they would otherwise all intersect (see carnationPetals). */
     petal(g, spec, 'p-carn', { w: 26, h: 16, tipH: 14, push: 6 });
@@ -256,15 +263,15 @@ function stemCross(parent, h, top) {
 
 export const FLOWER_TYPES = [
   { key: 'rose', label: 'Rose', latin: 'Rosa', focal: true,
-    build: (p, v, seed = 0) => rose(p, v, 15 + (seed % 3) * 2),
+    build: (p, v, seed = 0, tier = 'full') => rose(p, v, tierPetals(tier, 15 + (seed % 3) * 2)),
     variants: ['rose--blush', 'rose--cream', 'rose--coral'],
     planes: 36, preview: { s: 0.62, y: 8 } },
   { key: 'peony', label: 'Peony', latin: 'Paeonia', focal: true,
-    build: (p, v) => peony(p, v),
+    build: (p, v, seed = 0, tier = 'full') => peony(p, v, tierPetals(tier, 24)),
     variants: ['peony--pink', 'peony--ivory'],
     planes: 49, preview: { s: 0.6, y: 8 } },
   { key: 'sunflower', label: 'Sunflower', latin: 'Helianthus', focal: true,
-    build: (p, v) => sunflower(p, v),
+    build: (p, v, seed = 0, tier = 'full') => sunflower(p, v, tierPetals(tier, 14), tierPetals(tier, 11)),
     variants: ['sunflower--gold', 'sunflower--rust'],
     planes: 60, preview: { s: 0.62, y: 8 } },
   { key: 'lily', label: 'Lily', latin: 'Lilium', focal: true,
@@ -280,22 +287,22 @@ export const FLOWER_TYPES = [
     variants: ['tulip--plum', 'tulip--butter'],
     planes: 13, preview: { s: 0.72, y: 12 } },
   { key: 'daisy', label: 'Daisy', latin: 'Bellis',
-    build: (p, v, seed = 0) => daisy(p, v, 13 + (seed % 2) * 2),
+    build: (p, v, seed = 0, tier = 'full') => daisy(p, v, tierPetals(tier, 13 + (seed % 2) * 2, 9)),
     variants: ['daisy--white', 'daisy--lavender'],
     planes: 34, preview: { s: 0.78, y: 8 } },
   { key: 'carnation', label: 'Carnation', latin: 'Dianthus',
-    build: (p, v) => carnation(p, v),
+    build: (p, v, seed = 0, tier = 'full') => carnation(p, v, tierPetals(tier, 24)),
     variants: ['carnation--crimson', 'carnation--snow'],
     planes: 48, preview: { s: 0.68, y: 8 } },
   { key: 'dandelion', label: 'Dandelion', latin: 'Taraxacum',
     build: (p, v, seed = 0) => dandelion(p, v, seed),
     variants: ['dandelion--moon'],
-    planes: 45, seatAdjust: { y: 44, r: 10, tilt: 4, s: -0.2 },
+    planes: 45, seatAdjust: { y: 44, r: 10, tilt: 4, s: -0.2 }, stemFoot: 6,
     preview: { s: 0.62, y: 42 } },
   { key: 'lavender', label: 'Lavender', latin: 'Lavandula',
     build: (p, v, seed = 0) => lavender(p, v, seed),
     variants: ['lavender--violet'],
-    planes: 31, seatAdjust: { y: 44, r: 10, tilt: 4, s: -0.15 },
+    planes: 31, seatAdjust: { y: 44, r: 10, tilt: 4, s: -0.15 }, stemFoot: 10,
     preview: { s: 0.62, y: 44 } },
 ];
 
@@ -391,18 +398,6 @@ function tissue(parent) {
   }, 11);
 }
 
-/* Filler stems inside the throat, visible only when peering down into
-   the wrap. Tops stay below the rim line (y >= -14 vs rim -18) so the
-   paper always hides them from the side: a decorative stem poking into
-   open air ends at nothing and reads as a snipped stalk. The real head
-   stems carry the visible run from each flower down into the wrap. */
-function stems(parent, count = 7) {
-  ring(count, (i, a) => {
-    const g = node(parent, { ry: `${a}deg`, rz: `${jitter(i, 5)}deg` });
-    sized(face(g, { oz: `${8 + jitter(i, 9, 3)}px`, y: '18px' }, 'stem'), 3, 64);
-  }, 23);
-}
-
 function groundShadow(parent) {
   sized(face(parent, { rx: '90deg', y: `${CONE.height - 14}px` }, 'ground-shadow'), 270, 270);
 }
@@ -432,7 +427,27 @@ function plant(parent, build, { a, r, y, tilt, s = 1, seed = 0 }) {
   sway.style.animationDuration = `${6.5 + jitter(seed, 1.8)}s`;
   sway.style.animationDelay = `${jitter(seed, 2, 9)}s`;
   const seat = node(sway, { z: `${r}px`, y: `${y}px`, rx: `${-tilt}deg`, s });
-  return build(seat);
+  return { sway, flower: build(seat) };
+}
+
+/* Plant a flower and hang its curved stem beside it. The stem chords are
+   drawn on the SWAY node (siblings of the seat, in the seat's azimuth plane),
+   so they lean with the flower and sway with it, but are not scaled by the
+   head's seat scale (stemPath already works in bouquet-frame units). Each
+   chord is a crossed pair of thin faces sized to the chord, wearing a slice
+   of the stem gradient so the chain reads as one continuous stalk. */
+function plantStemmed(parent, build, seat, opts = {}) {
+  const { footY = 0, tier = 'full', cTop = STEM_LIGHT } = opts;
+  const { sway, flower } = plant(parent, build, seat);
+  const segments = tier === 'lite' ? 3 : 4;
+  for (const ch of stemPath(seat, { segments, seed: seat.seed ?? 0, footY })) {
+    const g = node(sway, { z: `${ch.z.toFixed(2)}px`, y: `${ch.y.toFixed(2)}px`, rx: `${(-ch.tilt).toFixed(2)}deg` }, 'stem-chain');
+    const bg = `linear-gradient(to top, ${mixHex(cTop, STEM_DARK, ch.t1)}, ${mixHex(cTop, STEM_DARK, ch.t0)})`;
+    for (const ry of ['0deg', '90deg']) {
+      sized(face(g, { ry }, 'stem'), 2.5, ch.len).style.background = bg;
+    }
+  }
+  return flower;
 }
 
 /* Turn an order ([{type, count}]) into one flower instance per stem,
@@ -472,7 +487,7 @@ export function countPlanes(order) {
 }
 
 export function buildBouquet(root, order = DEFAULT_ORDER, opts = {}) {
-  const { greens = true } = opts;
+  const { greens = true, tier = 'full' } = opts;
   const bq = node(root, { y: '-30px' }, 'bq');
 
   const instances = orderToInstances(order);
@@ -480,10 +495,12 @@ export function buildBouquet(root, order = DEFAULT_ORDER, opts = {}) {
   groundShadow(bq);
   fallenPetals(bq, instances.map((inst) => inst.variant));
   wrap(bq);
-  stems(bq, Math.max(5, Math.min(9, instances.length + 2)));
   tissue(bq);
 
-  const seats = bouquetSeats(Math.max(1, instances.length));
+  const seats = bouquetSeats(
+    Math.max(1, instances.length),
+    instances.map((inst) => HEAD_RADII[inst.def.key] ?? DEFAULT_HEAD_R),
+  );
   instances.forEach((inst, i) => {
     const seat = { ...seats[i], seed: i + 1 };
     const adj = inst.def.seatAdjust;
@@ -493,19 +510,15 @@ export function buildBouquet(root, order = DEFAULT_ORDER, opts = {}) {
       seat.tilt += adj.tilt ?? 0;
       seat.s += adj.s ?? 0;
     }
-    plant(bq, (p) => {
-      /* Drawn inside the tilted seat, the stem leans with its flower and
-         runs down into the bunch; length divides by the seat scale so it
-         reads the same regardless of head size. It runs the FULL seat
-         height so the end lands below the wrap rim, inside the cone:
-         a stem that stops short reads as a cut-off floating stick (the
-         plane-splitting cost of crossing the tissue measured fine).
-         Self-stemmed species (seatAdjust) bring their own. */
-      if (!adj) {
-        stemCross(p, -seat.y / seat.s, -2);
-      }
-      return inst.def.build(p, inst.variant, i);
-    }, seat);
+    /* Every head gets a curved stem that ties into the central bundle.
+       Self-stemmed species (dandelion, lavender) carry their own dark spine
+       down to `stemFoot`, where the chain picks up dark-to-dark. */
+    const spine = inst.def.stemFoot != null;
+    plantStemmed(bq, (p) => inst.def.build(p, inst.variant, i, tier), seat, {
+      footY: inst.def.stemFoot ?? 0,
+      cTop: spine ? STEM_DARK : STEM_LIGHT,
+      tier,
+    });
   });
 
   if (greens && instances.length) {
@@ -513,14 +526,16 @@ export function buildBouquet(root, order = DEFAULT_ORDER, opts = {}) {
     const sprigs = Math.min(3, Math.max(1, Math.round(n / 3)));
     const eucas = Math.min(3, Math.max(1, Math.round(n / 4)));
     const leaves = Math.min(3, Math.max(1, Math.round(n / 4)));
+    /* Greens carry their own dark spine down to a foot, then the chain ties
+       them into the same central bundle as the flowers. */
     ring(sprigs, (i, a) => {
-      plant(bq, (p) => sprig(p, i * 4 + 1), { a: a + jitter(i, 14), r: 68, y: -40, tilt: 28, s: 1, seed: 30 + i });
+      plantStemmed(bq, (p) => sprig(p, i * 4 + 1), { a: a + jitter(i, 14), r: 68, y: -40, tilt: 28, s: 1, seed: 30 + i }, { footY: 60, cTop: STEM_DARK, tier });
     }, 34);
     ring(eucas, (i, a) => {
-      plant(bq, (p) => greenery(p, i * 4 + 2), { a: a + jitter(i, 16, 3), r: 66, y: -38, tilt: 34, s: 1, seed: 40 + i });
+      plantStemmed(bq, (p) => greenery(p, i * 4 + 2), { a: a + jitter(i, 16, 3), r: 66, y: -38, tilt: 34, s: 1, seed: 40 + i }, { footY: 66, cTop: STEM_DARK, tier });
     }, 92);
     ring(leaves, (i, a) => {
-      plant(bq, (p) => bigLeaf(p, { azimuth: jitter(i, 14, 5), open: 52 + jitter(i, 6, 7), twist: jitter(i, 10, 9) }), { a: a + jitter(i, 18, 5), r: 64, y: -48, tilt: 30, s: 1.1, seed: 50 + i });
+      plantStemmed(bq, (p) => bigLeaf(p, { azimuth: jitter(i, 14, 5), open: 52 + jitter(i, 6, 7), twist: jitter(i, 10, 9) }), { a: a + jitter(i, 18, 5), r: 64, y: -48, tilt: 30, s: 1.1, seed: 50 + i }, { footY: 44, cTop: STEM_DARK, tier });
     }, 152);
   }
 

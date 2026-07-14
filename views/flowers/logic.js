@@ -211,11 +211,113 @@ export function spherePoints(n, radius) {
 
 /* Seats for n flower heads arranged as a dome: azimuth around the wrap,
    radius from the axis, height (negative = up), outward tilt, scale.
-   Ordered center-out so callers can put focal flowers first. n caps at 12,
-   which is what the wrap visually holds. */
+   Seat 0 is the pinned focal center; the rest are seeded on a golden-angle
+   spiral and relaxed apart by their head sizes. n caps at 12, which is what
+   the wrap visually holds. */
 export const MAX_STEMS = 12;
 
-export function bouquetSeats(count) {
+/* The dome silhouette as a function of radius from the axis. A head's
+   height, outward tilt, and scale are read off this profile, so heads at
+   the same radius share a look and the bunch always reads as a dome (tall
+   upright center, lower flatter smaller heads toward the rim). SEAT_RMAX is
+   the widest a head sits; the wrap rim is at radius ~96, so 84 keeps heads
+   inside the paper. Tune these anchors, not the code, to reshape the dome. */
+export const SEAT_RMAX = 84;
+export const DOME_ANCHORS = [
+  { r: 0, y: -100, tilt: 0, s: 1.4 },
+  { r: 54, y: -84, tilt: 22, s: 1.22 },
+  { r: 66, y: -80, tilt: 27, s: 1.11 },
+  { r: 76, y: -60, tilt: 38, s: 0.98 },
+  { r: SEAT_RMAX, y: -54, tilt: 40, s: 0.94 },
+];
+
+/* Interpolate the dome profile at radius r (clamped into the table's range).
+   Piecewise-linear between anchors: cheap, monotone, and easy to eyeball. */
+export function domeProfile(r) {
+  const rc = clamp(r, DOME_ANCHORS[0].r, DOME_ANCHORS.at(-1).r);
+  for (let i = 1; i < DOME_ANCHORS.length; i++) {
+    const b = DOME_ANCHORS[i];
+    if (rc <= b.r) {
+      const a = DOME_ANCHORS[i - 1];
+      const t = b.r === a.r ? 0 : (rc - a.r) / (b.r - a.r);
+      return {
+        y: lerp(a.y, b.y, t),
+        tilt: lerp(a.tilt, b.tilt, t),
+        s: lerp(a.s, b.s, t),
+      };
+    }
+  }
+  const last = DOME_ANCHORS.at(-1);
+  return { y: last.y, tilt: last.tilt, s: last.s };
+}
+
+/* Two heads may sit this close, as a fraction of their summed visual radii,
+   before they read as overlapping. Below 1 the heads kiss and interleave
+   (a lush hand-tied look); 1 would force fully disjoint discs, which 12 big
+   heads cannot achieve inside the wrap. */
+export const PACK_FACTOR = 0.6;
+/* The most the pack may shrink a head to resolve a crush. When even the
+   floor cannot separate everything (an impossible order), a little overlap
+   is accepted rather than rendering invisibly tiny flowers. */
+export const SHRINK_FLOOR = 0.75;
+/* Fallback head radius (at scale 1) for a species with no HEAD_RADII entry. */
+export const DEFAULT_HEAD_R = 30;
+
+/* Nominal plan-view head radius per species at scale 1, in the same units as
+   seat radius, so the pack can space heads by their real footprint. Kept here
+   (not in FLOWER_TYPES) so the placement math stays pure and testable. Tune
+   these against screenshots: too big and the bunch reads gappy, too small and
+   heads merge. */
+export const HEAD_RADII = {
+  rose: 33,
+  peony: 33,
+  sunflower: 35,
+  lily: 34,
+  poppy: 30,
+  tulip: 18,
+  daisy: 24,
+  carnation: 26,
+  dandelion: 24,
+  lavender: 12,
+};
+
+const RELAX_ITERS = 32;
+const RELAX_DAMP = 0.6;
+
+/* Read the dome profile at a seat's radius and apply its stored upward-only
+   stagger. Called at seeding and after every relaxation move, so a seat's
+   height, tilt, and scale always match wherever it has been pushed to. */
+function seatToDome(seat) {
+  const p = domeProfile(seat.r);
+  seat.y = p.y - seat.stag;
+  seat.tilt = p.tilt;
+  seat.s = p.s;
+}
+
+/* Seed n seats on a golden-angle spiral: seat 0 pinned at the axis, the
+   rest fanned to SEAT_RMAX with sqrt spacing (even area density, not
+   bunched at the rim). Each seat carries a deterministic upward-only
+   stagger so no two heads share a plane. */
+function seedSpiral(n) {
+  const center = domeProfile(0);
+  const seats = [{ a: jitter(0, 20), r: 0, stag: 0, y: center.y, tilt: center.tilt, s: center.s }];
+  for (let i = 1; i < n; i++) {
+    const seat = {
+      a: (i * GOLDEN_ANGLE + jitter(i, 10, 17)) % 360,
+      r: SEAT_RMAX * Math.sqrt(i / (n - 1)),
+      // Upward-only lift in [0, 10) from the golden-ratio low-discrepancy
+      // sequence (conjugate 0.618, offset 0.13): its values stay maximally
+      // spread, so heads at neighbouring radii never settle at the same
+      // height, which would pile their petals into one compositor plane.
+      stag: ((i * 0.6180339887 + 0.13) % 1) * 10,
+    };
+    seatToDome(seat);
+    seats.push(seat);
+  }
+  return seats;
+}
+
+export function bouquetSeats(count, sizes = []) {
   const n = clamp(count, 1, MAX_STEMS);
   if (n === 1) return [{ a: 0, r: 0, y: -100, tilt: 0, s: 1.42 }];
   if (n === 2) {
@@ -224,41 +326,190 @@ export function bouquetSeats(count) {
   if (n === 3) {
     return [0, 120, 240].map((a, i) => ({ a: a + jitter(i, 10), r: 44, y: -86, tilt: 20, s: 1.28 }));
   }
-  const seats = [{ a: jitter(0, 20), r: 0, y: -100, tilt: 0, s: 1.4 }];
-  const ring1 = Math.min(6, n - 1);
-  const ring2 = n - 1 - ring1;
-  /* The fuller a ring, the wider it sits and the smaller its heads, and
-     alternate seats RISE a little; neighbours interleave instead of
-     slicing through each other in one shared plane. The stagger goes up,
-     never down: dropped heads sink into the tissue collar and every
-     petal-through-tissue crossing costs the compositor a plane split. */
-  const r1 = 54 + ring1 * 2;
-  const s1 = 1.26 - ring1 * 0.025;
-  const step1 = 360 / ring1;
-  for (let i = 0; i < ring1; i++) {
-    const lift = i % 2 ? 1 : 0;
-    seats.push({
-      a: i * step1 + jitter(i, step1 * 0.12),
-      r: r1,
-      y: -78 - lift * 9,
-      tilt: 26 + lift * 3,
-      s: s1,
-    });
-  }
-  const r2 = 72 + ring2 * 0.8;
-  const s2 = 1.04 - ring2 * 0.012;
-  const step2 = ring2 > 0 ? 360 / ring2 : 0;
-  for (let i = 0; i < ring2; i++) {
-    const lift = i % 2 ? 1 : 0;
-    seats.push({
-      a: step2 / 2 + i * step2 + jitter(i, step2 * 0.1, 3),
-      r: r2,
-      y: -58 - lift * 8,
-      tilt: 37 + lift * 3,
-      s: s2,
-    });
-  }
+  const seats = seedSpiral(n);
+  relaxSeats(seats, sizes);
+  for (const seat of seats) delete seat.stag;
   return seats;
+}
+
+/* The plan-view (looking down the axis) position of a seat. */
+function planXZ(seat) {
+  const rad = (seat.a * Math.PI) / 180;
+  return { x: seat.r * Math.cos(rad), z: seat.r * Math.sin(rad) };
+}
+
+/* The center-to-center distance two heads must keep, so they overlap by at
+   most 1 - PACK_FACTOR of their summed visual radii. */
+function requiredGap(seats, sizes, i, j) {
+  const ri = (sizes[i] ?? DEFAULT_HEAD_R) * seats[i].s;
+  const rj = (sizes[j] ?? DEFAULT_HEAD_R) * seats[j].s;
+  return (ri + rj) * PACK_FACTOR;
+}
+
+/* Push overlapping heads apart in the plan view (a damped Jacobi relaxation),
+   then a single provable shrink so the guarantee holds exactly. Seat 0 (the
+   focal center) is immovable, so its neighbours take the full push away from
+   it. Each pass re-derives every moved seat's height/tilt/scale from the dome
+   profile at its new radius, keeping the silhouette intact. Deterministic:
+   coincident heads separate along a jittered-but-fixed angle. */
+function relaxSeats(seats, sizes) {
+  const n = seats.length;
+  for (let iter = 0; iter < RELAX_ITERS; iter++) {
+    const pos = seats.map(planXZ);
+    const push = seats.map(() => ({ x: 0, z: 0 }));
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const dx = pos[j].x - pos[i].x;
+        const dz = pos[j].z - pos[i].z;
+        let dist = Math.hypot(dx, dz);
+        const required = requiredGap(seats, sizes, i, j);
+        if (dist >= required) continue;
+        let ux;
+        let uz;
+        if (dist < 1e-6) {
+          const ang = (jitter(i * 31 + j, 180, 7) * Math.PI) / 180;
+          ux = Math.cos(ang);
+          uz = Math.sin(ang);
+        } else {
+          ux = dx / dist;
+          uz = dz / dist;
+        }
+        if (i === 0) {
+          // The center never moves; j alone takes the whole correction.
+          push[j].x += ux * (required - dist) * RELAX_DAMP;
+          push[j].z += uz * (required - dist) * RELAX_DAMP;
+        } else {
+          const half = (required - dist) * 0.5 * RELAX_DAMP;
+          push[i].x -= ux * half;
+          push[i].z -= uz * half;
+          push[j].x += ux * half;
+          push[j].z += uz * half;
+        }
+      }
+    }
+    for (let i = 1; i < n; i++) {
+      const nx = pos[i].x + push[i].x;
+      const nz = pos[i].z + push[i].z;
+      seats[i].r = clamp(Math.hypot(nx, nz), 0, SEAT_RMAX);
+      seats[i].a = (Math.atan2(nz, nx) * 180) / Math.PI;
+      seatToDome(seats[i]);
+    }
+  }
+  // One-shot shrink: required is linear in scale, so scaling every head by
+  // the tightest pair's ratio makes that pair meet its gap exactly and every
+  // looser pair clear it. Never grow (clamp <= 1), never vanish (>= floor).
+  let m = Infinity;
+  const pos = seats.map(planXZ);
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const dist = Math.hypot(pos[i].x - pos[j].x, pos[i].z - pos[j].z);
+      const required = requiredGap(seats, sizes, i, j);
+      if (required > 0) m = Math.min(m, dist / required);
+    }
+  }
+  m = clamp(m, SHRINK_FLOOR, 1);
+  if (m < 1) for (const seat of seats) seat.s *= m;
+}
+
+/* Where a point on a seat's local axis lands in the bouquet frame. A seat is
+   placed by translate(z=r, y=y) then rotateX(-tilt) then scale(s), so a point
+   localY down the local stem (y grows down) maps to y + s*localY*cos(tilt)
+   (down) and r - s*localY*sin(tilt) (inward). The stem path is planar in this
+   (z, y) slice because it stays on the seat's azimuth. */
+export function seatPoint(seat, localY) {
+  const t = (seat.tilt * Math.PI) / 180;
+  const s = seat.s ?? 1;
+  return {
+    z: seat.r - s * localY * Math.sin(t),
+    y: seat.y + s * localY * Math.cos(t),
+  };
+}
+
+/* Where each stem ties off near the axis, just inside the wrap throat: a
+   small jittered radius (rMin..rMax off-axis, either side) and depth
+   (yMin..yMax below the rim), so the ends gather like a hand-tied bundle and
+   stay hidden under the paper. minDrop keeps the tie at least this far below a
+   stem's foot, for greens whose foot already sits near the rim. */
+export const STEM_BIND = { rMin: 4, rMax: 14, yMin: 2, yMax: 14, minDrop: 6 };
+/* Each chord is drawn a hair longer than its span so neighbouring segments
+   overlap at the joints instead of leaving a gap. */
+export const OVERLAP_EPS = 1.2;
+
+/* A curved stem from a flower head down to its tie point, as a chain of
+   straight chords in the seat's (z, y) plane (z = radius from the axis, y
+   down). One quadratic Bezier: it starts along the head's own tilt (so the
+   stem grows cleanly out of the flower) and gathers in to the bind near the
+   axis. footY starts the stem lower than the head origin, for species that
+   carry their own spine down to that point (dandelion, lavender, greens).
+   Returns one {y, z, tilt, len, t0, t1} per chord (tilt in seat convention,
+   t0/t1 the chord's span along the stem for the gradient). */
+export function stemPath(seat, opts = {}) {
+  const { segments = 4, seed = 0, footY = 0 } = opts;
+  const p0 = seatPoint(seat, footY);
+  const bindMag = STEM_BIND.rMin + Math.abs(jitter(seed, STEM_BIND.rMax - STEM_BIND.rMin, 31));
+  const bindZ = (jitter(seed, 1, 29) < 0 ? -1 : 1) * bindMag;
+  let bindY = STEM_BIND.yMin + Math.abs(jitter(seed, STEM_BIND.yMax - STEM_BIND.yMin, 37));
+  bindY = Math.max(bindY, p0.y + STEM_BIND.minDrop);
+  const p2 = { z: bindZ, y: bindY };
+
+  // Control point along the head's tilt direction (down and inward), pulled
+  // no further down than the bind so the curve's height stays monotone. This
+  // makes the start tangent exactly the head tilt for any positive reach.
+  const t = (seat.tilt * Math.PI) / 180;
+  const dist = Math.hypot(p2.z - p0.z, p2.y - p0.y);
+  const reach = Math.min(0.5 * dist, (p2.y - p0.y) / Math.max(Math.cos(t), 0.2));
+  const p1 = { z: p0.z - reach * Math.sin(t), y: p0.y + reach * Math.cos(t) };
+
+  const at = (tt) => {
+    const mt = 1 - tt;
+    return {
+      z: mt * mt * p0.z + 2 * mt * tt * p1.z + tt * tt * p2.z,
+      y: mt * mt * p0.y + 2 * mt * tt * p1.y + tt * tt * p2.y,
+    };
+  };
+
+  const chords = [];
+  let prev = at(0);
+  for (let i = 1; i <= segments; i++) {
+    const cur = at(i / segments);
+    const dz = cur.z - prev.z;
+    const dy = cur.y - prev.y;
+    chords.push({
+      z: (prev.z + cur.z) / 2,
+      y: (prev.y + cur.y) / 2,
+      tilt: (Math.atan2(-dz, dy) * 180) / Math.PI,
+      len: Math.hypot(dz, dy) + OVERLAP_EPS,
+      t0: (i - 1) / segments,
+      t1: i / segments,
+    });
+    prev = cur;
+  }
+  return chords;
+}
+
+/* The render tier for a device. Coarse-pointer devices (phones, tablets) get
+   the lighter 'lite' tier: fewer petals and stem segments, no idle sway. Note
+   reduced motion is handled separately in CSS, so it does not flip the tier
+   (a fine-pointer laptop with reduced motion still renders full fidelity). */
+export function renderTier({ coarse = false } = {}) {
+  return coarse ? 'lite' : 'full';
+}
+
+/* Petal count for the current tier: full keeps the authored count; lite drops
+   to two thirds (fewer planes and fewer petal-petal intersections, the
+   quadratic compositor cost), never below a floor so a head still reads full. */
+export function tierPetals(tier, count, min = 8) {
+  return tier === 'lite' ? Math.max(min, Math.round((count * 2) / 3)) : count;
+}
+
+/* Blend two #rrggbb colours channel by channel; used so a chained stem reads
+   as one smooth gradient instead of banding at each segment joint. */
+export function mixHex(a, b, t) {
+  const chan = (hex, i) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  const out = [0, 1, 2]
+    .map((i) => Math.round(lerp(chan(a, i), chan(b, i), t)).toString(16).padStart(2, '0'))
+    .join('');
+  return `#${out}`;
 }
 
 /* ==========================================================================

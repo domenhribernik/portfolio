@@ -4,7 +4,8 @@
    controls (orbit drag, bloom slider, x-ray toggle, spin toggle). */
 
 import { buildBouquet, countPlanes, FLOWER_TYPES, DEFAULT_ORDER, MAX_STEMS } from './flowers.js';
-import { clamp, easeOutCubic, hashId, orderTotal, stepCount, surpriseCounts } from './logic.js';
+import { clamp, easeOutCubic, hashId, orderTotal, stepCount, surpriseCounts, renderTier } from './logic.js';
+import { attachOrbit, pauseOffscreen } from './orbit.js';
 
 const scene = document.getElementById('scene');
 const stage = document.getElementById('stage');
@@ -24,6 +25,9 @@ const shareMessage = document.getElementById('share-message');
 const shareCopy = document.getElementById('share-copy');
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* Coarse-pointer devices render the lite tier (fewer petals and stem
+   segments, no idle sway); computed once, the pointer type does not change. */
+const tier = renderTier({ coarse: matchMedia('(pointer: coarse)').matches });
 
 /* ==========================================================================
    The order: how many of each species, seeded from the default bouquet.
@@ -83,7 +87,7 @@ let stagedOrder = [];
 function generate({ scroll = false, duration = 1900 } = {}) {
   bouquetRoot.innerHTML = '';
   stagedOrder = currentOrder();
-  const stats = buildBouquet(bouquetRoot, stagedOrder);
+  const stats = buildBouquet(bouquetRoot, stagedOrder, { tier });
   updatePlaneCounts(stats.planes);
   regrow(duration);
   if (scroll) scene.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
@@ -99,6 +103,23 @@ const STEP_BTN =
   'step-btn w-8 h-8 rounded-full border border-hairline text-sage font-mono text-base leading-none ' +
   'hover:text-cream hover:border-cream/40 disabled:opacity-30 disabled:cursor-not-allowed ' +
   'disabled:hover:text-sage disabled:hover:border-hairline transition-colors';
+
+/* On coarse-pointer devices, defer building each card's live preview flower
+   until the card nears the viewport: building all ten up front is a big
+   synchronous plane dump on the very device that can least afford it. Fine
+   pointers (and browsers without IntersectionObserver) build eagerly, as
+   before. */
+const lazyPreviews = tier === 'lite' && 'IntersectionObserver' in window;
+const buildPreview = new Map();
+const previewObserver = lazyPreviews
+  ? new IntersectionObserver((entries, obs) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        buildPreview.get(e.target)?.();
+        obs.unobserve(e.target);
+      }
+    }, { rootMargin: '200px' })
+  : null;
 
 for (const def of FLOWER_TYPES) {
   const card = document.createElement('article');
@@ -126,7 +147,13 @@ for (const def of FLOWER_TYPES) {
         <button type="button" class="${STEP_BTN}" data-step="1" aria-label="One ${def.label.toLowerCase()} more">+</button>
       </div>
     </div>`;
-  def.build(card.querySelector('.preview-seat'), def.variants[0], 0);
+  const renderPreview = () => def.build(card.querySelector('.preview-seat'), def.variants[0], 0, tier);
+  if (previewObserver) {
+    buildPreview.set(card, renderPreview);
+    previewObserver.observe(card);
+  } else {
+    renderPreview();
+  }
   card.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-step]');
     if (!btn) return;
@@ -279,49 +306,12 @@ function fit() {
 fit();
 addEventListener('resize', fit);
 
-/* Orbit: drag to turn the stage, with a little inertia on release. */
-let ry = 0;
-let rx = -10;
-let vy = 0;
-let dragging = false;
-let last = null;
+/* Orbit: drag to turn the stage (both axes), with a little inertia. The
+   driver is shared with the share and bloom pages; rAF-coalesced so a fast
+   digitizer cannot invalidate the scene several times a frame. */
+attachOrbit(scene, stage, { axes: 'both', rx0: -10 });
+pauseOffscreen(scene);
 
-function applyOrbit() {
-  stage.style.setProperty('--ry', `${ry.toFixed(2)}deg`);
-  stage.style.setProperty('--rx', `${rx.toFixed(2)}deg`);
-}
-applyOrbit();
-
-scene.addEventListener('pointerdown', (e) => {
-  dragging = true;
-  vy = 0;
-  last = { x: e.clientX, y: e.clientY };
-  scene.classList.add('grabbing');
-  scene.setPointerCapture(e.pointerId);
-});
-
-scene.addEventListener('pointermove', (e) => {
-  if (!dragging) return;
-  const dx = e.clientX - last.x;
-  const dy = e.clientY - last.y;
-  last = { x: e.clientX, y: e.clientY };
-  ry += dx * 0.4;
-  rx = clamp(rx - dy * 0.25, -42, 14);
-  vy = dx * 0.4;
-  applyOrbit();
-});
-
-function release() {
-  if (!dragging) return;
-  dragging = false;
-  scene.classList.remove('grabbing');
-  (function coast() {
-    if (dragging || Math.abs(vy) < 0.05) return;
-    ry += vy;
-    vy *= 0.94;
-    applyOrbit();
-    requestAnimationFrame(coast);
-  })();
-}
-scene.addEventListener('pointerup', release);
-scene.addEventListener('pointercancel', release);
+/* Opt-in on-screen FPS meter for on-device checks (?fps=1). Dynamically
+   imported, so it costs nothing unless asked for. */
+if (new URLSearchParams(location.search).has('fps')) import('./fps.js').then((m) => m.mount());

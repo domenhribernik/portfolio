@@ -17,7 +17,21 @@ import {
   carnationPetals,
   lavenderWhorls,
   spherePoints,
+  domeProfile,
+  DOME_ANCHORS,
+  SEAT_RMAX,
+  PACK_FACTOR,
+  SHRINK_FLOOR,
+  HEAD_RADII,
+  DEFAULT_HEAD_R,
   bouquetSeats,
+  seatPoint,
+  stemPath,
+  STEM_BIND,
+  OVERLAP_EPS,
+  mixHex,
+  renderTier,
+  tierPetals,
   coneFaces,
   waveEdgePoints,
   stepCount,
@@ -182,43 +196,350 @@ test('spherePoints spreads n points on the sphere surface', () => {
   assert.deepEqual(pts, spherePoints(n, radius), 'must be deterministic');
 });
 
-test('bouquetSeats spreads, shrinks and staggers a crowded ring', () => {
-  // A fuller ring must push heads further out and make them smaller,
-  // so neighbours stop slicing through each other.
-  const sparse = bouquetSeats(4);
-  const crowded = bouquetSeats(7);
-  assert.ok(crowded[1].r > sparse[1].r, 'crowded ring must sit wider');
-  assert.ok(crowded[1].s < sparse[1].s, 'crowded ring heads must shrink');
-  // Adjacent heads in a ring must not sit at the same height: the stagger
-  // interleaves them vertically instead of letting petals share a plane.
-  for (let i = 2; i <= 6; i++) {
-    assert.notEqual(crowded[i].y, crowded[i - 1].y, `no stagger between ring seats ${i - 1} and ${i}`);
+/* Plan-view (looking straight down the axis) position of a seat. */
+function planXZ(seat) {
+  const rad = (seat.a * Math.PI) / 180;
+  return { x: seat.r * Math.cos(rad), z: seat.r * Math.sin(rad) };
+}
+
+/* The tightest pair's separation as a fraction of what the pack requires.
+   >= 1 means no pair is closer than PACK_FACTOR * summed visual radii. */
+function minGapRatio(seats, sizes) {
+  let worst = Infinity;
+  for (let i = 0; i < seats.length; i++) {
+    for (let j = i + 1; j < seats.length; j++) {
+      const a = planXZ(seats[i]);
+      const b = planXZ(seats[j]);
+      const dist = Math.hypot(a.x - b.x, a.z - b.z);
+      const required = (sizes[i] * seats[i].s + sizes[j] * seats[j].s) * PACK_FACTOR;
+      if (required > 0) worst = Math.min(worst, dist / required);
+    }
   }
-  // The outer ring staggers too.
-  const full = bouquetSeats(12);
-  const outer = full.slice(8);
-  for (let i = 1; i < outer.length; i++) {
-    assert.notEqual(outer[i].y, outer[i - 1].y, `no stagger in outer ring at ${i}`);
+  return worst;
+}
+
+test('domeProfile pins the focal center of the dome', () => {
+  const c = domeProfile(0);
+  assert.equal(c.y, -100, 'center head sits highest');
+  assert.equal(c.tilt, 0, 'center head stands upright');
+  assert.equal(c.s, 1.4, 'center head is the largest');
+});
+
+test('domeProfile flattens and shrinks toward the rim', () => {
+  let prevY = -Infinity;
+  let prevTilt = -Infinity;
+  let prevS = Infinity;
+  for (let r = 0; r <= SEAT_RMAX; r += 4) {
+    const p = domeProfile(r);
+    assert.ok(p.y >= prevY - 1e-9, `heads must not rise going outward at r=${r}`);
+    assert.ok(p.tilt >= prevTilt - 1e-9, `tilt must not decrease going outward at r=${r}`);
+    assert.ok(p.s <= prevS + 1e-9, `heads must not grow going outward at r=${r}`);
+    assert.ok(p.tilt >= 0 && p.tilt <= 40, `tilt out of band at r=${r}`);
+    assert.ok(p.s >= 0.9 && p.s <= 1.4, `scale out of band at r=${r}`);
+    assert.ok(p.y < 0, `every head sits above the wrap at r=${r}`);
+    prevY = p.y;
+    prevTilt = p.tilt;
+    prevS = p.s;
   }
 });
 
-test('bouquetSeats builds a dome, center-out, capped at MAX_STEMS', () => {
-  assert.equal(bouquetSeats(1).length, 1);
-  assert.equal(bouquetSeats(1)[0].r, 0);
-  assert.equal(bouquetSeats(7).length, 7);
+test('domeProfile clamps outside the dome', () => {
+  assert.deepEqual(domeProfile(-5), domeProfile(0), 'below zero clamps to the center');
+  assert.deepEqual(domeProfile(200), domeProfile(SEAT_RMAX), 'past the rim clamps to the edge');
+  const anchors = DOME_ANCHORS;
+  assert.ok(Array.isArray(anchors) && anchors.length >= 2, 'anchors must be a table');
+  assert.equal(anchors[0].r, 0, 'first anchor is the center');
+  assert.equal(anchors.at(-1).r, SEAT_RMAX, 'last anchor is the rim');
+});
+
+test('bouquetSeats keeps the literal 1, 2 and 3 stem arrangements', () => {
+  assert.deepEqual(bouquetSeats(1), [{ a: 0, r: 0, y: -100, tilt: 0, s: 1.42 }]);
+  const two = bouquetSeats(2);
+  assert.equal(two.length, 2);
+  assert.deepEqual(
+    two.map((s) => ({ r: s.r, y: s.y, tilt: s.tilt, s: s.s })),
+    [{ r: 34, y: -90, tilt: 16, s: 1.32 }, { r: 34, y: -90, tilt: 16, s: 1.32 }],
+  );
+  assert.equal(two[0].a, 0 + jitter(0, 8));
+  assert.equal(two[1].a, 180 + jitter(1, 8));
+  const three = bouquetSeats(3);
+  assert.equal(three.length, 3);
+  for (const s of three) {
+    assert.deepEqual({ r: s.r, y: s.y, tilt: s.tilt, s: s.s }, { r: 44, y: -86, tilt: 20, s: 1.28 });
+  }
+  assert.deepEqual(three.map((s, i) => s.a), [0, 120, 240].map((a, i) => a + jitter(i, 10)));
+});
+
+test('bouquetSeats pins seat 0 at the center and caps at MAX_STEMS', () => {
   assert.equal(bouquetSeats(20).length, MAX_STEMS);
-  for (const n of [2, 3, 5, 9, 12]) {
+  for (let n = 4; n <= 12; n++) {
     const seats = bouquetSeats(n);
-    assert.equal(seats.length, n);
-    for (let i = 1; i < seats.length; i++) {
-      assert.ok(seats[i].r >= seats[i - 1].r, `seats must be ordered center-out (n=${n})`);
-    }
-    for (const seat of seats) {
-      assert.ok(seat.y < 0, 'heads must sit above the wrap');
-      assert.ok(seat.s > 0.9 && seat.s < 1.6, 'seat scale must stay in range');
-      assert.ok(seat.tilt >= 0 && seat.tilt <= 40, 'tilt must stay in range');
+    assert.equal(seats.length, n, `wrong count at n=${n}`);
+    assert.equal(seats[0].r, 0, `seat 0 must be centered (n=${n})`);
+    assert.equal(seats[0].tilt, 0, `seat 0 must stand upright (n=${n})`);
+    assert.equal(seats[0].y, -100, `seat 0 must sit highest (n=${n})`);
+  }
+});
+
+test('bouquetSeats stays inside the wrap', () => {
+  for (let n = 4; n <= 12; n++) {
+    for (const seat of bouquetSeats(n)) {
+      assert.ok(seat.r <= SEAT_RMAX + 1e-9, `r ${seat.r} exceeds SEAT_RMAX (n=${n})`);
+      assert.ok(seat.r >= 0, `r must be non-negative (n=${n})`);
+      assert.ok(Number.isFinite(seat.a), `azimuth must be finite (n=${n})`);
     }
   }
+});
+
+test('bouquetSeats keeps every pair of heads apart for n 4 to 12', () => {
+  for (let n = 4; n <= 12; n++) {
+    const sizes = Array.from({ length: n }, (_, i) => 24 + (i % 3) * 5); // 24, 29, 34 mix
+    const seats = bouquetSeats(n, sizes);
+    assert.ok(minGapRatio(seats, sizes) >= 1 - 1e-6, `heads overlap at n=${n}`);
+  }
+});
+
+test('bouquetSeats separates mixed species by their head sizes', () => {
+  const mixes = [
+    [33, 18, 24, 33, 18, 24, 33],          // default-order rose/tulip/daisy sizes
+    [33, 33, 24, 12, 33, 24, 12, 26, 33],  // bloom hero mix of 9
+    [35, 30, 26, 24, 18, 34, 24, 33],      // 8-stem spread
+    [24, 24, 12, 12, 33, 33],              // dandelion + lavender + roses
+  ];
+  for (const sizes of mixes) {
+    const seats = bouquetSeats(sizes.length, sizes);
+    assert.ok(minGapRatio(seats, sizes) >= 1 - 1e-6, `overlap in mix of ${sizes.length}`);
+  }
+});
+
+test('bouquetSeats shrinks a crush of big heads instead of overlapping them', () => {
+  const n = 12;
+  const sizes = Array(n).fill(35); // twelve sunflowers, the worst real order
+  const seats = bouquetSeats(n, sizes);
+  assert.ok(minGapRatio(seats, sizes) >= 1 - 1e-6, 'must not overlap even when crushed');
+  for (let i = 0; i < n; i++) {
+    const dome = domeProfile(seats[i].r).s;
+    assert.ok(seats[i].s >= SHRINK_FLOOR * dome - 1e-9, `seat ${i} shrank below the floor`);
+    assert.ok(seats[i].s <= dome + 1e-9, `seat ${i} grew past its dome scale`);
+  }
+  for (let i = 1; i < n; i++) {
+    assert.ok(seats[0].s >= seats[i].s - 1e-9, 'the center head must stay the largest');
+  }
+});
+
+test('bouquetSeats is deterministic', () => {
+  for (const n of [4, 7, 9, 12]) {
+    const sizes = Array.from({ length: n }, (_, i) => 20 + i);
+    assert.deepEqual(bouquetSeats(n, sizes), bouquetSeats(n, sizes), `n=${n} not deterministic`);
+  }
+});
+
+test('HEAD_RADII covers the whole stall', () => {
+  const keys = ['rose', 'peony', 'sunflower', 'lily', 'poppy', 'tulip', 'daisy', 'carnation', 'dandelion', 'lavender'];
+  for (const k of keys) {
+    assert.equal(typeof HEAD_RADII[k], 'number', `missing head radius for ${k}`);
+    assert.ok(HEAD_RADII[k] >= 10 && HEAD_RADII[k] <= 40, `head radius out of range for ${k}`);
+  }
+  assert.equal(Object.keys(HEAD_RADII).length, keys.length, 'no stray species in HEAD_RADII');
+  assert.ok(DEFAULT_HEAD_R >= 10 && DEFAULT_HEAD_R <= 40, 'default head radius out of range');
+});
+
+test('bouquetSeats keeps the dome silhouette', () => {
+  for (let n = 4; n <= 12; n++) {
+    const seats = bouquetSeats(n);
+    for (const seat of seats) {
+      assert.ok(seat.y < 0, `head must sit above the wrap (n=${n})`);
+      assert.ok(seat.tilt >= 0 && seat.tilt <= 40, `tilt out of band (n=${n})`);
+      assert.ok(seat.s >= 0.7 && seat.s <= 1.45, `scale out of band (n=${n})`);
+    }
+    // Heads further from the axis sit lower (dome, not a flat disc), allowing
+    // for the small upward stagger.
+    for (let i = 0; i < seats.length; i++) {
+      for (let j = 0; j < seats.length; j++) {
+        if (seats[j].r >= seats[i].r + 20) {
+          assert.ok(seats[j].y >= seats[i].y - 3, `dome inverted at n=${n} (${i} vs ${j})`);
+        }
+      }
+    }
+  }
+});
+
+test('bouquetSeats staggers seats upward only', () => {
+  for (let n = 4; n <= 12; n++) {
+    for (const seat of bouquetSeats(n)) {
+      assert.ok(seat.y <= domeProfile(seat.r).y + 1e-9, `seat dropped below the dome (n=${n})`);
+    }
+  }
+});
+
+test('bouquetSeats never leaves two heads at one height', () => {
+  for (let n = 4; n <= 12; n++) {
+    const seats = bouquetSeats(n);
+    for (let i = 0; i < seats.length; i++) {
+      for (let j = i + 1; j < seats.length; j++) {
+        const a = planXZ(seats[i]);
+        const b = planXZ(seats[j]);
+        if (Math.hypot(a.x - b.x, a.z - b.z) <= 60) {
+          assert.ok(
+            Math.abs(seats[i].y - seats[j].y) >= 1,
+            `neighbours share a plane at n=${n} (seats ${i}, ${j})`,
+          );
+        }
+      }
+    }
+  }
+});
+
+test('bouquetSeats fills the dome without voids', () => {
+  for (let n = 8; n <= 12; n++) {
+    const R = 30;
+    const sizes = Array(n).fill(R);
+    const seats = bouquetSeats(n, sizes);
+    // Walk the heads outward by radius: each head's disc must start covering
+    // before the previous coverage ends, so no empty ring band is left. This
+    // is edge-to-edge (the big center head fills the moat around the axis),
+    // not a naive gap between seat-center radii.
+    const sorted = [...seats].sort((a, b) => a.r - b.r);
+    let reach = 0;
+    for (const seat of sorted) {
+      const vis = R * seat.s;
+      assert.ok(seat.r - vis <= reach + 1e-6, `radial void before r=${seat.r.toFixed(1)} at n=${n}`);
+      reach = Math.max(reach, seat.r + vis);
+    }
+    assert.ok(reach >= SEAT_RMAX, `dome edge unreached at n=${n}`);
+  }
+});
+
+test('seatPoint projects a seat local point into the bouquet frame', () => {
+  // Upright seat: stepping down the local stem is a pure y drop, scaled.
+  const up = seatPoint({ r: 40, y: -80, tilt: 0, s: 1 }, 10);
+  assert.ok(Math.abs(up.z - 40) < 1e-9, 'no radial shift when upright');
+  assert.ok(Math.abs(up.y - (-70)) < 1e-9, 'y drops by localY when upright');
+  const scaled = seatPoint({ r: 40, y: -80, tilt: 0, s: 1.5 }, 10);
+  assert.ok(Math.abs(scaled.y - (-65)) < 1e-9, 'scale multiplies the drop');
+  // Tilted seat leans the drop inward: the dandelion seat, 6 down its spine.
+  const d = seatPoint({ r: 76, y: -34, tilt: 30, s: 0.91 }, 6);
+  assert.ok(Math.abs(d.z - 73.27) < 0.05, `z was ${d.z}`);
+  assert.ok(Math.abs(d.y - -29.27) < 0.05, `y was ${d.y}`);
+});
+
+test('seatPoint is identity at the origin', () => {
+  const p = seatPoint({ r: 55, y: -60, tilt: 33, s: 1.2 }, 0);
+  assert.equal(p.z, 55);
+  assert.equal(p.y, -60);
+});
+
+/* Reconstruct a stem chord's two ends from its stored midpoint, tilt (seat
+   convention: down-axis is (-sin, cos)) and length. */
+function chordEnds(ch) {
+  const t = (ch.tilt * Math.PI) / 180;
+  const dz = -Math.sin(t);
+  const dy = Math.cos(t);
+  const half = ch.len / 2;
+  return {
+    top: { z: ch.z - dz * half, y: ch.y - dy * half },
+    bottom: { z: ch.z + dz * half, y: ch.y + dy * half },
+  };
+}
+const near = (a, b, eps) => Math.abs(a - b) <= eps;
+
+test('stemPath runs from the head base to the bind point', () => {
+  const seat = { r: 66, y: -78, tilt: 27, s: 1.1 };
+  const path = stemPath(seat, { segments: 4, seed: 3 });
+  const p0 = seatPoint(seat, 0);
+  const topEnd = chordEnds(path[0]).top;
+  assert.ok(near(topEnd.z, p0.z, OVERLAP_EPS + 0.05), `top z ${topEnd.z} vs ${p0.z}`);
+  assert.ok(near(topEnd.y, p0.y, OVERLAP_EPS + 0.05), `top y ${topEnd.y} vs ${p0.y}`);
+});
+
+test('stemPath keeps consecutive segments connected', () => {
+  const seat = { r: 72, y: -60, tilt: 38, s: 1 };
+  const path = stemPath(seat, { segments: 4, seed: 5 });
+  for (let i = 1; i < path.length; i++) {
+    const prevBottom = chordEnds(path[i - 1]).bottom;
+    const thisTop = chordEnds(path[i]).top;
+    assert.ok(near(prevBottom.z, thisTop.z, 2 * OVERLAP_EPS), `z gap at joint ${i}`);
+    assert.ok(near(prevBottom.y, thisTop.y, 2 * OVERLAP_EPS), `y gap at joint ${i}`);
+  }
+});
+
+test('stemPath bends monotonically toward the axis', () => {
+  const seat = { r: 76, y: -58, tilt: 38, s: 1 };
+  const path = stemPath(seat, { segments: 6, seed: 2 });
+  for (let i = 1; i < path.length; i++) {
+    assert.ok(path[i].z <= path[i - 1].z + 1e-6, `z rose at chord ${i}`);
+    assert.ok(path[i].y > path[i - 1].y, `y did not descend at chord ${i}`);
+  }
+});
+
+test('stemPath enters the flower along its tilt', () => {
+  for (const tilt of [12, 27, 38]) {
+    const path = stemPath({ r: 60, y: -70, tilt, s: 1 }, { segments: 4, seed: 1 });
+    assert.ok(Math.abs(path[0].tilt - tilt) <= 8, `first chord ${path[0].tilt} not near ${tilt}`);
+  }
+});
+
+test('stemPath ties off inside the wrap throat', () => {
+  for (const seed of [0, 1, 2, 3, 7]) {
+    const seat = { r: 70, y: -62, tilt: 36, s: 1 };
+    const end = chordEnds(stemPath(seat, { segments: 4, seed }).at(-1)).bottom;
+    assert.ok(Math.abs(end.z) <= STEM_BIND.rMax + OVERLAP_EPS + 0.5, `bind z ${end.z} outside throat`);
+    assert.ok(end.y > -6, `bind y ${end.y} not tucked below the rim`);
+  }
+});
+
+test('stemPath handles the upright center flower', () => {
+  const path = stemPath({ r: 0, y: -100, tilt: 0, s: 1.4 }, { segments: 4, seed: 9 });
+  for (const ch of path) {
+    assert.ok([ch.z, ch.y, ch.tilt, ch.len].every(Number.isFinite), 'no NaN in a center stem');
+  }
+  assert.ok(chordEnds(path.at(-1)).bottom.y > chordEnds(path[0]).top.y, 'center stem must run downward');
+});
+
+test('stemPath handles a foot already inside the throat', () => {
+  const seat = { r: 68, y: -40, tilt: 28, s: 1 };
+  const path = stemPath(seat, { segments: 4, seed: 4, footY: 60 });
+  const p0 = seatPoint(seat, 60);
+  const end = chordEnds(path.at(-1)).bottom;
+  assert.ok(end.y >= p0.y + STEM_BIND.minDrop - OVERLAP_EPS, `bind ${end.y} not below foot ${p0.y}`);
+  for (let i = 1; i < path.length; i++) {
+    assert.ok(path[i].y > path[i - 1].y - 1e-6, 'greenery stem still descends');
+  }
+});
+
+test('stemPath emits the asked segment count', () => {
+  assert.equal(stemPath({ r: 60, y: -70, tilt: 30, s: 1 }, { segments: 3, seed: 1 }).length, 3);
+  assert.equal(stemPath({ r: 60, y: -70, tilt: 30, s: 1 }, { segments: 4, seed: 1 }).length, 4);
+});
+
+test('stemPath is deterministic per seed and differs across seeds', () => {
+  const seat = { r: 66, y: -72, tilt: 30, s: 1 };
+  assert.deepEqual(stemPath(seat, { seed: 5 }), stemPath(seat, { seed: 5 }));
+  assert.notDeepEqual(stemPath(seat, { seed: 5 }), stemPath(seat, { seed: 6 }));
+});
+
+test('mixHex blends stem greens channel by channel', () => {
+  assert.equal(mixHex('#000000', '#ffffff', 0), '#000000');
+  assert.equal(mixHex('#000000', '#ffffff', 1), '#ffffff');
+  assert.equal(mixHex('#000000', '#ffffff', 0.5), '#808080');
+  assert.match(mixHex('#35522e', '#6f9457', 0.3), /^#[0-9a-f]{6}$/);
+});
+
+test('renderTier goes lite only for coarse pointers', () => {
+  assert.equal(renderTier({ coarse: true }), 'lite');
+  assert.equal(renderTier({ coarse: false }), 'full');
+  assert.equal(renderTier({ coarse: false, reducedMotion: true }), 'full', 'reduced motion alone stays full');
+  assert.equal(renderTier({}), 'full');
+});
+
+test('tierPetals trims dense heads by a third with a floor', () => {
+  assert.equal(tierPetals('full', 24), 24, 'full keeps every petal');
+  assert.equal(tierPetals('full', 15), 15);
+  assert.equal(tierPetals('lite', 24), 16);
+  assert.equal(tierPetals('lite', 15), 10);
+  assert.equal(tierPetals('lite', 14), 9);
+  assert.equal(tierPetals('lite', 11), 8, 'floor holds when two thirds dips under it');
+  assert.equal(tierPetals('lite', 9, 6), 6, 'a lower floor is honoured');
 });
 
 test('waveEdgePoints draws a smooth scallop, not razor teeth', () => {

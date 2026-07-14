@@ -45,6 +45,7 @@ jobs:
             .github/**,
             .gitignore,
             .env,
+            .htaccess,
             app/.env,
             vendor/**,
             app/vendor/**,
