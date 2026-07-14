@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Playbook &amp; Checklist</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="text-zinc-800 antialiased">
+    <div class="mx-auto max-w-6xl px-4 py-8">
+        <header class="mb-6">
+            <a href="../../" id="back-link" class="text-sm text-zinc-500 hover:text-zinc-800">&larr; domenhribernik.com</a>
+            <h1 class="mt-2 text-3xl font-semibold tracking-tight">SEO Playbook &amp; Checklist</h1>
+            <p class="mt-1 text-zinc-600 max-w-3xl">Everything this site does to be found, why it does it, and the
+                live state of every page. Private tool: noindexed, blocked in robots.txt, not linked anywhere.</p>
+        </header>
+
+        <nav class="flex gap-6 border-b border-zinc-300 mb-8 text-sm font-medium">
+            <a id="tab-playbook" href="#playbook" class="pb-2 border-b-2 border-zinc-900 text-zinc-900">Playbook</a>
+            <a id="tab-checklist" href="#checklist" class="pb-2 border-b-2 border-transparent text-zinc-500 hover:text-zinc-800">Checklist</a>
+        </nav>
+
+        <!-- ============================================================= -->
+        <!-- PLAYBOOK                                                      -->
+        <!-- ============================================================= -->
+        <main id="panel-playbook" class="lg:grid lg:grid-cols-[220px_1fr] lg:gap-10">
+            <aside class="playbook-toc hidden lg:block text-sm">
+                <p class="uppercase tracking-wide text-xs text-zinc-400 mb-2">Sections</p>
+                <ol class="space-y-1.5 text-zinc-600">
+                    <li><a class="hover:text-zinc-900" href="#s1">1. How search works in 2026</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s2">2. Technical SEO</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s3">3. Core Web Vitals</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s4">4. On-page</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s5">5. Structured data</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s6">6. Content strategy</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s7">7. Authority and backlinks</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s8">8. AI search and GEO</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s9">9. Search Console workflow</a></li>
+                    <li><a class="hover:text-zinc-900" href="#s10">10. Operating cadence</a></li>
+                </ol>
+            </aside>
+
+            <div class="space-y-10 max-w-3xl leading-relaxed">
+                <section id="s1" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">1. How search works in 2026</h2>
+                    <p class="mb-3">Google still runs the same four-stage pipeline: <strong>crawl</strong> (fetch the
+                        HTML), <strong>render</strong> (run the JS in a headless Chromium, on a queue that can lag
+                        hours or days behind the crawl), <strong>index</strong> (store what survived), and
+                        <strong>rank</strong> (order it against a query). Two things follow from the render queue.
+                        First, anything that only exists after JS runs is indexed late and unreliably. Second, most
+                        crawlers that are not Google (Bing partially, and nearly every AI scraper) do not render JS
+                        at all: they see the raw HTML and nothing else.</p>
+                    <p class="mb-3">That is why this site prerenders its JS-built content. The homepage projects
+                        section and the blog post list carry a static fallback in the HTML itself, and every blog
+                        post exists as a real static page. The interactive views (nebo, flowers, workout) stay apps,
+                        but their heads carry complete metadata so even a non-rendering crawler knows exactly what
+                        each page is.</p>
+                    <p>The second index that matters now is the <strong>AI answer layer</strong>: ChatGPT, Perplexity,
+                        and Google's AI Overviews assemble answers from pages they can fetch and quote. They favor
+                        plain, well-structured HTML with clear statements of what a thing is. Section 8 covers this;
+                        the short version is that the same work that makes classic SEO good makes AI citation
+                        possible.</p>
+                </section>
+
+                <section id="s2" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">2. Technical SEO</h2>
+                    <p class="mb-3"><strong>One canonical host.</strong> Everything lives at
+                        <code>https://domenhribernik.com</code>, no www. The root <code>.htaccess</code> 301s
+                        www&rarr;apex and http&rarr;https (rules are host-anchored so local XAMPP is untouched).
+                        Every page also declares an absolute <code>&lt;link rel="canonical"&gt;</code> with a
+                        trailing slash, the same form the sitemap uses. One URL per page, everywhere.</p>
+                    <p class="mb-3"><strong>robots.txt vs noindex.</strong> They answer different questions.
+                        <code>robots.txt Disallow</code> means "do not crawl": good for private tools, but a blocked
+                        page can still be indexed URL-only if someone links it. <code>&lt;meta name="robots"
+                        content="noindex"&gt;</code> means "you may crawl, do not index": the stronger promise, but
+                        only works if the crawler can fetch the page. Private tools here carry <em>both</em>. Never
+                        Disallow a page you want deindexed but that is already indexed: Google can no longer see the
+                        noindex. Remove the Disallow, let it recrawl, then block.</p>
+                    <p class="mb-3"><strong>The sitemap.</strong> <code>sitemap.xml</code> at the root, referenced
+                        from robots.txt, regenerated by <code>node tools/seo/generate.js</code> (also run in CI on
+                        every deploy). Inventory comes from <code>project-data.js</code> plus
+                        <code>tools/seo/config.js</code>; a page gaining a noindex drops out automatically. lastmod
+                        comes from real git history: never fake freshness, Google learns to distrust a sitemap whose
+                        lastmod lies. Priorities: homepage 1.0, flagship 0.8, about 0.7, the rest 0.4.</p>
+                    <p class="mb-3"><strong>Redirects.</strong> Permanent moves get a 301 (the old blog
+                        <code>post.html?slug=</code> URLs 301 to the static pages). Chains waste crawl budget;
+                        point old URLs at the final destination directly.</p>
+                    <p><strong>This site's machinery.</strong> After editing <code>project-data.js</code>, adding a
+                        blog post, or renaming a view: run <code>node tools/seo/generate.js</code> and commit what
+                        changed (sitemap, homepage fallback between the <code>seo:projects</code> markers, blog
+                        fallback, <code>views/blog/&lt;slug&gt;/</code> pages). CI regenerates on deploy, so prod
+                        can never be stale, but committing keeps local and git truthful. Deleting a post leaves a
+                        stale copy on the server (deploys never delete); remove it over SFTP.</p>
+                </section>
+
+                <section id="s3" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">3. Core Web Vitals</h2>
+                    <p class="mb-3">Three field metrics, measured on real Chrome users (CrUX), checked with
+                        <a class="underline" href="https://pagespeed.web.dev/">PageSpeed Insights</a>:</p>
+                    <ul class="list-disc pl-5 space-y-1 mb-3">
+                        <li><strong>LCP</strong> (Largest Contentful Paint) &le; 2.5s: when the main content lands.</li>
+                        <li><strong>INP</strong> (Interaction to Next Paint) &le; 200ms: how fast taps respond.</li>
+                        <li><strong>CLS</strong> (Cumulative Layout Shift) &le; 0.1: how much the page jumps around.</li>
+                    </ul>
+                    <p class="mb-3">Site-specific notes: the homepage <strong>intro overlay</strong> paints
+                        immediately (it is the LCP candidate itself, which is fine, it is content-sized and fast),
+                        but anything that delays it delays everything. The <strong>Tailwind CDN script</strong> is
+                        render-blocking JS on every view that uses it; that is the accepted cost of the no-build
+                        rule. Fonts load from Google Fonts with <code>display=swap</code>, so text never blocks.</p>
+                    <p>What is worth fixing on a portfolio: images without dimensions (CLS), anything that blocks
+                        first paint, slow PHP endpoints on first render. What is not worth chasing: the last 200ms
+                        of LCP on a hobby view nobody queries. Check PSI quarterly for the flagship pages, record
+                        the result in the checklist's <code>cwv</code> column, and move on.</p>
+                </section>
+
+                <section id="s4" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">4. On-page</h2>
+                    <p class="mb-3"><strong>Titles.</strong> The pattern here is
+                        <code>{Name} | {plain-language descriptor}</code>, under ~60 characters so nothing truncates.
+                        The descriptor is what someone would actually type: "Plant Watering Schedule and Care
+                        Tracker" beats "Plant Care Manager". The homepage carries the money phrase:
+                        "Full-Stack Developer in Slovenia". Tarok's title is Slovenian because its searchers are.</p>
+                    <p class="mb-3"><strong>Meta descriptions.</strong> Not a ranking factor; they are ad copy for
+                        the search result. 150 to 160 characters, front-load the value, write like the registry
+                        descriptions (lead with the problem, plain sentences). Google rewrites bad ones; give it no
+                        reason to.</p>
+                    <p class="mb-3"><strong>Headings.</strong> Exactly one <code>h1</code> per page that says what
+                        the page is, then a sane h2/h3 hierarchy. The checklist tracks the two current offenders
+                        (workout has none, spy has two).</p>
+                    <p class="mb-3"><strong>Images.</strong> Meaningful <code>alt</code> text on content images;
+                        empty alt on decorative ones. Every image should have width/height or a CSS aspect ratio so
+                        it cannot shift layout.</p>
+                    <p><strong>Internal linking.</strong> Links are how authority flows through the site and how
+                        crawlers discover pages. The homepage fallback lists flagship projects first, so the
+                        strongest page passes its weight to the pages that should rank. When a blog post mentions a
+                        project, link the project. The about page carries the academic work. Nothing indexed should
+                        be more than two clicks from the homepage.</p>
+                </section>
+
+                <section id="s5" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">5. Structured data</h2>
+                    <p class="mb-3">JSON-LD tells machines what a page <em>is</em>, in schema.org vocabulary. It
+                        feeds rich results and gives AI engines clean facts to quote. What this site uses:</p>
+                    <ul class="list-disc pl-5 space-y-1 mb-3">
+                        <li><strong>Person + WebSite</strong> on the homepage (one <code>@graph</code>), with
+                            <code>sameAs</code> links to GitHub, LinkedIn, Instagram. This is the identity anchor.</li>
+                        <li><strong>ProfilePage</strong> on about, embedding the same Person inline.</li>
+                        <li><strong>WebApplication</strong> on each flagship view (name, category, free Offer,
+                            author). Fits interactive tools better than SoftwareApplication.</li>
+                        <li><strong>Blog</strong> on the blog index; <strong>BlogPosting + BreadcrumbList</strong> on
+                            every generated post page (the generator emits these).</li>
+                        <li><strong>Organization</strong> on Everbloom, since it is a product, not a portfolio piece.</li>
+                    </ul>
+                    <p class="mb-3">Each page's JSON-LD is self-contained: cross-page <code>@id</code> references do
+                        not resolve for Google, so the author is inlined as a small Person object everywhere.</p>
+                    <p>Test with the <a class="underline" href="https://search.google.com/test/rich-results">Rich
+                        Results Test</a> after changing any block. When NOT to add schema: types the page cannot
+                        honestly claim (Review, FAQ, HowTo without visible on-page counterparts). Dishonest markup
+                        earns manual actions, and Google ignores breadcrumbs with no visible breadcrumb UI, which is
+                        why only the generated posts carry BreadcrumbList.</p>
+                </section>
+
+                <section id="s6" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">6. Content and keyword strategy for a portfolio</h2>
+                    <p class="mb-3"><strong>Search intent first.</strong> Nobody searches "Domen Hribernik portfolio"
+                        except people who already know the name. Strangers arrive through queries the tools can win:
+                        a need ("tarok to&#269;kovanje", "print maze puzzles", "sourdough starter tracker") or a
+                        curiosity ("CSS 3D without WebGL"). Every public tool page should be written to answer one
+                        such query in its title and description.</p>
+                    <p class="mb-3"><strong>The tarok case study.</strong> "Tarok to&#269;kovanje" is a real,
+                        low-competition Slovenian query with a tool-shaped answer, and this site has the tool. The
+                        page now targets it in Slovenian. The highest-leverage next step is one Slovenian blog post
+                        ("Kako &scaron;teti to&#269;ke pri taroku") that explains the scoring rules in prose and
+                        links the tool: the post catches the informational query, the tool catches the
+                        transactional one, and they link to each other.</p>
+                    <p class="mb-3"><strong>Blog topics with demand vs diary posts.</strong> Both are fine, they do
+                        different jobs. A diary post ("In Praise of Small Software") earns links and shows voice; a
+                        demand post answers something people type ("markdown blog without a build step"). Aim the
+                        title of a demand post at the query, not at cleverness. One post a month, of either kind,
+                        beats every other lever on this page.</p>
+                    <p><strong>Evergreen tool pages beat posts.</strong> A tool page ranks for years and improves
+                        with every feature; treat the flagship views as the site's permanent content and the blog as
+                        the thing that feeds them links and context.</p>
+                </section>
+
+                <section id="s7" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">7. Authority and backlinks for developers</h2>
+                    <p class="mb-3">Links are still the strongest ranking signal, and a personal site starts with
+                        none. The honest sources, in rough order of effort:</p>
+                    <ul class="list-disc pl-5 space-y-1 mb-3">
+                        <li><strong>GitHub profile README</strong>: link the domain and two or three flagship
+                            projects. High-trust domain, takes ten minutes.</li>
+                        <li><strong>Profile links everywhere</strong>: LinkedIn website field, Instagram bio.
+                            Mostly nofollow, still identity-confirming for the knowledge graph.</li>
+                        <li><strong>dev.to republishing</strong>: repost blog entries with
+                            <code>canonical_url</code> set to the original (dev.to supports this natively), so the
+                            canonical credit flows home while the post reaches an audience.</li>
+                        <li><strong>Hacker News / Lobsters</strong>: submit essays as plain links. One front-page
+                            hour is worth more links than a year of directories.</li>
+                        <li><strong>Slovenian channels for tarok</strong>: r/Slovenia, slo-tech.com, tarok club
+                            pages. The audience is small and exactly right.</li>
+                    </ul>
+                    <p><strong>The quality bar:</strong> never directories-for-directories'-sake, never bought
+                        links, never reciprocal link pages. A handful of real links from real pages beats hundreds
+                        of junk ones, and junk can hurt.</p>
+                </section>
+
+                <section id="s8" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">8. AI search and GEO</h2>
+                    <p class="mb-3">Generative engines (ChatGPT search, Perplexity, Google AI Overviews) are now a
+                        meaningful referrer class. They select sources they can fetch, parse, and quote. What moves
+                        the needle:</p>
+                    <ul class="list-disc pl-5 space-y-1 mb-3">
+                        <li><strong>Static HTML.</strong> Most AI crawlers do not execute JS. The prerendered
+                            fallbacks and static blog pages exist for exactly this reader.</li>
+                        <li><strong>Being quotable.</strong> Clear one-sentence definitions of what each thing is
+                            ("Nebo is a live map of the night sky computed in the browser"), stated in the page
+                            text, not only in a meta tag. Name your concepts; engines quote names.</li>
+                        <li><strong>Structured data and honest freshness</strong> (sections 2 and 5) double as GEO
+                            signals: they are the machine-readable statement of the same facts.</li>
+                        <li><strong>Bing matters again</strong>: ChatGPT browsing rides Bing's index, so Bing
+                            Webmaster Tools is no longer optional (import from GSC, one click).</li>
+                        <li><strong>llms.txt</strong> (a proposed root file listing what an LLM should read) is
+                            still a proposal without confirmed adoption by the major engines. Skip it until an
+                            engine documents that it reads one; revisit quarterly.</li>
+                    </ul>
+                    <p>Checking your citations: ask the engines the queries you want to win ("tarok scoring app",
+                        "CSS-only 3D bouquet") and see whether the site is cited; GSC's performance report also
+                        breaks out AI Overview impressions. Record findings in the checklist notes.</p>
+                </section>
+
+                <section id="s9" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">9. Google Search Console workflow</h2>
+                    <p class="mb-3"><strong>One-time setup (do today):</strong></p>
+                    <ol class="list-decimal pl-5 space-y-1 mb-3">
+                        <li>Add a <em>Domain</em> property for <code>domenhribernik.com</code> in
+                            <a class="underline" href="https://search.google.com/search-console">Search Console</a>
+                            (DNS TXT record at the registrar; covers http/https/www at once).</li>
+                        <li>Submit <code>https://domenhribernik.com/sitemap.xml</code> under Sitemaps.</li>
+                        <li>URL Inspection &rarr; Request Indexing for: the homepage, about, the blog index, both
+                            post URLs, and the seven flagship views. This is the only lever that speeds up a new
+                            site's first crawl.</li>
+                        <li>Bing Webmaster Tools: sign in, "Import from GSC", done. This also feeds ChatGPT.</li>
+                        <li>Verify the deploy landed: <code>curl -I https://domenhribernik.com/robots.txt</code>,
+                            the sitemap URL, and <code>curl -I http://www.domenhribernik.com/</code> (expect 301).</li>
+                    </ol>
+                    <p class="mb-3"><strong>Reading the reports.</strong> <em>Pages</em> (indexing) tells you what
+                        Google kept and why it rejected the rest; "Crawled, currently not indexed" on a new site
+                        mostly means "wait and earn a link". <em>Performance</em> shows queries vs pages: sort by
+                        impressions to find queries where the site appears but nobody clicks (title/description
+                        problem), and by position 5 to 15 to find pages one improvement away from page one.</p>
+                    <p>Request indexing again after any significant page change; otherwise let the sitemap do its
+                        job.</p>
+                </section>
+
+                <section id="s10" class="playbook-section">
+                    <h2 class="text-xl font-semibold mb-3">10. Operating cadence</h2>
+                    <ul class="list-disc pl-5 space-y-1 mb-3">
+                        <li><strong>On every content change:</strong> run <code>node tools/seo/generate.js</code>,
+                            commit the artifacts. CI regenerates anyway; keep git truthful.</li>
+                        <li><strong>Monthly (15 minutes):</strong> GSC Pages + Performance skim; request indexing on
+                            anything new; flip the checklist's <code>indexed</code> cells that GSC confirms; one
+                            look at AI Overview impressions.</li>
+                        <li><strong>Monthly (the real work):</strong> one blog post. Nothing on this page compounds
+                            like content.</li>
+                        <li><strong>Quarterly:</strong> PSI on the flagships (record in <code>cwv</code>), a
+                            full-site audit with an audit skill
+                            (<code>npx skills add seo-skills/seo-audit-skill</code> or
+                            <code>coreyhaines31/marketingskills@seo-audit</code>, needs Node 20+), re-check the
+                            llms.txt adoption question, and reread this playbook against reality.</li>
+                    </ul>
+                    <p>The checklist tab is the living state: cells cycle on click (in memory), and "Copy updated
+                        JSON" exports the new state to paste back into <code>views/seo/checklist.json</code> and
+                        commit. The test suite validates the file, so a bad paste fails
+                        <code>node --test tests/</code> instead of silently breaking this page.</p>
+                </section>
+            </div>
+        </main>
+
+        <!-- ============================================================= -->
+        <!-- CHECKLIST                                                     -->
+        <!-- ============================================================= -->
+        <main id="panel-checklist" style="display:none">
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+                <div id="stats" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+                <div class="text-right">
+                    <p class="text-xs text-zinc-500">Last updated: <span id="updated"></span></p>
+                    <button id="copy-json" type="button"
+                        class="hidden mt-1 border border-zinc-900 bg-zinc-900 text-white text-sm px-3 py-1.5 hover:bg-zinc-700">
+                        Copy updated JSON</button>
+                </div>
+            </div>
+
+            <section class="mb-8">
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-zinc-500 mb-2">Next actions</h2>
+                <ol id="actions" class="border border-zinc-300 bg-white px-4 py-2 divide-y divide-zinc-100 text-sm"></ol>
+            </section>
+
+            <section>
+                <div id="tier-filters" class="flex flex-wrap gap-2 mb-3"></div>
+                <div class="overflow-x-auto border border-zinc-300 bg-white">
+                    <table id="matrix" class="w-full text-sm border-collapse"></table>
+                </div>
+                <p class="mt-2 text-xs text-zinc-500">Cells: ok = done, half = partial, todo = missing, n/a = not
+                    applicable, ? = unmeasured. Click a cell to cycle its status, then copy the JSON out.</p>
+            </section>
+        </main>
+    </div>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>

@@ -11,6 +11,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Full history: sitemap lastmod dates come from `git log` per path.
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Sitemap, homepage projects fallback, and prerendered blog pages are
+      # committed, but regenerating here guarantees prod is never stale.
+      - name: Regenerate SEO artifacts
+        run: node tools/seo/generate.js
+
+      - name: Run tests
+        run: node --test tests/
 
       - name: Upload via SFTP
         uses: wangyucode/sftp-upload-action@v3.0.0
@@ -37,6 +53,7 @@ jobs:
             app/config/dev-mode.php,
             assets/uploads/**,
             tests/**,
+            tools/**,
             .agents/**,
             .claude/**,
             bugs.md,

@@ -43,7 +43,7 @@ function render(posts) {
         const { title = post.slug, date = '', tag = '' } = post.meta;
         const card = document.createElement('a');
         card.className = 'post-card reveal';
-        card.href = `post.html?slug=${encodeURIComponent(post.slug)}`;
+        card.href = `${encodeURIComponent(post.slug)}/`;
         card.dataset.category = tag;
         card.style.transitionDelay = `${Math.min(i, 8) * 0.05}s`;
 

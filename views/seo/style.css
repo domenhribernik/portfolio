@@ -1,0 +1,20 @@
+/* base-style.css paints body with the navy gradient; this private tool is a
+   plain paper-white document, so reassert it (see the root CLAUDE.md gotcha). */
+body {
+    background: #fafaf9;
+}
+
+/* Sticky section nav for the playbook on wide screens. */
+@media (min-width: 1024px) {
+    .playbook-toc {
+        position: sticky;
+        top: 1.5rem;
+        max-height: calc(100vh - 3rem);
+        overflow-y: auto;
+    }
+}
+
+/* Anchor targets land below the tab bar instead of underneath it. */
+.playbook-section {
+    scroll-margin-top: 4.5rem;
+}
