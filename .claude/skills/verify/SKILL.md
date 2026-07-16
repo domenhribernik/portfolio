@@ -21,5 +21,6 @@ No playwright installed; `/usr/bin/google-chrome` exists. Plain `--headless=new 
 
 ## Flows worth driving
 
-- Homepage: hover a `.ppaper__story` (headline underlines in the section accent), professional splash + 3 ruled stories, passion briefs flow in 3 CSS columns (2 at tablet, 1 on mobile), the foot `.ppaper__crossref` links to `views/about/#academic-projects`. At 390px each section caps at 5 stories with a `.ppaper__more` toggle (hidden on wider viewports, where every story prints).
+- Homepage projects (`<projects-index>`): professional band as 4 ruled stories (headline underlines in clay on hover), then 7 numbered `.pindex__row` featured rows; hover/focus underlines the headline in cobalt, number + arrow take cobalt, arrow nudges. The `.pindex__edition` banner at the foot underlines its line in cobalt on hover (no lift, no shadow) and links to `views/projects/`.
+- `views/projects/` (the broadsheet): masthead dateline filled by JS (`Vol. … · No. …`, weekday date, story count), then sections `#section-a/b/c` straight after the masthead (no front page). Each section opens on a photo lead (halftone press photo: registry gradient + icon + dot overlay); section C's lead is pinned to Virtual Runner via `leadKey`. Briefs flow in 3 ruled columns (2 at 640px, 1 on phones). No mobile fold anywhere: every story always prints.
 - `views/about/`: still uses `<projects-grid>`/`<project-card>` with Show More; regression-check it after touching anything under `components/project*`.

@@ -1,4 +1,4 @@
-/* Unit tests for views/bloom/logic.js (the Everbloom storefront's pure logic).
+/* Unit tests for views/store/logic.js (the Everbloom storefront's pure logic).
    Run with: node --test tests/ */
 
 import { test } from 'node:test';
@@ -13,7 +13,7 @@ import {
     validateSignup,
     spotsLine,
     annualSavingsPercent,
-} from '../views/bloom/logic.js';
+} from '../views/store/logic.js';
 
 test('validateSignup accepts a clean signup and trims fields', () => {
     const r = validateSignup({

@@ -12,6 +12,7 @@ import {
     sitemapXml,
     replaceBetweenMarkers,
     projectsFallbackHtml,
+    archiveFallbackHtml,
     postsFallbackHtml,
     blogPostPage,
     validateSlug,
@@ -108,15 +109,34 @@ const sampleProjects = {
     },
 };
 
-test('projectsFallbackHtml escapes registry text and orders flagship first', () => {
-    // registry order puts minor's source before flag when keys are swapped
-    const swapped = { pro: sampleProjects.pro, minor: sampleProjects.minor, flag: sampleProjects.flag };
-    const html = projectsFallbackHtml(swapped, ['views/flag']);
+test('projectsFallbackHtml mirrors the homepage index: band, featured picks, edition link', () => {
+    const html = projectsFallbackHtml(sampleProjects, ['flag']);
     assert.ok(html.includes('Client &amp; Co'));
     assert.ok(html.includes('Quotes &quot;here&quot; stay safe.'));
-    assert.ok(html.indexOf('views/flag') < html.indexOf('views/minor'), 'flagship listed first');
-    assert.ok(!html.includes('Thesis'), 'academic entries stay off the front page');
     assert.ok(html.includes('<a href="https://client.example">'));
+    assert.ok(html.includes('Flagship App'), 'featured entry listed');
+    assert.ok(!html.includes('Minor App'), 'non-featured passion entries stay off the homepage');
+    assert.ok(!html.includes('Thesis'), 'academic entries stay off the homepage');
+    assert.ok(html.includes('href="views/projects/"'), 'links to the full edition');
+});
+
+test('projectsFallbackHtml keeps the featured entries in hand-ranked order', () => {
+    const html = projectsFallbackHtml({
+        ...sampleProjects,
+        second: { category: 'passion', title: 'Second Pick', description: 'x', links: { visitSite: 'views/second' } },
+    }, ['second', 'flag']);
+    assert.ok(html.indexOf('Second Pick') < html.indexOf('Flagship App'));
+});
+
+test('archiveFallbackHtml carries every entry in section order with page-relative links', () => {
+    const html = archiveFallbackHtml(sampleProjects);
+    for (const title of ['Client &amp; Co', 'Flagship App', 'Minor App', 'Thesis']) {
+        assert.ok(html.includes(title), `${title} present`);
+    }
+    assert.ok(html.indexOf('Professional') < html.indexOf('Passion'), 'sections in order');
+    assert.ok(html.indexOf('Passion') < html.indexOf('Academic'), 'sections in order');
+    assert.ok(html.includes('<a href="../../views/flag">'), 'internal links climb out of views/projects');
+    assert.ok(html.includes('<a href="https://client.example">'), 'external links untouched');
 });
 
 test('postsFallbackHtml renders cards matching the hydrated markup', () => {

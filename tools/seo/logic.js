@@ -46,7 +46,7 @@ export function buildInventory({ registryPages, extras, notDeployed, noindexed }
 
 //? Extract the site-internal page paths ('views/...') from the registry, in
 //? registry order. External links (https://...) are skipped. Link priority
-//? per entry matches projects-paper: visitSite, else readMore, else code.
+//? per entry matches project-links.js: visitSite, else readMore, else code.
 export function registryInternalPages(projects) {
     const pages = [];
     for (const entry of Object.values(projects)) {
@@ -90,47 +90,66 @@ export function replaceBetweenMarkers(source, startMarker, endMarker, content) {
     return `${before}\n${content}\n${after}`;
 }
 
-//? ------------------------------------------------- homepage projects fallback
+//? ------------------------------------------------- projects fallbacks
 
-//? Static, crawlable stand-in for the <projects-paper> front page. Real light
-//? DOM (not <noscript>): projects-paper.js overwrites this wholesale at
-//? hydration, so it only ever renders for non-JS crawlers and readers.
-//? Mirrors the paper's content: professional + passion, academic left to the
-//? about page. Flagship passion projects list first.
-export function projectsFallbackHtml(projects, flagship) {
-    const flagshipSet = new Set(flagship);
-    const byCategory = (cat) => Object.values(projects).filter(p => p.category === cat);
+//? One fallback list item. `site` is the rendering page's prefix back to
+//? the site root ('' on the homepage, '../../' on views/projects), applied
+//? to internal registry links only.
+function fallbackItem(entry, site) {
+    const href = entry.links?.visitSite || entry.links?.readMore || entry.links?.code || '';
+    const resolved = /^[a-z][a-z0-9+.-]*:/i.test(href) ? href : site + href;
+    const title = escapeHtml(entry.title);
+    const desc = escapeHtml(entry.description);
+    const a = href ? `<a href="${escapeHtml(resolved)}">${title}</a>` : title;
+    return `            <li>${a}: ${desc}</li>`;
+}
 
-    const link = (entry) => {
-        const href = entry.links?.visitSite || entry.links?.readMore || entry.links?.code || '';
-        return href;
-    };
-    const item = (entry) => {
-        const href = link(entry);
-        const title = escapeHtml(entry.title);
-        const desc = escapeHtml(entry.description);
-        const a = href ? `<a href="${escapeHtml(href)}">${title}</a>` : title;
-        return `            <li>${a}: ${desc}</li>`;
-    };
-
-    const passion = byCategory('passion').sort((a, b) => {
-        const fa = flagshipSet.has(link(a).replace(/\/+$/, '')) ? 0 : 1;
-        const fb = flagshipSet.has(link(b).replace(/\/+$/, '')) ? 0 : 1;
-        return fa - fb;
-    });
+//? Static, crawlable stand-in for the <projects-index> homepage section.
+//? Real light DOM (not <noscript>): projects-index.js overwrites this
+//? wholesale at hydration, so it only ever renders for non-JS crawlers and
+//? readers. Mirrors the section's content: the professional band, the
+//? hand-ranked featured picks (registry keys, in order), and the link to
+//? the full edition; everything else lives on views/projects.
+export function projectsFallbackHtml(projects, featuredKeys) {
+    const professional = Object.values(projects).filter(p => p.category === 'professional');
+    const featured = featuredKeys.filter(key => projects[key]).map(key => projects[key]);
 
     return [
-        '        <div class="ppaper-fallback">',
+        '        <div class="pindex-fallback">',
         '            <h3>Professional &amp; Freelance</h3>',
         '            <ul>',
-        ...byCategory('professional').map(item),
+        ...professional.map(e => fallbackItem(e, '')),
         '            </ul>',
-        '            <h3>Passion Projects</h3>',
+        '            <h3>Featured builds</h3>',
         '            <ul>',
-        ...passion.map(item),
+        ...featured.map(e => fallbackItem(e, '')),
         '            </ul>',
+        `            <p><a href="views/projects/">Read the full edition: all ${Object.keys(projects).length} projects</a></p>`,
         '        </div>',
     ].join('\n');
+}
+
+//? Static, crawlable stand-in for the views/projects edition, replaced
+//? wholesale by its script.js at hydration. Every registry entry, in the
+//? edition's section order; internal links climb out of views/projects.
+const ARCHIVE_SECTIONS = [
+    { category: 'professional', label: 'Professional &amp; Freelance' },
+    { category: 'passion', label: 'Passion Projects' },
+    { category: 'academic', label: 'Academic &amp; Research' },
+];
+
+export function archiveFallbackHtml(projects) {
+    const lines = ['            <div class="bsheet-fallback">'];
+    for (const { category, label } of ARCHIVE_SECTIONS) {
+        const entries = Object.values(projects).filter(p => p.category === category);
+        if (!entries.length) continue;
+        lines.push(`                <h2>${label}</h2>`);
+        lines.push('                <ul>');
+        lines.push(...entries.map(e => '    ' + fallbackItem(e, '../../')));
+        lines.push('                </ul>');
+    }
+    lines.push('            </div>');
+    return lines.join('\n');
 }
 
 //? --------------------------------------------------- blog index fallback

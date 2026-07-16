@@ -21,8 +21,8 @@ export const FLAGSHIP = [
 //? whose registry entry has no internal link) but should still be crawled.
 export const EXTRA_PUBLIC_PAGES = [
     'views/about',
-    'views/flowers',
-    'views/bloom',
+    'views/projects',
+    'views/store',
     'views/rocks',
     'views/dnd',
     'views/jeger',
@@ -45,5 +45,6 @@ export const PRIORITY = {
     flagship: '0.8',
     post: '0.8',
     about: '0.7',
+    archive: '0.7',
     default: '0.4',
 };
