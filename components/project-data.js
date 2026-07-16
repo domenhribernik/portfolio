@@ -189,6 +189,16 @@ export const projects = {
     },
     iconClass: "fas fa-bell",
   },
+  flowers: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #b13a6e 0%, #f6c1d9 100%)",
+    title: "Paper Flowers",
+    description: "Build a bouquet out of nothing but CSS: pick roses, sunflowers, poppies and more, and every petal is a flat div rotated into place. Then send someone a link to their arrangement.",
+    links: {
+      visitSite: "views/flowers",
+    },
+    iconClass: "fas fa-spa",
+  },
   nebo: {
     category: "passion",
     gradient: "linear-gradient(45deg, #0b102a 0%, #2c3e70 100%)",

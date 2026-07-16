@@ -8,7 +8,6 @@
     - Scales-Chords API — free, no activation needed, returns chord charts and sounds for guitar or piano. You just include their JS file and request chords by name. Scales-Chords.com
     - Hooktheory — has an API that exposes chord probability data, letting you query what chords most commonly follow a given progression. Useful for theory-based suggestions rather than song-specific lookups. Hooktheory
     - Songsterr — provides guitar, bass, and drum tabs/chords and doesn't require an API key, though it has no CORS support so you'd need to proxy through your PHP backend.
-- **Look into unit testing**, and add them before commit. And on actions as well? 
 - Add webp to image service, and then also figure out the jpg edge case
 ## Refactoring
 - Go through controllers and refactor them
@@ -19,6 +18,7 @@
 - Refactor app/admin into subprojects for admin page
 
 ## Project Ideas
+- **Pricing page** - finish the pricing page and have a copy ready to send out to potential clients
 - **ASCII art converter** — transform images to ASCII (lightest to darkest); already have a project, put it on the portfolio
 - **Pixel encoder to YouTube video** — encode data into video frames (B&W and RGB); explore glitch AI art angle to avoid content removal
 - **QR / barcode generator**

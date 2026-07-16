@@ -1,0 +1,496 @@
+/* ============================================================
+   PROJECT PORTFOLIO: THE FULL EDITION
+   One broadsheet carrying every project in the registry. The
+   homepage teases seven stories; this page is the whole paper:
+   masthead with ears and a live dateline, then one section per
+   category, each opening on a photo lead and running the rest
+   in ruled newspaper columns. Headlines run in Fraunces (the site's
+   editorial serif), decks in IBM Plex Sans, furniture in Space
+   Mono. Hover stays in the site's quiet manner: headlines
+   underline in the section's accent ink, nothing moves.
+   Halftone dots turn each project's registry gradient into the
+   story's press photo.
+   ============================================================ */
+
+:root {
+    --paper: #f6f2ea;
+    --paper-2: #efe9dd;
+    --ink: #1c1a17;
+    --stone: #6b6256;
+    --clay: #d4451f;
+    --cobalt: #1f35e0;
+    --pine: #2f5b53;
+    --rule: rgba(28, 26, 23, 0.25);
+    --rule-soft: rgba(28, 26, 23, 0.14);
+}
+
+/* base-style paints body with the navy gradient shorthand; a full-page
+   view must reassert its own background (see root CLAUDE.md). */
+body {
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.bsheet {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6.8rem 1.4rem 2.4rem;
+}
+
+/* ============================================================
+   MASTHEAD
+   ============================================================ */
+.bsheet__mast-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--stone);
+}
+
+.bsheet__mast-top span:nth-child(2) {
+    color: var(--ink);
+}
+
+.bsheet__name-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1.4rem;
+    padding: 1.5rem 0 1.1rem;
+    animation: mastRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bsheet__name {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-size: clamp(2.4rem, 7.5vw, 5.4rem);
+    line-height: 0.95;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+    text-align: center;
+    text-wrap: balance;
+}
+
+/* Ears: the small boxed asides flanking a broadsheet's nameplate */
+.bsheet__ear {
+    max-width: 13rem;
+    border: 1px solid var(--rule);
+    padding: 0.5rem 0.65rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--stone);
+}
+
+.bsheet__ear:last-child {
+    justify-self: end;
+    text-align: right;
+}
+
+/* Dateline: the thick-over-thin double rule with the edition line */
+.bsheet__date {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 0.6rem;
+    padding: 0.5rem 0.2rem;
+    border-top: 3px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+}
+
+.bsheet__date-sep {
+    color: var(--stone);
+}
+
+@keyframes mastRise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+}
+
+/* ============================================================
+   SCROLL REVEAL (gated on JS: without script.js nothing hides)
+   ============================================================ */
+body.reveals-on .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.reveals-on .reveal.is-in {
+    opacity: 1;
+    transform: none;
+}
+
+/* ============================================================
+   PRESS PHOTOS
+   The project's registry gradient as the plate, its icon as the
+   subject, halftone dots printed over the top. Each layer gets
+   its own GPU layer (translateZ + backface-visibility) so the
+   stacked gradients don't seam on high-DPI screens.
+   ============================================================ */
+.bsheet__figure {
+    margin: 0;
+}
+
+.bsheet__photo {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--art);
+    border: 1px solid var(--rule);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    filter: saturate(0.82) contrast(1.02);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.bsheet__photo i {
+    font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+    color: rgba(28, 26, 23, 0.55);
+}
+
+.bsheet__photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(28, 26, 23, 0.38) 1px, transparent 1.35px);
+    background-size: 4px 4px;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.bsheet__caption {
+    padding: 0.35rem 0.1rem 0;
+    font-family: 'Space Mono', monospace;
+    font-style: italic;
+    font-size: 0.62rem;
+    color: var(--stone);
+    border-bottom: 1px solid var(--rule-soft);
+    padding-bottom: 0.45rem;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+.bsheet__sec {
+    margin-top: 2.8rem;
+}
+
+.bsheet__sechead {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.45rem 0.15rem;
+    border-top: 3px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+}
+
+.bsheet__sec-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--acc, var(--clay));
+    white-space: nowrap;
+}
+
+.bsheet__sec-label {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(1.1rem, 2vw, 1.45rem);
+    line-height: 1.1;
+}
+
+.bsheet__sec-folio {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--stone);
+    white-space: nowrap;
+}
+
+/* ---- Stories ---- */
+.bsheet__story {
+    position: relative;
+    isolation: isolate;
+    padding: 0.95rem 0.1rem 1.05rem;
+    border-bottom: 1px solid var(--rule-soft);
+    break-inside: avoid;
+}
+
+/* Stretched link: the story's single tap target; text layers let
+   clicks fall through, the refs opt back in. */
+.bsheet__cover {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.bsheet__cover:focus-visible {
+    outline: 3px solid var(--acc, var(--cobalt));
+    outline-offset: -3px;
+}
+
+.bsheet__folio,
+.bsheet__head,
+.bsheet__deck,
+.bsheet__refs,
+.bsheet__figure {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.bsheet__folio {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--stone);
+}
+
+.bsheet__head {
+    margin-top: 0.2rem;
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: 1.12rem;
+    line-height: 1.2;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color 0.2s ease;
+}
+
+.bsheet__story:hover .bsheet__head,
+.bsheet__story:focus-within .bsheet__head,
+.bsheet__story:active .bsheet__head {
+    text-decoration-color: var(--acc, var(--clay));
+}
+
+.bsheet__deck {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--stone);
+    max-width: 62ch;
+}
+
+.bsheet__badge {
+    display: inline-block;
+    vertical-align: 0.22em;
+    margin-left: 0.4rem;
+    padding: 0.24em 0.6em;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.5rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.bsheet__refs {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5em 1.1em;
+    margin-top: 0.55rem;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.6rem;
+}
+
+.bsheet__ref {
+    pointer-events: auto;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: rgba(28, 26, 23, 0.35);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.3em;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.bsheet__ref--lead {
+    color: var(--acc, var(--clay));
+    text-decoration-color: var(--acc, var(--clay));
+}
+
+.bsheet__ref:hover,
+.bsheet__ref:focus-visible {
+    color: var(--acc, var(--clay));
+    text-decoration-color: var(--acc, var(--clay));
+}
+
+/* ---- Section lead: photo beside text ---- */
+.bsheet__story--lead {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem 1.8rem;
+    padding: 1.2rem 0.1rem 1.3rem;
+    border-bottom: 1px solid var(--rule);
+}
+
+@media (min-width: 768px) {
+    .bsheet__story--lead {
+        grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+        align-items: start;
+    }
+}
+
+.bsheet__head--lead {
+    font-size: clamp(1.45rem, 2.6vw, 2.15rem);
+    line-height: 1.08;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+}
+
+.bsheet__story--lead .bsheet__deck {
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+/* ---- Briefs: ruled newspaper columns ---- */
+.bsheet__briefs {
+    margin-top: 0.3rem;
+    columns: 1;
+    column-gap: 2.4rem;
+    column-rule: 1px solid var(--rule);
+}
+
+@media (min-width: 640px) {
+    .bsheet__briefs { columns: 2; }
+}
+
+@media (min-width: 1024px) {
+    .bsheet__briefs { columns: 3; }
+}
+
+/* ============================================================
+   COLOPHON + FOOTER
+   ============================================================ */
+.bsheet__colophon {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.3em 0.6em;
+    margin-top: 3rem;
+    padding: 0.6rem 0.15rem 0;
+    border-top: 3px solid var(--ink);
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--stone);
+}
+
+.bsheet__colophon-link {
+    margin-left: auto;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: rgba(28, 26, 23, 0.35);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.3em;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.bsheet__colophon-link:hover,
+.bsheet__colophon-link:focus-visible {
+    color: var(--clay);
+    text-decoration-color: var(--clay);
+}
+
+.footer {
+    background: var(--paper-2);
+    color: var(--stone);
+    border-top: 1px solid var(--rule-soft);
+}
+
+/* ============================================================
+   SMALL SCREENS
+   ============================================================ */
+@media (max-width: 767px) {
+    .bsheet {
+        padding-top: 6rem;
+    }
+
+    .bsheet__name-row {
+        grid-template-columns: 1fr;
+        padding: 1.1rem 0 0.9rem;
+    }
+
+    .bsheet__ear {
+        display: none;
+    }
+
+    .bsheet__mast-top span:nth-child(2) {
+        display: none;
+    }
+}
+
+/* ============================================================
+   REDUCED MOTION + PRINT
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .bsheet__name-row {
+        animation: none;
+    }
+
+    body.reveals-on .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .bsheet__head,
+    .bsheet__ref,
+    .bsheet__colophon-link {
+        transition: none;
+    }
+}
+
+/* It is a newspaper; it should survive an actual printer. */
+@media print {
+    .navbar,
+    .footer,
+    .bsheet__colophon-link,
+    #gt-wrapper,
+    .skiptranslate {
+        display: none !important;
+    }
+
+    body {
+        background: #fff;
+    }
+
+    .bsheet {
+        padding-top: 0.5rem;
+        max-width: none;
+    }
+
+    .bsheet__sec {
+        break-inside: avoid-page;
+    }
+}
