@@ -8,8 +8,8 @@
 import { node, face, seg, ring } from './css3d.js';
 import {
   rosePetals, tulipPetals, daisyPetals, sunflowerPetals, peonyPetals,
-  poppyPetals, lilyPetals, carnationPetals, lavenderWhorls, spherePoints,
-  coneFaces, bouquetSeats, waveEdgePoints, jitter, MAX_STEMS,
+  poppyPetals, lilyPetals, carnationPetals, lavenderWhorls, dandelionTufts,
+  coneFaces, bouquetSeats, spineSeat, waveEdgePoints, jitter, MAX_STEMS,
   HEAD_RADII, DEFAULT_HEAD_R, stemPath, mixHex, tierPetals,
 } from './logic.js';
 
@@ -155,21 +155,29 @@ export function carnation(parent, variant = 'carnation--crimson', petals = 24) {
 }
 
 /* The dandelion clock: a sphere of downy tufts on a bare stem, with a few
-   fine spokes through the middle so the ball reads as seeds, not fog. */
-export function dandelion(parent, variant = 'dandelion--moon', seed = 0) {
+   fine spokes through the middle so the ball reads as seeds, not fog. The
+   head sits DAND_SPINE.head up the stalk; the bouquet plants it through
+   spineSeat(headLift) so the ball lands ON the dome, not towering over it. */
+export const DAND_SPINE = { head: 70, foot: 6 };
+export function dandelion(parent, variant = 'dandelion--moon', seed = 0, tier = 'full') {
   const g = node(parent, {}, `flower dandelion ${variant}`);
-  stemCross(g, 76, -70);
-  const head = node(g, { y: '-70px' });
+  stemCross(g, DAND_SPINE.head + DAND_SPINE.foot, -DAND_SPINE.head);
+  const head = node(g, { y: `${-DAND_SPINE.head}px` });
+  /* Three crossed faint discs under the tufts: the down's own soft body,
+     so the shell reads as one connected ball from every angle instead of
+     loose specks against the dark backdrop. */
+  for (const vars of [{ ry: '0deg' }, { ry: '90deg' }, { rx: '90deg' }]) {
+    sized(face(head, vars, 'dand-halo'), 44, 44);
+  }
   sized(face(head, { ry: '0deg' }, 'dand-heart'), 9, 9);
   sized(face(head, { ry: '90deg' }, 'dand-heart'), 9, 9);
-  spherePoints(16, 19).forEach((pt, i) => {
-    const p = node(head, { x: `${pt.x}px`, y: `${pt.y}px`, z: `${pt.z}px` });
-    const d = 8.5 + jitter(i + seed, 1.5, 7);
-    sized(face(p, { ry: '0deg' }, 'dand-tuft'), d, d);
-    sized(face(p, { ry: '90deg' }, 'dand-tuft'), d, d);
-  });
+  for (const t of dandelionTufts(tierPetals(tier, 22, 14), 17, seed)) {
+    const p = node(head, { x: `${t.x}px`, y: `${t.y}px`, z: `${t.z}px` });
+    sized(face(p, { ry: '0deg' }, 'dand-tuft'), t.d, t.d);
+    sized(face(p, { ry: '90deg' }, 'dand-tuft'), t.d, t.d);
+  }
   for (let i = 0; i < 7; i++) {
-    sized(face(head, { ry: `${i * 26}deg`, rz: `${(i * 47) % 180}deg` }, 'dand-spoke'), 1.2, 38);
+    sized(face(head, { ry: `${i * 26}deg`, rz: `${(i * 47) % 180}deg` }, 'dand-spoke'), 1.4, 34);
   }
   return g;
 }
@@ -200,10 +208,12 @@ export function lavender(parent, variant = 'lavender--violet', seed = 0) {
 }
 
 /* Baby's breath: a stem that ends in a loose cloud of tiny white puffs.
-   Each puff is two crossed soft circles so it reads from every angle. */
+   Each puff is two crossed soft circles so it reads from every angle. The
+   stalk must run INTO the cloud (top -58 reaches the lowest puffs at ~-48),
+   or the puffs read as loose white dots hovering over a stub. */
 export function sprig(parent, seed = 0) {
   const g = node(parent, {}, 'flower sprig');
-  stemCross(g, 70, -10);
+  stemCross(g, 118, -58);
   for (let i = 0; i < 7; i++) {
     const p = node(g, {
       x: `${jitter(i + seed, 19)}px`,
@@ -217,10 +227,12 @@ export function sprig(parent, seed = 0) {
   return g;
 }
 
-/* Eucalyptus-ish greenery: a tall stem with pairs of small round leaves. */
+/* Eucalyptus-ish greenery: a tall stem with pairs of small round leaves.
+   The stalk spans the whole leaf ladder (top leaf base sits at -100), so
+   the leaves hang on a visible rail instead of floating in a diagonal. */
 export function greenery(parent, seed = 0) {
   const g = node(parent, {}, 'flower euca');
-  stemCross(g, 78, -12);
+  stemCross(g, 166, -100);
   for (let k = 0; k < 7; k++) {
     const leafSpec = {
       ry: `${(k % 2 ? 100 : 262) + jitter(k + seed, 18)}deg`,
@@ -257,8 +269,9 @@ function stemCross(parent, h, top) {
 /* ==========================================================================
    The stall's catalogue: everything the menu can order. `planes` is a
    rough per-head estimate for the live counter; `focal` heads compete for
-   the center seat; `seatAdjust` sinks the tall self-stemmed ones so their
-   heads don't tower over the dome; `preview` frames the menu-card scene.
+   the center seat; `headLift` plants a self-stemmed species through
+   spineSeat so its head lands on the dome (seatAdjust is the older static
+   nudge, still used by lavender); `preview` frames the menu-card scene.
    ========================================================================== */
 
 export const FLOWER_TYPES = [
@@ -295,9 +308,9 @@ export const FLOWER_TYPES = [
     variants: ['carnation--crimson', 'carnation--snow'],
     planes: 48, preview: { s: 0.68, y: 8 } },
   { key: 'dandelion', label: 'Dandelion', latin: 'Taraxacum',
-    build: (p, v, seed = 0) => dandelion(p, v, seed),
+    build: (p, v, seed = 0, tier = 'full') => dandelion(p, v, seed, tier),
     variants: ['dandelion--moon'],
-    planes: 45, seatAdjust: { y: 44, r: 10, tilt: 4, s: -0.2 }, stemFoot: 6,
+    planes: 56, seatAdjust: { s: -0.2 }, headLift: DAND_SPINE.head, stemFoot: DAND_SPINE.foot,
     preview: { s: 0.62, y: 42 } },
   { key: 'lavender', label: 'Lavender', latin: 'Lavandula',
     build: (p, v, seed = 0) => lavender(p, v, seed),
@@ -510,6 +523,10 @@ export function buildBouquet(root, order = DEFAULT_ORDER, opts = {}) {
       seat.tilt += adj.tilt ?? 0;
       seat.s += adj.s ?? 0;
     }
+    /* A self-stemmed species' head sits headLift up its own stalk: sink the
+       seat along the tilted spine axis so the head lands back on the dome
+       point the packer reserved (after any seatAdjust scale tweak). */
+    if (inst.def.headLift) Object.assign(seat, spineSeat(seat, inst.def.headLift));
     /* Every head gets a curved stem that ties into the central bundle.
        Self-stemmed species (dandelion, lavender) carry their own dark spine
        down to `stemFoot`, where the chain picks up dark-to-dark. */

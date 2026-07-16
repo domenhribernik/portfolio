@@ -11,8 +11,9 @@ the contract below.
   the DOM helpers (`node`, `face`, `seg`, `ring`). Keep these two files free of anything
   flower-specific so they stay liftable.
 - `logic.js`: pure math and state, no DOM (petal spec functions for all ten species, cone
-  geometry, sphere point spread, `domeProfile` + `bouquetSeats` collision-free dome
-  arrangement, `seatPoint`/`stemPath` curved-stem geometry, `renderTier`/`tierPetals` device
+  geometry, sphere point spread + the `dandelionTufts` clock shell, `domeProfile` +
+  `bouquetSeats` collision-free dome arrangement, `seatPoint`/`spineSeat`/`stemPath`
+  curved-stem geometry, `renderTier`/`tierPetals` device
   tiering, `mixHex`, the rim's `waveEdgePoints` scallop, the stall's order logic
   `stepCount`/`orderTotal`/`surpriseCounts`, deterministic `jitter`). Tested by
   `node --test tests/flowers-logic.test.mjs`.
@@ -56,8 +57,10 @@ paused and spin on card hover). Generate clears `#bouquet-root`, calls
 - Variants cycle per instance (`i % variants.length`), so three roses come in three colorways.
 - `MAX_STEMS` (12) caps the order; the UI enforces it in the steppers.
 - **Stems curve into a hand-tied bundle.** `stemPath(seat, {segments, seed, footY})` (logic.js)
-  is one quadratic Bezier from a head's base down to a jittered bind point near the axis inside
-  the wrap throat (`STEM_BIND`), sampled into straight chords. It starts along the head's own
+  is one quadratic Bezier from a head's base down to a jittered bind point near the axis, DEEP
+  in the wrap, almost at the cone's base (`STEM_BIND`; the tie depth matters: rim-high ties
+  curl every stem inward right below the heads, deep ties keep the run long and near-straight,
+  arriving near-vertical). Sampled into straight chords. It starts along the head's own
   tilt (so the stem grows cleanly out of the flower) and gathers inward; `seatPoint` projects
   the seat-local start into the bouquet frame. `buildBouquet`'s `plantStemmed` hangs each chord
   on the flower's SWAY node (a sibling of the seat, in the seat's azimuth plane), so the stem
@@ -66,12 +69,16 @@ paused and spin on card hover). Generate clears `#bouquet-root`, calls
   `tilt` (positive = leans outward); the builder writes `rx: -tilt`, matching `plant()`. Each
   chord wears a slice of the stem gradient (`mixHex`) so the chain reads as one stalk; heads run
   light->dark, spine species (dandelion, lavender, greens) run dark->dark so the joint with their
-  own spine doesn't band. The bind sits below the rim, hidden by the paper. There is no separate
-  decorative throat-stem ring any more; the real stems fill the throat. `footY` starts the curve
+  own spine doesn't band. The bind sits deep inside the cone, hidden by the paper. There is no
+  separate decorative throat-stem ring any more; the real stems fill the throat. `footY` starts the curve
   at a self-stemmed species' spine foot (`stemFoot` in `FLOWER_TYPES`: dandelion 6, lavender 10;
   greens pass their own).
-- Tall self-stemmed species (dandelion, lavender) also carry `seatAdjust` to sink their seat so
-  the head lines up with the dome.
+- Tall self-stemmed species sink their seat so the head lines up with the dome. The dandelion
+  does it with `headLift`: `buildBouquet` runs the seat through `spineSeat(seat, lift)`
+  (logic.js), which sinks it ALONG THE TILTED SPINE AXIS so the head lands exactly on the dome
+  point the packer reserved. Sinking straight down instead (the older static `seatAdjust`,
+  still used by lavender) leaves the radial term uncompensated; a 70px spine on a ~40deg rim
+  seat overshot the wrap by ~45px, reading as a ball of white dots hovering in the sky.
 - The wrap rim is `scallopClip` in flowers.js over `waveEdgePoints`: one smooth cosine arc
   per facet, with the liner half a phase offset so its crests peek through the outer dips.
   Integer wave counts keep the edge continuous across facet seams.
@@ -167,6 +174,17 @@ normal). Specs in logic.js keep openness positive; flowers.js multiplies by `-1`
   down into the tissue collar) and spreads their heights with a low-discrepancy stagger so
   neighbours don't share a plane. Stems curve into the throat (`stemPath`) and their bind
   ends sit below the rim, hidden by the paper.
+- **A species' own stalk must span its foliage.** The bundle stem (`stemPath`) only runs from
+  `footY` DOWN into the wrap; everything above the foot is the species' own `stemCross`, and it
+  must reach INTO the visual mass (the dandelion ball's center, the sprig's lowest puffs, the
+  euca's top leaf pair). A stalk that stops short leaves puffs/leaves floating in the sky,
+  which is exactly how the sprig (top -10 vs puffs from -48) and euca (top -12 vs leaves to
+  -100) originally shipped.
+- **Sparse translucent shells read as dots, not volume.** The dandelion clock needs its tuft
+  ink to cover roughly a third of the sphere shell (unit-tested against `dandelionTufts`
+  defaults) plus the three faint `dand-halo` discs underneath; thin it only via `tierPetals`
+  count, never by shrinking tuft faces, or it falls apart into specks against the dark
+  backdrop.
 - **Flat flowers' cores ride the bloom.** The sunflower and daisy seed cores set `--y`
   through `bloomY(open, closed)` (flowers.js): the core caps the closed bud, then settles
   onto the petal disc as the petals fold flat. A fixed-height core hovers in mid-air at

@@ -209,6 +209,18 @@ export function spherePoints(n, radius) {
   return pts;
 }
 
+/* The dandelion clock's downy shell: `count` tufts spread over a sphere,
+   each with its own jittered face size. The defaults are calibrated so the
+   crossed tuft pairs ink enough of the shell to read as one connected ball
+   of down; thin them (count) only through tierPetals, never by shrinking d,
+   or the clock falls back apart into loose specks. */
+export function dandelionTufts(count = 22, radius = 17, seed = 0) {
+  return spherePoints(count, radius).map((pt, i) => ({
+    ...pt,
+    d: 10 + jitter(i + seed, 2, 7),
+  }));
+}
+
 /* Seats for n flower heads arranged as a dome: azimuth around the wrap,
    radius from the axis, height (negative = up), outward tilt, scale.
    Seat 0 is the pinned focal center; the rest are seeded on a golden-angle
@@ -425,12 +437,31 @@ export function seatPoint(seat, localY) {
   };
 }
 
-/* Where each stem ties off near the axis, just inside the wrap throat: a
-   small jittered radius (rMin..rMax off-axis, either side) and depth
-   (yMin..yMax below the rim), so the ends gather like a hand-tied bundle and
-   stay hidden under the paper. minDrop keeps the tie at least this far below a
-   stem's foot, for greens whose foot already sits near the rim. */
-export const STEM_BIND = { rMin: 4, rMax: 14, yMin: 2, yMax: 14, minDrop: 6 };
+/* Plant a self-stemmed species (dandelion, lavender) so its head lands on
+   the dome seat the packer reserved. The head sits `lift` up the species'
+   own stalk, so the seat must sink by that much ALONG THE TILTED SPINE AXIS:
+   seatPoint of -lift from the returned seat is exactly (seat.r, seat.y).
+   Sinking straight down instead (the old static seatAdjust) left the radial
+   term uncompensated, and a 70px spine on a 40deg rim seat overshot the wrap
+   by ~45px: a ball of tufts hovering in the sky beside the bouquet. */
+export function spineSeat(seat, lift) {
+  const t = (seat.tilt * Math.PI) / 180;
+  const s = seat.s ?? 1;
+  return {
+    ...seat,
+    r: seat.r - s * lift * Math.sin(t),
+    y: seat.y + s * lift * Math.cos(t),
+  };
+}
+
+/* Where each stem ties off near the axis, deep in the wrap: a small jittered
+   radius (rMin..rMax off-axis, either side) and depth (yMin..yMax, almost at
+   the cone's base; the rim is at y -18 and the base at y 150). Gathering LOW
+   matters: a tie just under the rim bends every stem toward the axis right
+   below the heads (harsh curls, empty throat), while a deep tie lets the
+   stems run long and near-straight before bunching, like a real hand-tied
+   bouquet. minDrop keeps the tie at least this far below a stem's foot. */
+export const STEM_BIND = { rMin: 4, rMax: 14, yMin: 108, yMax: 136, minDrop: 6 };
 /* Each chord is drawn a hair longer than its span so neighbouring segments
    overlap at the joints instead of leaving a gap. */
 export const OVERLAP_EPS = 1.2;

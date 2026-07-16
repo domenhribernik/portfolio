@@ -283,11 +283,18 @@ body::after {
 
 .dand-tuft {
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(252, 250, 240, 0.95) 0 16%, rgba(252, 250, 240, 0.32) 44%, transparent 70%);
+  background: radial-gradient(circle, rgba(252, 250, 240, 0.95) 0 22%, rgba(252, 250, 240, 0.55) 46%, rgba(252, 250, 240, 0.2) 62%, transparent 78%);
+}
+
+/* The clock's soft body: three crossed faint discs under the tufts, tying
+   the specks together into one downy ball (see dandelion() in flowers.js). */
+.dand-halo {
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(250, 246, 232, 0.3) 0 28%, rgba(250, 246, 232, 0.14) 52%, transparent 72%);
 }
 
 .dand-spoke {
-  background: linear-gradient(to top, transparent, rgba(240, 232, 214, 0.5), transparent);
+  background: linear-gradient(to top, transparent, rgba(240, 232, 214, 0.55), transparent);
 }
 
 .dand-heart {

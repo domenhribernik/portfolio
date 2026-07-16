@@ -17,6 +17,7 @@ import {
   carnationPetals,
   lavenderWhorls,
   spherePoints,
+  dandelionTufts,
   domeProfile,
   DOME_ANCHORS,
   SEAT_RMAX,
@@ -26,6 +27,7 @@ import {
   DEFAULT_HEAD_R,
   bouquetSeats,
   seatPoint,
+  spineSeat,
   stemPath,
   STEM_BIND,
   OVERLAP_EPS,
@@ -429,6 +431,74 @@ test('seatPoint is identity at the origin', () => {
   assert.equal(p.y, -60);
 });
 
+test('spineSeat lands a self-stemmed head exactly on its dome seat', () => {
+  // A spine species (dandelion, lavender) carries its head `lift` up its own
+  // stalk. Sinking the seat straight down (the old static seatAdjust) throws
+  // the head radially outside the wrap on tilted rim seats (70 * sin(40deg)
+  // is ~45px of overshoot: the "white dots in the sky" bug). spineSeat sinks
+  // the seat along the tilted spine axis instead, so the head comes back to
+  // the exact point the dome packer reserved for it.
+  const seats = [
+    { a: 20, r: 0, stag: 0, y: -100, tilt: 0, s: 1.2 },
+    { a: 130, r: 54, stag: 4, y: -88, tilt: 22, s: 1.22 },
+    { a: 250, r: 76, stag: 0, y: -60, tilt: 38, s: 0.78 },
+    { a: 305, r: SEAT_RMAX, stag: 8, y: -62, tilt: 40, s: 0.94 },
+  ];
+  for (const seat of seats) {
+    for (const lift of [70, 62]) {
+      const planted = spineSeat(seat, lift);
+      const head = seatPoint(planted, -lift);
+      assert.ok(near(head.z, seat.r, 1e-9), `head z ${head.z} misses dome r ${seat.r}`);
+      assert.ok(near(head.y, seat.y, 1e-9), `head y ${head.y} misses dome y ${seat.y}`);
+      // Everything but the planting point is untouched, and the input seat
+      // is not mutated (the packer's seats are shared state).
+      assert.equal(planted.a, seat.a);
+      assert.equal(planted.stag, seat.stag);
+      assert.equal(planted.tilt, seat.tilt);
+      assert.equal(planted.s, seat.s);
+      assert.notEqual(planted, seat);
+    }
+  }
+});
+
+test('dandelionTufts spreads sized tufts over the clock sphere', () => {
+  const tufts = dandelionTufts(22, 17, 3);
+  assert.equal(tufts.length, 22);
+  for (const t of tufts) {
+    const rr = Math.hypot(t.x, t.y, t.z);
+    assert.ok(near(rr, 17, 1e-6), `tuft off the sphere shell: ${rr}`);
+    assert.ok(t.d >= 8 && t.d <= 13, `tuft size ${t.d} out of range`);
+  }
+  // Deterministic per seed, varied across seeds (per-instance variety).
+  assert.deepEqual(dandelionTufts(22, 17, 3), tufts);
+  assert.notDeepEqual(dandelionTufts(22, 17, 4).map((t) => t.d), tufts.map((t) => t.d));
+});
+
+test('dandelionTufts covers the shell densely enough to read as down', () => {
+  // The "white dots in the sky" half of the bug: tufts whose ink covers a
+  // few percent of the sphere read as loose specks, not a downy ball. Each
+  // crossed tuft pair inks roughly a d-sized disc; the defaults must keep
+  // that total above a third of the shell's area.
+  const tufts = dandelionTufts();
+  const shell = 4 * Math.PI * 17 * 17;
+  const ink = tufts.reduce((sum, t) => sum + Math.PI * (t.d / 2) ** 2, 0);
+  assert.ok(tufts.length >= 20, `only ${tufts.length} tufts`);
+  assert.ok(ink / shell >= 0.34, `ink covers only ${(ink / shell * 100).toFixed(0)}% of the shell`);
+});
+
+test('spineSeat keeps the stalk inside the wrap', () => {
+  // The planted seat (and the spine foot just below it) must sit in the
+  // throat, under the rim (y -18), not hover in the air beside the cone:
+  // that is what hides the hand-off from the species' own spine to the
+  // curved bundle stem.
+  for (const r of [0, 40, 66, SEAT_RMAX]) {
+    const p = domeProfile(r);
+    const planted = spineSeat({ a: 0, r, stag: 0, y: p.y, tilt: p.tilt, s: p.s }, 70);
+    assert.ok(planted.y > -18, `seat y ${planted.y} floats above the rim at r=${r}`);
+    assert.ok(Math.abs(planted.r) <= 96, `seat r ${planted.r} outside the cone at r=${r}`);
+  }
+});
+
 /* Reconstruct a stem chord's two ends from its stored midpoint, tilt (seat
    convention: down-axis is (-sin, cos)) and length. */
 function chordEnds(ch) {
@@ -479,12 +549,37 @@ test('stemPath enters the flower along its tilt', () => {
   }
 });
 
-test('stemPath ties off inside the wrap throat', () => {
+test('stemPath ties off near the base of the wrap', () => {
+  // The wrap cone runs from the rim (y -18) down to its base (y 150) in the
+  // bouquet frame. The bundle gathers LOW, almost at the base: a high tie
+  // point curls every stem toward the axis right under the heads (harsh
+  // bends, empty throat); a deep one lets them run long and near-straight.
   for (const seed of [0, 1, 2, 3, 7]) {
-    const seat = { r: 70, y: -62, tilt: 36, s: 1 };
-    const end = chordEnds(stemPath(seat, { segments: 4, seed }).at(-1)).bottom;
-    assert.ok(Math.abs(end.z) <= STEM_BIND.rMax + OVERLAP_EPS + 0.5, `bind z ${end.z} outside throat`);
-    assert.ok(end.y > -6, `bind y ${end.y} not tucked below the rim`);
+    for (const seat of [{ r: 70, y: -62, tilt: 36, s: 1 }, { r: 0, y: -100, tilt: 0, s: 1.4 }]) {
+      const end = chordEnds(stemPath(seat, { segments: 4, seed }).at(-1)).bottom;
+      assert.ok(Math.abs(end.z) <= STEM_BIND.rMax + OVERLAP_EPS + 0.5, `bind z ${end.z} outside throat`);
+      assert.ok(end.y >= 100, `bind y ${end.y} ties off too high up the throat`);
+      assert.ok(end.y <= 145, `bind y ${end.y} pokes out of the wrap's base`);
+    }
+  }
+});
+
+test('stemPath straightens as it descends into the bundle', () => {
+  // The deep tie point is what makes the bend gentle: each chord leans less
+  // than the one above it, and the stem arrives at the bind near-vertical.
+  // (With the old rim-high tie, stems arrived ~52deg off vertical: the harsh
+  // inward curl right below the heads this locks out.)
+  for (const seed of [1, 4, 8]) {
+    for (const seat of [{ r: 76, y: -58, tilt: 38, s: 1 }, { r: 60, y: -80, tilt: 24, s: 1.15 }]) {
+      const path = stemPath(seat, { segments: 4, seed });
+      for (let i = 1; i < path.length; i++) {
+        assert.ok(
+          Math.abs(path[i].tilt) <= Math.abs(path[i - 1].tilt) + 1e-6,
+          `chord ${i} leans harder than the one above it (seed ${seed})`,
+        );
+      }
+      assert.ok(Math.abs(path.at(-1).tilt) <= 15, `arrives ${path.at(-1).tilt}deg off vertical (seed ${seed})`);
+    }
   }
 });
 
