@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wild Flowers | The Paper Bouquet Regrown in WebGL</title>
+    <meta name="description" content="The Paper Flowers bouquet rebuilt with three.js: the same species, seats and stems, but every petal is real instanced geometry now. Then the wrap comes off and the same math plants a meadow of thousands of swaying flowers, with live fps and draw call meters.">
+    <link rel="canonical" href="https://domenhribernik.com/views/wildflowers/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Wild Flowers, the paper bouquet regrown in WebGL">
+    <meta property="og:description" content="Same flower math as Paper Flowers, different renderer: instanced petals, GPU bloom and wind, real moonlight, and a meadow of thousands of stems where CSS caps at twelve.">
+    <meta property="og:url" content="https://domenhribernik.com/views/wildflowers/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Albert+Sans:wght@300;400;500;600&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        night: '#0b100c',
+                        moss: '#121a13',
+                        cream: '#f0e8d6',
+                        sage: '#9fae97',
+                        corn: '#8ea6f0',
+                        gold: '#d9a851',
+                        rose: '#e78fa3',
+                    },
+                    fontFamily: {
+                        display: ['"Instrument Serif"', 'Georgia', 'serif'],
+                        sans: ['"Albert Sans"', 'sans-serif'],
+                        mono: ['"Fragment Mono"', 'monospace'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(240, 232, 214, 0.14)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.min.js"
+        }
+    }
+    </script>
+    <script>
+        /* If the module graph never boots (no import map support, blocked CDN,
+           no WebGL), fold the hero back to the graceful card. */
+        setTimeout(function () {
+            if (!window.__wf_boot) {
+                var boot = document.getElementById('boot-label');
+                if (boot) boot.remove();
+                var fb = document.getElementById('gl-fallback');
+                if (fb) fb.classList.remove('hidden');
+            }
+        }, 8000);
+    </script>
+</head>
+<body class="font-sans bg-night text-cream min-h-screen antialiased">
+
+    <!-- Hero: the garden on stage -->
+    <section class="relative">
+
+        <header class="absolute top-0 left-0 right-0 z-20 pointer-events-none">
+            <div class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-5 sm:pt-7 flex items-center justify-between">
+                <a id="back-link" href="../../" class="pointer-events-auto font-mono text-sm text-sage no-underline hover:text-corn transition-colors" aria-label="Back">&larr; back</a>
+                <span class="hidden sm:inline font-mono text-[0.65rem] tracking-[0.28em] uppercase text-sage/80 text-right">Grown on the GPU · Same math as the paper one</span>
+            </div>
+        </header>
+
+        <!-- The WebGL stage -->
+        <div id="scene" class="gl-scene w-full">
+            <canvas id="gl-canvas" aria-label="A 3D night garden: drag to turn it"></canvas>
+            <p id="boot-label" class="absolute bottom-16 left-1/2 -translate-x-1/2 z-10 font-mono text-[0.65rem] tracking-[0.3em] uppercase text-sage/80 pointer-events-none">germinating&hellip;</p>
+            <div id="gl-fallback" class="hidden absolute inset-0 z-10 flex items-center justify-center p-6">
+                <div class="max-w-[44ch] border border-hairline rounded-md bg-moss/80 p-6 text-center">
+                    <p class="font-display italic text-2xl mb-3">The greenhouse stayed dark.</p>
+                    <p class="text-sage text-sm leading-relaxed mb-4">
+                        WebGL did not start here, so nothing can grow on this stage. The paper
+                        original needs no GPU at all: every petal there is a div.
+                    </p>
+                    <a href="../flowers/" class="inline-block font-mono text-[0.68rem] tracking-[0.25em] uppercase text-cream border border-hairline rounded-full px-4 py-2 no-underline hover:border-corn hover:text-corn transition-colors">visit Paper Flowers &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Headline, floating over the stage -->
+        <div class="absolute top-0 left-0 z-10 pointer-events-none w-full">
+            <div class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-16 sm:pt-24">
+                <p class="reveal reveal-1 font-mono text-[0.68rem] sm:text-xs tracking-[0.3em] uppercase text-corn mb-3">All WebGL · One canvas · The same math</p>
+                <h1 class="reveal reveal-2 font-display text-[clamp(3.4rem,10vw,7rem)] leading-[0.95] tracking-tight">
+                    Wild<br><span class="italic text-corn">Flowers</span>
+                </h1>
+                <p class="reveal reveal-3 mt-4 max-w-[36ch] text-sage text-[clamp(0.95rem,2vw,1.1rem)] leading-relaxed">
+                    The <a href="../flowers/" class="pointer-events-auto text-cream underline decoration-corn/40 underline-offset-4 hover:decoration-corn">paper bouquet</a>, regrown as real geometry:
+                    <span class="font-mono text-cream text-[0.9em]" data-instance-count>a few hundred</span> instanced
+                    parts, blooming and swaying on the GPU.
+                </p>
+                <p class="reveal reveal-4 mt-5">
+                    <a href="#counter" class="pointer-events-auto inline-block font-mono text-[0.68rem] tracking-[0.25em] uppercase text-cream border border-hairline rounded-full px-4 py-2 no-underline hover:border-corn hover:text-corn transition-colors">Open the meadow &darr;</a>
+                </p>
+            </div>
+        </div>
+
+        <p class="absolute bottom-4 right-5 sm:right-8 z-10 pointer-events-none font-mono text-[0.65rem] tracking-[0.2em] uppercase text-sage/60">drag to turn it</p>
+    </section>
+
+    <!-- Controls -->
+    <section class="border-y border-hairline bg-moss/60">
+        <div class="max-w-[1200px] mx-auto px-5 sm:px-8 py-4 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <div class="flex items-center rounded-full border border-hairline overflow-hidden">
+                <button id="mode-bouquet" aria-pressed="true"
+                    class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 text-sage hover:text-cream aria-pressed:bg-cream aria-pressed:text-night transition-colors">
+                    bouquet
+                </button>
+                <button id="mode-meadow" aria-pressed="false"
+                    class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 text-sage hover:text-cream aria-pressed:bg-cream aria-pressed:text-night transition-colors border-l border-hairline">
+                    meadow
+                </button>
+            </div>
+            <label class="flex items-center gap-3 min-w-[170px] flex-1 sm:flex-none sm:w-[220px]">
+                <span class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-sage">Bloom</span>
+                <input id="bloom-slider" type="range" min="0" max="100" value="0" class="wf-range flex-1" aria-label="Bloom amount">
+            </label>
+            <label id="density-wrap" class="hidden flex items-center gap-3 min-w-[190px] flex-1 sm:flex-none sm:w-[250px]">
+                <span class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-sage">Stems</span>
+                <input id="density-slider" type="range" min="120" max="4000" step="40" value="900" class="wf-range flex-1" aria-label="Meadow density">
+                <b id="density-value" class="font-mono text-[0.72rem] text-gold font-normal min-w-[3.5ch]">900</b>
+            </label>
+            <button id="wind-toggle" aria-pressed="false"
+                class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 aria-pressed:bg-cream aria-pressed:text-night aria-pressed:border-cream transition-colors">
+                wind
+            </button>
+            <button id="xray-toggle" aria-pressed="false"
+                class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 aria-pressed:bg-cream aria-pressed:text-night aria-pressed:border-cream transition-colors">
+                x-ray
+            </button>
+            <button id="shadow-toggle" aria-pressed="false"
+                class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 aria-pressed:bg-cream aria-pressed:text-night aria-pressed:border-cream transition-colors">
+                shadows
+            </button>
+            <button id="spin-toggle" aria-pressed="false"
+                class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 transition-colors">
+                <span>still</span>
+            </button>
+            <span class="ml-auto flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/70">
+                <span><b id="hud-fps" class="text-gold font-normal">&hellip;</b></span>
+                <span>draw calls: <b id="hud-calls" class="text-gold font-normal">0</b></span>
+                <span>triangles: <b id="hud-tris" class="text-gold font-normal">0</b></span>
+            </span>
+            <p id="equiv-line" class="w-full font-mono text-[0.62rem] tracking-[0.18em] uppercase text-sage/50"></p>
+        </div>
+    </section>
+
+    <!-- The counter: arrangements and field densities -->
+    <section id="counter" class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-16 sm:pt-24">
+        <div class="flex items-baseline gap-4 mb-2">
+            <h2 class="font-display italic text-3xl sm:text-4xl whitespace-nowrap">The counter</h2>
+            <div class="hidden sm:block flex-1 border-b border-dotted border-cream/25"></div>
+            <span class="hidden sm:inline font-mono text-[0.65rem] tracking-[0.25em] uppercase text-sage/70">no vase needed</span>
+        </div>
+        <p class="text-sage max-w-[68ch] mb-10">
+            Eight of the paper stall's ten species made the crossing, grown from the very same
+            spec functions. Pick an arrangement and it is planted through the same dome seating
+            the paper wrap uses, or skip the wrap entirely and plant a field of them.
+        </p>
+
+        <div id="preset-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+
+        <div class="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4 border border-hairline rounded-md bg-moss/60 px-5 py-4">
+            <span class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage">
+                on stage: <b class="text-cream font-normal" data-stem-count>0</b> stems ·
+                <b class="text-gold font-normal" data-instance-count>0</b> instances
+            </span>
+            <button id="surprise-btn"
+                class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-4 py-2.5 border border-hairline rounded-full text-sage hover:text-cream hover:border-cream/40 transition-colors">
+                surprise me
+            </button>
+            <div class="ml-auto flex flex-wrap items-center gap-3">
+                <span class="font-mono text-[0.62rem] tracking-[0.25em] uppercase text-sage/60">or plant a field:</span>
+                <button data-density="300" class="font-mono text-[0.68rem] tracking-[0.2em] uppercase px-4 py-2.5 border border-hairline rounded-full text-sage hover:text-corn hover:border-corn/50 transition-colors">300</button>
+                <button data-density="900" class="font-mono text-[0.68rem] tracking-[0.2em] uppercase px-4 py-2.5 border border-hairline rounded-full text-sage hover:text-corn hover:border-corn/50 transition-colors">900</button>
+                <button data-density="2200" class="font-mono text-[0.68rem] tracking-[0.2em] uppercase px-4 py-2.5 border border-hairline rounded-full text-sage hover:text-corn hover:border-corn/50 transition-colors">2,200</button>
+                <button data-density="4000" class="font-mono text-[0.68rem] tracking-[0.2em] uppercase px-6 py-2.5 rounded-full bg-corn text-night border border-corn hover:bg-cream hover:border-cream transition-colors">4,000 stems</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Same DNA, different renderer -->
+    <section class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-16 sm:pt-24">
+        <div class="flex items-baseline gap-4 mb-2">
+            <h2 class="font-display italic text-3xl sm:text-4xl whitespace-nowrap">Same DNA, different renderer</h2>
+            <div class="hidden sm:block flex-1 border-b border-dotted border-cream/25"></div>
+        </div>
+        <p class="text-sage max-w-[68ch] mb-10">
+            This page imports its flower math straight from the paper one:
+            <span class="font-mono text-[0.9em] text-cream">rosePetals()</span>,
+            <span class="font-mono text-[0.9em] text-cream">bouquetSeats()</span> and the stem
+            Bezier are shared, so a rose opens to the same angles and a bouquet packs into the
+            same dome in both. Everything after the math is a different world, and that
+            difference is the whole experiment.
+        </p>
+
+        <div class="overflow-x-auto border border-hairline rounded-md">
+            <table class="w-full min-w-[720px] text-sm leading-relaxed">
+                <thead>
+                    <tr class="border-b border-hairline bg-moss/60 font-mono text-[0.65rem] tracking-[0.25em] uppercase">
+                        <th class="text-left font-normal text-sage/60 px-5 py-3 w-[16%]"></th>
+                        <th class="text-left font-normal text-rose px-5 py-3 w-[42%]">Paper Flowers (CSS)</th>
+                        <th class="text-left font-normal text-corn px-5 py-3 w-[42%]">Wild Flowers (WebGL)</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sage [&_td]:px-5 [&_td]:py-3.5 [&_td]:align-top [&_tr]:border-b [&_tr]:border-hairline last:[&_tr]:border-b-0">
+                    <tr>
+                        <td class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/60">a petal is</td>
+                        <td>a flat div wearing a gradient, hinged on its bottom edge; curvature is faked with chained segments</td>
+                        <td>a genuinely cupped and curled surface of ~160 triangles, gradient baked into vertex colors</td>
+                    </tr>
+                    <tr>
+                        <td class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/60">placed by</td>
+                        <td>the custom property transform pipeline (<span class="font-mono text-[0.85em] text-cream">--ry --rx --oz --s</span>), one element per plane</td>
+                        <td>one instance matrix per petal, computed from the same spec numbers, thousands per draw call</td>
+                    </tr>
+                    <tr>
+                        <td class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/60">bloom</td>
+                        <td>a <span class="font-mono text-[0.85em] text-cream">--bloom</span> variable cascades into every petal's rotateX; each change invalidates the whole scene</td>
+                        <td>a <span class="font-mono text-[0.85em] text-cream">uBloom</span> uniform; the vertex shader rotates every petal at its hinge, one float per frame</td>
+                    </tr>
+                    <tr>
+                        <td class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/60">wind</td>
+                        <td>CSS keyframes gently roll whole flowers; turned off on phones because it repaints the scene</td>
+                        <td><span class="font-mono text-[0.85em] text-cream">sin()</span> in the vertex shader: stalks shear by height, heads ride their stalk tips, petals flutter, near zero cost</td>
+                    </tr>
+                    <tr>
+                        <td class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/60">light</td>
+                        <td>painted by hand into every gradient; the shadow under the bouquet is a radial gradient div</td>
+                        <td>a warm moon with a real shadow map, a sky hemisphere, and a cornflower fill; petals shade as they turn</td>
+                    </tr>
+                    <tr>
+                        <td class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/60">the ceiling</td>
+                        <td>12 stems and roughly 520 planes: past that, the compositor's plane splitting turns quadratic and the frame dies</td>
+                        <td>4,000 stems and a couple million triangles on an ordinary laptop; the cost curve is one draw call per part kind</td>
+                    </tr>
+                    <tr>
+                        <td class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-sage/60">inspect a petal</td>
+                        <td>right-click it, it is a div; the whole flower reads in the Elements panel</td>
+                        <td>it is three floats in a <span class="font-mono text-[0.85em] text-cream">Float32Array</span>; bring a debugger and a torch</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Field notes -->
+    <section class="max-w-[1200px] mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-16">
+        <div class="flex items-baseline gap-4 mb-2">
+            <h2 class="font-display italic text-3xl sm:text-4xl whitespace-nowrap">Field notes</h2>
+            <div class="hidden sm:block flex-1 border-b border-dotted border-cream/25"></div>
+        </div>
+        <p class="text-sage max-w-[68ch] mb-10">
+            An honest scoreboard, because the point of growing the same garden twice was never
+            to declare a winner.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="border border-hairline rounded-md bg-moss/50 p-5">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-rose mb-3">What the paper wins</p>
+                <ul class="text-sm text-sage leading-relaxed space-y-2.5 list-none">
+                    <li>Zero dependencies. This page ships a whole rendering engine from a CDN; that one ships two small files of its own CSS.</li>
+                    <li>Every petal is inspectable, stylable, themeable DOM. A colorway there is one line of CSS.</li>
+                    <li>Vector crispness at any zoom, no GPU context to lose, nothing to fall back from.</li>
+                    <li>The carnation and the dandelion stayed behind on purpose: a fringe mask and a fog of tufts are cheaper to fake with CSS than to mesh honestly.</li>
+                </ul>
+            </div>
+            <div class="border border-hairline rounded-md bg-moss/50 p-5">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-corn mb-3">What the mesh wins</p>
+                <ul class="text-sm text-sage leading-relaxed space-y-2.5 list-none">
+                    <li>Scale. The wrap holds 12 stems; the meadow holds 4,000 and keeps breathing.</li>
+                    <li>Real curvature: a rose petal is cupped and curled, not a hinged rectangle squinted at kindly.</li>
+                    <li>Light that behaves: shadows fall where the moon says, and a turning petal actually shades.</li>
+                    <li>Animation for free: bloom and wind are two floats per frame, whatever the head count. The CSS version pays per plane, every frame.</li>
+                </ul>
+            </div>
+            <div class="border border-hairline rounded-md bg-moss/50 p-5">
+                <p class="font-mono text-[0.65rem] tracking-[0.25em] uppercase text-gold mb-3">How to read the meters</p>
+                <ul class="text-sm text-sage leading-relaxed space-y-2.5 list-none">
+                    <li>Watch draw calls stay flat as you raise the stem slider: instancing means more flowers, same number of GPU conversations.</li>
+                    <li>Toggle shadows in a 4,000-stem field to feel the depth pass double the vertex work.</li>
+                    <li>Flip x-ray to see the triangles the lighting hides, the way the paper page strips its gradients.</li>
+                    <li>The 1% low is the honest number: it is what a stutter feels like.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Colophon -->
+    <footer class="border-t border-hairline">
+        <div class="max-w-[1200px] mx-auto px-5 sm:px-8 py-8 flex flex-wrap gap-x-8 gap-y-2 justify-between">
+            <p class="font-mono text-[0.7rem] text-sage/80 leading-relaxed">
+                <span data-instance-count>0</span> instances, zero divs on stage. Inspect any petal: it is a Float32Array now.
+            </p>
+            <p class="font-mono text-[0.7rem] text-sage/60 leading-relaxed">
+                Standing on: <a href="https://threejs.org/" class="underline underline-offset-2 hover:text-cream">three.js</a> ·
+                <a href="../flowers/" class="underline underline-offset-2 hover:text-cream">Paper Flowers, the original</a> ·
+                <a href="https://threejs.org/docs/#api/en/objects/InstancedMesh" class="underline underline-offset-2 hover:text-cream">InstancedMesh</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="../../components/gtranslate.js"></script>
+</body>
+</html>
