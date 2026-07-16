@@ -1,4 +1,4 @@
-/* views/bloom : page wiring for the Everbloom storefront. Decision logic
+/* views/store : page wiring for the Everbloom storefront. Decision logic
    lives in logic.js (tested); the bouquet builder is the same one the stall
    uses (../flowers/flowers.js), so the hero is the actual product, not a
    render of it. */
@@ -8,7 +8,7 @@ import { easeOutCubic, renderTier } from '../flowers/logic.js';
 import { attachOrbit, pauseOffscreen } from '../flowers/orbit.js';
 import { HERO_ORDER, validateSignup, spotsLine } from './logic.js';
 
-const PROXY = '../../app/proxys/bloom.php';
+const PROXY = '../../app/proxys/store.php';
 
 const scene = document.getElementById('scene');
 const stage = document.getElementById('stage');

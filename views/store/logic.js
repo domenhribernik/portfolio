@@ -1,6 +1,6 @@
 /* Everbloom storefront: pure decision logic, no DOM, so it can be unit-tested
-   (tests/bloom-logic.test.mjs) and shared by script.js. The PHP endpoint
-   (app/proxys/bloom.php) mirrors the signup rules; client checks are only a
+   (tests/store-logic.test.mjs) and shared by script.js. The PHP endpoint
+   (app/proxys/store.php) mirrors the signup rules; client checks are only a
    courtesy, the server is the real gate. */
 
 import { MAX_STEMS } from '../flowers/logic.js';

@@ -1,4 +1,4 @@
-/* views/bloom : layout for the Everbloom storefront.
+/* views/store : layout for the Everbloom storefront.
    The flower skins, scene atmosphere, film grain, autospin and reveal
    keyframes all come from ../flowers/style.css (loaded before this file);
    this file only lays out the shop. Hand-written instead of Tailwind on

@@ -122,7 +122,7 @@ at 6 EUR/mo plus one-offs around occasions (Valentine's, Mother's Day spikes).
 
 1. **Internal (done, in effect):** the builder has been live and verified; friends have
    sent bouquets.
-2. **Alpha (this prototype):** the Everbloom storefront at `views/bloom` with a founding
+2. **Alpha (this prototype):** the Everbloom storefront at `views/store` with a founding
    waitlist. Goal: 100 emails. Promote the free builder, let the shop page convert.
 3. **Beta:** wire Stripe (Payment Links are enough, no custom integration), build the
    permanent-bouquet store (the `flowers.php` JSON store minus the 7-day prune, plus a
@@ -136,17 +136,17 @@ at 6 EUR/mo plus one-offs around occasions (Valentine's, Mother's Day spikes).
 
 ## 7. What the prototype contains (phase 2, built today)
 
-- `views/bloom/`: storefront. Live 3D hero bouquet (reuses the flowers engine the same
+- `views/store/`: storefront. Live 3D hero bouquet (reuses the flowers engine the same
   way `views/flowers/share/` does), offer sections, pricing tiers, FAQ, founding waitlist
   form. Hand-written CSS on the flowers design system, no Tailwind, same reasoning as the
   share page (cold opens on phones, and the engine's stylesheets are already the design
   system).
-- `views/bloom/logic.js`: DOM-free signup validation, founding-spots copy, plan math.
-  Tested by `tests/bloom-logic.test.mjs`.
-- `app/proxys/bloom.php`: POST stores a waitlist row (`bloom_waitlist`) and fires the
+- `views/store/logic.js`: DOM-free signup validation, founding-spots copy, plan math.
+  Tested by `tests/store-logic.test.mjs`.
+- `app/proxys/store.php`: POST stores a waitlist row (`store_waitlist`) and fires the
   owner Telegram alert; GET `?action=count` returns claimed/cap for honest scarcity copy.
   Mirrors `contact.php`.
-- `app/models/bloom-model.sql`: the table. Run manually via phpMyAdmin, as always.
+- `app/models/store-model.sql`: the table. Run manually via phpMyAdmin, as always.
 
 Deliberately not built yet: payments, permanent storage, scheduling, PDFs. The waitlist
 proves demand before any of that is worth building.

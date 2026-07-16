@@ -1,11 +1,11 @@
 <?php
-// Everbloom founding-waitlist endpoint (views/bloom). POST stores a signup in
-// bloom_waitlist (durable record, one row per email) and fires a Telegram
+// Everbloom founding-waitlist endpoint (views/store). POST stores a signup in
+// store_waitlist (durable record, one row per email) and fires a Telegram
 // alert to the site owner (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID in .env).
 // GET ?action=count returns the claimed/cap numbers the storefront's
 // founding-spots line prints, so the scarcity copy is never made up.
 // No auth by design; all consumers are same-origin. Validation mirrors
-// views/bloom/logic.js, but the server is the real gate.
+// views/store/logic.js, but the server is the real gate.
 
 declare(strict_types=1);
 
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
     try {
-        $count = (int) Database::read()->query('SELECT COUNT(*) FROM bloom_waitlist')->fetchColumn();
+        $count = (int) Database::read()->query('SELECT COUNT(*) FROM store_waitlist')->fetchColumn();
         echo json_encode(['count' => $count, 'cap' => FOUNDING_CAP]);
     } catch (Throwable $e) {
         http_response_code(503);
@@ -92,7 +92,7 @@ $notified = notifyOwner($email, $plan, $note) ? 1 : 0;
 // duplicating, and the response stays a plain ok either way.
 $db = Database::write();
 $stmt = $db->prepare(
-    'INSERT INTO bloom_waitlist (email, plan, note, ip_hash, user_agent, notified)
+    'INSERT INTO store_waitlist (email, plan, note, ip_hash, user_agent, notified)
      VALUES (?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE plan = VALUES(plan), note = COALESCE(VALUES(note), note)'
 );
