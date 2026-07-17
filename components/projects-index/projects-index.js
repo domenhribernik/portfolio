@@ -6,9 +6,9 @@ import { featuredEntries, professionalEntries, archiveCount } from './logic.js';
    The homepage projects section as a kinetic index: a compact
    Professional & Freelance band up top (quiet ruled stories, same
    grammar as the old paper), then the hand-ranked featured selection
-   as big numbered headline rows. Hover stays quiet everywhere: the
-   headline underlines in the section accent, the number and arrow
-   take the accent, the arrow nudges. The section closes with the
+   as big numbered headline rows. On hover the featured rows pop off
+   a cobalt hard-shadow (the hero buttons' offset-ink move), the
+   number and arrow take the accent, the arrow nudges. The section closes with the
    edition banner handing off to views/projects, where every project
    runs in full. Every story and row is one stretched-link tap target.
    None of the homepage entries carry links beyond the primary; the

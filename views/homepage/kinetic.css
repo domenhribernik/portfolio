@@ -396,12 +396,13 @@
    & Freelance runs as a compact ruled band; below, the
    hand-ranked featured selection prints as big numbered
    headline rows; the foot is the boxed edition banner handing
-   off to views/projects. Hover everywhere stays in the site's
-   quiet manner: the headline underlines in the section accent
-   (clay band, cobalt rows and banner), the number and arrow
-   take the accent, the arrow nudges. Nothing floods, lifts or
-   moves. Every story and row is one stretched-link tap target
-   (.pindex__cover), so nothing depends on hover.
+   off to views/projects. Hover: the band stories and the edition
+   banner underline in the section accent (clay band, cobalt
+   banner); the big featured rows pop off a cobalt hard-shadow
+   (the hero buttons' offset-ink move). Everywhere the number and
+   arrow take the accent and the arrow nudges. Every story and row
+   is one stretched-link tap target (.pindex__cover), so nothing
+   depends on hover.
    ============================================================ */
 .pindex {
     display: block;
@@ -585,11 +586,12 @@
     font-size: clamp(1.7rem, 4.2vw, 3.3rem);
     color: var(--ink);
     text-wrap: balance;
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    text-decoration-thickness: 0.09em;
-    text-underline-offset: 0.14em;
-    transition: text-decoration-color 0.25s ease;
+    /* Poster hard-shadow, transparent at rest. On hover it pops out in the
+       section accent (the offset-ink move the hero buttons make), scaled in
+       em so the offset stays proportional across the headline's size range. */
+    text-shadow: 0 0 0 transparent;
+    transition: text-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                color 0.25s ease;
 }
 
 .pindex__deck {
@@ -612,12 +614,12 @@
     transition: color 0.25s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* The quiet hover: headline underlines in the section accent, the
+/* The hover: the headline pops off a section-accent hard-shadow, the
    number and arrow take the accent, the arrow nudges. */
 .pindex__row:hover .pindex__headline,
 .pindex__row:focus-within .pindex__headline,
 .pindex__row:active .pindex__headline {
-    text-decoration-color: var(--acc);
+    text-shadow: 0.08em 0.08em 0 var(--acc);
 }
 
 .pindex__row:hover .pindex__num,
@@ -750,25 +752,46 @@
     color: var(--stone);
 }
 
+/* Full-bleed imprint form: it spans the whole colophon, the same width as
+   the ruled index below it. Contact details stack in the left column, the
+   message takes the taller right column, and the send action rules across
+   the foot. Collapses to one column on phones (see the mobile block). */
 .colophon__form {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(1.4rem, 3vh, 1.9rem);
-    max-width: 680px;
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-areas:
+        "details message"
+        "actions actions";
+    column-gap: clamp(1.8rem, 4.5vw, 3.4rem);
+    row-gap: clamp(1.5rem, 3.5vh, 2.1rem);
     width: 100%;
 }
 
-/* Name + email share a row on wider viewports */
+/* Left column: name over email, held to the top so the block lines up with
+   the message's cap height rather than floating in the stretched cell. */
 .colophon__row {
+    grid-area: details;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(1.4rem, 3vw, 1.9rem);
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: clamp(1.4rem, 3vh, 1.9rem);
 }
 
 .colophon__field {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+/* Right column: the message fills the row's full height next to the two
+   stacked fields, so the writing box reads as the form's main event. */
+.colophon__field--message {
+    grid-area: message;
+    height: 100%;
+}
+
+.colophon__field--message .colophon__textarea {
+    flex: 1 1 auto;
 }
 
 .colophon__label {
@@ -834,6 +857,7 @@
 }
 
 .colophon__actions {
+    grid-area: actions;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -1074,8 +1098,18 @@ html:has(body.kinetic)::-webkit-scrollbar-corner {
 
 /* Colophon: form fields and index stack into one column on phones */
 @media (max-width: 767px) {
-    .colophon__row {
+    .colophon__form {
         grid-template-columns: 1fr;
+        grid-template-areas:
+            "details"
+            "message"
+            "actions";
+    }
+
+    /* One column: let the message use its own min-height instead of
+       stretching to match the stacked details block. */
+    .colophon__field--message {
+        height: auto;
     }
 
     .colophon__index {
