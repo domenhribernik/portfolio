@@ -133,3 +133,49 @@ CREATE TABLE IF NOT EXISTS workout_session_sets (
 --       UNION ALL SELECT 'Chin-ups', 3, 8
 --       UNION ALL SELECT 'Dips',     4, 5) o
 -- JOIN workout_exercises e ON e.name = o.name AND e.user_id = @admin_id;
+
+-- Seed (2026-07-17): A/B full-gym split for the site admin. A = squat + chest +
+-- triceps + front/side delts, B = squat + back + biceps + rear delts, run on an
+-- every-2-days rhythm (A, rest, B, rest). Rounds = sets: 3 passes over the items.
+-- Weights are deliberate light-restart placeholders; adjust targets in the app
+-- after the first session. Run once in phpMyAdmin, then leave commented.
+-- Workout B is inserted a minute earlier so A tops the created_at DESC list.
+--
+-- SET @admin_id = (SELECT id FROM users WHERE is_admin = 1 AND is_active = 1 ORDER BY id LIMIT 1);
+
+-- INSERT INTO workout_exercises (user_id, name, type, icon, note) VALUES
+--     (@admin_id, 'Back squat',       'weighted', 'fas fa-weight-hanging',  'Heavy on A day, about 85 to 90 percent of that on B day. Add 5 kg when you hit the top of the rep range on all 3 sets. First two weeks stay 2 to 3 reps shy of failure.'),
+--     (@admin_id, 'Bench press',      'weighted', 'fas fa-dumbbell',        'Touch the chest, no bounce. Add 2.5 kg when you hit 10 reps on all 3 sets, then drop back to 6.'),
+--     (@admin_id, 'Overhead press',   'weighted', 'fas fa-angles-up',       'Seated, dumbbells, weight is per hand. Strict, no leg drive. Add 2.5 kg per hand at 12 reps on all sets.'),
+--     (@admin_id, 'Cable pushdown',   'weighted', 'fas fa-angles-down',     'Elbows pinned to your sides. Superset with Lateral raise: one set of each back to back, then rest 60 s.'),
+--     (@admin_id, 'Lateral raise',    'weighted', 'fas fa-arrows-left-right', 'Weight is per hand. Light and strict, no swinging. Second half of the triceps superset.'),
+--     (@admin_id, 'Pull-ups',         'reps',     'fas fa-arrows-up-to-line', 'Full hang at the bottom, chin over the bar. Switch to lat pulldown if you cannot get 6 clean reps.'),
+--     (@admin_id, 'Seated cable row', 'weighted', 'fas fa-right-left',      'Chest tall, pull to the sternum, squeeze the shoulder blades.'),
+--     (@admin_id, 'EZ-bar curl',      'weighted', 'fas fa-hand-fist',       'No swinging. Superset with Face pull: one set of each back to back, then rest 60 s.'),
+--     (@admin_id, 'Face pull',        'weighted', 'fas fa-arrows-to-eye',   'Rope at face height, pull toward the eyes, elbows high. Rear delts. Second half of the biceps superset.');
+
+-- INSERT INTO workouts (user_id, name, description, rounds, created_at) VALUES
+--     (@admin_id, 'Workout B: Pull', 'Squat first at about 85 to 90 percent of A-day weight, then back, biceps, and rear delts. About 30 minutes.', 3, NOW() - INTERVAL 1 MINUTE);
+-- SET @workout_b = LAST_INSERT_ID();
+
+-- INSERT INTO workouts (user_id, name, description, rounds) VALUES
+--     (@admin_id, 'Workout A: Push', 'Squat first and heavy, then chest, triceps, and front and side delts. About 30 minutes.', 3);
+-- SET @workout_a = LAST_INSERT_ID();
+
+-- INSERT INTO workout_items (workout_id, exercise_id, position, target_reps, target_weight_kg, note)
+-- SELECT @workout_a, e.id, o.position, o.reps, o.weight, o.note
+-- FROM (SELECT 'Back squat' AS name, 1 AS position, 5 AS reps, 40.0 AS weight, '2 light ramp-up sets first. 5 to 8 reps, rest 2 min.' AS note
+--       UNION ALL SELECT 'Bench press',    2, 6,  40.0, '6 to 10 reps, rest 2 min.'
+--       UNION ALL SELECT 'Overhead press', 3, 8,  12.0, '8 to 12 reps, rest 90 s. Weight per hand.'
+--       UNION ALL SELECT 'Cable pushdown', 4, 10, 20.0, '10 to 15 reps. Superset with Lateral raise, 60 s rest after the pair.'
+--       UNION ALL SELECT 'Lateral raise',  5, 12, 6.0,  '12 to 20 reps, per hand. Superset with Cable pushdown.') o
+-- JOIN workout_exercises e ON e.name = o.name AND e.user_id = @admin_id AND e.deleted_at IS NULL;
+
+-- INSERT INTO workout_items (workout_id, exercise_id, position, target_reps, target_weight_kg, note)
+-- SELECT @workout_b, e.id, o.position, o.reps, o.weight, o.note
+-- FROM (SELECT 'Back squat' AS name, 1 AS position, 5 AS reps, 35.0 AS weight, 'About 85 to 90 percent of A-day squat. 5 to 8 reps, rest 2 min.' AS note
+--       UNION ALL SELECT 'Pull-ups',         2, 6,  NULL, '6 to 10 reps, rest 2 min. Lat pulldown if under 6.'
+--       UNION ALL SELECT 'Seated cable row', 3, 8,  40.0, '8 to 12 reps, rest 90 s.'
+--       UNION ALL SELECT 'EZ-bar curl',      4, 8,  20.0, '8 to 12 reps. Superset with Face pull, 60 s rest after the pair.'
+--       UNION ALL SELECT 'Face pull',        5, 15, 15.0, '15 to 20 reps. Superset with EZ-bar curl.') o
+-- JOIN workout_exercises e ON e.name = o.name AND e.user_id = @admin_id AND e.deleted_at IS NULL;
