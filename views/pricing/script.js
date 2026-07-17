@@ -1,7 +1,7 @@
 'use strict';
 
 import {
-    pageCount, suggestTier, calculatePrice, validateForm,
+    pageCount, suggestTier, calculatePrice, validateForm, shouldShowShopSection,
     PRICES, PACKAGE_FROM, SUPPORT_PRICES, LOADING_STEPS,
 } from './logic.js';
 import {
@@ -99,6 +99,24 @@ async function setLanguage(lang, { save = false } = {}) {
 
 let currentQuoteId = null; // DB id of the last saved quote (for PUT)
 
+// Persist the quote id alongside the form so a page reload + resubmit UPDATEs
+// the same row instead of creating a duplicate lead. Cleared when the row is
+// gone server-side (see saveQuote's 404 fallback).
+const QUOTE_ID_KEY = 'pricing_quote_id_v1';
+function persistQuoteId(id) {
+    try { localStorage.setItem(QUOTE_ID_KEY, String(id)); } catch (_) {}
+}
+function loadStoredQuoteId() {
+    try {
+        const raw = localStorage.getItem(QUOTE_ID_KEY);
+        const n = raw ? parseInt(raw, 10) : NaN;
+        return Number.isInteger(n) && n > 0 ? n : null;
+    } catch (_) { return null; }
+}
+function clearStoredQuoteId() {
+    try { localStorage.removeItem(QUOTE_ID_KEY); } catch (_) {}
+}
+
 function getFormState() {
     const f = document.getElementById('quoteForm');
     const checkedValues = (name) =>
@@ -153,6 +171,15 @@ function restoreFormState(s) {
     setChecked('marketing', s.marketing || []);
     setRadio('hosting',     s.hosting);
     document.getElementById('specialRequests').value = s.special_requests || '';
+}
+
+// The Q8 "online shop details" section is only relevant when an online shop
+// is one of the chosen purposes (its hint text says as much); hide it otherwise.
+function updateShopVisibility() {
+    const section = document.getElementById('shopSection');
+    if (!section) return;
+    const purpose = [...document.querySelectorAll('input[name="purpose"]:checked')].map(el => el.value);
+    section.classList.toggle('hidden', !shouldShowShopSection(purpose));
 }
 
 // ─── Results rendering ────────────────────────────────────────────────────────
@@ -295,9 +322,21 @@ async function saveQuote(state, priceData, isUpdate) {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
     });
+
+    // Stale local id (row deleted from the admin inbox, or a different
+    // environment): forget it and create a fresh quote instead of losing it.
+    if (isUpdate && res.status === 404) {
+        currentQuoteId = null;
+        clearStoredQuoteId();
+        return saveQuote(state, priceData, false);
+    }
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Server error');
-    if (!isUpdate) currentQuoteId = data.id;
+    if (!isUpdate) {
+        currentQuoteId = data.id;
+        persistQuoteId(data.id);
+    }
     return data;
 }
 
@@ -463,9 +502,12 @@ function loadFromStorage() {
 document.addEventListener('DOMContentLoaded', () => {
     applyPackagePrices();
 
-    // Restore saved state
+    // Restore saved state (form answers + the quote id so a resubmit updates
+    // the same lead row instead of creating a duplicate).
     const saved = loadFromStorage();
     if (saved) restoreFormState(saved);
+    currentQuoteId = loadStoredQuoteId();
+    updateShopVisibility();
 
     initPackagesToggle();
     initAlacToggle();
@@ -473,6 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Save on every change
     document.getElementById('quoteForm').addEventListener('change', () => {
         saveToStorage(getFormState());
+        updateShopVisibility();
     });
     document.getElementById('specialRequests').addEventListener('input', () => {
         saveToStorage(getFormState());

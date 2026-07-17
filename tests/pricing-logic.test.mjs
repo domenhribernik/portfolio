@@ -5,7 +5,15 @@
 // for the contract that every key here has an en and sl translation.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pageCount, suggestTier, calculatePrice, validateForm } from '../views/pricing/logic.js';
+import { pageCount, suggestTier, calculatePrice, validateForm, shouldShowShopSection } from '../views/pricing/logic.js';
+
+test('shouldShowShopSection: only when the shop purpose is selected', () => {
+    assert.equal(shouldShowShopSection(['shop']), true);
+    assert.equal(shouldShowShopSection(['business', 'shop']), true);
+    assert.equal(shouldShowShopSection(['business']), false);
+    assert.equal(shouldShowShopSection([]), false);
+    assert.equal(shouldShowShopSection(undefined), false);
+});
 
 test('pageCount: maps each radio value to a page number', () => {
     assert.equal(pageCount('1'), 1);

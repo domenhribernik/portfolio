@@ -1,4 +1,4 @@
-import { resolveTab, filterProjects, filterHubApps, filterLeads, buildHubPayload, swapPlan, randomGradient, accentFromGradient } from './logic.js';
+import { resolveTab, filterProjects, filterHubApps, filterLeads, buildHubPayload, swapPlan, randomGradient, accentFromGradient, buildPromoMessage, promoMailtoHref, PRICING_URL } from './logic.js';
 
 const ADMIN_API = '../../app/controllers/admin-controller.php';
 const AUTH_API = '../../app/controllers/auth-controller.php';
@@ -44,6 +44,15 @@ function toast(message, isError = false) {
     toastTimer = setTimeout(() => el.classList.add('hidden'), 3500);
 }
 
+async function copyText(text, okMsg = 'Copied') {
+    try {
+        await navigator.clipboard.writeText(text);
+        toast(okMsg);
+    } catch {
+        toast('Copy failed, select it manually', true);
+    }
+}
+
 // ------------------------------------------------------------------
 //  Tabs (hash-routed: #users / #projects / #hub)
 // ------------------------------------------------------------------
@@ -56,7 +65,7 @@ function setTab(id, updateHash = false) {
         t.classList.toggle('active', active);
         t.setAttribute('aria-selected', String(active));
     });
-    ['users', 'projects', 'hub', 'leads'].forEach(p => {
+    ['users', 'projects', 'hub', 'leads', 'marketing'].forEach(p => {
         document.getElementById('panel-' + p).classList.toggle('hidden', p !== id);
     });
     if (updateHash) history.replaceState(null, '', '#' + id);
@@ -845,6 +854,42 @@ function renderLeads() {
         });
         head.appendChild(toggleBtn);
 
+        // Send a promo personalized with this lead's package + estimate. Opens
+        // the owner's mail client pre-filled (no server-side email exists); the
+        // language follows the Marketing tab's picker.
+        const promoBtn = document.createElement('button');
+        promoBtn.className = 'btn-ghost shrink-0';
+        promoBtn.textContent = 'Send promo';
+        promoBtn.addEventListener('click', () => {
+            const lang = document.getElementById('promo-lang')?.value || 'en';
+            const total = `€${lead.total_price.toLocaleString('de-DE')}`;
+            const { subject, body } = buildPromoMessage({
+                lang,
+                name: lead.contact_name || '',
+                pkg: lead.suggested_package,
+                total,
+            });
+            window.location.href = promoMailtoHref({ email: lead.contact_email || '', subject, body });
+        });
+        head.appendChild(promoBtn);
+
+        // Delete the lead outright (clean up junk / test submissions).
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-ghost shrink-0 text-clay';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', async () => {
+            const who = lead.contact_name || lead.contact_email || `${lead.suggested_package} · €${lead.total_price.toLocaleString('de-DE')}`;
+            if (!confirm(`Delete this lead (${who})? This cannot be undone.`)) return;
+            try {
+                await pricingFetch({ id: lead.id }, { method: 'DELETE' });
+                toast('Lead deleted');
+                loadLeads();
+            } catch (err) {
+                toast(err.message, true);
+            }
+        });
+        head.appendChild(delBtn);
+
         li.appendChild(head);
 
         const contact = document.createElement('p');
@@ -881,5 +926,49 @@ function renderLeads() {
 
 document.getElementById('leads-search').addEventListener('input', renderLeads);
 document.getElementById('leads-hide-contacted').addEventListener('change', renderLeads);
+
+// ------------------------------------------------------------------
+//  Marketing (promo composer for cold outreach)
+// ------------------------------------------------------------------
+
+(function initMarketing() {
+    const langSel   = document.getElementById('promo-lang');
+    const subjectEl = document.getElementById('promo-subject');
+    const bodyEl    = document.getElementById('promo-body');
+    const linkEl    = document.getElementById('promo-link');
+    let dirty = false;
+    let prevLang = langSel.value;
+
+    function fill() {
+        const { subject, body } = buildPromoMessage({ lang: langSel.value });
+        subjectEl.value = subject;
+        bodyEl.value    = body;
+        dirty = false;
+    }
+
+    linkEl.value = PRICING_URL;
+    fill();
+
+    subjectEl.addEventListener('input', () => { dirty = true; });
+    bodyEl.addEventListener('input', () => { dirty = true; });
+
+    // Switching language reloads the template; guard unsaved edits and revert
+    // the picker if the owner backs out.
+    langSel.addEventListener('change', () => {
+        if (dirty && !confirm('Discard your edits and load the ' + langSel.options[langSel.selectedIndex].text + ' template?')) {
+            langSel.value = prevLang;
+            return;
+        }
+        prevLang = langSel.value;
+        fill();
+    });
+
+    document.getElementById('promo-reset').addEventListener('click', fill);
+    document.getElementById('promo-copy').addEventListener('click', () => copyText(bodyEl.value, 'Message copied'));
+    document.getElementById('promo-copy-link').addEventListener('click', () => copyText(linkEl.value, 'Link copied'));
+    document.getElementById('promo-mailto').addEventListener('click', () => {
+        window.location.href = promoMailtoHref({ email: '', subject: subjectEl.value, body: bodyEl.value });
+    });
+})();
 
 boot();

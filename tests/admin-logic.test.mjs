@@ -2,7 +2,55 @@
 // Run: node --test tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveTab, filterProjects, filterHubApps, filterLeads, buildHubPayload, swapPlan, hslToHex, randomGradient, accentFromGradient } from '../views/admin/logic.js';
+import { resolveTab, filterProjects, filterHubApps, filterLeads, buildHubPayload, swapPlan, hslToHex, randomGradient, accentFromGradient, buildPromoMessage, promoMailtoHref, PRICING_URL } from '../views/admin/logic.js';
+
+// ── Marketing: promo message builder ──
+test('buildPromoMessage: generic template pitches the calculator and links to pricing', () => {
+    const { subject, body } = buildPromoMessage({ lang: 'en' });
+    assert.ok(subject.length > 0);
+    assert.ok(body.includes(PRICING_URL), 'body links to the pricing page');
+    assert.ok(!body.includes('undefined') && !body.includes('null'));
+    assert.ok(!body.includes('—') && !subject.includes('—'), 'no em dashes (house style)');
+});
+
+test('buildPromoMessage: personalized template uses name, package and total', () => {
+    const { subject, body } = buildPromoMessage({ lang: 'en', name: 'Ana', pkg: 'PLUS', total: '€1.240' });
+    assert.ok(body.includes('Ana'));
+    assert.ok(body.includes('PLUS'));
+    assert.ok(body.includes('€1.240'));
+    assert.ok(body.includes(PRICING_URL));
+    assert.ok(subject.includes('€1.240') || subject.includes('PLUS'));
+});
+
+test('buildPromoMessage: personalized without a name still greets cleanly', () => {
+    const { body } = buildPromoMessage({ lang: 'en', pkg: 'BASIC', total: '€490' });
+    assert.ok(!body.includes('Hi ,') && !body.includes('Živjo ,'));
+    assert.ok(body.includes('BASIC') && body.includes('€490'));
+});
+
+test('buildPromoMessage: Slovenian variant differs from English but stays clean', () => {
+    const sl = buildPromoMessage({ lang: 'sl', name: 'Ana', pkg: 'PLUS', total: '€1.240' });
+    const en = buildPromoMessage({ lang: 'en', name: 'Ana', pkg: 'PLUS', total: '€1.240' });
+    assert.notEqual(sl.body, en.body);
+    assert.ok(sl.body.includes(PRICING_URL) && sl.body.includes('Ana') && sl.body.includes('€1.240'));
+    assert.ok(!sl.body.includes('—'));
+});
+
+test('buildPromoMessage: unknown language falls back to English', () => {
+    assert.equal(buildPromoMessage({ lang: 'zz' }).body, buildPromoMessage({ lang: 'en' }).body);
+});
+
+test('promoMailtoHref: builds an encoded mailto addressed to the lead', () => {
+    const href = promoMailtoHref({ email: 'ana@shop.si', subject: 'Your estimate: €1.240', body: 'Hi Ana,\nsee the link' });
+    assert.ok(href.startsWith('mailto:ana@shop.si?'));
+    assert.ok(href.includes('subject=' + encodeURIComponent('Your estimate: €1.240')));
+    assert.ok(href.includes('body=' + encodeURIComponent('Hi Ana,\nsee the link')));
+});
+
+test('promoMailtoHref: without an email yields a mailto the owner can address', () => {
+    const href = promoMailtoHref({ email: '', subject: 'Hi', body: 'x' });
+    assert.ok(href.startsWith('mailto:?'));
+});
 
 // Perceived brightness (0..255) of a #rrggbb string, for the legibility guard.
 function brightness(hex) {
@@ -17,6 +65,7 @@ test('resolveTab maps location hashes to tab ids, defaulting to users', () => {
     assert.equal(resolveTab('#projects'), 'projects');
     assert.equal(resolveTab('#hub'), 'hub');
     assert.equal(resolveTab('#leads'), 'leads');
+    assert.equal(resolveTab('#marketing'), 'marketing');
     assert.equal(resolveTab(''), 'users');
     assert.equal(resolveTab('#nonsense'), 'users');
     assert.equal(resolveTab(undefined), 'users');

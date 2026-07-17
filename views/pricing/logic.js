@@ -12,6 +12,12 @@ export function pageCount(pagesValue) {
     return map[pagesValue] || 1;
 }
 
+// The "online shop details" question (Q8) is only relevant when the visitor
+// picked an online shop as a purpose (Q1); the DOM layer hides it otherwise.
+export function shouldShowShopSection(purpose) {
+    return (purpose || []).includes('shop');
+}
+
 // Escalation order matters: CUSTOM triggers outrank PREMIUM, which outranks
 // PLUS, which outranks the MINI carve-out. Checked highest tier first.
 export function suggestTier(s) {

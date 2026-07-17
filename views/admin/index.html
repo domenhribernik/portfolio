@@ -93,6 +93,8 @@
                     Hub tiles<span class="tab-count" id="count-hub"></span></button>
                 <button type="button" class="tab" role="tab" data-tab="leads" aria-controls="panel-leads">
                     Leads<span class="tab-count" id="count-leads"></span></button>
+                <button type="button" class="tab" role="tab" data-tab="marketing" aria-controls="panel-marketing">
+                    Marketing</button>
             </nav>
 
             <!-- Tab: Users -->
@@ -349,6 +351,48 @@
                         placeholder="Search name, email, package, message…" autocomplete="off">
                     <ul id="leads-list" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1"></ul>
                     <p id="leads-empty" class="hidden font-mono text-xs text-faint mt-2">No submissions match.</p>
+                </div>
+            </section>
+
+            <!-- Tab: Marketing -->
+            <section id="panel-marketing" class="tab-panel hidden space-y-6" role="tabpanel">
+                <div class="card p-6">
+                    <h2 class="section-title mb-4">Promotion composer</h2>
+                    <p class="text-stone text-sm mb-4">A ready-to-send promo for cold outreach: it pitches the <code
+                            class="font-mono text-xs">/views/pricing</code> calculator so a prospect can build their own
+                        baseline before you talk numbers. Copy it into an email or message. For an existing lead, use
+                        <strong>Send promo</strong> on the Leads tab to personalize it with their package and estimate.
+                    </p>
+
+                    <div class="flex flex-wrap items-center gap-3 mb-5">
+                        <label class="flex items-center gap-2">
+                            <span class="font-mono text-[10px] tracking-widest uppercase text-stone">Language</span>
+                            <select id="promo-lang" class="field-input !w-auto">
+                                <option value="en">English</option>
+                                <option value="sl">Slovenščina</option>
+                            </select>
+                        </label>
+                        <button id="promo-reset" type="button" class="btn-ghost">Reset to template</button>
+                    </div>
+
+                    <label
+                        class="block font-mono text-[10px] tracking-widest uppercase text-stone mb-1">Pricing link</label>
+                    <div class="flex flex-wrap items-center gap-2 mb-4">
+                        <input id="promo-link" type="text" class="field-input flex-1 min-w-[240px]" readonly>
+                        <button id="promo-copy-link" type="button" class="btn-ghost shrink-0">Copy link</button>
+                    </div>
+
+                    <label class="block font-mono text-[10px] tracking-widest uppercase text-stone mb-1">Subject</label>
+                    <input id="promo-subject" type="text" class="field-input mb-4">
+
+                    <label class="block font-mono text-[10px] tracking-widest uppercase text-stone mb-1">Message</label>
+                    <textarea id="promo-body" rows="14"
+                        class="field-input font-mono text-sm leading-relaxed mb-4"></textarea>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button id="promo-copy" type="button" class="btn-clay">Copy message</button>
+                        <button id="promo-mailto" type="button" class="btn-ghost">Open blank email</button>
+                    </div>
                 </div>
             </section>
 

@@ -2,7 +2,7 @@
 // unit-tested with `node --test tests/` (no dependencies, no build step).
 // script.js imports this as an ES module.
 
-const TABS = ['users', 'projects', 'hub', 'leads'];
+const TABS = ['users', 'projects', 'hub', 'leads', 'marketing'];
 
 export function resolveTab(hash) {
     const id = (hash || '').replace(/^#/, '');
@@ -90,6 +90,99 @@ export function randomGradient(rng = Math.random) {
 export function accentFromGradient(gradient) {
     const m = /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/.exec(gradient || '');
     return m ? m[0] : '#1c1a17';
+}
+
+// ── Marketing: promo message builder ──────────────────────────────────────
+// The pricing page is unlisted, so a lead only finds it via a link we send.
+// A promo is either GENERIC (cold outreach: pitch the calculator so the
+// prospect builds their own baseline) or PERSONALIZED (an existing lead: remind
+// them of the package and estimate they already saw, then invite a negotiation
+// from that number). There is no email server anywhere in this codebase, so
+// delivery is the owner's own mail client (promoMailtoHref) or the clipboard.
+
+export const PRICING_URL = 'https://domenhribernik.com/views/pricing/';
+
+// Copy is kept out here so buildPromoMessage stays a pure lookup + interpolation
+// and the whole thing is trivially unit-testable. House style: no em dashes.
+const PROMO_COPY = {
+    en: {
+        genericSubject: 'A baseline for your website project',
+        genericBody: (url) => [
+            'Hi,',
+            '',
+            'Thanks for your interest in working together. Before we talk numbers, I built an interactive pricing calculator so you can see roughly what a project like yours costs and exactly what is included at each level:',
+            '',
+            url,
+            '',
+            'Answer a few questions and it puts together an itemized estimate in about a minute. Treat it as a starting point for our conversation, not a fixed quote, so we can shape the scope around your budget from there.',
+            '',
+            'Happy to jump on a call whenever you are ready.',
+            '',
+            'Domen',
+        ].join('\n'),
+        personalSubject: (pkg, total) => `Your website estimate: around ${total}`,
+        personalBody: (greetName, pkg, total, url) => [
+            greetName ? `Hi ${greetName},` : 'Hi,',
+            '',
+            `Thanks again for trying the pricing calculator. Based on what you told me, your project lands around the ${pkg} package, roughly ${total} excl. VAT. Here is the full breakdown and everything included at that level:`,
+            '',
+            url,
+            '',
+            'Treat it as a baseline rather than a final number. We can move the scope up or down to fit your budget, so tell me what feels right and we will take it from there.',
+            '',
+            'Domen',
+        ].join('\n'),
+    },
+    sl: {
+        genericSubject: 'Izhodišče za vašo spletno stran',
+        genericBody: (url) => [
+            'Pozdravljeni,',
+            '',
+            'Hvala za zanimanje za sodelovanje. Preden se pogovoriva o ceni, sem pripravil interaktivni cenovni kalkulator, kjer vidite, koliko približno stane projekt, kot je vaš, in kaj je vključeno na vsaki ravni:',
+            '',
+            url,
+            '',
+            'Odgovorite na nekaj vprašanj in v približno minuti sestavi razčlenjeno oceno. Vzemite jo kot izhodišče za pogovor, ne kot dokončno ponudbo, tako da obseg prilagodiva vašemu proračunu.',
+            '',
+            'Z veseljem se slišiva po telefonu, ko vam ustreza.',
+            '',
+            'Domen',
+        ].join('\n'),
+        personalSubject: (pkg, total) => `Vaša ocena za spletno stran: okoli ${total}`,
+        personalBody: (greetName, pkg, total, url) => [
+            greetName ? `Živjo ${greetName},` : 'Pozdravljeni,',
+            '',
+            `Hvala, da ste preizkusili cenovni kalkulator. Glede na vaše odgovore vaš projekt sodi približno v paket ${pkg}, okoli ${total} brez DDV. Tukaj je celotna razčlenitev in vse, kar je vključeno na tej ravni:`,
+            '',
+            url,
+            '',
+            'Vzemite to kot izhodišče in ne kot dokončno številko. Obseg lahko prilagodiva navzgor ali navzdol glede na vaš proračun, zato mi povejte, kaj se vam zdi pravo, in nadaljujeva od tam.',
+            '',
+            'Domen',
+        ].join('\n'),
+    },
+};
+
+// Builds the subject + body for a promo email. A lead is "personalized" when we
+// have both a package and an estimate to anchor on; otherwise it is the generic
+// cold-outreach pitch. Unknown languages fall back to English.
+export function buildPromoMessage({ lang = 'en', name = '', pkg = '', total = '', url = PRICING_URL } = {}) {
+    const copy = PROMO_COPY[lang] || PROMO_COPY.en;
+    const personalized = !!(pkg && total);
+    if (personalized) {
+        return {
+            subject: copy.personalSubject(pkg, total),
+            body: copy.personalBody((name || '').trim(), pkg, total, url),
+        };
+    }
+    return { subject: copy.genericSubject, body: copy.genericBody(url) };
+}
+
+// A mailto: link the owner's own mail client opens, pre-filled. No email is sent
+// server-side (this codebase has no MTA); the owner presses send. An empty
+// address still yields a valid mailto so the owner can fill in the recipient.
+export function promoMailtoHref({ email = '', subject = '', body = '' } = {}) {
+    return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 // Blank icon/gradient are omitted so the controller's defaults apply.

@@ -4,7 +4,7 @@ define('SECURE_ACCESS', true);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
-header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 // Deliberately no Access-Control-Allow-Origin: the admin-only reads below are
 // cookie-authed, same-origin only (see root CLAUDE.md gotchas).
@@ -28,6 +28,11 @@ try {
     } elseif ($method === 'PATCH' && $id) {
         Auth::requireAdmin();
         markContacted($id);
+    } elseif ($method === 'DELETE' && $id) {
+        // Admin-only: lets the owner clear junk or test submissions from the
+        // leads inbox (views/admin). Hard delete, mirroring the roles delete.
+        Auth::requireAdmin();
+        deleteQuote($id);
     } elseif ($method === 'GET' && isset($_GET['all'])) {
         // Admin leads inbox: every submitted quote, newest first.
         Auth::requireAdmin();
@@ -113,17 +118,21 @@ function createQuote(): void
         sendError('Invalid total_price', 400);
     }
 
+    // Store a daily-salted hash of the IP, never the raw address: enough to
+    // spot abuse within a day, not reversible or identifiable across days.
+    // Matches contact_messages / store_waitlist (see their model files).
     $ip        = getClientIp();
+    $ipHash    = $ip !== '' && $ip !== '0.0.0.0' ? hash('sha256', $ip . '|' . gmdate('Y-m-d')) : null;
     $userAgent = mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
 
     $stmt = Database::write()->prepare(
         'INSERT INTO pricing_quotes
-             (ip_address, user_agent, suggested_package, total_price, selections,
+             (ip_hash, user_agent, suggested_package, total_price, selections,
               special_requests, contact_name, contact_email, message)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     $stmt->execute([
-        $ip,
+        $ipHash,
         $userAgent,
         $suggestedPackage,
         $totalPrice,
@@ -190,7 +199,7 @@ function updateQuote(int $id): void
 function getQuote(int $id): void
 {
     $stmt = Database::read()->prepare(
-        'SELECT id, ip_address, suggested_package, total_price, selections,
+        'SELECT id, suggested_package, total_price, selections,
                 special_requests, contact_name, contact_email, message, contacted,
                 created_at, updated_at
          FROM pricing_quotes WHERE id = ?'
@@ -224,6 +233,14 @@ function listQuotes(): void
         $row['selections']  = json_decode($row['selections'], true);
     }
     sendJson($rows);
+}
+
+function deleteQuote(int $id): void
+{
+    $stmt = Database::write()->prepare('DELETE FROM pricing_quotes WHERE id = ?');
+    $stmt->execute([$id]);
+    if ($stmt->rowCount() === 0) sendError('Quote not found', 404);
+    sendJson(['message' => 'Quote deleted']);
 }
 
 function markContacted(int $id): void
