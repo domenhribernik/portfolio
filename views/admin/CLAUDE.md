@@ -5,11 +5,13 @@ Admin dashboard of the auth system, backed by [app/controllers/admin-controller.
 ## Dashboard frontend
 
 - The dashboard is split into four hash-routed tabs (`#users`, `#projects`, `#hub`, `#leads`) so the page never grows into one long scroll; `script.js` is an ES module.
+- The Users tab pins an "All users" pseudo-row above the roster: selecting it opens a grant-all card instead of the user detail, POSTing `user_id: "all"` to the roles resource (one-time fan-out to every existing active user; held roles are never overwritten; users created later need a re-run). It shows the server's `granted` count in the toast.
+- Hub tiles carry an `is_default` flag (checkbox in the tile composer, `· default` marker in the list): default tiles are seeded onto every NEW user's personal shelf at signup by `app/services/hub-shelf-service.php`. Which tiles a user actually sees is their own choice, made in the hub's picker; this dashboard only defines the tile pool, per-tile audience (project), and the new-user defaults.
 - The Leads tab is not backed by admin-controller.php: it lists `pricing_quotes` rows (submissions from the unlisted `views/pricing` quote calculator) via `pricing-controller.php?all=1`, gated by `Auth::requireAdmin()` in that controller directly, mirroring the hub tiles pattern (feature data stays in the feature's own controller; the dashboard just calls it). A quote only reaches the site owner's inbox today if the visitor clicked "send" in the calculator (which opens a `mailto:`), so this tab exists to catch the ones who filled out the form but never sent, e.g. bounced before clicking. The `contacted` boolean is toggled via `PATCH pricing-controller.php?id=<id>`, also admin-gated.
 - DOM-free decision logic (tab routing, list filters, hub form payload, tile reorder plan) lives in [logic.js](logic.js), unit-tested by [tests/admin-logic.test.mjs](../../tests/admin-logic.test.mjs) via `node --test tests/`. Put new pure logic there, test-first, rather than inline in script.js. Use the `.js` extension for browser-imported modules, never `.mjs`: Apache has no MIME mapping for `.mjs` and module scripts get blocked (the root package.json's `"type": "module"` is what lets node parse these `.js` files as ESM).
 - Tile reordering (the up/down buttons) is disabled while the tile filter is active, because reorder indices refer to the full list.
 - Visual language: the editorial paper theme shared with `views/account` (paper/ink/clay palette, Fraunces + IBM Plex Sans + Space Mono), matching the homepage's light editorial theme, with the "Control Room" / "Access Terminal" voice kept on purpose. Component classes live in each view's own style.css because the Tailwind CDN cannot `@apply` in linked stylesheets.
-- Hub tile visibility semantics are pinned by [tests/hub-controller.test.php](../../tests/hub-controller.test.php); run it after touching `hub-controller.php` (see the root CLAUDE.md "Testing" section).
+- Hub shelf semantics (personal picks AND permission, dormant rows, seeding) are pinned by [tests/hub-controller.test.php](../../tests/hub-controller.test.php); the all-users grant by [tests/admin-roles.test.php](../../tests/admin-roles.test.php). Run them after touching `hub-controller.php` or `admin-controller.php` roles (see the root CLAUDE.md "Testing" section).
 
 ## Authorization pattern: RBAC for membership, ACL for rows
 
@@ -23,7 +25,7 @@ $user = Auth::requireProjectRole('<project_key>');            // any role
 $user = Auth::requireProjectRole('<project_key>', 'editor');  // exact role
 ```
 
-Roles are granted from this dashboard. Use this layer alone when the whole feature has one audience (everyone with access sees the same data). Precedents: `images-controller.php` (public GETs, role-gated writes), hub tiles (`hub_apps.project_id` decides tile visibility).
+Roles are granted from this dashboard (per user, or via the "All users" fan-out). Use this layer alone when the whole feature has one audience (everyone with access sees the same data). Precedents: `images-controller.php` (public GETs, role-gated writes), hub tiles (`hub_apps.project_id` decides which tiles a user MAY pick; their own `hub_user_apps` rows decide which actually show).
 
 **Layer 2, row-level access (access control list).** When different users must see different rows of the same table (one list for family, another for friends), add a per-feature ACL join table. Naming convention: `<feature>_<resource>_access`.
 

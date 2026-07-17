@@ -1,9 +1,12 @@
--- Hub launcher tiles. Per-user visibility rides the auth projects registry:
--- a tile linked to a project is shown only to users holding a role in it
--- (site admins see everything); a tile with project_id NULL is shown to any
--- signed-in user. The hub is navigation, not a security boundary: every
--- target view enforces its own auth.
--- Run manually in phpMyAdmin. Safe to re-run.
+-- Hub launcher tiles. The shelf is personal: a user sees a tile only when
+-- they PICKED it (a hub_user_apps row) AND they are permitted to see it
+-- (tile with project_id NULL is permitted to any signed-in user; a gated
+-- tile needs a role in that project; site admins are permitted everything).
+-- Admins mark tiles is_default: those are seeded onto the shelf of every
+-- NEW user at signup (even gated ones; the row lies dormant until a role
+-- arrives). Existing users are never backfilled. The hub is navigation,
+-- not a security boundary: every target view enforces its own auth.
+-- Run manually in phpMyAdmin. Safe to re-run (MariaDB: uses ADD COLUMN IF NOT EXISTS).
 
 CREATE TABLE IF NOT EXISTS hub_apps (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -19,6 +22,26 @@ CREATE TABLE IF NOT EXISTS hub_apps (
     INDEX idx_hub_apps_sort (active, sort_order),
     CONSTRAINT fk_hub_apps_project FOREIGN KEY (project_id)
         REFERENCES projects(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Seeded onto every new user's shelf at signup when 1.
+ALTER TABLE hub_apps ADD COLUMN IF NOT EXISTS is_default TINYINT NOT NULL DEFAULT 0;
+
+-- One row = one tile a user chose to show on their shelf. Presence only:
+-- ordering stays global (hub_apps.sort_order). Rows for tiles the user is
+-- not (or no longer) permitted to see are harmless: the shelf query filters
+-- by permission, so they lie dormant and pop back in if a role is granted.
+CREATE TABLE IF NOT EXISTS hub_user_apps (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    app_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_hua_user_app (user_id, app_id),
+    INDEX idx_hua_app (app_id),
+    CONSTRAINT fk_hua_user FOREIGN KEY (user_id)
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_hua_app FOREIGN KEY (app_id)
+        REFERENCES hub_apps(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Register the linked projects if missing (auth-model.sql seed pattern).

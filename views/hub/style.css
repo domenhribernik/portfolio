@@ -135,6 +135,88 @@ button.press:active {
     animation: shimmer 1.4s infinite;
 }
 
+/* Shelf picker: one row per available app, whole row is the toggle */
+@keyframes panel-rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.picker-panel {
+    animation: panel-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.picker-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 2px;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.1);
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+#picker-list li:last-child .picker-row {
+    border-bottom: none;
+}
+
+@media (hover: hover) {
+    .picker-row:hover {
+        background: color-mix(in srgb, var(--accent, var(--ink)) 8%, transparent);
+    }
+}
+
+.picker-row:focus-visible {
+    outline: none;
+    background: color-mix(in srgb, var(--accent, var(--ink)) 8%, transparent);
+}
+
+.picker-row[data-busy] {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.picker-icon {
+    width: 1.6rem;
+    text-align: center;
+    font-size: 1.15rem;
+    color: var(--accent, var(--ink));
+}
+
+.picker-name {
+    flex: 1;
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+
+/* Square editorial checkbox; fills with the tile's accent when on */
+.picker-box {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--ink);
+    color: var(--card);
+    font-size: 0.7rem;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.picker-box.on {
+    background: var(--accent, var(--ink));
+    border-color: var(--accent, var(--ink));
+}
+
 @media (prefers-reduced-motion: reduce) {
     #tile-grid > li {
         animation: none;
@@ -143,8 +225,13 @@ button.press:active {
     .skeleton-tile::after {
         animation: none;
     }
+    .picker-panel {
+        animation: none;
+    }
     .tile,
-    .press {
+    .press,
+    .picker-row,
+    .picker-box {
         transition: none;
     }
 }

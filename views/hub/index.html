@@ -58,8 +58,12 @@
                 <span>DH // HUB</span>
                 <span id="today"></span>
             </div>
-            <h1 class="font-display font-extrabold uppercase tracking-tight text-4xl sm:text-5xl mt-5">
-                Hub<span class="text-clay">.</span></h1>
+            <div class="flex items-end justify-between gap-4 mt-5">
+                <h1 class="font-display font-extrabold uppercase tracking-tight text-4xl sm:text-5xl">
+                    Hub<span class="text-clay">.</span></h1>
+                <button id="btn-edit" type="button" class="press hidden font-mono text-[11px] tracking-[0.15em] uppercase border border-ink px-3 py-2 hover:bg-ink hover:text-paper transition-colors">
+                    <i class="fa-solid fa-sliders mr-1" aria-hidden="true"></i> Edit shelf</button>
+            </div>
             <p id="shelf-note" class="font-mono text-xs text-stone mt-2">opening the shelf…</p>
         </header>
 
@@ -92,13 +96,15 @@
             <ul id="tile-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3"></ul>
         </section>
 
-        <!-- Nothing granted -->
+        <!-- Empty shelf -->
         <section id="view-empty" class="hidden">
             <div class="max-w-sm border border-ink bg-card p-6">
                 <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-stone mb-3">0 apps</p>
                 <h2 class="font-display font-extrabold uppercase text-3xl leading-tight">Nothing here yet.</h2>
-                <p class="text-stone text-sm mt-3">Your account has no apps on the shelf. Ask the admin to put
-                    something here.</p>
+                <p class="text-stone text-sm mt-3 mb-6">Your shelf is empty. Pick the apps you want at hand.</p>
+                <button id="btn-choose" type="button"
+                    class="press inline-block bg-clay hover:bg-clay-dk text-paper font-display font-bold uppercase tracking-wide text-sm border border-ink px-5 py-2.5">
+                    Choose apps <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i></button>
             </div>
         </section>
 
@@ -123,7 +129,25 @@
 
     </main>
 
-    <script src="script.js"></script>
+    <!-- Shelf picker overlay: every app the account may show, toggled per tap -->
+    <div id="picker" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+        <div id="picker-backdrop" class="absolute inset-0 bg-ink/40"></div>
+        <div class="picker-panel relative max-w-md mx-4 sm:mx-auto mt-[8dvh] mb-8 bg-card border border-ink max-h-[84dvh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-ink/15 px-5 py-4">
+                <div>
+                    <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-stone">your shelf</p>
+                    <h2 id="picker-title" class="font-display font-extrabold uppercase text-xl leading-tight">Choose apps</h2>
+                </div>
+                <button id="btn-picker-close" type="button" aria-label="Close"
+                    class="press border border-ink w-9 h-9 hover:bg-ink hover:text-paper transition-colors">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <ul id="picker-list" class="overflow-y-auto px-5 py-2 flex-1"></ul>
+            <p id="picker-note" class="font-mono text-[11px] text-stone border-t border-ink/15 px-5 py-3">tap an app to add or remove it</p>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
 </body>
 
 </html>

@@ -39,14 +39,21 @@ try {
                 // Admin dashboard list: every tile, incl. inactive, with project info.
                 Auth::requireAdmin();
                 listAllApps();
+            } elseif (isset($_GET['manage'])) {
+                // Picker list: every tile the caller MAY show, with on_shelf flags.
+                listManageableApps(Auth::requireLogin());
             } else {
                 $user = Auth::requireLogin();
                 listVisibleApps($user);
             }
             break;
         case 'POST':
-            Auth::requireAdmin();
-            createApp();
+            if (isset($_GET['shelf'])) {
+                addToShelf(Auth::requireLogin());
+            } else {
+                Auth::requireAdmin();
+                createApp();
+            }
             break;
         case 'PUT':
             Auth::requireAdmin();
@@ -56,6 +63,10 @@ try {
             updateApp($id);
             break;
         case 'DELETE':
+            if (isset($_GET['shelf'])) {
+                removeFromShelf(Auth::requireLogin());
+                break;
+            }
             Auth::requireAdmin();
             if (!$id) {
                 sendError('Id is required', 400);
@@ -82,40 +93,37 @@ try {
 
 function listVisibleApps(array $user): void
 {
-    if ((int) $user['is_admin'] === 1) {
-        // Site admins see every active tile, mirroring Auth::hasProjectRole's implicit pass.
-        $stmt = Database::read()->query(
-            'SELECT id, name, icon, gradient, url
-             FROM hub_apps WHERE active = 1
-             ORDER BY sort_order ASC, id ASC'
-        );
-    } else {
-        // p.active = 1 keeps semantics identical to Auth::hasProjectRole:
-        // roles on disabled projects do not count. A tile with project_id NULL
-        // is visible to any signed-in user (this is also what a tile degrades
-        // to via ON DELETE SET NULL if its project row is ever deleted; the
-        // hub is navigation, not a security boundary).
-        $stmt = Database::read()->prepare(
-            'SELECT h.id, h.name, h.icon, h.gradient, h.url
-             FROM hub_apps h
-             WHERE h.active = 1
-               AND (h.project_id IS NULL
-                    OR EXISTS (
-                        SELECT 1
-                        FROM user_project_roles r
-                        JOIN projects p ON p.id = r.project_id
-                        WHERE r.user_id = ? AND r.project_id = h.project_id AND p.active = 1))
-             ORDER BY h.sort_order ASC, h.id ASC'
-        );
-        $stmt->execute([$user['id']]);
-    }
+    // The shelf is personal: a tile shows only when the user picked it
+    // (hub_user_apps row) AND is permitted to see it. Site admins skip the
+    // permission branch (mirroring Auth::hasProjectRole's implicit pass) but
+    // still curate their own shelf. p.active = 1 keeps semantics identical to
+    // Auth::hasProjectRole: roles on disabled projects do not count. A tile
+    // with project_id NULL is permitted to any signed-in user (this is also
+    // what a tile degrades to via ON DELETE SET NULL if its project row is
+    // ever deleted; the hub is navigation, not a security boundary). Picked
+    // rows failing the permission branch lie dormant, never leak.
+    $stmt = Database::read()->prepare(
+        'SELECT h.id, h.name, h.icon, h.gradient, h.url
+         FROM hub_apps h
+         JOIN hub_user_apps s ON s.app_id = h.id AND s.user_id = ?
+         WHERE h.active = 1
+           AND (? = 1
+                OR h.project_id IS NULL
+                OR EXISTS (
+                    SELECT 1
+                    FROM user_project_roles r
+                    JOIN projects p ON p.id = r.project_id
+                    WHERE r.user_id = ? AND r.project_id = h.project_id AND p.active = 1))
+         ORDER BY h.sort_order ASC, h.id ASC'
+    );
+    $stmt->execute([$user['id'], (int) $user['is_admin'], $user['id']]);
     sendJson(array_map(fn (array $r) => ['id' => (int) $r['id']] + $r, $stmt->fetchAll()));
 }
 
 function listAllApps(): void
 {
     $stmt = Database::read()->query(
-        'SELECT h.id, h.name, h.icon, h.gradient, h.url, h.sort_order, h.project_id, h.active,
+        'SELECT h.id, h.name, h.icon, h.gradient, h.url, h.sort_order, h.project_id, h.active, h.is_default,
                 p.project_key, p.name AS project_name
          FROM hub_apps h
          LEFT JOIN projects p ON p.id = h.project_id
@@ -126,9 +134,109 @@ function listAllApps(): void
         $a['id']         = (int) $a['id'];
         $a['sort_order'] = (int) $a['sort_order'];
         $a['active']     = (int) $a['active'];
+        $a['is_default'] = (int) $a['is_default'];
         $a['project_id'] = $a['project_id'] !== null ? (int) $a['project_id'] : null;
     }
     sendJson($apps);
+}
+
+// ------------------------------------------------------------------
+//  Shelf (any signed-in user, own rows only)
+// ------------------------------------------------------------------
+
+function listManageableApps(array $user): void
+{
+    // Same permission branch as the shelf query, but WITHOUT the selection
+    // join filter: this feeds the picker, so it lists everything addable
+    // and flags what is already picked.
+    $stmt = Database::read()->prepare(
+        'SELECT h.id, h.name, h.icon, h.gradient, h.url,
+                (s.id IS NOT NULL) AS on_shelf
+         FROM hub_apps h
+         LEFT JOIN hub_user_apps s ON s.app_id = h.id AND s.user_id = ?
+         WHERE h.active = 1
+           AND (? = 1
+                OR h.project_id IS NULL
+                OR EXISTS (
+                    SELECT 1
+                    FROM user_project_roles r
+                    JOIN projects p ON p.id = r.project_id
+                    WHERE r.user_id = ? AND r.project_id = h.project_id AND p.active = 1))
+         ORDER BY h.sort_order ASC, h.id ASC'
+    );
+    $stmt->execute([$user['id'], (int) $user['is_admin'], $user['id']]);
+    sendJson(array_map(fn (array $r) => [
+        'id'       => (int) $r['id'],
+        'name'     => $r['name'],
+        'icon'     => $r['icon'],
+        'gradient' => $r['gradient'],
+        'url'      => $r['url'],
+        'on_shelf' => (int) $r['on_shelf'] === 1,
+    ], $stmt->fetchAll()));
+}
+
+/**
+ * True when the user may see this tile: active, and (admin | no project |
+ * role in the tile's active project). Same rule as the shelf query's
+ * permission branch.
+ */
+function canSeeTile(array $user, array $tile): bool
+{
+    if ((int) $tile['active'] !== 1) {
+        return false;
+    }
+    if ((int) $user['is_admin'] === 1 || $tile['project_id'] === null) {
+        return true;
+    }
+    $stmt = Database::read()->prepare(
+        'SELECT 1 FROM user_project_roles r
+         JOIN projects p ON p.id = r.project_id
+         WHERE r.user_id = ? AND r.project_id = ? AND p.active = 1'
+    );
+    $stmt->execute([$user['id'], (int) $tile['project_id']]);
+    return $stmt->fetchColumn() !== false;
+}
+
+function addToShelf(array $user): void
+{
+    $body = jsonBody();
+    if (!isset($body['app_id']) || !is_numeric($body['app_id'])) {
+        sendError('app_id is required', 400);
+    }
+    $appId = (int) $body['app_id'];
+
+    $stmt = Database::read()->prepare('SELECT id, project_id, active FROM hub_apps WHERE id = ?');
+    $stmt->execute([$appId]);
+    $tile = $stmt->fetch();
+    if (!$tile || (int) $tile['active'] !== 1) {
+        sendError('Tile not found', 404);
+    }
+    if (!canSeeTile($user, $tile)) {
+        sendError('You do not have access to this app', 403);
+    }
+
+    // Idempotent: re-adding is a no-op, not an error.
+    Database::write()->prepare(
+        'INSERT INTO hub_user_apps (user_id, app_id) VALUES (?, ?)
+         ON DUPLICATE KEY UPDATE app_id = app_id'
+    )->execute([$user['id'], $appId]);
+    sendJson(['message' => 'Added to your shelf'], 201);
+}
+
+function removeFromShelf(array $user): void
+{
+    $appId = isset($_GET['app_id']) ? (int) $_GET['app_id'] : 0;
+    if ($appId <= 0) {
+        sendError('app_id is required', 400);
+    }
+    // Own row only; no permission check needed to drop something you picked
+    // (dormant rows included, they are the user's own data).
+    $stmt = Database::write()->prepare('DELETE FROM hub_user_apps WHERE user_id = ? AND app_id = ?');
+    $stmt->execute([$user['id'], $appId]);
+    if ($stmt->rowCount() === 0) {
+        sendError('Tile is not on your shelf', 404);
+    }
+    sendJson(['message' => 'Removed from your shelf']);
 }
 
 // ------------------------------------------------------------------
@@ -140,8 +248,8 @@ function createApp(): void
     $fields = validateAppFields(jsonBody(), false);
     try {
         Database::write()->prepare(
-            'INSERT INTO hub_apps (name, icon, gradient, url, sort_order, project_id, active)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO hub_apps (name, icon, gradient, url, sort_order, project_id, active, is_default)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         )->execute([
             $fields['name'],
             $fields['icon']       ?? 'fa-solid fa-cube',
@@ -150,6 +258,7 @@ function createApp(): void
             $fields['sort_order'] ?? 0,
             $fields['project_id'] ?? null,
             $fields['active']     ?? 1,
+            $fields['is_default'] ?? 0,
         ]);
     } catch (PDOException $e) {
         if ((int) $e->errorInfo[1] === 1062) {
@@ -260,6 +369,10 @@ function validateAppFields(array $body, bool $partial): array
 
     if (isset($body['active'])) {
         $fields['active'] = (int) (bool) $body['active'];
+    }
+
+    if (isset($body['is_default'])) {
+        $fields['is_default'] = (int) (bool) $body['is_default'];
     }
 
     if (array_key_exists('project_id', $body)) {

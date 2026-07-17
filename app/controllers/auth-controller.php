@@ -149,6 +149,16 @@ function googleLogin(): void
             $isAdminEmail ? 1 : 0,
         ]);
         $userId = (int) $write->lastInsertId();
+
+        // Seed the personal hub shelf with the admin-marked default tiles.
+        // Best-effort: a shelf without defaults is recoverable, a failed
+        // signup is not.
+        try {
+            require_once __DIR__ . '/../services/hub-shelf-service.php';
+            seedDefaultHubApps($write, $userId);
+        } catch (Throwable $e) {
+            error_log('Default hub shelf seeding failed for user ' . $userId . ': ' . $e->getMessage());
+        }
     }
 
     Auth::login($userId);

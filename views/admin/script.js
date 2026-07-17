@@ -173,6 +173,7 @@ async function selectUser(id) {
     selectedUser = data.user;
 
     document.getElementById('detail-placeholder').classList.add('hidden');
+    document.getElementById('detail-all').classList.add('hidden');
     document.getElementById('detail').classList.remove('hidden');
     document.querySelectorAll('.roster-row').forEach(r => r.classList.remove('selected'));
     loadUsers();
@@ -338,6 +339,38 @@ document.getElementById('grant-form').addEventListener('submit', async (e) => {
 });
 
 // ------------------------------------------------------------------
+//  All users (bulk grant to the whole roster)
+// ------------------------------------------------------------------
+
+document.getElementById('all-users-row').addEventListener('click', () => {
+    selectedUserId = null;
+    selectedUser = null;
+    document.getElementById('detail-placeholder').classList.add('hidden');
+    document.getElementById('detail').classList.add('hidden');
+    document.getElementById('detail-all').classList.remove('hidden');
+    document.querySelectorAll('.roster-row').forEach(r => r.classList.remove('selected'));
+    document.getElementById('all-users-row').classList.add('selected');
+});
+
+document.getElementById('grant-all-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const projectKey = document.getElementById('grant-all-project').value;
+    const role = document.getElementById('grant-all-role').value.trim();
+    if (!confirm(`Grant "${role}" in ${projectKey} to every active user?`)) return;
+    try {
+        const res = await adminFetch({ resource: 'roles' }, {
+            method: 'POST',
+            body: { user_id: 'all', project_key: projectKey, role },
+        });
+        toast(`${res.message} · ${res.granted} user(s) granted`);
+        loadUsers();
+        loadProjects(); // member counts changed
+    } catch (err) {
+        toast(err.message, true);
+    }
+});
+
+// ------------------------------------------------------------------
 //  Password / resets
 // ------------------------------------------------------------------
 
@@ -471,15 +504,18 @@ async function loadProjects() {
     setCount('count-projects', projects.length);
     renderProjects();
 
-    // Grant form project picker only offers active projects.
-    const select = document.getElementById('grant-project');
-    select.replaceChildren();
-    projects.filter(p => p.active).forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.project_key;
-        opt.textContent = `${p.project_key} (${p.name})`;
-        select.appendChild(opt);
-    });
+    // Grant form project pickers (single user + all users) only offer active projects.
+    const fillActiveProjects = (el) => {
+        el.replaceChildren();
+        projects.filter(p => p.active).forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.project_key;
+            opt.textContent = `${p.project_key} (${p.name})`;
+            el.appendChild(opt);
+        });
+    };
+    fillActiveProjects(document.getElementById('grant-project'));
+    fillActiveProjects(document.getElementById('grant-all-project'));
 
     // Hub tile project picker: blank option = visible to any signed-in user.
     // Inactive projects stay listed since tiles may already link to them.
@@ -607,7 +643,8 @@ function renderHubApps() {
         icon.style.color = accentFromGradient(app.gradient);
         const label = document.createElement('p');
         label.className = 'font-mono text-xs text-ink truncate';
-        label.textContent = `${app.name} · ${app.url} · ${app.project_key || 'everyone'} · #${app.sort_order}`;
+        label.textContent = `${app.name} · ${app.url} · ${app.project_key || 'everyone'} · #${app.sort_order}`
+            + (app.is_default ? ' · default' : '');
         info.append(led, swatch, icon, label);
         li.appendChild(info);
 
@@ -696,6 +733,7 @@ function startHubEdit(app) {
     document.getElementById('hub-gradient').value = app.gradient;
     document.getElementById('hub-project').value = app.project_id === null ? '' : String(app.project_id);
     document.getElementById('hub-sort').value = app.sort_order;
+    document.getElementById('hub-default').checked = app.is_default === 1;
     document.getElementById('hub-submit').textContent = 'Save tile';
     document.getElementById('hub-cancel').classList.remove('hidden');
     syncGradientSwatch();
@@ -728,6 +766,7 @@ document.getElementById('hub-form').addEventListener('submit', async (e) => {
         gradient: document.getElementById('hub-gradient').value,
         project: document.getElementById('hub-project').value,
         sort: document.getElementById('hub-sort').value,
+        isDefault: document.getElementById('hub-default').checked,
     });
     try {
         const res = editingHubAppId === null

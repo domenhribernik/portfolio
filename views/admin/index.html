@@ -104,6 +104,16 @@
                         <h2 class="section-title mb-4">Roster</h2>
                         <input id="user-search" type="search" class="field-input mb-4"
                             placeholder="Search email, username, name…" autocomplete="off">
+                        <button id="all-users-row" type="button" class="roster-row mb-2">
+                            <span class="led led-clay" aria-hidden="true"></span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-sm font-semibold">All users</span>
+                                <span class="block font-mono text-[10px] text-faint">grant a role to the whole
+                                    roster</span>
+                            </span>
+                            <span class="font-mono text-[9px] uppercase tracking-widest text-stone shrink-0">
+                                <i class="fa-solid fa-users" aria-hidden="true"></i></span>
+                        </button>
                         <ul id="user-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></ul>
                         <p id="user-empty" class="hidden font-mono text-xs text-faint mt-2">No users match.</p>
                     </div>
@@ -112,6 +122,34 @@
                     <div id="detail-placeholder" class="card p-10 text-center">
                         <p class="font-mono text-xs text-faint tracking-widest uppercase">Select a user from the
                             roster</p>
+                    </div>
+
+                    <!-- Right: the whole roster at once -->
+                    <div id="detail-all" class="hidden card p-6">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div
+                                class="w-12 h-12 rounded-[3px] border border-hairline bg-paper2 flex items-center justify-center text-clay text-xl">
+                                <i class="fa-solid fa-users" aria-hidden="true"></i></div>
+                            <div class="min-w-0 flex-1">
+                                <h2 class="font-display text-xl font-semibold">All users</h2>
+                                <p class="font-mono text-xs text-stone">one grant, the whole roster</p>
+                            </div>
+                        </div>
+                        <p class="text-stone text-sm mb-4">Grants a role in one project to every <em>active</em> user
+                            at once. Anyone already holding a role in that project keeps it unchanged, so nobody gets
+                            downgraded. Users created later are not covered; run it again when the roster grows.</p>
+                        <form id="grant-all-form" class="grid sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                            <div>
+                                <label for="grant-all-project" class="field-label">Project</label>
+                                <select id="grant-all-project" class="field-input" required></select>
+                            </div>
+                            <div>
+                                <label for="grant-all-role" class="field-label">Role</label>
+                                <input id="grant-all-role" type="text" class="field-input" required value="member"
+                                    placeholder="member, viewer, player…">
+                            </div>
+                            <button type="submit" class="btn-clay">Grant to all</button>
+                        </form>
                     </div>
 
                     <div id="detail" class="hidden space-y-6">
@@ -235,9 +273,11 @@
             <section id="panel-hub" class="tab-panel hidden space-y-6" role="tabpanel">
                 <div class="card p-6">
                     <h2 class="section-title">Tile composer</h2>
-                    <p class="text-stone text-sm mb-4">Tiles on the Hub launcher. A tile with no project is visible to
-                        any signed-in user; otherwise only to users holding a role in that project (admins see
-                        everything).</p>
+                    <p class="text-stone text-sm mb-4">Tiles on the Hub launcher. Each user picks their own shelf on
+                        the Hub itself, limited to what they may see: a tile with no project is available to any
+                        signed-in user, otherwise a role in the tile's project is required (admins may pick
+                        everything). Tiles marked <span class="font-mono text-xs">default</span> are placed on every
+                        new user's shelf at signup.</p>
                     <form id="hub-form" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
                         <div>
                             <label for="hub-name" class="field-label">Name</label>
@@ -271,6 +311,11 @@
                             <label for="hub-sort" class="field-label">Sort order</label>
                             <input id="hub-sort" type="number" class="field-input" value="0">
                         </div>
+                        <label for="hub-default"
+                            class="flex items-center gap-2 font-mono text-[10px] tracking-widest uppercase text-stone pb-3 cursor-pointer">
+                            <input id="hub-default" type="checkbox" class="accent-clay">
+                            default for new users
+                        </label>
                         <div class="flex gap-3">
                             <button type="submit" id="hub-submit" class="btn-clay">Add tile</button>
                             <button type="button" id="hub-cancel" class="btn-ghost hidden">Cancel</button>

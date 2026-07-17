@@ -75,12 +75,12 @@ test('buildHubPayload trims fields and resolves the project select value', () =>
         buildHubPayload({
             name: ' Botaniq ', url: ' /views/botaniq/ ',
             icon: 'fa-solid fa-leaf', gradient: 'linear-gradient(45deg, #000 0%, #fff 100%)',
-            project: '5', sort: '20',
+            project: '5', sort: '20', isDefault: true,
         }),
         {
             name: 'Botaniq', url: '/views/botaniq/',
             icon: 'fa-solid fa-leaf', gradient: 'linear-gradient(45deg, #000 0%, #fff 100%)',
-            project_id: 5, sort_order: 20,
+            project_id: 5, sort_order: 20, is_default: true,
         }
     );
 });
@@ -88,8 +88,15 @@ test('buildHubPayload trims fields and resolves the project select value', () =>
 test('buildHubPayload omits blank icon/gradient and maps empty project to null', () => {
     assert.deepEqual(
         buildHubPayload({ name: 'X', url: '/views/x/', icon: '  ', gradient: '', project: '', sort: '' }),
-        { name: 'X', url: '/views/x/', project_id: null, sort_order: 0 }
+        { name: 'X', url: '/views/x/', project_id: null, sort_order: 0, is_default: false }
     );
+});
+
+test('buildHubPayload carries the default-for-new-users flag as a boolean', () => {
+    const base = { name: 'X', url: '/views/x/', icon: '', gradient: '', project: '', sort: '0' };
+    assert.equal(buildHubPayload({ ...base, isDefault: true }).is_default, true);
+    assert.equal(buildHubPayload({ ...base, isDefault: false }).is_default, false);
+    assert.equal(buildHubPayload(base).is_default, false);
 });
 
 test('hslToHex converts the primary/secondary corners exactly', () => {

@@ -93,12 +93,14 @@ export function accentFromGradient(gradient) {
 }
 
 // Blank icon/gradient are omitted so the controller's defaults apply.
-export function buildHubPayload({ name, url, icon, gradient, project, sort }) {
+// is_default marks the tile for seeding onto every NEW user's shelf.
+export function buildHubPayload({ name, url, icon, gradient, project, sort, isDefault }) {
     const body = {
         name: name.trim(),
         url: url.trim(),
         project_id: project === '' ? null : Number(project),
         sort_order: Number(sort) || 0,
+        is_default: !!isDefault,
     };
     if (icon.trim()) body.icon = icon.trim();
     if (gradient.trim()) body.gradient = gradient.trim();

@@ -252,12 +252,14 @@ function handleRoles(string $method, ?int $id, array $admin): void
     switch ($method) {
         case 'POST':
             $body = jsonBody();
-            $targetId = (int) ($body['user_id'] ?? 0);
+            // user_id "all" fans the grant out to every existing active user.
+            $isBulk = ($body['user_id'] ?? null) === 'all';
+            $targetId = $isBulk ? 0 : (int) ($body['user_id'] ?? 0);
             $projectKey = isset($body['project_key']) && is_string($body['project_key'])
                 ? strtolower(trim($body['project_key'])) : '';
             $role = isset($body['role']) && is_string($body['role']) ? strtolower(trim($body['role'])) : '';
 
-            if (!$targetId || !fetchUser($targetId)) {
+            if (!$isBulk && (!$targetId || !fetchUser($targetId))) {
                 sendError('User not found', 404);
             }
             if (!preg_match('/^[a-z0-9_-]{2,32}$/', $role)) {
@@ -268,6 +270,23 @@ function handleRoles(string $method, ?int $id, array $admin): void
             $projectId = $stmt->fetchColumn();
             if ($projectId === false) {
                 sendError('Project not found or inactive', 404);
+            }
+
+            if ($isBulk) {
+                // One-time fan-out over users existing NOW (users created later
+                // are not covered; re-run when needed). Users already holding a
+                // role in the project are left untouched, so a better role is
+                // never downgraded. The permissions JSON is per-user tuning and
+                // is deliberately not part of a fan-out.
+                $stmt = Database::write()->prepare(
+                    'INSERT INTO user_project_roles (user_id, project_id, role, granted_by)
+                     SELECT u.id, ?, ?, ? FROM users u
+                     WHERE u.is_active = 1
+                       AND NOT EXISTS (SELECT 1 FROM user_project_roles r
+                                       WHERE r.user_id = u.id AND r.project_id = ?)'
+                );
+                $stmt->execute([(int) $projectId, $role, $admin['id'], (int) $projectId]);
+                sendJson(['message' => 'Role granted to all users', 'granted' => $stmt->rowCount()]);
             }
 
             $permissions = null;
