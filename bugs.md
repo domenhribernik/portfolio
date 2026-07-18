@@ -101,6 +101,8 @@ Unchanged and still deliberate: [auth.php:149-152](app/config/auth.php#L149-L152
 ### LOW-09 (was SEC-04): No web-server hardening: dotfiles, `.env`, `.git`, `.sql` are unprotected
 **Downgraded High → Low 2026-07-18, accepted risk (owner decision).** Rationale recorded from the owner: on prod, `.env` and `vendor/` live in the server root **outside** `public_html` (the SFTP deploy only pushes into `public_html`), so the production secrets are not servable; and the repository is intentionally **open source** on GitHub, so `.git` contents, `app/models/*.sql`, and CLAUDE.md are public anyway and serving them leaks nothing that is not already published. Remaining sliver (accepted): in dev, `app/.env` sits inside the document root and holds the production DB credentials, so `http://localhost/portfolio/app/.env` serves them in cleartext to anyone who can reach the dev machine's Apache (localhost/LAN). If that ever becomes a concern, the cheap fix stays the same: a `<FilesMatch "(^\.|\.(env)$)">` deny in the root `.htaccess` (do NOT blanket-deny `.md` or `.sql` site-wide; the blog reader fetches `posts/<slug>.md` client-side, and open-sourcing makes the wider denies pointless anyway), or move the dev `.env` outside the doc root to mirror prod.
 
+**Sliver closed later the same day (2026-07-18):** the root `.htaccess` was merged with the server's real one (dotfile `FilesMatch` deny plus `app/config|models|vendor|cache` blocks, active in dev too; pretty-URL rules prod-only via a host-anchored skip) and untracked from git. Verified locally: `app/.env`, `app/config/*`, `app/models/*` all 403.
+
 ---
 
 ## IMPROVEMENTS (grouped, low urgency)
