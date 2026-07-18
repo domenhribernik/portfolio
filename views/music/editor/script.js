@@ -853,9 +853,13 @@ document.addEventListener('DOMContentLoaded', function() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ track_key: trackKey, lyrics: lyricsInput.value, chords: chords, words: words })
     })
-      .then(r => r.json().then(body => ({ ok: r.ok, body })))
-      .then(({ ok, body }) => {
-        if (!ok) throw new Error(body.error || 'Save failed');
+      .then(r => r.json().then(body => ({ ok: r.ok, status: r.status, body })))
+      .then(({ ok, status, body }) => {
+        if (!ok) {
+          if (status === 401) throw new Error('sign in first (views/account), saving is editor-only now');
+          if (status === 403) throw new Error('your account has no music editor access yet');
+          throw new Error(body.error || 'Save failed');
+        }
         markClean();
         const savedWords = (body.words || []).length;
         setStatus(`Saved (${body.chords.length} chord events${savedWords ? `, ${savedWords} word syncs` : ''}).`, 'ok');

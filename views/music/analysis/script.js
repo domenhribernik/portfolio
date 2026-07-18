@@ -190,11 +190,15 @@ document.addEventListener('DOMContentLoaded', function() {
     form.append('save', saveCheck.checked ? '1' : '0');
 
     fetch(API + '?resource=analysis', { method: 'POST', body: form })
-      .then(r => r.json().then(body => ({ ok: r.ok, body })).catch(() => {
+      .then(r => r.json().then(body => ({ ok: r.ok, status: r.status, body })).catch(() => {
         throw new Error('The server returned an unreadable response.');
       }))
-      .then(({ ok, body }) => {
-        if (!ok) throw new Error(body.error || 'Analysis failed');
+      .then(({ ok, status, body }) => {
+        if (!ok) {
+          if (status === 401) throw new Error('sign in first (views/account), analysis is editor-only now');
+          if (status === 403) throw new Error('your account has no music editor access yet');
+          throw new Error(body.error || 'Analysis failed');
+        }
         renderResults(body.filename, body.result, body.saved);
         if (body.saved) loadRecent();
       })

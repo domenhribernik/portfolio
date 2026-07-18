@@ -19,6 +19,12 @@ CREATE TABLE IF NOT EXISTS music_sync (
 -- player to interpolate the karaoke highlight; the API always exposes them
 -- as a separate "words" array in both directions.
 
+-- Writes (saveSync/deleteSync/runAnalysis) are gated by
+-- Auth::requireProjectRole('music', 'editor') (SEC-05); reads stay public.
+-- Requires auth-model.sql first. Grant the editor role from views/admin.
+INSERT INTO projects (project_key, name) VALUES ('music', 'Music')
+ON DUPLICATE KEY UPDATE active = 1;
+
 CREATE TABLE IF NOT EXISTS music_analyses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     filename VARCHAR(255) NOT NULL,

@@ -7,21 +7,25 @@ define('SECURE_ACCESS', true);
 ini_set('serialize_precision', '-1');
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Responses vary with the session cookie, so they must never be cached.
+header('Cache-Control: no-store');
+// No Access-Control-Allow-Origin here: writes are gated by the session
+// cookie, and wildcard CORS is incompatible with cookie auth.
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
 
+require_once __DIR__ . '/../config/dev-mode.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/auth.php';
 
 const MAX_UPLOAD_BYTES = 30 * 1024 * 1024;
 const MAX_CHORD_EVENTS = 500;
 const MAX_WORD_SYNCS   = 2000;
 const MAX_LYRICS_CHARS = 20000;
+const ANALYSIS_LOCK_STALE_SECONDS = 300;
 
 $method   = $_SERVER['REQUEST_METHOD'];
 $resource = $_GET['resource'] ?? null;
@@ -82,9 +86,11 @@ function handleSync(string $method): void
             listSync();
             return;
         case 'POST':
+            Auth::requireProjectRole('music', 'editor');
             saveSync();
             return;
         case 'DELETE':
+            Auth::requireProjectRole('music', 'editor');
             if ($track === null) sendError('track parameter is required', 400);
             deleteSync($track);
             return;
@@ -234,6 +240,7 @@ function handleAnalysis(string $method, ?int $id): void
             listAnalyses();
             return;
         case 'POST':
+            Auth::requireProjectRole('music', 'editor');
             runAnalysis();
             return;
         default:
@@ -303,9 +310,29 @@ function looksLikeAudio(string $path, string $ext): bool
     return false;
 }
 
+/**
+ * Each analysis spawns a synchronous Python + ffmpeg process for up to
+ * three minutes, so only one may run at a time (a second one would stack
+ * CPU and PHP workers). The lock file's mtime marks the running analysis;
+ * anything older than the stale cutoff is a crashed run and is ignored.
+ */
+function analysisLockFile(): string
+{
+    $override = getenv('MUSIC_ANALYSIS_LOCK');
+    return is_string($override) && $override !== ''
+        ? $override
+        : __DIR__ . '/../cache/music-analysis.lock';
+}
+
 function runAnalysis(): void
 {
     set_time_limit(180);
+
+    $lock = analysisLockFile();
+    clearstatcache(true, $lock);
+    if (is_file($lock) && time() - (int) filemtime($lock) < ANALYSIS_LOCK_STALE_SECONDS) {
+        sendError('Another analysis is already running. Try again in a moment.', 429);
+    }
 
     if (empty($_FILES['audio'])) sendError('No file uploaded (field name must be "audio")', 400);
     $file = $_FILES['audio'];
@@ -338,6 +365,14 @@ function runAnalysis(): void
         unlink($tmpPath);
         sendError('Analyzer script not found on the server', 500);
     }
+
+    // Hold the concurrency lock for the duration of the exec. sendError()
+    // exits, which skips finally blocks, so the release must be a shutdown
+    // function to survive every failure path.
+    file_put_contents($lock, (string) getmypid(), LOCK_EX);
+    register_shutdown_function(function () use ($lock) {
+        @unlink($lock);
+    });
 
     $python = $_ENV['PYTHON_BIN'] ?? 'python3';
     // XAMPP exports LD_LIBRARY_PATH=/opt/lampp/lib, whose old libstdc++ breaks

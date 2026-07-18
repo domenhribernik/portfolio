@@ -4,9 +4,9 @@ Audit date: 2026-07-04. **Re-verified: 2026-07-18** against the current tree. Fi
 
 **How to read this:** findings are ranked most-severe first, in severity buckets, each with a stable ID, `file:line`, impact, how to trigger it, and a concrete fix. The low-severity long tail is curated and grouped rather than listed exhaustively.
 
-**One-line takeaway (updated 2026-07-18):** the auth system is solid AND has now been retrofitted onto the older controllers (pricing, jeger, sourdough, plants, and as of today iliana-photos, stocks, rocks, and the vrata door). The remaining exposure is `music` writes (SEC-05) and missing web-server hardening (SEC-04). One correctness bug (sanitize-on-input, BUG-01) is actively spreading into new controllers.
+**One-line takeaway (updated 2026-07-18):** the auth system is solid AND has now been retrofitted onto every controller that needed it (pricing, jeger, sourdough, plants, and as of today iliana-photos, stocks, rocks, the vrata door, and music writes). No unauthenticated mutation surface remains; web-server hardening (SEC-04) was accepted as low risk by the owner (secrets live outside `public_html`, the repo is intentionally open source). The top remaining item is QUAL-01 (`dev-mode.php` committed as `true`); one correctness bug (sanitize-on-input, BUG-01) still awaits its cleanup.
 
-Severity counts: **Critical 0 · High 3 · Medium 7 · Low 8 · Improvements 6**
+Severity counts: **Critical 0 · High 1 · Medium 7 · Low 9 (incl. the accepted SEC-04) · Improvements 6**
 
 ---
 
@@ -22,27 +22,9 @@ Nothing open. SEC-02 (the last Critical, unauthenticated iliana-photos/stocks/ro
 - **Status 2026-07-18: FIXED.** The proxy is now POST-only (bare GET → 405), the shared key is read from the JSON body only (a key in the URL counts as no key), it is same-origin gated via `Auth::assertSameOrigin()`, requires `Content-Type: application/json` (form-encoded → 415), and rate-limits failed key attempts per IP (a timestamp file in `app/cache/`, default 10 per 15 min, → 429). A signed-in user with a role in the new `vrata` project (admins implicitly) unlocks without needing the key at all. `Access-Control-Allow-Origin: *` removed; `Cache-Control: no-store` added. The PWA ([views/vrata/index.html](views/vrata/index.html)) now POSTs `{key, action}` with `credentials: 'same-origin'`. Covered by [tests/vrata.test.php](tests/vrata.test.php) (24 checks, incl. a fake Tuya cloud that proves denied requests reach the door zero times). **Prod deploy needs the project row:** run [app/models/vrata-model.sql](app/models/vrata-model.sql) (one `INSERT INTO projects`) so the session-role path resolves; the shared-key path works without it. Grant the `vrata` `user` role from the admin dashboard to anyone who should skip the key.
 - **Original impact (for the record):** the gate was a shared secret passed as `?key=…`, so it landed in access logs, history, `Referer` and proxies, and unlock ran on a plain `GET`, meaning any link-preview/prefetch bot that saw the URL silently opened the door.
 
-### SEC-04: No web-server hardening: dotfiles, `.env`, `.git`, `.sql` are unprotected
-- **Status 2026-07-18: partially addressed, deny rules still missing.** A root [.htaccess](.htaccess) now exists (added with the SEO work) but only handles canonical-host 301s, a legacy blog redirect, deflate and expires. There are still no access-control rules anywhere in the tree, and `robots.txt`'s `Disallow: /app/` is not access control.
-- **Impact:** In dev, `app/.env` sits inside the document root (`$DEV_MODE` sets `basePath = dirname(__DIR__)` = `app/`), so `http://localhost/portfolio/app/.env` is served as plain text, and that file holds the **production** DB credentials, Tuya door secrets, Telegram bot token, NASA key. `.git/` and `app/models/*.sql` are likewise servable as static files where the repo root maps under a web root. Prod mitigates the `.env` case (it lives at `/usr/home/meuhdy/.env`, outside the web root), but nothing blocks `.git`, `.sql`, or a stray dotfile.
-- **Repro (dev):** `curl http://localhost/portfolio/app/.env` → all secrets in cleartext.
-- **Fix:** Append deny rules to the existing root `.htaccess`. **Important correction to the original suggestion:** do NOT deny `.md` site-wide, the live blog reader fetches posts client-side ([views/blog/blog.js:20](views/blog/blog.js#L20) fetches `posts/<slug>.md`), so a blanket `.md` deny breaks it. Deny the sensitive names/extensions instead:
-  ```apache
-  <FilesMatch "(^\.|\.(env|sql|py|log|ini)$)">
-    Require all denied
-  </FilesMatch>
-  <Files "CLAUDE.md">
-    Require all denied
-  </Files>
-  RedirectMatch 404 /\.git
-  ```
-  Also move `app/.env` out of the doc root in dev (mirror prod), and confirm `.git/` is not deployed (the SFTP deploy workflow uploads a file list, so verify `.git` is excluded there too).
-
 ### SEC-05: `music-controller.php` write/delete/analysis endpoints are open to the internet
-- **Status 2026-07-18: unchanged.** Verified: `*` CORS at [:10](app/controllers/music-controller.php#L10), no auth include; `saveSync` [:140](app/controllers/music-controller.php#L140), `deleteSync` [:219](app/controllers/music-controller.php#L219), `runAnalysis` [:306](app/controllers/music-controller.php#L306).
-- **Impact:** Anyone can overwrite/delete the chords & lyrics for any track (`POST`/`DELETE ?resource=sync`), and repeatedly `POST` 30 MB files to `?resource=analysis`; each one spawns a **synchronous Python + ffmpeg process** (`set_time_limit(180)`), so a handful of parallel requests exhausts PHP workers and CPU: a cheap denial-of-service. Input is validated (no command injection, args are `escapeshellarg`'d) and rendering is `textContent`, so this is authorization + resource exhaustion, not RCE/XSS.
-- **Repro:** loop `curl -X POST -F audio=@big.mp3 '…music-controller.php?resource=analysis'`.
-- **Fix:** Register a `music` project and gate `saveSync`/`deleteSync`/`runAnalysis` behind `Auth::requireProjectRole('music', 'editor')` (public GETs stay open). Add a per-IP rate limit and a concurrency cap on analysis (a lock file in `app/cache/` is enough). Remove `Access-Control-Allow-Origin: *`.
+- **Status 2026-07-18: FIXED.** `saveSync`/`deleteSync`/`runAnalysis` are now behind `Auth::requireProjectRole('music', 'editor')` (public GETs stay open: the player, chord sheets, and analysis library still work for everyone). `Access-Control-Allow-Origin: *` removed, `Cache-Control: no-store` added. Analysis additionally has a **concurrency cap**: a lock file (`app/cache/music-analysis.lock`, mtime-based, stale after 300 s, released via a shutdown function so failed runs can't wedge it) makes a second simultaneous analysis return 429, so the synchronous Python + ffmpeg process can no longer be stacked. The per-IP rate limit from the original fix sketch was deliberately dropped: with the role gate, only authorized editors can reach `exec()` at all, so the anonymous DoS is gone and the lock only guards against accidental self-concurrency. Registered via a seed `INSERT` in [app/models/music-model.sql](app/models/music-model.sql) (run on prod, then grant the `editor` role from the admin dashboard). Editor and analysis pages show a sign-in hint on 401/403. Covered by [tests/music-controller.test.php](tests/music-controller.test.php) (26 checks; the analysis cases stop at the gate/lock/validation, so no Python ever runs in tests).
+- **Original impact (for the record):** anyone could overwrite/delete the chords & lyrics for any track and stack 30 MB analysis uploads, each spawning a synchronous Python + ffmpeg process (`set_time_limit(180)`): a cheap denial-of-service. Input was already well validated (no command injection), so this was authorization + resource exhaustion, not RCE/XSS.
 
 ### QUAL-01 / SEC: `dev-mode.php` is committed as `true`, and error bodies leak file:line
 - **Status 2026-07-18: unchanged.** [app/config/dev-mode.php:3](app/config/dev-mode.php#L3) still commits `$DEV_MODE = true;`.
@@ -116,12 +98,15 @@ Unchanged: e.g. [auth-controller.php:106](app/controllers/auth-controller.php#L1
 ### LOW-08: `assertSameOrigin()` short-circuits when `Origin` is absent
 Unchanged and still deliberate: [auth.php:149-152](app/config/auth.php#L149-L152) returns early if no `Origin` header (curl/non-browser allowance); the JSON-content-type requirement is the real CSRF backstop. Noting it so it stays a conscious choice: if any gated endpoint ever accepts form-encoded bodies, this becomes a hole.
 
+### LOW-09 (was SEC-04): No web-server hardening: dotfiles, `.env`, `.git`, `.sql` are unprotected
+**Downgraded High → Low 2026-07-18, accepted risk (owner decision).** Rationale recorded from the owner: on prod, `.env` and `vendor/` live in the server root **outside** `public_html` (the SFTP deploy only pushes into `public_html`), so the production secrets are not servable; and the repository is intentionally **open source** on GitHub, so `.git` contents, `app/models/*.sql`, and CLAUDE.md are public anyway and serving them leaks nothing that is not already published. Remaining sliver (accepted): in dev, `app/.env` sits inside the document root and holds the production DB credentials, so `http://localhost/portfolio/app/.env` serves them in cleartext to anyone who can reach the dev machine's Apache (localhost/LAN). If that ever becomes a concern, the cheap fix stays the same: a `<FilesMatch "(^\.|\.(env)$)">` deny in the root `.htaccess` (do NOT blanket-deny `.md` or `.sql` site-wide; the blog reader fetches `posts/<slug>.md` client-side, and open-sourcing makes the wider denies pointless anyway), or move the dev `.env` outside the doc root to mirror prod.
+
 ---
 
 ## IMPROVEMENTS (grouped, low urgency)
 
 - **IMP-01: Copy-pasted controller helpers.** Still open and grew since the audit: `sendJson`/`sendError`/`readBody`/`sanitize` variants are now also in `contact.php`, `store.php` and the reworked `pricing-controller.php`. Extract to a shared `app/config/http.php` include, like `auth.php`/`database.php` already are.
-- **IMP-02: CORS policy on mutating endpoints.** Much improved: everything wired into the auth system (auth, admin, hub, images, list, plants, sourdough, jeger, recipes, workout, pricing, parlour, contact, store, and since 2026-07-18 stocks, rocks, iliana-photos, vrata) correctly omits `Access-Control-Allow-Origin`. Still sending `*`: music, tarok, apod, stats, tabs, otd. The read-only public proxies (apod, otd, stats, tabs, tarok) are defensible; the remaining mutating one falls under SEC-05.
+- **IMP-02: CORS policy on mutating endpoints.** Resolved for every mutating endpoint: everything wired into the auth system (auth, admin, hub, images, list, plants, sourdough, jeger, recipes, workout, pricing, parlour, contact, store, and since 2026-07-18 stocks, rocks, iliana-photos, vrata, music) correctly omits `Access-Control-Allow-Origin`. Still sending `*`: only the read-only public proxies (apod, otd, stats, tabs, tarok), which is defensible.
 - **IMP-03: Adopt encode-on-output everywhere** (see BUG-01, which is now spreading) and delete the write-time `htmlspecialchars` helpers so new controllers stop inheriting the bug.
 - **IMP-04: Consider a front controller / router.** Every controller re-implements method/param dispatch, `SECURE_ACCESS`, headers, and error handling. A thin router would make it impossible to forget the auth include on a new endpoint, which is still the root cause of everything left in SEC-02/05.
 - **IMP-05: Centralize upload validation.** Unchanged: `plants` and `iliana` still hand-roll their own `finfo` MIME checks instead of going through `ImageService` (which already validates). Route all uploads through `ImageService::prepareFromUpload`.
@@ -141,6 +126,7 @@ Verified fixed on 2026-07-18 and removed:
 - **plants writes** (adjacent to SEC-02): now `Auth::requireLogin()` with every write scoped `AND user_id = ?`, CORS header removed. (Its BLOB storage and sanitize-on-input remain: PERF-01, BUG-01.)
 - **tarok write race** (was in LOW-04): now writes with `LOCK_EX`. (Its unbounded file count remains: SEC-06.)
 - **`index.html` noopener** (part of LOW-03) and the **blog gtranslate embed** (part of IMP-06): both done.
+- **SEC-05 (music write/delete/analysis endpoints open):** fixed 2026-07-18. Writes behind `Auth::requireProjectRole('music', 'editor')`, public reads untouched, wildcard CORS gone, analysis capped to one concurrent run via a stale-aware lock file. See the full SEC-05 entry above; covered by [tests/music-controller.test.php](tests/music-controller.test.php). Prod needs the `music` project `INSERT` from [app/models/music-model.sql](app/models/music-model.sql) plus an `editor` role grant, or saving chords from the editor will 401/403.
 - **SEC-03 (vrata door on a GET with the key in the URL):** fixed 2026-07-18. POST-only, key in the JSON body only, same-origin + JSON-content-type CSRF backstops, per-IP rate limit on failed key attempts, optional session-role bypass via the new `vrata` project, no wildcard CORS. See the full SEC-03 entry above; covered by [tests/vrata.test.php](tests/vrata.test.php). LOW-04 note: the new attempts file writes with `LOCK_EX`.
 
 ### Notes on what was checked and found clean
