@@ -4,9 +4,9 @@ Audit date: 2026-07-04. **Re-verified: 2026-07-18** against the current tree. Fi
 
 **How to read this:** findings are ranked most-severe first, in severity buckets, each with a stable ID, `file:line`, impact, how to trigger it, and a concrete fix. The low-severity long tail is curated and grouped rather than listed exhaustively.
 
-**One-line takeaway (updated 2026-07-18):** the auth system is solid AND has now been retrofitted onto the older controllers (pricing, jeger, sourdough, plants, and as of today iliana-photos, stocks, and rocks). The remaining exposure is `music` writes (SEC-05), the vrata door key in a GET URL, and missing web-server hardening. One correctness bug (sanitize-on-input, BUG-01) is actively spreading into new controllers.
+**One-line takeaway (updated 2026-07-18):** the auth system is solid AND has now been retrofitted onto the older controllers (pricing, jeger, sourdough, plants, and as of today iliana-photos, stocks, rocks, and the vrata door). The remaining exposure is `music` writes (SEC-05) and missing web-server hardening (SEC-04). One correctness bug (sanitize-on-input, BUG-01) is actively spreading into new controllers.
 
-Severity counts: **Critical 0 · High 4 · Medium 7 · Low 8 · Improvements 6**
+Severity counts: **Critical 0 · High 3 · Medium 7 · Low 8 · Improvements 6**
 
 ---
 
@@ -19,10 +19,8 @@ Nothing open. SEC-02 (the last Critical, unauthenticated iliana-photos/stocks/ro
 ## HIGH
 
 ### SEC-03: `vrata.php` unlocks a physical door on a `GET` with the key in the URL
-- **Status 2026-07-18: unchanged.** Verified: `*` CORS at [:2](app/proxys/vrata.php#L2), key check at [:29](app/proxys/vrata.php#L29), unlock runs on any method including GET ([:34](app/proxys/vrata.php#L34)).
-- **Impact:** The gate is a shared secret passed as `?key=…`. Query strings land in web-server access logs, browser history, `Referer` headers and any proxy in between. Worse, unlock happens on a plain `GET`: any link-preview/prefetch bot (Telegram/WhatsApp/Slack unfurlers, antivirus URL scanners) that ever sees the full URL will silently open the door. No rate limit on the key check.
-- **Repro:** `GET vrata.php?key=<key>` opens the lock. Paste that URL into any chat app that fetches link previews.
-- **Fix:** Require `POST` for the unlock action (reject GET with 405). Move the key out of the URL into the JSON body. Better: gate behind the real auth system (`Auth::requireProjectRole('vrata', 'user')`); the vrata PWA is same-origin so the `portfolio_sid` cookie flows normally, and the `login_attempts` table already provides a rate-limit pattern to copy if the shared key is kept as a fallback. Remove `Access-Control-Allow-Origin: *`.
+- **Status 2026-07-18: FIXED.** The proxy is now POST-only (bare GET → 405), the shared key is read from the JSON body only (a key in the URL counts as no key), it is same-origin gated via `Auth::assertSameOrigin()`, requires `Content-Type: application/json` (form-encoded → 415), and rate-limits failed key attempts per IP (a timestamp file in `app/cache/`, default 10 per 15 min, → 429). A signed-in user with a role in the new `vrata` project (admins implicitly) unlocks without needing the key at all. `Access-Control-Allow-Origin: *` removed; `Cache-Control: no-store` added. The PWA ([views/vrata/index.html](views/vrata/index.html)) now POSTs `{key, action}` with `credentials: 'same-origin'`. Covered by [tests/vrata.test.php](tests/vrata.test.php) (24 checks, incl. a fake Tuya cloud that proves denied requests reach the door zero times). **Prod deploy needs the project row:** run [app/models/vrata-model.sql](app/models/vrata-model.sql) (one `INSERT INTO projects`) so the session-role path resolves; the shared-key path works without it. Grant the `vrata` `user` role from the admin dashboard to anyone who should skip the key.
+- **Original impact (for the record):** the gate was a shared secret passed as `?key=…`, so it landed in access logs, history, `Referer` and proxies, and unlock ran on a plain `GET`, meaning any link-preview/prefetch bot that saw the URL silently opened the door.
 
 ### SEC-04: No web-server hardening: dotfiles, `.env`, `.git`, `.sql` are unprotected
 - **Status 2026-07-18: partially addressed, deny rules still missing.** A root [.htaccess](.htaccess) now exists (added with the SEO work) but only handles canonical-host 301s, a legacy blog redirect, deflate and expires. There are still no access-control rules anywhere in the tree, and `robots.txt`'s `Disallow: /app/` is not access control.
@@ -123,7 +121,7 @@ Unchanged and still deliberate: [auth.php:149-152](app/config/auth.php#L149-L152
 ## IMPROVEMENTS (grouped, low urgency)
 
 - **IMP-01: Copy-pasted controller helpers.** Still open and grew since the audit: `sendJson`/`sendError`/`readBody`/`sanitize` variants are now also in `contact.php`, `store.php` and the reworked `pricing-controller.php`. Extract to a shared `app/config/http.php` include, like `auth.php`/`database.php` already are.
-- **IMP-02: CORS policy on mutating endpoints.** Much improved: everything wired into the auth system (auth, admin, hub, images, list, plants, sourdough, jeger, recipes, workout, pricing, parlour, contact, store, and since 2026-07-18 stocks, rocks, iliana-photos) correctly omits `Access-Control-Allow-Origin`. Still sending `*`: music, tarok, apod, stats, tabs, otd, vrata. The read-only public proxies (apod, otd, stats, tabs, tarok) are defensible; the mutating ones fall under SEC-03/05.
+- **IMP-02: CORS policy on mutating endpoints.** Much improved: everything wired into the auth system (auth, admin, hub, images, list, plants, sourdough, jeger, recipes, workout, pricing, parlour, contact, store, and since 2026-07-18 stocks, rocks, iliana-photos, vrata) correctly omits `Access-Control-Allow-Origin`. Still sending `*`: music, tarok, apod, stats, tabs, otd. The read-only public proxies (apod, otd, stats, tabs, tarok) are defensible; the remaining mutating one falls under SEC-05.
 - **IMP-03: Adopt encode-on-output everywhere** (see BUG-01, which is now spreading) and delete the write-time `htmlspecialchars` helpers so new controllers stop inheriting the bug.
 - **IMP-04: Consider a front controller / router.** Every controller re-implements method/param dispatch, `SECURE_ACCESS`, headers, and error handling. A thin router would make it impossible to forget the auth include on a new endpoint, which is still the root cause of everything left in SEC-02/05.
 - **IMP-05: Centralize upload validation.** Unchanged: `plants` and `iliana` still hand-roll their own `finfo` MIME checks instead of going through `ImageService` (which already validates). Route all uploads through `ImageService::prepareFromUpload`.
@@ -143,8 +141,7 @@ Verified fixed on 2026-07-18 and removed:
 - **plants writes** (adjacent to SEC-02): now `Auth::requireLogin()` with every write scoped `AND user_id = ?`, CORS header removed. (Its BLOB storage and sanitize-on-input remain: PERF-01, BUG-01.)
 - **tarok write race** (was in LOW-04): now writes with `LOCK_EX`. (Its unbounded file count remains: SEC-06.)
 - **`index.html` noopener** (part of LOW-03) and the **blog gtranslate embed** (part of IMP-06): both done.
-
----
+- **SEC-03 (vrata door on a GET with the key in the URL):** fixed 2026-07-18. POST-only, key in the JSON body only, same-origin + JSON-content-type CSRF backstops, per-IP rate limit on failed key attempts, optional session-role bypass via the new `vrata` project, no wildcard CORS. See the full SEC-03 entry above; covered by [tests/vrata.test.php](tests/vrata.test.php). LOW-04 note: the new attempts file writes with `LOCK_EX`.
 
 ### Notes on what was checked and found clean
 - The auth core (`auth.php`, `google-auth-service.php`, `auth-controller.php`, `admin-controller.php`, `hub-controller.php`, `list-controller.php`) uses prepared statements throughout, hashes session/reset tokens with SHA-256, compares secrets with `hash_equals`, rate-limits password logins, and applies sensible CSRF backstops (JSON-only bodies + same-origin). No SQL injection was found in any controller (all dynamic SQL uses bound params; the only interpolated values, `LIMIT/OFFSET` and column-name lists, are integer-cast or from fixed allow-lists).

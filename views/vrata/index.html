@@ -161,17 +161,26 @@
         if (liveBadge) liveBadge.classList.toggle('hidden', text !== 'Live');
     };
 
+    // The key is sent in the JSON body of a POST, never in the URL: query
+    // strings leak into logs/history/Referer and a GET would let link-preview
+    // and prefetch bots trip the door (SEC-03). credentials:'same-origin' so
+    // the session cookie flows, letting a signed-in user with the vrata role
+    // work even without a key.
+    const callEndpoint = (payload, signal) => fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'same-origin',
+        cache: 'no-store',
+        redirect: 'error',
+        referrerPolicy: 'no-referrer',
+        signal,
+    });
+
     const fetchStreamUrl = async () => {
         const key = safeGetKey();
-        if (!key) throw new Error('no_key');
-        const res = await fetch(ENDPOINT + '?action=stream&key=' + encodeURIComponent(key), {
-            method: 'GET',
-            credentials: 'omit',
-            cache: 'no-store',
-            redirect: 'error',
-            referrerPolicy: 'no-referrer',
-        });
-        if (res.status === 403) {
+        const res = await callEndpoint({ action: 'stream', key: key || '' });
+        if (res.status === 403 || res.status === 401) {
             safeClearKey();
             showView('key');
             throw new Error('forbidden');
@@ -277,7 +286,6 @@
     openBtn.addEventListener('click', async () => {
         if (inFlight) return;
         const key = safeGetKey();
-        if (!key) { showView('key'); return; }
 
         inFlight = true;
         openBtn.disabled = true;
@@ -288,20 +296,16 @@
         const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
         try {
-            const url = ENDPOINT + '?key=' + encodeURIComponent(key);
-            const res = await fetch(url, {
-                method: 'GET',
-                credentials: 'omit',
-                cache: 'no-store',
-                redirect: 'error',
-                referrerPolicy: 'no-referrer',
-                signal: controller.signal,
-            });
+            const res = await callEndpoint({ key: key || '' }, controller.signal);
 
-            if (res.status === 403) {
+            if (res.status === 401 || res.status === 403) {
                 setStatus('Key rejected.', 'err');
                 safeClearKey();
                 showView('key');
+                return;
+            }
+            if (res.status === 429) {
+                setStatus('Too many attempts. Wait a few minutes.', 'err');
                 return;
             }
             if (!res.ok) {
