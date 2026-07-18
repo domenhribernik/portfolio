@@ -1,14 +1,21 @@
 <?php
 declare(strict_types=1);
+define('SECURE_ACCESS', true);
+
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Cache-Control: no-store');
+// No Access-Control-Allow-Origin here: this endpoint mutates server state,
+// every consumer is same-origin, and 'clear' is gated by the session cookie
+// (wildcard CORS is incompatible with cookie auth).
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
+
+require_once __DIR__ . '/../config/dev-mode.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/auth.php';
 
 $dataFile = __DIR__ . '/../data/rocks.json';
 
@@ -77,6 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         case 'clear': {
+            // Wipes every visitor's rock: owner only (SEC-02). GET and the
+            // per-rock actions stay public, this is a shared toy.
+            Auth::requireAdmin();
             writeRocks($dataFile, []);
             echo json_encode(['ok' => true]);
             exit;

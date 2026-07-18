@@ -17,7 +17,13 @@ let deleteTargetId = null;
 async function apiFetch(url, options = {}) {
     const res = await fetch(url, options);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Request failed');
+    if (!res.ok) {
+        // Writes are gated by the real account system (the page password is
+        // only decoration): translate the auth denials into plain guidance.
+        if (res.status === 401) throw new Error('Please sign in on the account page first (views/account), then come back to edit memories.');
+        if (res.status === 403) throw new Error('Your account does not have access to edit memories yet. Ask Domen to grant it.');
+        throw new Error(data.error || 'Request failed');
+    }
     return data;
 }
 

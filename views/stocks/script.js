@@ -95,9 +95,43 @@ function renderTickers(tickers) {
     });
 }
 
+// The backend is admin-only (SEC-02): signed out gets 401, signed in
+// without admin gets 403. Show a wall instead of the list in both cases.
+function showAuthWall(status) {
+    emptyState.classList.add('hidden');
+    countBar.classList.add('hidden');
+    input.disabled = true;
+    addBtn.disabled = true;
+    tickerList.innerHTML = '';
+
+    const wall = document.createElement('div');
+    wall.className = 'text-center py-16';
+
+    const msg = document.createElement('p');
+    msg.className = 'text-gray-500 text-sm mb-4 font-mono';
+    msg.textContent = status === 401
+        ? 'Sign in to manage the watchlist.'
+        : 'This watchlist is owner-only.';
+    wall.appendChild(msg);
+
+    if (status === 401) {
+        const link = document.createElement('a');
+        link.href = '../account/?redirect=' + encodeURIComponent(location.pathname);
+        link.textContent = 'Sign in';
+        link.className = 'text-green-400 font-mono text-sm underline hover:text-green-300';
+        wall.appendChild(link);
+    }
+
+    tickerList.appendChild(wall);
+}
+
 async function loadTickers() {
     try {
         const res = await fetch(API);
+        if (res.status === 401 || res.status === 403) {
+            showAuthWall(res.status);
+            return;
+        }
         const tickers = await res.json();
         renderTickers(tickers);
     } catch {

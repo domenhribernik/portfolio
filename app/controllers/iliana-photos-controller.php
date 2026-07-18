@@ -3,16 +3,19 @@ declare(strict_types=1);
 define('SECURE_ACCESS', true);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Responses vary with the session cookie, so they must never be cached.
+header('Cache-Control: no-store');
+// No Access-Control-Allow-Origin here: writes are gated by the session
+// cookie, and wildcard CORS is incompatible with cookie auth.
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
 
+require_once __DIR__ . '/../config/dev-mode.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../services/image-service.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -24,13 +27,16 @@ try {
             $id ? getPhoto($id) : getAllPhotos();
             break;
         case 'POST':
-            $id ? updatePhoto($id) : createPhoto();
+            $user = Auth::requireProjectRole('iliana', 'editor');
+            $id ? updatePhoto($id) : createPhoto($user);
             break;
         case 'PUT':
+            Auth::requireProjectRole('iliana', 'editor');
             if (!$id) sendError('Photo ID is required', 400);
             updatePhoto($id);
             break;
         case 'DELETE':
+            Auth::requireProjectRole('iliana', 'editor');
             if (!$id) sendError('Photo ID is required', 400);
             deletePhoto($id);
             break;
@@ -120,11 +126,20 @@ function validateInput(array $data): array
         }
     }
 
-    if (!in_array($data['added_by'] ?? '', ['Domen', 'Iliana'], true)) {
-        $errors[] = 'Added by must be Domen or Iliana';
-    }
-
     return $errors;
+}
+
+/**
+ * Attribution comes from the session user, never from the request body
+ * (anyone could otherwise post as anyone). Same derivation as the recipes
+ * author display: display name, else username, never the email.
+ */
+function sessionDisplayName(array $user): string
+{
+    $name = trim((string) ($user['display_name'] ?? ''));
+    if ($name === '') $name = trim((string) ($user['username'] ?? ''));
+    if ($name === '') $name = 'Member';
+    return mb_substr($name, 0, 100);
 }
 
 // --- CRUD ---
@@ -166,7 +181,7 @@ function getPhoto(int $id): void
     sendJson(formatPhoto(fetchById($id)));
 }
 
-function createPhoto(): void
+function createPhoto(array $user): void
 {
     $data   = $_POST;
     $errors = validateInput($data);
@@ -207,7 +222,7 @@ function createPhoto(): void
         $imageId,
         trim($data['caption']),
         $data['photo_date'],
-        $data['added_by'],
+        sessionDisplayName($user),
     ]);
 
     $id = (int) Database::write()->lastInsertId();
@@ -244,12 +259,12 @@ function updatePhoto(int $id): void
         ]);
     }
 
-    $sql = 'UPDATE iliana_photos SET caption = ?, photo_date = ?, added_by = ? WHERE id = ?';
+    // added_by is creator attribution: preserved on edit, never body-supplied.
+    $sql = 'UPDATE iliana_photos SET caption = ?, photo_date = ? WHERE id = ?';
     $stmt = Database::write()->prepare($sql);
     $stmt->execute([
         trim($data['caption']),
         $data['photo_date'],
-        $data['added_by'],
         $id,
     ]);
 

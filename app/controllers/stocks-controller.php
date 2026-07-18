@@ -1,12 +1,26 @@
 <?php
+declare(strict_types=1);
+define('SECURE_ACCESS', true);
+
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Responses vary with the session cookie, so they must never be cached.
+header('Cache-Control: no-store');
+// No Access-Control-Allow-Origin here: everything is gated by the session
+// cookie, and wildcard CORS is incompatible with cookie auth.
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
     exit;
 }
+
+require_once __DIR__ . '/../config/dev-mode.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/auth.php';
+
+// Single-owner private tool: every branch, reads included, is admin-only.
+// The cron script (app/scripts/check_stocks.py) reads the JSON file
+// directly, so it is unaffected by this gate.
+Auth::requireAdmin();
 
 $cacheFile = __DIR__ . '/../cache/stocks.json';
 

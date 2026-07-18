@@ -327,12 +327,13 @@ async function persistDelete(rock) {
 
 async function persistClear() {
     try {
-        await fetch(ROCKS_API, {
+        const res = await fetch(ROCKS_API, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'clear' }),
         });
-    } catch (e) { console.warn('persistClear failed', e); }
+        return res.ok;
+    } catch (e) { console.warn('persistClear failed', e); return false; }
 }
 
 async function loadRocks() {
@@ -457,9 +458,15 @@ clearCancelBtn.addEventListener('click', () => {
     clearDialog.style.display = 'none';
 });
 
-clearConfirmBtn.addEventListener('click', () => {
+clearConfirmBtn.addEventListener('click', async () => {
     clearDialog.style.display = 'none';
-    persistClear();
+    // Clearing the shared garden is owner-only server-side: only empty the
+    // local scene when the server actually cleared, so nothing is misleading.
+    const cleared = await persistClear();
+    if (!cleared) {
+        alert('Only the site owner can clear the whole garden.');
+        return;
+    }
     rocks.forEach(rock => rock.dispose());
     rocks = [];
     isPlacingRock = false;
