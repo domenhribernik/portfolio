@@ -1,5 +1,5 @@
 {
-    "updated": "2026-07-16",
+    "updated": "2026-07-18",
     "requirements": [
         { "id": "title", "label": "Unique descriptive title", "weight": 3 },
         { "id": "description", "label": "Meta description 150-160 chars", "weight": 3 },
@@ -233,6 +233,12 @@
         {
             "path": "views/seo",
             "name": "SEO tool (this page)",
+            "tier": "private",
+            "status": { "title": "na", "description": "na", "canonical": "na", "og": "na", "jsonld": "na", "h1": "na", "crawlable": "na", "robots": "done", "sitemap": "na", "indexed": "na", "cwv": "na" }
+        },
+        {
+            "path": "views/masaza",
+            "name": "Masaža (private)",
             "tier": "private",
             "status": { "title": "na", "description": "na", "canonical": "na", "og": "na", "jsonld": "na", "h1": "na", "crawlable": "na", "robots": "done", "sitemap": "na", "indexed": "na", "cwv": "na" }
         }

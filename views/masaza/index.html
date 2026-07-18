@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klasična masaža · 60 min</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        pine: '#2f5b53',
+                        pinedk: '#24463f',
+                        terra: '#8a4a32',
+                        terradk: '#6f3a27',
+                    },
+                    fontFamily: {
+                        display: ['Fraunces', 'Georgia', 'serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.14)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans bg-paper text-ink min-h-screen leading-relaxed">
+
+    <!-- Guided-session bar: hidden until body.guided (style.css) -->
+    <div id="timerbar" class="timerbar bg-card/95 backdrop-blur-sm border-b border-hairline shadow-[0_6px_20px_rgba(28,26,23,0.07)]">
+        <div class="max-w-[960px] mx-auto px-4 sm:px-6 pt-3 pb-2.5">
+            <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                    <div id="tbPhase" class="font-mono text-[0.6rem] tracking-[0.22em] uppercase text-stone">Vodena seja</div>
+                    <div id="tbSegment" class="font-display font-semibold text-xl sm:text-2xl leading-tight truncate">Obraz</div>
+                    <div id="tbNext" class="font-mono text-[0.68rem] text-stone truncate mt-0.5">Sledi: prsni koš in trebuh</div>
+                </div>
+                <div class="text-right shrink-0">
+                    <div id="tbCountdown" class="font-mono font-bold tabular-nums text-[2.3rem] sm:text-[2.75rem] leading-none">5:00</div>
+                    <div id="tbTotal" class="font-mono text-[0.65rem] text-stone tabular-nums mt-1">0:00 / 60:00</div>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-2.5">
+                <button id="pauseBtn" class="btn-press flex-1 font-mono font-bold text-xs uppercase tracking-widest bg-pine text-paper border border-pine rounded-[3px] px-3 py-2.5 hover:bg-pinedk hover:border-pinedk transition">Pavza</button>
+                <button id="skipBtn" class="btn-press flex-1 font-mono font-bold text-xs uppercase tracking-widest bg-transparent text-ink border border-ink/50 rounded-[3px] px-3 py-2.5 hover:bg-ink hover:text-paper transition">Preskoči</button>
+                <button id="stopBtn" class="btn-press font-mono text-xs uppercase tracking-widest bg-transparent text-stone border border-transparent rounded-[3px] px-3 py-2.5 hover:text-terra transition">Končaj</button>
+            </div>
+        </div>
+        <div class="h-[3px] bg-paper2"><div id="tbProgress" class="h-full bg-pine" style="width:0%"></div></div>
+    </div>
+
+    <div class="max-w-[960px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+
+        <!-- Masthead -->
+        <header class="relative border-b-2 border-ink pb-6 sm:pb-8 mb-7 sm:mb-9">
+            <div class="flex items-center justify-between mb-5">
+                <a id="back-link" href="../../" class="shrink-0 whitespace-nowrap text-stone no-underline hover:text-pine transition-colors font-mono text-sm" aria-label="Nazaj">&larr; nazaj</a>
+                <span class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone text-right">Osebni pripomoček &middot; NPK maser</span>
+            </div>
+            <div class="flex items-end justify-between gap-6">
+                <div>
+                    <h1 class="font-display font-semibold text-[clamp(2.4rem,7vw,4.2rem)] leading-[1.02] tracking-tight">Klasična masaža</h1>
+                    <p class="mt-3 max-w-[52ch] text-ink/80 text-[clamp(0.95rem,2vw,1.05rem)]">
+                        Celotelesna rutina v 60 minutah, po skripti šole VITAL.
+                        Začnemo pri obrazu, končamo pri stopalih; vsaka stran telesa dobi pol ure.
+                    </p>
+                    <div class="mt-5 flex flex-wrap items-center gap-3">
+                        <button id="startBtn" class="btn-press font-mono font-bold text-sm uppercase tracking-widest bg-pine text-paper border border-pine rounded-[3px] px-6 py-3.5 hover:bg-pinedk hover:border-pinedk transition">Začni vodeno sejo</button>
+                        <span class="font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone">10 postaj &middot; zvočni prehodi</span>
+                    </div>
+                </div>
+                <!-- Rotating stamp: the five techniques circling three massage strokes -->
+                <svg class="stamp-ornament hidden md:block shrink-0 w-28 h-28 -mb-2 text-pine" viewBox="0 0 100 100" aria-hidden="true">
+                    <defs>
+                        <path id="stampCircle" d="M 50,50 m -36,0 a 36,36 0 1,1 72,0 a 36,36 0 1,1 -72,0" />
+                    </defs>
+                    <circle cx="50" cy="50" r="47" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" />
+                    <circle cx="50" cy="50" r="26" fill="none" stroke="currentColor" stroke-width="1" />
+                    <path d="M 38 60 q 12 -8 24 -20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                    <path d="M 36 51 q 14 -6 26 -16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.75" />
+                    <path d="M 41 68 q 12 -9 22 -22" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5" />
+                    <text font-family="'Space Mono', monospace" font-size="7.4" letter-spacing="2" fill="currentColor">
+                        <textPath href="#stampCircle">GLADENJE&#183;GNETENJE&#183;VTIRANJE&#183;UDARJANJE&#183;TRESENJE&#183;</textPath>
+                    </text>
+                </svg>
+            </div>
+        </header>
+
+        <main>
+            <!-- Potek masaže -->
+            <section id="potek" class="mb-9 sm:mb-12" aria-labelledby="potekTitle">
+                <div class="flex items-baseline gap-3 mb-3">
+                    <h2 id="potekTitle" class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone whitespace-nowrap">Potek masaže</h2>
+                    <div class="flex-1 border-b border-dotted border-ink/25"></div>
+                    <span class="font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone/80 whitespace-nowrap">60 min</span>
+                </div>
+                <div class="bg-card border border-hairline rounded-[3px] shadow-[0_10px_30px_rgba(28,26,23,0.06)] overflow-hidden">
+                    <ol id="timeline" class="m-0 p-0 list-none"></ol>
+                </div>
+            </section>
+
+            <!-- Masažne tehnike -->
+            <section id="tehnike" class="mb-9 sm:mb-12" aria-labelledby="tehnikeTitle">
+                <div class="flex items-baseline gap-3 mb-3">
+                    <h2 id="tehnikeTitle" class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone whitespace-nowrap">Masažne tehnike</h2>
+                    <div class="flex-1 border-b border-dotted border-ink/25"></div>
+                    <span class="font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone/80 whitespace-nowrap">pet prijemov</span>
+                </div>
+                <div id="tehnikeGrid" class="grid gap-4 sm:grid-cols-2"></div>
+            </section>
+
+            <!-- Vrstni red prijemov -->
+            <section id="vrstni-red" class="mb-9 sm:mb-12" aria-labelledby="vrstniTitle">
+                <div class="flex items-baseline gap-3 mb-3">
+                    <h2 id="vrstniTitle" class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone whitespace-nowrap">Vrstni red prijemov</h2>
+                    <div class="flex-1 border-b border-dotted border-ink/25"></div>
+                    <span class="font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone/80 whitespace-nowrap">na vsakem predelu</span>
+                </div>
+                <div class="bg-card border border-hairline rounded-[3px] shadow-[0_10px_30px_rgba(28,26,23,0.06)] px-5 sm:px-6 py-2">
+                    <ol id="vrstniRed" class="m-0 p-0 list-none"></ol>
+                </div>
+            </section>
+
+            <!-- Ne masiramo -->
+            <section id="ne-masiramo" class="mb-9 sm:mb-12" aria-labelledby="neMasiramoTitle">
+                <div class="flex items-baseline gap-3 mb-3">
+                    <h2 id="neMasiramoTitle" class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-terra whitespace-nowrap">Ne masiramo</h2>
+                    <div class="flex-1 border-b border-dotted border-terra/40"></div>
+                </div>
+                <div class="border border-terra/40 bg-terra/5 rounded-[3px] p-5 sm:p-6">
+                    <ul id="neMasiramoList" class="m-0 p-0 list-none space-y-2"></ul>
+                    <p class="mt-5 pt-4 border-t border-dotted border-terra/40 font-display italic font-medium text-terra text-[clamp(1.3rem,3.5vw,1.8rem)] leading-snug">Če dvomiš, ne masiraj.</p>
+                    <p class="mt-1 font-mono text-[0.68rem] tracking-[0.25em] uppercase text-terra/80">Primum non nocere</p>
+                </div>
+            </section>
+
+            <!-- Priprava -->
+            <section id="priprava" class="mb-10" aria-labelledby="pripravaTitle">
+                <div class="flex items-baseline gap-3 mb-3">
+                    <h2 id="pripravaTitle" class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone whitespace-nowrap">Priprava</h2>
+                    <div class="flex-1 border-b border-dotted border-ink/25"></div>
+                    <span class="font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone/80 whitespace-nowrap">pred prvim dotikom</span>
+                </div>
+                <div class="bg-paper2/70 border border-hairline rounded-[3px] p-5 sm:p-6">
+                    <ul id="pripravaList" class="m-0 p-0 list-none space-y-2"></ul>
+                </div>
+            </section>
+        </main>
+
+        <footer class="border-t border-hairline pt-4 pb-2 flex flex-wrap items-baseline justify-between gap-2">
+            <span class="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-stone/80">Zasebno orodje &middot; po skripti šole VITAL</span>
+            <span class="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-stone/80">Masaža ni panacea</span>
+        </footer>
+    </div>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
