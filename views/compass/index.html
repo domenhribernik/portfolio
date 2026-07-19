@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compass · private</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        pine: '#2f5b53',
+                        pinedk: '#24463f',
+                        terra: '#8a4a32',
+                        terradk: '#6f3a27',
+                    },
+                    fontFamily: {
+                        display: ['Fraunces', 'Georgia', 'serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.14)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans bg-paper text-ink min-h-screen leading-relaxed loading">
+
+    <!-- Loading -->
+    <div id="loader" class="state-panel min-h-screen grid place-items-center">
+        <div class="font-mono text-xs tracking-[0.25em] uppercase text-stone loader-pulse">Opening the field manual…</div>
+    </div>
+
+    <!-- Signed out -->
+    <div id="signin" class="state-panel min-h-screen grid place-items-center px-6">
+        <div class="max-w-sm w-full bg-card border border-hairline rounded-[4px] p-8 text-center shadow-[0_10px_30px_rgba(28,26,23,0.08)]">
+            <div class="font-mono text-[0.62rem] tracking-[0.3em] uppercase text-stone">Private · field manual</div>
+            <h1 class="font-display font-semibold text-3xl mt-2">Compass</h1>
+            <p class="text-sm text-stone mt-3">This notebook is sealed. Sign in to open it.</p>
+            <a id="signinLink" href="../account/" class="btn-press inline-block mt-6 font-mono font-bold text-xs uppercase tracking-widest bg-ink text-paper rounded-[3px] px-6 py-3 hover:bg-black transition">Sign in</a>
+        </div>
+    </div>
+
+    <!-- Signed in, not the owner -->
+    <div id="noaccess" class="state-panel min-h-screen grid place-items-center px-6">
+        <div class="max-w-sm w-full bg-card border border-hairline rounded-[4px] p-8 text-center">
+            <div class="font-mono text-[0.62rem] tracking-[0.3em] uppercase text-stone">Private · field manual</div>
+            <h1 class="font-display font-semibold text-3xl mt-2">Not yours</h1>
+            <p class="text-sm text-stone mt-3">This is one man's private notebook. It only opens for him.</p>
+            <a href="../../" class="inline-block mt-6 font-mono text-xs uppercase tracking-widest text-stone hover:text-ink transition">← back to the site</a>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div id="error" class="state-panel min-h-screen grid place-items-center px-6">
+        <div class="max-w-sm w-full bg-card border border-terra/40 rounded-[4px] p-8 text-center">
+            <h1 class="font-display font-semibold text-2xl">Couldn't open it</h1>
+            <p id="errorMsg" class="text-sm text-stone mt-3">Something went wrong.</p>
+            <button id="retryBtn" class="btn-press mt-6 font-mono font-bold text-xs uppercase tracking-widest bg-ink text-paper rounded-[3px] px-6 py-3 hover:bg-black transition">Try again</button>
+        </div>
+    </div>
+
+    <!-- The manual -->
+    <div id="app" class="state-panel">
+        <div class="max-w-[820px] mx-auto px-4 sm:px-6 pb-24 pt-8 sm:pt-12">
+
+            <!-- Masthead -->
+            <header class="reveal">
+                <div class="flex items-end justify-between gap-4 border-b-2 border-ink pb-4">
+                    <div>
+                        <div class="font-mono text-[0.62rem] tracking-[0.3em] uppercase text-stone">Private · for me only · no audience</div>
+                        <h1 class="font-display font-bold text-[2.6rem] sm:text-[3.2rem] leading-none mt-1">Compass</h1>
+                        <div class="font-mono text-[0.68rem] text-stone mt-2">A field manual out of the Nice Guy Syndrome, after Dr. Robert Glover</div>
+                    </div>
+                    <div class="text-right shrink-0 pb-1">
+                        <div id="streakNum" class="font-display font-bold text-[2.6rem] sm:text-[3.2rem] leading-none tabular-nums text-pine">0</div>
+                        <div class="font-mono text-[0.6rem] tracking-[0.2em] uppercase text-stone mt-1">day streak</div>
+                    </div>
+                </div>
+
+                <!-- The mission: her words, faced head-on (ch. 5: dwell in reality) -->
+                <div class="mt-5 border-l-2 border-terra pl-4 py-1 reveal reveal-1">
+                    <p class="font-display italic text-[1.05rem] leading-snug text-ink/90">
+                        She said: <em>"I don't feel loved."</em> <em>"I feel ugly."</em> <em>"You don't care."</em>
+                    </p>
+                    <p class="text-[0.85rem] text-stone mt-1.5">
+                        This page exists so those sentences stop being true. Not by trying harder to be <span class="line-through">nice</span>,
+                        but by becoming direct, present and solid. <span class="font-mono text-[0.7rem]">"If you keep doing what you've always
+                        done, you'll keep getting what you've always had."</span>
+                    </p>
+                </div>
+            </header>
+
+            <!-- Tabs -->
+            <nav id="tabs" class="reveal reveal-2 sticky top-0 z-10 bg-paper/95 backdrop-blur-sm mt-6 -mx-4 px-4 sm:-mx-6 sm:px-6 border-b border-hairline">
+                <div class="flex gap-1 sm:gap-2 overflow-x-auto">
+                    <button data-tab="today" class="tab font-mono text-[0.7rem] sm:text-xs uppercase tracking-[0.15em] px-3 sm:px-4 py-3 whitespace-nowrap">Today</button>
+                    <button data-tab="catch" class="tab font-mono text-[0.7rem] sm:text-xs uppercase tracking-[0.15em] px-3 sm:px-4 py-3 whitespace-nowrap">Catch log</button>
+                    <button data-tab="work" class="tab font-mono text-[0.7rem] sm:text-xs uppercase tracking-[0.15em] px-3 sm:px-4 py-3 whitespace-nowrap">The work</button>
+                    <button data-tab="progress" class="tab font-mono text-[0.7rem] sm:text-xs uppercase tracking-[0.15em] px-3 sm:px-4 py-3 whitespace-nowrap">Progress</button>
+                </div>
+            </nav>
+
+            <!-- TODAY -->
+            <section id="tab-today" class="tabpanel mt-8">
+                <div class="flex items-baseline justify-between gap-4 flex-wrap">
+                    <h2 id="dayTitle" class="font-display font-semibold text-2xl">Today</h2>
+                    <div class="flex items-center gap-2">
+                        <button id="dayToday" class="dayswitch font-mono text-[0.65rem] uppercase tracking-widest px-3 py-1.5 border border-hairline rounded-[3px]">Today</button>
+                        <button id="dayYesterday" class="dayswitch font-mono text-[0.65rem] uppercase tracking-widest px-3 py-1.5 border border-hairline rounded-[3px]">Yesterday</button>
+                    </div>
+                </div>
+                <p class="text-sm text-stone mt-1">Six practices. A day is <span class="font-semibold text-ink">kept</span> at four: perfect days are not the goal, kept days are.</p>
+
+                <div id="practiceList" class="mt-5 space-y-2.5"></div>
+
+                <div class="mt-5 flex items-center gap-3">
+                    <div id="dayMeter" class="font-mono font-bold text-sm tabular-nums px-3 py-1.5 border border-hairline rounded-[3px] bg-card">0 / 6</div>
+                    <div id="dayKept" class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stone">not kept yet</div>
+                    <div id="saveState" class="font-mono text-[0.65rem] text-stone ml-auto" aria-live="polite"></div>
+                </div>
+
+                <label for="dayNote" class="block font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stone mt-6 mb-1.5">Field note: what actually happened today</label>
+                <textarea id="dayNote" rows="3" maxlength="2000" placeholder="What I did, what I dodged, what she needed, what I felt…"
+                    class="w-full bg-card border border-hairline rounded-[3px] p-3 text-sm focus:outline-none focus:border-ink/50 resize-y"></textarea>
+                <button id="noteSave" class="btn-press mt-2 font-mono font-bold text-xs uppercase tracking-widest bg-pine text-paper rounded-[3px] px-5 py-2.5 hover:bg-pinedk transition">Save note</button>
+            </section>
+
+            <!-- CATCH LOG -->
+            <section id="tab-catch" class="tabpanel mt-8">
+                <h2 class="font-display font-semibold text-2xl">Catch yourself in the act</h2>
+                <p class="text-sm text-stone mt-1">Logging a slip is the <span class="font-semibold text-ink">win</span>, not the failure. Awareness comes before change, so expect more catches at first, not fewer.</p>
+
+                <div id="patternGrid" class="mt-5 grid sm:grid-cols-2 gap-2.5"></div>
+
+                <form id="catchForm" class="mt-5 bg-card border border-terra/40 rounded-[4px] p-4 sm:p-5 hidden">
+                    <div class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-terra">Caught: <span id="catchPatternLabel" class="font-bold"></span></div>
+                    <label for="catchNote" class="block font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stone mt-4 mb-1.5">What happened</label>
+                    <textarea id="catchNote" rows="2" maxlength="2000" class="w-full bg-paper border border-hairline rounded-[3px] p-3 text-sm focus:outline-none focus:border-ink/50 resize-y"></textarea>
+                    <label for="catchInstead" class="block font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stone mt-3 mb-1.5">What I'll do instead next time</label>
+                    <textarea id="catchInstead" rows="2" maxlength="2000" class="w-full bg-paper border border-hairline rounded-[3px] p-3 text-sm focus:outline-none focus:border-ink/50 resize-y"></textarea>
+                    <div class="flex gap-2 mt-4">
+                        <button type="submit" class="btn-press font-mono font-bold text-xs uppercase tracking-widest bg-terra text-paper rounded-[3px] px-5 py-2.5 hover:bg-terradk transition">Log it</button>
+                        <button type="button" id="catchCancel" class="font-mono text-xs uppercase tracking-widest text-stone px-4 py-2.5 hover:text-ink transition">Cancel</button>
+                    </div>
+                </form>
+
+                <h3 class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stone mt-8 mb-2">Recent catches</h3>
+                <div id="catchList" class="space-y-2"></div>
+            </section>
+
+            <!-- THE WORK -->
+            <section id="tab-work" class="tabpanel mt-8">
+                <div class="flex items-baseline justify-between gap-4 flex-wrap">
+                    <h2 class="font-display font-semibold text-2xl">The Breaking Free work</h2>
+                    <div id="workSummary" class="font-mono text-xs text-stone tabular-nums">0 / 46 done</div>
+                </div>
+                <p class="text-sm text-stone mt-1">All 46 exercises from the book. Tap a status to move it <span class="font-mono text-[0.7rem]">todo → doing → done</span>; open one to read the prompt and keep notes. Do them with a safe person where the book says to; this page tracks the work, it can't replace it.</p>
+                <div id="workList" class="mt-5"></div>
+            </section>
+
+            <!-- PROGRESS -->
+            <section id="tab-progress" class="tabpanel mt-8">
+                <h2 class="font-display font-semibold text-2xl">Progress</h2>
+                <p class="text-sm text-stone mt-1">Proof over promises. This is what she can't see but will feel.</p>
+
+                <div id="statTiles" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5"></div>
+
+                <h3 class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stone mt-8 mb-2">The last ten weeks</h3>
+                <div id="wall" class="bg-card border border-hairline rounded-[4px] p-4 overflow-x-auto"></div>
+                <div class="flex items-center gap-2 mt-2 font-mono text-[0.62rem] text-stone">
+                    <span>quiet</span>
+                    <span class="wall-key" style="background:#e9e2d3"></span>
+                    <span class="wall-key" style="background:#a9c0b8"></span>
+                    <span class="wall-key" style="background:#6f948a"></span>
+                    <span class="wall-key" style="background:#2f5b53"></span>
+                    <span class="wall-key" style="background:#24463f"></span>
+                    <span>kept</span>
+                </div>
+
+                <h3 class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stone mt-8 mb-2">Practices · last 30 days</h3>
+                <div id="practiceBars" class="bg-card border border-hairline rounded-[4px] p-4 space-y-3"></div>
+
+                <h3 class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-stone mt-8 mb-2">Patterns caught · last 30 days</h3>
+                <div id="patternCounts" class="bg-card border border-hairline rounded-[4px] p-4 space-y-3"></div>
+                <p class="text-[0.8rem] text-stone mt-2">A repeated pattern with an "instead" written down is learning. The same pattern repeating with empty notes is the old script running you.</p>
+            </section>
+
+            <footer class="mt-16 pt-4 border-t border-hairline flex items-center justify-between">
+                <div class="font-mono text-[0.62rem] text-stone">Compass · built on <em>No More Mr. Nice Guy</em>, R. Glover</div>
+                <a href="../../" class="font-mono text-[0.62rem] uppercase tracking-widest text-stone hover:text-ink transition">← site</a>
+            </footer>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

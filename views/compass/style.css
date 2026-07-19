@@ -1,0 +1,149 @@
+/* Compass (views/compass): only what Tailwind can't cleanly express.
+   State panels toggled by JS, keyframes, the day wall, and small
+   pseudo-element details. Everything else is utility classes in index.html. */
+
+/* --- Page states: exactly one panel visible, driven by a body class --- */
+
+/* !important on both sides: the Tailwind CDN injects its utility rules
+   (.grid, .min-h-screen...) after this sheet, and the panels carry those
+   classes, so plain specificity would leave every panel visible. */
+.state-panel { display: none !important; }
+body.loading #loader,
+body.signin #signin,
+body.noaccess #noaccess,
+body.error #error { display: grid !important; }
+body.ready #app { display: block !important; }
+
+@keyframes loaderPulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+}
+.loader-pulse { animation: loaderPulse 1.6s ease-in-out infinite; }
+
+/* --- Staggered load-in for the manual --- */
+
+@keyframes revealUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+body.ready .reveal { animation: revealUp 0.5s ease-out both; }
+body.ready .reveal-1 { animation-delay: 0.08s; }
+body.ready .reveal-2 { animation-delay: 0.16s; }
+
+/* --- Tabs --- */
+
+.tab { color: #6b6256; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab:hover { color: #1c1a17; }
+.tab.active { color: #1c1a17; border-bottom-color: #1c1a17; font-weight: 700; }
+.tabpanel { display: none; }
+.tabpanel.active { display: block; animation: revealUp 0.3s ease-out both; }
+
+/* --- Today: practice rows --- */
+
+.practice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.9rem;
+    align-items: start;
+    width: 100%;
+    text-align: left;
+    background: #fffdf8;
+    border: 1px solid rgba(28, 26, 23, 0.14);
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.practice:hover { border-color: rgba(28, 26, 23, 0.35); }
+.practice .box {
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: 0.15rem;
+    border: 2px solid rgba(28, 26, 23, 0.4);
+    border-radius: 3px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1;
+    color: transparent;
+    transition: all 0.15s ease;
+}
+.practice.done { background: rgba(47, 91, 83, 0.07); border-color: rgba(47, 91, 83, 0.5); }
+.practice.done .box { background: #2f5b53; border-color: #2f5b53; color: #f6f2ea; }
+.practice.done .p-label { color: #24463f; }
+.practice .p-why { display: none; }
+.practice.open .p-why { display: block; }
+
+/* --- Catch log: pattern buttons --- */
+
+.pattern {
+    text-align: left;
+    background: #fffdf8;
+    border: 1px solid rgba(28, 26, 23, 0.14);
+    border-radius: 4px;
+    padding: 0.8rem 0.95rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.pattern:hover { border-color: rgba(138, 74, 50, 0.6); }
+.pattern.selected { border-color: #8a4a32; background: rgba(138, 74, 50, 0.06); }
+
+/* --- The work: chapter groups & activity items --- */
+
+.work-item summary { cursor: pointer; list-style: none; }
+.work-item summary::-webkit-details-marker { display: none; }
+.work-item summary::after {
+    content: '+';
+    font-family: 'Space Mono', monospace;
+    color: #6b6256;
+    float: right;
+    margin-left: 0.5rem;
+}
+.work-item[open] summary::after { content: '\2212'; }
+.work-item.st-done .w-title { color: #24463f; }
+.work-item.st-done .w-num { background: #2f5b53; color: #f6f2ea; border-color: #2f5b53; }
+.work-item.st-doing .w-num { background: #8a4a32; color: #f6f2ea; border-color: #8a4a32; }
+
+/* --- Progress: the day wall --- */
+
+.wall-grid { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, auto); gap: 3px; width: max-content; }
+.wall-cell {
+    width: 13px;
+    height: 13px;
+    border-radius: 2px;
+    background: transparent;
+    border: 1px solid rgba(28, 26, 23, 0.12);
+}
+.wall-cell.today { outline: 2px solid #1c1a17; outline-offset: 1px; }
+.wall-key { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+
+/* Single-hue sequential ramp (quiet -> kept), light to dark on paper */
+.wall-s0 { background: #e9e2d3; border-color: transparent; }
+.wall-s1 { background: #c9d6d0; border-color: transparent; }
+.wall-s2 { background: #a9c0b8; border-color: transparent; }
+.wall-s3 { background: #6f948a; border-color: transparent; }
+.wall-s4 { background: #2f5b53; border-color: transparent; }
+.wall-s5 { background: #2a5149; border-color: transparent; }
+.wall-s6 { background: #24463f; border-color: transparent; }
+
+/* Horizontal measure bars (per-practice, per-pattern). The fill is always
+   full-width and scaled on the compositor (no layout thrash); the track's
+   overflow clip keeps the visible end crisp. */
+.bar-track { background: #efe9dd; border-radius: 2px; height: 10px; overflow: hidden; }
+.bar-fill { height: 100%; width: 100%; border-radius: 2px; transform-origin: left; transform: scaleX(0); transition: transform 0.6s ease; }
+
+/* --- Micro-interactions --- */
+
+.btn-press:active { transform: translateY(1px) scale(0.99); }
+
+@keyframes savedFlash {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.saved-flash { animation: savedFlash 0.25s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+    .loader-pulse, body.ready .reveal, .tabpanel.active, .saved-flash { animation: none; }
+    .bar-fill { transition: none; }
+}
