@@ -1,12 +1,261 @@
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
+/* Tečajnica (views/stocks): editorial skin pieces Tailwind can't express.
+   Layout and color live in Tailwind classes in index.html / script.js. */
+
+/* base-style.css paints body with the site's navy gradient; this view is a
+   paper broadsheet, so reassert the full-page background. */
+body {
+    background: #f6f2ea;
 }
 
-.ticker-row {
-    animation: slideIn 0.15s ease-out;
+/* Section headers: mono label with a dotted leader line, like a ledger. */
+.section-rule {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
 }
 
-input[type="text"]:focus {
-    caret-color: #22c55e;
+.section-rule h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #6b6256;
+    white-space: nowrap;
+}
+
+.section-rule::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px dotted rgba(28, 26, 23, 0.25);
+    transform: translateY(-0.2em);
+}
+
+.section-rule span {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(107, 98, 86, 0.7);
+    white-space: nowrap;
+    order: 3;
+}
+
+/* Form fields: label-over-input, editorial paper look. */
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.field > span {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6b6256;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.field input,
+.field select {
+    font-family: 'Space Mono', monospace;
+    font-size: 16px; /* stops iOS zooming the form */
+    color: #1c1a17;
+    background: #f6f2ea;
+    border: 1px solid rgba(28, 26, 23, 0.14);
+    border-radius: 3px;
+    padding: 0.55rem 0.7rem;
+    min-width: 0;
+    width: 100%;
+    caret-color: #d4451f;
+}
+
+.field input:focus,
+.field select:focus {
+    outline: none;
+    border-color: #d4451f;
+    box-shadow: 0 0 0 1px rgba(212, 69, 31, 0.4);
+}
+
+.field input::placeholder {
+    color: rgba(107, 98, 86, 0.55);
+}
+
+/* Buttons get a tactile press. */
+.btn-press:active {
+    transform: translateY(1px);
+}
+
+/* Data tables (rendered by script.js). */
+.ledger {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.ledger th {
+    font-family: 'Space Mono', monospace;
+    font-weight: 400;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6b6256;
+    text-align: right;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.25);
+    white-space: nowrap;
+}
+
+.ledger th:first-child {
+    text-align: left;
+}
+
+.ledger td {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    text-align: right;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.08);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.ledger td:first-child {
+    text-align: left;
+}
+
+.ledger tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ledger tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.ledger tbody tr:hover {
+    background: rgba(239, 233, 221, 0.6);
+}
+
+.ledger tr.clickable {
+    cursor: pointer;
+}
+
+/* Instrument cell: symbol above the issuer name. */
+.ledger .paper-name {
+    display: block;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.68rem;
+    color: #6b6256;
+    max-width: 16ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 52-week range track. */
+.range52 {
+    position: relative;
+    display: inline-block;
+    width: 64px;
+    height: 4px;
+    background: rgba(28, 26, 23, 0.12);
+    border-radius: 2px;
+    vertical-align: middle;
+}
+
+.range52 > i {
+    position: absolute;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #1c1a17;
+    transform: translate(-50%, -50%);
+}
+
+/* Expanded instrument drawer under a board row. */
+.drawer td {
+    background: rgba(239, 233, 221, 0.45);
+    white-space: normal;
+    cursor: default;
+}
+
+.drawer-open > td {
+    background: rgba(239, 233, 221, 0.45);
+}
+
+/* Charts. */
+.chart-host {
+    position: relative;
+    width: 100%;
+}
+
+.chart-host svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.chart-tip {
+    position: fixed;
+    z-index: 50;
+    pointer-events: none;
+    background: #1c1a17;
+    color: #f6f2ea;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    line-height: 1.5;
+    padding: 0.4rem 0.6rem;
+    border-radius: 3px;
+    transform: translate(-50%, calc(-100% - 10px));
+    white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(28, 26, 23, 0.25);
+}
+
+/* Loading skeletons. */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: #efe9dd;
+    border-radius: 3px;
+}
+
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 253, 248, 0.75), transparent);
+    animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
+}
+
+/* Active section link in the sticky nav (toggled by script.js). */
+.nav-link.active {
+    color: #1c1a17;
+    text-decoration: underline;
+    text-decoration-color: #d4451f;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+}
+
+/* Rows just written flash briefly so edits are traceable. */
+@keyframes settle {
+    from { background: rgba(212, 69, 31, 0.12); }
+    to   { background: transparent; }
+}
+
+.ledger tr.settle {
+    animation: settle 1.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton::after { animation: none; }
+    .ledger tr.settle { animation: none; }
+    .ledger tbody tr { transition: none; }
 }

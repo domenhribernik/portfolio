@@ -11,6 +11,8 @@ Disallow: /views/valentine/
 Disallow: /views/iliana/
 Disallow: /views/seo/
 Disallow: /views/masaza/
+Disallow: /views/stocks/
+Disallow: /views/compass/
 Disallow: /views/flowers/share/
 Disallow: /views/blog/post.html
 

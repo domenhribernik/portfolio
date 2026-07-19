@@ -1,84 +1,302 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sl">
 <head>
-    <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stocks Watchlist</title>
+    <title>Tečajnica | Zasebni pregled Ljubljanske borze</title>
+    <meta name="description" content="Zasebni sledilnik LJSE: portfelj, tečajnica, dividende, opozorila in davčni pregled.">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        clay: '#d4451f',
+                        claydk: '#b8371a',
+                        pine: '#2f5b53',
+                        gain: '#177d5b',
+                        loss: '#d4451f',
+                    },
                     fontFamily: {
-                        mono: ['IBM Plex Mono', 'monospace'],
-                        sans: ['Inter', 'sans-serif'],
-                    }
+                        display: ['Fraunces', 'Georgia', 'serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.14)',
+                    },
                 }
             }
         }
     </script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#0f1117] min-h-screen flex items-start justify-center p-6 font-sans">
+<body class="font-sans bg-paper text-ink min-h-screen leading-relaxed">
 
-    <div class="w-full max-w-lg">
+    <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
-        <!-- Header -->
-        <div class="mb-8">
-            <p class="text-xs font-mono text-green-500 tracking-widest uppercase mb-1">Portfolio Watchlist</p>
-            <h1 class="text-3xl font-semibold text-white">Stock Tickers</h1>
-            <p class="text-sm text-gray-500 mt-1">Add tickers to track — saved to <span class="font-mono text-gray-400">cache/stocks.json</span></p>
-        </div>
-
-        <!-- Add ticker form -->
-        <div class="flex gap-2 mb-6">
-            <input
-                id="tickerInput"
-                type="text"
-                placeholder="e.g. AAPL, TSLA, BRK.B"
-                maxlength="10"
-                autocomplete="off"
-                autocapitalize="characters"
-                class="flex-1 bg-[#1a1d26] border border-[#2a2d3a] text-white font-mono placeholder-gray-600 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-green-500 transition-colors uppercase"
-            >
-            <button
-                id="addBtn"
-                class="px-5 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 whitespace-nowrap"
-            >
-                <i class="fas fa-plus text-xs"></i> Add
-            </button>
-        </div>
-
-        <!-- Error message -->
-        <p id="errorMsg" class="text-red-400 text-xs font-mono mb-4 hidden"></p>
-
-        <!-- Ticker list -->
-        <div id="tickerList" class="flex flex-col gap-2"></div>
-
-        <!-- Empty state -->
-        <div id="emptyState" class="hidden text-center py-16">
-            <div class="text-4xl mb-3 opacity-20">
-                <i class="fas fa-chart-line"></i>
+        <!-- Masthead -->
+        <header class="relative pb-4 mb-1">
+            <div class="flex items-center justify-between mb-4">
+                <a id="back-link" href="../../" class="shrink-0 whitespace-nowrap text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Nazaj">&larr; nazaj</a>
+                <span class="font-mono text-[0.62rem] sm:text-[0.68rem] tracking-[0.25em] uppercase text-stone text-right">Zasebna izdaja &middot; Ljubljanska borza &middot; XLJU</span>
             </div>
-            <p class="text-gray-600 text-sm">No tickers yet. Add one above.</p>
+            <div class="flex items-end justify-between gap-6">
+                <h1 class="font-display font-semibold text-[clamp(2.6rem,8vw,4.6rem)] leading-[0.98] tracking-tight">Tečajnica</h1>
+                <div class="hidden sm:block text-right font-mono text-[0.68rem] tracking-[0.15em] uppercase text-stone leading-relaxed">
+                    <div>delnice &middot; ETF &middot; SLOTR</div>
+                    <div>portfelj &middot; dividende &middot; davki</div>
+                </div>
+            </div>
+        </header>
+        <div class="border-t-2 border-ink"></div>
+        <div class="border-t border-ink mt-[3px] mb-3"></div>
+
+        <!-- Dateline -->
+        <div id="dateline" class="hidden flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-6 font-mono text-[0.72rem] text-stone">
+            <span id="datelineText">&nbsp;</span>
+            <span class="flex items-baseline gap-3">
+                <span id="syncStamp"></span>
+                <button id="refreshBtn" class="text-clay hover:text-claydk underline decoration-dotted underline-offset-4 disabled:opacity-40 disabled:cursor-wait" type="button">osveži</button>
+            </span>
         </div>
 
-        <!-- Count -->
-        <div id="countBar" class="hidden mt-6 pt-4 border-t border-[#1e2130] flex items-center justify-between">
-            <span class="text-xs text-gray-600 font-mono"><span id="tickerCount">0</span> ticker(s)</span>
-            <button id="clearAllBtn" class="text-xs text-gray-600 hover:text-red-400 font-mono transition-colors">
-                clear all
-            </button>
-        </div>
+        <!-- Auth walls: signed out / no access -->
+        <section id="wallSignin" class="hidden text-center py-20 sm:py-28">
+            <p class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone mb-3">Zasebna izdaja</p>
+            <h2 class="font-display italic text-3xl mb-4">Tečajnica je za naročnike.</h2>
+            <p class="text-stone max-w-[40ch] mx-auto mb-8">Prijavi se in odpre se ti celoten borzni pregled: portfelj, opozorila in davčna ura.</p>
+            <a id="signinLink" href="../account/" class="btn-press inline-block font-mono font-bold text-sm uppercase tracking-widest bg-clay text-paper border border-clay rounded-[3px] px-7 py-3 hover:bg-claydk hover:border-claydk transition no-underline">Prijava</a>
+        </section>
 
+        <section id="wallForbidden" class="hidden text-center py-20 sm:py-28">
+            <p class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone mb-3">Zasebna izdaja</p>
+            <h2 class="font-display italic text-3xl mb-4">Naročnina še ni urejena.</h2>
+            <p class="text-stone max-w-[44ch] mx-auto">Prijavljen si, a dostop do borznega pregleda ti še ni bil odobren. Oglasi se pri lastniku strani.</p>
+        </section>
+
+        <!-- Error notice -->
+        <div id="errorMsg" class="hidden mb-5 rounded-[3px] border border-clay bg-clay/10 text-claydk px-4 py-3 font-mono text-sm" role="alert"></div>
+
+        <!-- App -->
+        <main id="app" class="hidden">
+
+            <!-- Section nav -->
+            <nav id="sectionNav" class="sticky top-0 z-20 -mx-4 sm:mx-0 px-4 sm:px-0 bg-paper/95 backdrop-blur-sm border-b border-hairline mb-8">
+                <div class="flex gap-5 sm:gap-7 overflow-x-auto whitespace-nowrap py-3 font-mono text-[0.68rem] tracking-[0.2em] uppercase">
+                    <a href="#portfelj" class="nav-link text-stone hover:text-ink no-underline">Portfelj</a>
+                    <a href="#borza" class="nav-link text-stone hover:text-ink no-underline">Borza</a>
+                    <a href="#transakcije" class="nav-link text-stone hover:text-ink no-underline">Transakcije</a>
+                    <a href="#dividende" class="nav-link text-stone hover:text-ink no-underline">Dividende</a>
+                    <a href="#opozorila" class="nav-link text-stone hover:text-ink no-underline">Opozorila</a>
+                    <a href="#davki" class="nav-link text-stone hover:text-ink no-underline">Davki</a>
+                </div>
+            </nav>
+
+            <!-- Portfelj -->
+            <section id="portfelj" class="mb-12 scroll-mt-16">
+                <div class="section-rule">
+                    <h2>Moj portfelj</h2>
+                    <span id="portfolioCount"></span>
+                </div>
+                <div id="portfolioEmpty" class="hidden bg-card border border-hairline rounded-[3px] p-6 sm:p-8 text-center">
+                    <p class="font-display italic text-xl mb-2">Portfelj je še prazen list.</p>
+                    <p class="text-stone max-w-[46ch] mx-auto">Vpiši svoj prvi nakup pod <a href="#transakcije" class="text-clay">Transakcije</a> in tu se pojavijo vrednost, donos, delitev naložb in davčna ura.</p>
+                </div>
+                <div id="portfolioBody" class="hidden">
+                    <div id="portfolioTiles" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-5"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 mb-5">
+                        <div class="bg-card border border-hairline rounded-[3px] p-4 sm:p-5">
+                            <div class="flex items-baseline justify-between mb-3">
+                                <h3 class="font-display italic text-lg">Vrednost skozi čas</h3>
+                                <div id="portfolioChartRanges" class="font-mono text-[0.68rem] uppercase tracking-[0.15em] flex gap-3"></div>
+                            </div>
+                            <div id="portfolioChart" class="chart-host" data-chart="portfolio"></div>
+                            <div class="flex gap-5 mt-2 font-mono text-[0.65rem] uppercase tracking-[0.15em] text-stone">
+                                <span class="flex items-center gap-2"><span class="inline-block w-4 h-[2px] bg-ink"></span>vrednost</span>
+                                <span class="flex items-center gap-2"><span class="inline-block w-4 border-t-2 border-dashed border-stone"></span>vloženo</span>
+                            </div>
+                        </div>
+                        <div class="bg-card border border-hairline rounded-[3px] p-4 sm:p-5">
+                            <h3 class="font-display italic text-lg mb-3">Delitev naložb</h3>
+                            <div id="allocationBar" class="h-4 flex rounded-[2px] overflow-hidden mb-3"></div>
+                            <div id="allocationLegend" class="space-y-1.5"></div>
+                        </div>
+                    </div>
+                    <div id="holdingsTable" class="bg-card border border-hairline rounded-[3px] overflow-x-auto"></div>
+                </div>
+            </section>
+
+            <!-- Borza -->
+            <section id="borza" class="mb-12 scroll-mt-16">
+                <div class="section-rule">
+                    <h2>Borza v živo</h2>
+                    <span id="boardStamp"></span>
+                </div>
+                <div id="board" class="space-y-7"></div>
+            </section>
+
+            <!-- Transakcije -->
+            <section id="transakcije" class="mb-12 scroll-mt-16">
+                <div class="section-rule">
+                    <h2>Transakcije</h2>
+                    <span id="txCount"></span>
+                </div>
+                <form id="txForm" class="bg-card border border-hairline rounded-[3px] p-4 sm:p-5 mb-4">
+                    <input type="hidden" id="txId">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <label class="field col-span-2 md:col-span-1">
+                            <span>Papir</span>
+                            <select id="txInstrument" required></select>
+                        </label>
+                        <label class="field">
+                            <span>Vrsta</span>
+                            <select id="txSide">
+                                <option value="buy">Nakup</option>
+                                <option value="sell">Prodaja</option>
+                                <option value="div">Dividenda</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span id="txQtyLabel">Količina</span>
+                            <input id="txQty" inputmode="decimal" placeholder="10" required>
+                        </label>
+                        <label class="field">
+                            <span id="txPriceLabel">Cena na enoto (€)</span>
+                            <input id="txPrice" inputmode="decimal" placeholder="268,50" required>
+                        </label>
+                        <label class="field">
+                            <span>Stroški (€)</span>
+                            <input id="txFees" inputmode="decimal" placeholder="1,50">
+                        </label>
+                        <label class="field">
+                            <span>Datum</span>
+                            <input id="txDate" type="date" required>
+                        </label>
+                        <label class="field col-span-2">
+                            <span>Opomba</span>
+                            <input id="txNote" maxlength="200" placeholder="neobvezno">
+                        </label>
+                    </div>
+                    <div class="flex items-center gap-3 mt-4">
+                        <button type="submit" id="txSubmit" class="btn-press font-mono font-bold text-xs uppercase tracking-widest bg-ink text-paper border border-ink rounded-[3px] px-5 py-2.5 hover:bg-clay hover:border-clay transition">Dodaj</button>
+                        <button type="button" id="txCancel" class="hidden font-mono text-xs uppercase tracking-widest text-stone hover:text-ink">Prekliči</button>
+                        <span id="txHint" class="font-mono text-[0.68rem] text-stone"></span>
+                    </div>
+                </form>
+                <div id="txTable" class="bg-card border border-hairline rounded-[3px] overflow-x-auto"></div>
+            </section>
+
+            <!-- Dividende -->
+            <section id="dividende" class="mb-12 scroll-mt-16">
+                <div class="section-rule">
+                    <h2>Dividende</h2>
+                    <span id="divYield"></span>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div>
+                        <h3 class="font-display italic text-lg mb-3">Napovedane</h3>
+                        <form id="divForm" class="bg-card border border-hairline rounded-[3px] p-4 mb-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="field col-span-2">
+                                    <span>Papir</span>
+                                    <select id="divInstrument" required></select>
+                                </label>
+                                <label class="field">
+                                    <span>Bruto/delnico (€)</span>
+                                    <input id="divAmount" inputmode="decimal" placeholder="8,50" required>
+                                </label>
+                                <label class="field">
+                                    <span>Presečni dan</span>
+                                    <input id="divExDate" type="date">
+                                </label>
+                                <label class="field">
+                                    <span>Izplačilo</span>
+                                    <input id="divPayDate" type="date">
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-press mt-3 font-mono font-bold text-xs uppercase tracking-widest bg-ink text-paper border border-ink rounded-[3px] px-5 py-2.5 hover:bg-clay hover:border-clay transition">Zabeleži</button>
+                        </form>
+                        <div id="divTable" class="bg-card border border-hairline rounded-[3px] overflow-x-auto"></div>
+                    </div>
+                    <div>
+                        <h3 class="font-display italic text-lg mb-3">Prejete</h3>
+                        <div id="divReceived" class="bg-card border border-hairline rounded-[3px] overflow-x-auto"></div>
+                        <p class="mt-3 font-mono text-[0.68rem] text-stone leading-relaxed">Prejete dividende vpišeš kot transakcijo vrste »Dividenda«: količina je število delnic, cena pa neto znesek na delnico.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Opozorila -->
+            <section id="opozorila" class="mb-12 scroll-mt-16">
+                <div class="section-rule">
+                    <h2>Opozorila</h2>
+                    <span>Telegram</span>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-5">
+                    <form id="alertForm" class="bg-card border border-hairline rounded-[3px] p-4 self-start">
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="field col-span-2">
+                                <span>Papir</span>
+                                <select id="alertInstrument"></select>
+                            </label>
+                            <label class="field">
+                                <span>Pogoj</span>
+                                <select id="alertKind">
+                                    <option value="above">cena nad</option>
+                                    <option value="below">cena pod</option>
+                                    <option value="move">dnevni premik nad</option>
+                                </select>
+                            </label>
+                            <label class="field">
+                                <span id="alertThresholdLabel">Prag (€)</span>
+                                <input id="alertThreshold" inputmode="decimal" placeholder="280,00" required>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-press mt-3 font-mono font-bold text-xs uppercase tracking-widest bg-ink text-paper border border-ink rounded-[3px] px-5 py-2.5 hover:bg-clay hover:border-clay transition">Nastavi</button>
+                        <p class="mt-3 font-mono text-[0.68rem] text-stone leading-relaxed">Ko pogoj drži, prileti sporočilo v Telegram: največ enkrat na borzni dan za vsako pravilo.</p>
+                    </form>
+                    <div id="alertsList" class="bg-card border border-hairline rounded-[3px] overflow-x-auto self-start"></div>
+                </div>
+            </section>
+
+            <!-- Davki -->
+            <section id="davki" class="mb-10 scroll-mt-16">
+                <div class="section-rule">
+                    <h2>Davčna ura</h2>
+                    <span>FIFO &middot; ZDoh-2</span>
+                </div>
+                <div id="taxBody"></div>
+                <p class="mt-4 font-mono text-[0.68rem] text-stone leading-relaxed max-w-[72ch]">Informativni izračun: dobiček po sklopih FIFO, stopnja po letih imetništva (25 / 20 / 15 / 0 %). Letna napoved KDVP pobota tudi izgube, zato je dejanski davek lahko nižji.</p>
+            </section>
+
+            <footer class="border-t-2 border-ink pt-4 mt-6 flex flex-wrap items-baseline justify-between gap-2 font-mono text-[0.65rem] tracking-[0.15em] uppercase text-stone">
+                <span>Vir podatkov: Ljubljanska borza (ljse.si)</span>
+                <span>15-minutni zamik &middot; ni naložbeni nasvet</span>
+            </footer>
+        </main>
+
+        <!-- Loading skeleton -->
+        <div id="loading" class="py-16">
+            <div class="skeleton h-8 w-2/5 mb-6"></div>
+            <div class="skeleton h-28 w-full mb-4"></div>
+            <div class="skeleton h-28 w-full mb-4"></div>
+            <div class="skeleton h-28 w-3/4"></div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="chartTip" class="chart-tip hidden" role="status"></div>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
