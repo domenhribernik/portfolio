@@ -1,10 +1,15 @@
 import { loginUrl } from '../../components/auth-gate.js';
+import { getWateringStatus, formatTemp } from './logic.js';
 
 (() => {
     'use strict';
 
     const API = '../../app/controllers/plants-controller.php';
     const LOCK_TITLE = 'Sign in to manage your own plants';
+    // Base classes for the compact watering pill on a card. Shared by the card
+    // template and the 60s countdown refresh so the two can never drift apart;
+    // the status class (status-ok/soon/overdue) is appended per plant.
+    const CARD_PILL_CLS = 'watering-countdown flex items-center gap-2 px-3 py-2 rounded-lg';
 
     // --- State ---
     let plants = [];
@@ -105,13 +110,6 @@ import { loginUrl } from '../../components/auth-gate.js';
         return div.innerHTML;
     }
 
-    function formatTemp(temp) {
-        if (!temp) return '';
-        temp = temp.trim();
-        if (temp.includes('°')) return temp;
-        return temp + '°C';
-    }
-
     // --- Header / demo state ---
 
     function updateAuthUI() {
@@ -169,10 +167,12 @@ import { loginUrl } from '../../components/auth-gate.js';
     }
 
     function addCardHTML() {
+        // Compact dashed row on mobile, tall tile on the grid. Height matches a
+        // real card so it never towers over the list on a phone.
         return `
         <button id="addCard" title="Add plant"
-            class="border-2 border-dashed border-neutral-300 rounded-xl bg-transparent cursor-pointer text-neutral-400 flex flex-col items-center justify-center gap-3 min-h-[220px] transition-colors hover:border-[#2d6a4f] hover:text-[#2d6a4f]">
-            <span class="w-10 h-10 rounded-full border-2 border-current flex items-center justify-center text-base"><i class="fas fa-plus"></i></span>
+            class="border-2 border-dashed border-neutral-300 rounded-2xl bg-transparent cursor-pointer text-neutral-400 flex sm:flex-col items-center justify-center gap-3 p-4 sm:min-h-[240px] transition-colors hover:border-[#2d6a4f] hover:text-[#2d6a4f]">
+            <span class="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base shrink-0"><i class="fas fa-plus"></i></span>
             <span class="text-sm font-medium">Add a plant</span>
         </button>`;
     }
@@ -180,21 +180,26 @@ import { loginUrl } from '../../components/auth-gate.js';
     function plantCardHTML(plant) {
         const displayName = plant.nickname || plant.name;
         const scientificLine = plant.nickname
-            ? `<div class="text-xs text-neutral-400 italic mb-2">${esc(plant.name)}</div>`
+            ? `<div class="text-xs text-neutral-400 italic truncate">${esc(plant.name)}</div>`
             : '';
+        // Mobile: fixed-width thumbnail that stretches to the card height (list
+        // row). sm+: full-width square photo on top (tile).
+        const imgCls = 'w-24 sm:w-full shrink-0 min-h-[6.5rem] sm:min-h-0 sm:aspect-square object-cover select-none';
         const imageHTML = plant.image_url
-            ? `<img class="w-full aspect-square object-cover block" src="../../${esc(plant.image_url)}" alt="${esc(displayName)}" loading="lazy">`
-            : `<div class="w-full aspect-square bg-neutral-100 flex items-center justify-center text-6xl select-none">🪴</div>`;
+            ? `<img class="${imgCls}" src="../../${esc(plant.image_url)}" alt="${esc(displayName)}" loading="lazy">`
+            : `<div class="${imgCls} bg-neutral-100 flex items-center justify-center text-4xl sm:text-6xl">🪴</div>`;
         const watering = getWateringStatus(plant);
 
         const waterBtn = isDemo
-            ? `<button class="bg-neutral-100 text-neutral-400 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-not-allowed inline-flex items-center gap-1.5" disabled title="${LOCK_TITLE}">
-                    <i class="fas fa-tint"></i> Water
+            ? `<button class="shrink-0 bg-neutral-100 text-neutral-400 px-2.5 py-1.5 rounded-md text-xs font-semibold border-none cursor-not-allowed inline-flex items-center gap-1.5" disabled title="${LOCK_TITLE}">
+                    <i class="fas fa-tint"></i><span class="hidden sm:inline">Water</span>
                 </button>`
-            : `<button class="bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer transition-colors hover:bg-sky-200 inline-flex items-center gap-1.5" onclick="event.stopPropagation(); waterPlant(${plant.id})" title="Mark as watered">
-                    <i class="fas fa-tint"></i> Water
+            : `<button class="shrink-0 bg-sky-100 text-sky-700 px-2.5 py-1.5 rounded-md text-xs font-semibold border-none cursor-pointer transition-colors hover:bg-sky-200 inline-flex items-center gap-1.5" onclick="event.stopPropagation(); waterPlant(${plant.id})" title="Mark as watered">
+                    <i class="fas fa-tint"></i><span class="hidden sm:inline">Water</span>
                 </button>`;
 
+        // Edit/delete stay on the grid tiles; on a phone they live in the detail
+        // sheet you get by tapping the card, keeping the list row uncluttered.
         const actionRow = isDemo
             ? `<button class="bg-transparent border-none cursor-not-allowed text-neutral-200 p-1.5 rounded-md text-sm" disabled title="${LOCK_TITLE}">
                     <i class="fas fa-pen"></i>
@@ -210,21 +215,20 @@ import { loginUrl } from '../../components/auth-gate.js';
                 </button>`;
 
         return `
-        <div class="plant-card bg-white border border-neutral-200 rounded-xl overflow-hidden cursor-pointer transition-shadow hover:shadow-lg" data-id="${plant.id}">
+        <div class="plant-card group flex sm:block bg-white border border-neutral-200 rounded-2xl overflow-hidden cursor-pointer transition-shadow hover:shadow-md" data-id="${plant.id}">
             ${imageHTML}
-            <div class="p-4 px-5">
-                <div class="text-lg font-semibold mb-0.5">${esc(displayName)}</div>
-                ${scientificLine}
-                <div class="text-xs text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded-full inline-block mb-3">${esc(plant.type)}</div>
-                <div class="watering-countdown ${watering.statusClass} flex items-center gap-2.5 px-3.5 py-3 rounded-lg mb-3" data-plant-id="${plant.id}">
-                    <i class="fas fa-tint watering-icon text-base"></i>
-                    <div class="flex-1">
-                        <div class="watering-label text-[0.7rem] text-neutral-500 uppercase tracking-wide font-semibold">Next watering</div>
-                        <div class="watering-time text-sm font-semibold">${watering.text}</div>
-                    </div>
+            <div class="flex-1 min-w-0 flex flex-col p-3.5 sm:p-4">
+                <div class="min-w-0">
+                    <div class="text-base sm:text-lg font-semibold leading-tight truncate">${esc(displayName)}</div>
+                    ${scientificLine}
+                </div>
+                <div class="text-xs text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded-full self-start max-w-full truncate mt-1.5">${esc(plant.type)}</div>
+                <div class="${CARD_PILL_CLS} ${watering.statusClass} mt-3" data-plant-id="${plant.id}">
+                    <i class="fas fa-tint watering-icon text-sm shrink-0"></i>
+                    <span class="watering-time flex-1 min-w-0 text-[0.8rem] font-semibold truncate">${watering.text}</span>
                     ${waterBtn}
                 </div>
-                <div class="flex gap-1.5 justify-end pt-2 border-t border-neutral-100">
+                <div class="hidden sm:flex gap-1 justify-end items-center mt-auto pt-2.5">
                     ${actionRow}
                 </div>
             </div>
@@ -232,51 +236,7 @@ import { loginUrl } from '../../components/auth-gate.js';
     }
 
     // --- Watering countdown ---
-
-    function getWateringStatus(plant) {
-        if (!plant.last_watered) {
-            return { text: 'Never watered', statusClass: 'status-overdue' };
-        }
-
-        const lastWatered = new Date(plant.last_watered);
-        const now = new Date();
-        const diffMs = now - lastWatered;
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-        const minDays = plant.watering_min_days;
-        const maxDays = plant.watering_max_days;
-
-        if (diffDays >= maxDays) {
-            const overdueDays = Math.floor(diffDays - maxDays);
-            return {
-                text: overdueDays === 0 ? 'Water today!' : `Overdue by ${overdueDays} day${overdueDays !== 1 ? 's' : ''}`,
-                statusClass: 'status-overdue'
-            };
-        }
-
-        if (diffDays >= minDays) {
-            const remainingDays = Math.ceil(maxDays - diffDays);
-            return {
-                text: remainingDays <= 1 ? 'Water today or tomorrow' : `Water within ${remainingDays} days`,
-                statusClass: 'status-soon'
-            };
-        }
-
-        const daysUntilMin = Math.ceil(minDays - diffDays);
-        if (daysUntilMin <= 0) {
-            return { text: 'Water today', statusClass: 'status-soon' };
-        }
-
-        const hours = Math.floor((minDays - diffDays) * 24);
-        if (hours < 24) {
-            return { text: `${hours} hour${hours !== 1 ? 's' : ''} left`, statusClass: 'status-soon' };
-        }
-
-        return {
-            text: `${daysUntilMin} day${daysUntilMin !== 1 ? 's' : ''} left`,
-            statusClass: 'status-ok'
-        };
-    }
+    // getWateringStatus + formatTemp live in logic.js (tested); imported above.
 
     function startCountdownUpdates() {
         if (countdownInterval) clearInterval(countdownInterval);
@@ -285,7 +245,7 @@ import { loginUrl } from '../../components/auth-gate.js';
                 const el = document.querySelector(`.watering-countdown[data-plant-id="${plant.id}"]`);
                 if (!el) return;
                 const status = getWateringStatus(plant);
-                el.className = `watering-countdown ${status.statusClass} flex items-center gap-2.5 px-3.5 py-3 rounded-lg mb-3`;
+                el.className = `${CARD_PILL_CLS} ${status.statusClass} mt-3`;
                 el.querySelector('.watering-time').textContent = status.text;
             });
         }, 60000);
@@ -299,8 +259,8 @@ import { loginUrl } from '../../components/auth-gate.js';
             ? `<div class="text-sm text-neutral-400 italic mb-2">${esc(plant.name)}</div>`
             : '';
         const imageHTML = plant.image_url
-            ? `<img class="w-full aspect-square object-cover rounded-xl mb-5" src="../../${esc(plant.image_url)}" alt="${esc(displayName)}">`
-            : `<div class="w-full aspect-square bg-neutral-100 rounded-xl flex items-center justify-center text-7xl mb-5 select-none">🪴</div>`;
+            ? `<img class="w-full h-56 sm:h-64 object-cover rounded-xl mb-5" src="../../${esc(plant.image_url)}" alt="${esc(displayName)}">`
+            : `<div class="w-full h-56 sm:h-64 bg-neutral-100 rounded-xl flex items-center justify-center text-7xl mb-5 select-none">🪴</div>`;
         const watering = getWateringStatus(plant);
 
         const issuesHTML = plant.common_issues.length > 0
