@@ -139,3 +139,34 @@ INSERT INTO stocks_instruments (symbol, isin, name, segment, security_type) VALU
     ('ICASH', 'HRICAMFEUMM1', 'InterCapital Euro Money Market UCITS ETF', 'E', 'etf')
 ON DUPLICATE KEY UPDATE name = VALUES(name), segment = VALUES(segment),
     security_type = VALUES(security_type);
+
+-- The 2026 dividend calendar (fiscal year 2025), hardcoded from the AGM
+-- announcements as published (vlagaj.si roundup, SEOnet, issuer IR pages,
+-- July 2026). ex_date holds the record day ("presečni dan") since that is
+-- the date Slovenian investors track; NLB's December installment has no
+-- dates yet (announced, subject to the year-end AGM). The NULL-safe
+-- NOT-EXISTS guard keeps the file safe to re-run without duplicating rows.
+-- SLOTR and the InterCapital ETFs are total-return (accumulating), so they
+-- pay nothing and have no rows here.
+INSERT INTO stocks_dividends (instrument_id, ex_date, pay_date, amount, note)
+SELECT i.id, s.ex_date, s.pay_date, s.amount, s.note
+FROM (
+    SELECT 'SALR' AS symbol, '2026-04-29' AS ex_date, '2026-04-30' AS pay_date, 1.20 AS amount,
+           'za 2025, vključno z vmesno dividendo (jan)' AS note
+    UNION ALL SELECT 'POSR', '2026-06-10', '2026-06-11', 2.75, 'za leto 2025'
+    UNION ALL SELECT 'ZVTG', '2026-06-16', '2026-06-17', 3.00, 'za leto 2025'
+    UNION ALL SELECT 'NLBR', '2026-06-22', '2026-06-23', 6.92, '1. obrok za 2025'
+    UNION ALL SELECT 'CICG', '2026-06-29', '2026-06-30', 1.80, 'za leto 2025'
+    UNION ALL SELECT 'KRKG', '2026-07-22', '2026-07-23', 9.10, 'za leto 2025'
+    UNION ALL SELECT 'PETG', '2026-07-31', '2026-08-01', 2.50, 'za leto 2025'
+    UNION ALL SELECT 'TLSG', '2026-08-25', '2026-08-26', 4.60, 'za leto 2025'
+    UNION ALL SELECT 'LKPG', '2026-08-28', '2026-08-31', 2.30, 'za leto 2025'
+    UNION ALL SELECT 'NLBR', NULL, NULL, 6.92, '2. obrok, predvidoma december 2026'
+) AS s
+JOIN stocks_instruments i ON i.symbol = s.symbol
+WHERE NOT EXISTS (
+    SELECT 1 FROM stocks_dividends d
+    WHERE d.instrument_id = i.id
+      AND d.amount = s.amount
+      AND (d.ex_date <=> s.ex_date)
+);

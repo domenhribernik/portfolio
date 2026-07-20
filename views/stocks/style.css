@@ -154,6 +154,32 @@ body {
     text-overflow: ellipsis;
 }
 
+/* Calendar notes may run longer than issuer names, but only where there
+   is room: phones squeeze them so the money columns fit on screen. */
+@media (min-width: 768px) {
+    .ledger .note-wide {
+        max-width: 30ch;
+    }
+}
+
+/* Phones: tighter cell padding and shorter notes so a four-column ledger
+   (papir, bruto, izplačilo, zate) fits without sideways scrolling. */
+@media (max-width: 767px) {
+    .ledger th,
+    .ledger td {
+        padding: 0.5rem 0.45rem;
+    }
+
+    .ledger .paper-name {
+        max-width: 12ch;
+    }
+
+    /* Calendar notes vanish on phones; the chips already carry the state. */
+    .ledger .note-wide {
+        display: none;
+    }
+}
+
 /* 52-week range track. */
 .range52 {
     position: relative;

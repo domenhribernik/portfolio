@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { fmtEur, fmtPct, fmtQty, fmtDateSl, computeHoldings, cgtRatePct, taxReport, changePct, weekPos52, evaluateAlerts, sparklinePath, niceTicks, seriesToPath, enrichHoldings, groupBySegment, portfolioTimeline, parseSlNum } from '../views/stocks/logic.js';
+import { fmtEur, fmtPct, fmtQty, fmtDateSl, computeHoldings, cgtRatePct, taxReport, changePct, weekPos52, evaluateAlerts, sparklinePath, niceTicks, seriesToPath, enrichHoldings, groupBySegment, portfolioTimeline, parseSlNum, expectedDividends, upcomingDividends } from '../views/stocks/logic.js';
 
 // The space before € is U+00A0 so the amount never wraps away from its unit.
 test('fmtEur renders Slovenian format with dot thousands and comma decimals', () => {
@@ -313,4 +313,53 @@ test('parseSlNum reads Slovenian decimal commas and thousands dots', () => {
     assert.equal(parseSlNum(''), null);
     assert.equal(parseSlNum('abc'), null);
     assert.equal(parseSlNum('-3,2'), -3.2);
+});
+
+// The seeded 2026 dividend calendar: what a holder can still expect this
+// year. A row counts while its pay date is today or later, or has no dates
+// yet (an announced tranche, e.g. NLB's December installment).
+test('expectedDividends sums upcoming payouts for held instruments', () => {
+    const dividends = [
+        { id: 1, instrument_id: 1, amount: 9.1, ex_date: '2026-07-22', pay_date: '2026-07-23' },
+        { id: 2, instrument_id: 1, amount: 6.5, ex_date: '2025-07-10', pay_date: '2025-07-11' },
+        { id: 3, instrument_id: 2, amount: 6.92, ex_date: null, pay_date: null },
+        { id: 4, instrument_id: 3, amount: 2.5, ex_date: '2026-07-31', pay_date: '2026-08-01' },
+    ];
+    const holdings = {
+        1: { qty: 15 }, // held: future payout counts, last year's does not
+        2: { qty: 10 }, // held: undated announcement counts
+        // instrument 3 not held: never counts
+    };
+    const r = expectedDividends(dividends, holdings, '2026-07-19');
+    assert.equal(r.total, 15 * 9.1 + 10 * 6.92);
+    assert.deepEqual(r.rows.map((x) => x.id), [1, 3]);
+    assert.equal(r.rows[0].mine, 15 * 9.1);
+});
+
+test('expectedDividends still counts a payout on its payment day', () => {
+    const r = expectedDividends(
+        [{ id: 1, instrument_id: 1, amount: 2, ex_date: '2026-07-18', pay_date: '2026-07-19' }],
+        { 1: { qty: 5 } },
+        '2026-07-19',
+    );
+    assert.equal(r.total, 10);
+});
+
+// The calendar view hides history: only payouts whose payment day is today
+// or later remain, plus undated announcements, in record-day order with the
+// undated ones last.
+test('upcomingDividends keeps future and undated rows in calendar order', () => {
+    const rows = upcomingDividends([
+        { id: 1, ex_date: '2026-07-31', pay_date: '2026-08-01' },
+        { id: 2, ex_date: '2026-06-16', pay_date: '2026-06-17' }, // paid out: gone
+        { id: 3, ex_date: null, pay_date: null },                 // announced: stays, last
+        { id: 4, ex_date: '2026-07-22', pay_date: '2026-07-23' },
+    ], '2026-07-19');
+    assert.deepEqual(rows.map((r) => r.id), [4, 1, 3]);
+});
+
+test('upcomingDividends keeps a payout on its payment day', () => {
+    const rows = upcomingDividends(
+        [{ id: 1, ex_date: '2026-07-18', pay_date: '2026-07-19' }], '2026-07-19');
+    assert.equal(rows.length, 1);
 });

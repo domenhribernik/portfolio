@@ -4,7 +4,7 @@
 
 import {
     fmtNum, fmtEur, fmtPct, fmtQty, fmtDateSl, parseSlNum,
-    computeHoldings, enrichHoldings, taxReport,
+    computeHoldings, enrichHoldings, expectedDividends, upcomingDividends,
     changePct, weekPos52, evaluateAlerts,
     sparklinePath, niceTicks, seriesToPath,
     groupBySegment, portfolioTimeline,
@@ -91,7 +91,7 @@ async function refresh(manual) {
                 renderDateline();
                 renderBoard();
                 renderPortfolio();
-                renderTax();
+                renderDividends();
             }
         } else if (manual && data && data.error) {
             showError('Osvežitev ni uspela: ' + data.error);
@@ -123,7 +123,6 @@ function renderAll() {
     renderTransactions();
     renderDividends();
     renderAlerts();
-    renderTax();
 }
 
 // ------------------------------------------------------------------
@@ -741,25 +740,38 @@ function renderDividends() {
     const held = holdings();
     const today = new Date().toISOString().slice(0, 10);
 
-    const list = state.dividends;
+    // Only what is still ahead: paid-out rows stay in the DB as history but
+    // leave the calendar. Undated announcements (NLB's December installment)
+    // sink to the bottom.
+    const list = upcomingDividends(state.dividends, today);
+    const nextUpcoming = list.find((d) => d.pay_date);
+
     $('divTable').innerHTML = list.length ? `<table class="ledger"><thead><tr>
-        <th>Papir</th><th>Bruto/delnico</th><th>Presečni dan</th><th>Ocena zate</th><th></th>
+        <th>Papir</th><th>Bruto<span class="max-md:hidden">/delnico</span></th><th class="max-md:hidden">Donos</th>
+        <th class="max-md:hidden">Presečni dan</th><th>Izplačilo</th><th>Zate</th><th class="max-md:hidden"></th>
     </tr></thead><tbody>${list.map((d) => {
+        const inst = instrumentById(d.instrument_id);
         const h = held[d.instrument_id];
         const mine = h && h.qty > 0 ? h.qty * d.amount : null;
-        const upcoming = d.ex_date && d.ex_date >= today;
+        const yieldPct = inst && inst.last ? d.amount / inst.last * 100 : null;
+        const chip = d === nextUpcoming
+            ? '<span class="ml-2 font-mono text-[0.6rem] font-bold uppercase tracking-[0.12em] text-clay border border-clay rounded-[2px] px-1.5 py-0.5">prihaja</span>'
+            : '';
         return `<tr>
-            <td><b>${escapeHtml(d.symbol)}</b>${upcoming ? '<span class="paper-name text-clay">prihaja</span>' : ''}</td>
-            <td>${fmtEur(d.amount)}</td>
-            <td>${fmtDateSl(d.ex_date)}</td>
-            <td>${mine === null ? '–' : '<b>' + fmtEur(mine) + '</b> bruto'}</td>
-            <td><button type="button" data-divdel="${d.id}" class="text-stone hover:text-clay underline decoration-dotted underline-offset-2">izbriši</button></td>
+            <td><b>${escapeHtml(d.symbol)}</b>${chip}${d.note ? `<span class="paper-name note-wide">${escapeHtml(d.note)}</span>` : ''}</td>
+            <td><b>${fmtEur(d.amount)}</b></td>
+            <td class="max-md:hidden">${yieldPct === null ? '–' : pct(yieldPct)}</td>
+            <td class="max-md:hidden">${fmtDateSl(d.ex_date)}</td>
+            <td>${fmtDateSl(d.pay_date)}</td>
+            <td>${mine === null ? '–' : '<b>' + fmtEur(mine) + '</b>'}</td>
+            <td class="max-md:hidden"><button type="button" data-divdel="${d.id}" class="text-stone hover:text-clay underline decoration-dotted underline-offset-2">izbriši</button></td>
         </tr>`;
     }).join('')}</tbody></table>`
-        : `<div class="p-6 text-center font-mono text-[0.72rem] text-stone">Ko izdajatelj napove dividendo, jo zabeleži zgoraj.</div>`;
+        : `<div class="p-6 text-center font-mono text-[0.72rem] text-stone">Letošnja dividendna sezona je izplačana. Novo sezono vpišeš po spomladanskih skupščinah: seed v stocks-model.sql ali »Ročni vnos«.</div>`;
 
     $('divTable').querySelectorAll('[data-divdel]').forEach((b) => {
         b.addEventListener('click', async () => {
+            if (!confirm('Odstranim ta vpis iz koledarja?')) return;
             const res = await fetch(API + '?resource=dividends&id=' + b.dataset.divdel, { method: 'DELETE' });
             if (!res.ok) return showError('Brisanje ni uspelo.');
             await loadDividends();
@@ -781,13 +793,13 @@ function renderDividends() {
     </tbody></table>`
         : `<div class="p-6 text-center font-mono text-[0.72rem] text-stone">Dividend še nisi prejel: ko jo, jo vpiši med transakcije.</div>`;
 
-    // Yield on cost across the portfolio, when there is anything to say.
-    const rows = enrichHoldings(held, quotes());
-    const totals = enrichHoldings.totals(rows);
+    // Header stat: received this year plus what the calendar still owes you.
+    const expected = expectedDividends(list, held, today);
     const thisYear = byYear[new Date().getFullYear()] || 0;
-    $('divYield').textContent = totals.costBasis > 0 && thisYear > 0
-        ? 'letos ' + pct(thisYear / totals.costBasis * 100) + ' na vložek'
-        : '';
+    const parts = [];
+    if (thisYear > 0) parts.push('prejeto ' + fmtEur(thisYear));
+    if (expected.total > 0) parts.push('še pričakuješ ' + fmtEur(expected.total) + ' bruto');
+    $('divYield').textContent = parts.join(' · ');
 }
 
 // ------------------------------------------------------------------
@@ -883,61 +895,6 @@ function syncAlertLabels() {
     const move = $('alertKind').value === 'move';
     $('alertThresholdLabel').textContent = move ? 'Prag (%)' : 'Prag (€)';
     $('alertThreshold').placeholder = move ? '3,0' : '280,00';
-}
-
-// ------------------------------------------------------------------
-//  Tax clock
-// ------------------------------------------------------------------
-
-function renderTax() {
-    const today = new Date().toISOString().slice(0, 10);
-    const held = holdings();
-    const blocks = [];
-
-    for (const [id, h] of Object.entries(held)) {
-        if (h.qty <= 0 || !h.lots.length) continue;
-        const i = instrumentById(id);
-        if (!i || i.last === null) continue;
-        const report = taxReport(h.lots, i.last, today);
-        blocks.push({ instrument: i, report });
-    }
-
-    if (!blocks.length) {
-        $('taxBody').innerHTML = `<div class="bg-card border border-hairline rounded-[3px] p-6 text-center font-mono text-[0.72rem] text-stone">
-            Davčna ura teče, ko imaš odprte pozicije.</div>`;
-        return;
-    }
-
-    let totalTax = 0, totalGain = 0;
-    const tables = blocks.map(({ instrument, report }) => {
-        totalTax += report.totalTax;
-        totalGain += report.totalGain;
-        return `<div class="bg-card border border-hairline rounded-[3px] overflow-x-auto mb-4">
-            <div class="px-4 pt-3 pb-1 flex items-baseline justify-between">
-                <span class="font-display italic text-lg">${escapeHtml(instrument.name)}
-                    <span class="font-mono not-italic text-sm text-stone">${escapeHtml(instrument.symbol)}</span></span>
-                <span class="font-mono text-[0.68rem] text-stone">ob prodaji danes: <b class="${report.totalTax > 0 ? 'text-clay' : 'text-gain'}">${fmtEur(report.totalTax)}</b> davka</span>
-            </div>
-            <table class="ledger"><thead><tr>
-                <th>Nakup</th><th>Količina</th><th>Nabavna</th><th>Dobiček</th><th>Stopnja</th><th>Davek</th><th>Nižja stopnja</th>
-            </tr></thead><tbody>${report.lots.map((lot) => `<tr>
-                <td>${fmtDateSl(lot.date)}</td>
-                <td>${fmtQty(lot.qty)}</td>
-                <td>${fmtEur(lot.unitCost)}</td>
-                <td class="${signClass(lot.gain)}">${fmtEur(lot.gain)}</td>
-                <td>${pct(lot.ratePct, 0)}</td>
-                <td>${lot.tax > 0 ? fmtEur(lot.tax) : '–'}</td>
-                <td>${lot.nextDropDate
-                    ? `${pct(lot.nextRatePct, 0)} od ${fmtDateSl(lot.nextDropDate)}`
-                    : '<span class="text-gain">brez davka</span>'}</td>
-            </tr>`).join('')}</tbody></table></div>`;
-    }).join('');
-
-    $('taxBody').innerHTML = `
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-4">
-            ${tile('Nerealiziran dobiček', fmtEur(totalGain), signClass(totalGain), true)}
-            ${tile('Davek ob prodaji danes', fmtEur(totalTax), totalTax > 0 ? 'text-clay' : 'text-gain')}
-        </div>${tables}`;
 }
 
 // ------------------------------------------------------------------

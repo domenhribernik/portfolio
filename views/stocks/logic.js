@@ -375,3 +375,37 @@ export function parseSlNum(text) {
     const value = Number(normalized);
     return Number.isFinite(value) ? value : null;
 }
+
+/**
+ * Payouts a holder can still expect: calendar rows whose pay date is today
+ * or later (or not yet announced, dates null), for instruments held now.
+ * Returns { rows: [{...row, mine}], total } with mine = qty * amount.
+ */
+export function expectedDividends(dividends, holdings, todayIso) {
+    const rows = [];
+    let total = 0;
+    for (const d of dividends) {
+        const holding = holdings[d.instrument_id];
+        if (!holding || holding.qty <= 0) continue;
+        if (d.pay_date !== null && d.pay_date !== undefined && d.pay_date < todayIso) continue;
+        const mine = holding.qty * d.amount;
+        rows.push({ ...d, mine });
+        total += mine;
+    }
+    return { rows, total };
+}
+
+/**
+ * The calendar's visible rows: payouts whose payment day is today or later,
+ * plus undated announcements. Record-day order, undated rows last.
+ */
+export function upcomingDividends(dividends, todayIso) {
+    return dividends
+        .filter((d) => d.pay_date === null || d.pay_date === undefined || d.pay_date >= todayIso)
+        .sort((a, b) => {
+            if (!a.ex_date && !b.ex_date) return (a.id || 0) - (b.id || 0);
+            if (!a.ex_date) return 1;
+            if (!b.ex_date) return -1;
+            return a.ex_date.localeCompare(b.ex_date);
+        });
+}
