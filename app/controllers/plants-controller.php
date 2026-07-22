@@ -119,9 +119,10 @@ function validatePlantInput(array $data): array
 {
     $errors = [];
 
-    $required = ['name', 'type', 'description', 'watering_frequency_text',
-                 'watering_min_days', 'watering_max_days', 'light',
-                 'humidity', 'temperature', 'soil'];
+    // Only a name and the watering window are required. Type, description and
+    // the environment fields (light/humidity/temperature/soil) are optional and
+    // stored as '' when omitted. The frequency line is derived from min/max.
+    $required = ['name', 'watering_min_days', 'watering_max_days'];
 
     foreach ($required as $field) {
         if (empty($data[$field]) && $data[$field] !== '0') {
@@ -141,6 +142,19 @@ function validatePlantInput(array $data): array
     }
 
     return $errors;
+}
+
+/**
+ * Server-side mirror of wateringFrequencyText() in views/botaniq/logic.js, used
+ * as a fallback so the NOT NULL column is always filled even if an API caller
+ * posts only the min/max window. The browser normally sends the derived value.
+ */
+function deriveWateringText(int $min, int $max): string
+{
+    if ($min === $max) {
+        return $min === 1 ? 'Every day' : "Every {$min} days";
+    }
+    return "Every {$min} to {$max} days";
 }
 
 function handleImageUpload(): ?array
@@ -306,20 +320,23 @@ function createPlant(array $user): void
             common_issues, useful_tips, image_data, image_mime, last_watered)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())';
 
+    $min = (int) $data['watering_min_days'];
+    $max = (int) $data['watering_max_days'];
+
     $stmt = Database::write()->prepare($sql);
     $stmt->execute([
         (int) $user['id'],
         sanitize($data['name']),
         !empty($data['nickname']) ? sanitize($data['nickname']) : null,
-        sanitize($data['type']),
-        sanitize($data['description']),
-        sanitize($data['watering_frequency_text']),
-        (int) $data['watering_min_days'],
-        (int) $data['watering_max_days'],
-        sanitize($data['light']),
-        sanitize($data['humidity']),
-        sanitize($data['temperature']),
-        sanitize($data['soil']),
+        sanitize($data['type'] ?? ''),
+        sanitize($data['description'] ?? ''),
+        !empty($data['watering_frequency_text']) ? sanitize($data['watering_frequency_text']) : deriveWateringText($min, $max),
+        $min,
+        $max,
+        sanitize($data['light'] ?? ''),
+        sanitize($data['humidity'] ?? ''),
+        sanitize($data['temperature'] ?? ''),
+        sanitize($data['soil'] ?? ''),
         $commonIssues,
         $usefulTips,
         $image ? $image['data'] : null,
@@ -358,18 +375,21 @@ function updatePlant(int $id, array $user): void
         ? json_encode(array_map('sanitize', json_decode($data['useful_tips'], true) ?? []), JSON_UNESCAPED_UNICODE)
         : '[]';
 
+    $min = (int) $data['watering_min_days'];
+    $max = (int) $data['watering_max_days'];
+
     $params = [
         sanitize($data['name']),
         !empty($data['nickname']) ? sanitize($data['nickname']) : null,
-        sanitize($data['type']),
-        sanitize($data['description']),
-        sanitize($data['watering_frequency_text']),
-        (int) $data['watering_min_days'],
-        (int) $data['watering_max_days'],
-        sanitize($data['light']),
-        sanitize($data['humidity']),
-        sanitize($data['temperature']),
-        sanitize($data['soil']),
+        sanitize($data['type'] ?? ''),
+        sanitize($data['description'] ?? ''),
+        !empty($data['watering_frequency_text']) ? sanitize($data['watering_frequency_text']) : deriveWateringText($min, $max),
+        $min,
+        $max,
+        sanitize($data['light'] ?? ''),
+        sanitize($data['humidity'] ?? ''),
+        sanitize($data['temperature'] ?? ''),
+        sanitize($data['soil'] ?? ''),
         $commonIssues,
         $usefulTips,
     ];

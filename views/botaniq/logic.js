@@ -57,6 +57,21 @@ export function getWateringStatus(plant, now = new Date()) {
     };
 }
 
+/**
+ * Turn a min/max watering window (in days) into a human frequency line,
+ * e.g. "Every 5 to 7 days". Replaces the old free-text field: the schedule is
+ * derived from the two numbers so the two can never disagree.
+ * @param {number} min soonest it should be watered, in days
+ * @param {number} max latest it should be watered, in days
+ * @returns {string}
+ */
+export function wateringFrequencyText(min, max) {
+    if (min === max) {
+        return min === 1 ? 'Every day' : `Every ${min} days`;
+    }
+    return `Every ${min} to ${max} days`;
+}
+
 /** Append °C unless the value already carries a degree unit. */
 export function formatTemp(temp) {
     if (!temp) return '';

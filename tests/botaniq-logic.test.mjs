@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getWateringStatus, formatTemp } from '../views/botaniq/logic.js';
+import { getWateringStatus, formatTemp, wateringFrequencyText } from '../views/botaniq/logic.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const LAST = '2026-01-01T00:00:00';
@@ -72,6 +72,19 @@ test('past the outer bound counts overdue days, singular at one', () => {
     const many = getWateringStatus(plant(), at(9.9));
     assert.equal(many.statusClass, 'status-overdue');
     assert.equal(many.text, 'Overdue by 2 days');
+});
+
+test('wateringFrequencyText reads a min/max window as a range', () => {
+    assert.equal(wateringFrequencyText(5, 7), 'Every 5 to 7 days');
+});
+
+test('wateringFrequencyText collapses an equal window to one interval', () => {
+    assert.equal(wateringFrequencyText(7, 7), 'Every 7 days');
+});
+
+test('wateringFrequencyText says "Every day" for a one-day window', () => {
+    assert.equal(wateringFrequencyText(1, 1), 'Every day');
+    assert.equal(wateringFrequencyText(1, 3), 'Every 1 to 3 days');
 });
 
 test('formatTemp appends °C only when no degree unit is present', () => {

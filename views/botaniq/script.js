@@ -1,5 +1,5 @@
 import { loginUrl } from '../../components/auth-gate.js';
-import { getWateringStatus, formatTemp } from './logic.js';
+import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js';
 
 (() => {
     'use strict';
@@ -18,6 +18,9 @@ import { getWateringStatus, formatTemp } from './logic.js';
     let currentIssues = [];
     let currentTips = [];
     let countdownInterval = null;
+    // The image chosen for the form, from either the file picker or the camera.
+    // Both inputs feed this, and submit reads it, so the two never fight.
+    let selectedImageFile = null;
 
     // --- DOM refs ---
     const plantsGrid = document.getElementById('plantsGrid');
@@ -182,6 +185,9 @@ import { getWateringStatus, formatTemp } from './logic.js';
         const scientificLine = plant.nickname
             ? `<div class="text-xs text-neutral-400 italic truncate">${esc(plant.name)}</div>`
             : '';
+        const typeChip = plant.type
+            ? `<div class="text-xs text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded-full self-start max-w-full truncate mt-1.5">${esc(plant.type)}</div>`
+            : '';
         // Mobile: fixed-width thumbnail that stretches to the card height (list
         // row). sm+: full-width square photo on top (tile).
         const imgCls = 'w-24 sm:w-full shrink-0 min-h-[6.5rem] sm:min-h-0 sm:aspect-square object-cover select-none';
@@ -222,7 +228,7 @@ import { getWateringStatus, formatTemp } from './logic.js';
                     <div class="text-base sm:text-lg font-semibold leading-tight truncate">${esc(displayName)}</div>
                     ${scientificLine}
                 </div>
-                <div class="text-xs text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded-full self-start max-w-full truncate mt-1.5">${esc(plant.type)}</div>
+                ${typeChip}
                 <div class="${CARD_PILL_CLS} ${watering.statusClass} mt-3" data-plant-id="${plant.id}">
                     <i class="fas fa-tint watering-icon text-sm shrink-0"></i>
                     <span class="watering-time flex-1 min-w-0 text-[0.8rem] font-semibold truncate">${watering.text}</span>
@@ -253,23 +259,53 @@ import { getWateringStatus, formatTemp } from './logic.js';
 
     // --- Detail modal ---
 
+    /** A bulleted list of strings (shared by the issues and tips sections). */
+    function bulletListHTML(items) {
+        return `<ul class="list-none p-0">${items.map(i => `<li class="py-1.5 text-sm text-neutral-500 flex items-start gap-2"><span class="text-neutral-300 font-bold shrink-0">&bull;</span>${esc(i)}</li>`).join('')}</ul>`;
+    }
+
     function showPlantDetail(plant) {
         const displayName = plant.nickname || plant.name;
         const scientificLine = plant.nickname
-            ? `<div class="text-sm text-neutral-400 italic mb-2">${esc(plant.name)}</div>`
+            ? `<div class="text-sm text-neutral-400 italic mt-0.5">${esc(plant.name)}</div>`
+            : '';
+        const typeChip = plant.type
+            ? `<span class="text-sm text-neutral-500 bg-neutral-100 px-3 py-1 rounded-full inline-block mt-3">${esc(plant.type)}</span>`
+            : '';
+        const descriptionHTML = plant.description
+            ? `<p class="text-neutral-500 text-sm mt-3 mb-0 leading-7">${esc(plant.description)}</p>`
             : '';
         const imageHTML = plant.image_url
             ? `<img class="w-full h-56 sm:h-64 object-cover rounded-xl mb-5" src="../../${esc(plant.image_url)}" alt="${esc(displayName)}">`
             : `<div class="w-full h-56 sm:h-64 bg-neutral-100 rounded-xl flex items-center justify-center text-7xl mb-5 select-none">🪴</div>`;
         const watering = getWateringStatus(plant);
 
-        const issuesHTML = plant.common_issues.length > 0
-            ? `<ul class="list-none p-0">${plant.common_issues.map(i => `<li class="py-1.5 text-sm text-neutral-500 flex items-start gap-2"><span class="text-neutral-300 font-bold shrink-0">&bull;</span>${esc(i)}</li>`).join('')}</ul>`
-            : '<p class="text-neutral-400 text-sm">None listed</p>';
+        // Frequency line is derived from min/max; legacy rows keep their stored text.
+        const freqText = plant.watering_frequency_text
+            || wateringFrequencyText(plant.watering_min_days, plant.watering_max_days);
+        const careCell = (icon, label, value) => `
+            <div class="bg-neutral-50 p-3 rounded-lg">
+                <div class="text-[0.7rem] text-neutral-400 uppercase tracking-wide font-semibold"><i class="fas ${icon}"></i> ${label}</div>
+                <div class="text-sm font-medium">${value}</div>
+            </div>`;
+        const careCells = [
+            careCell('fa-tint', 'Watering', esc(freqText)),
+            plant.light ? careCell('fa-sun', 'Light', esc(plant.light)) : '',
+            plant.humidity ? careCell('fa-water', 'Humidity', esc(plant.humidity)) : '',
+            plant.temperature ? careCell('fa-thermometer-half', 'Temperature', formatTemp(esc(plant.temperature))) : '',
+            plant.soil ? careCell('fa-mountain', 'Soil', esc(plant.soil)) : '',
+        ].join('');
+        const issuesBlock = plant.common_issues.length > 0 ? `
+            <div class="mb-5">
+                <div class="text-[0.7rem] font-semibold uppercase tracking-widest text-neutral-400 mb-2.5">Common Issues</div>
+                ${bulletListHTML(plant.common_issues)}
+            </div>` : '';
+        const tipsBlock = plant.useful_tips.length > 0 ? `
+            <div class="mb-5">
+                <div class="text-[0.7rem] font-semibold uppercase tracking-widest text-neutral-400 mb-2.5">Useful Tips</div>
+                ${bulletListHTML(plant.useful_tips)}
+            </div>` : '';
 
-        const tipsHTML = plant.useful_tips.length > 0
-            ? `<ul class="list-none p-0">${plant.useful_tips.map(t => `<li class="py-1.5 text-sm text-neutral-500 flex items-start gap-2"><span class="text-neutral-300 font-bold shrink-0">&bull;</span>${esc(t)}</li>`).join('')}</ul>`
-            : '<p class="text-neutral-400 text-sm">None listed</p>';
 
         const actionsHTML = isDemo
             ? `<button class="flex-1 justify-center bg-neutral-100 text-neutral-400 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-not-allowed inline-flex items-center gap-1.5" disabled title="${LOCK_TITLE}">
@@ -293,10 +329,12 @@ import { getWateringStatus, formatTemp } from './logic.js';
 
         detailContent.innerHTML = `
             ${imageHTML}
-            <div class="text-2xl font-bold mb-0.5">${esc(displayName)}</div>
-            ${scientificLine}
-            <div class="text-sm text-neutral-500 bg-neutral-100 px-3 py-1 rounded-full inline-block mb-4">${esc(plant.type)}</div>
-            <p class="text-neutral-500 text-sm mb-6 leading-7">${esc(plant.description)}</p>
+            <div class="mb-5">
+                <div class="text-2xl font-bold">${esc(displayName)}</div>
+                ${scientificLine}
+                ${typeChip}
+                ${descriptionHTML}
+            </div>
 
             <div class="watering-countdown ${watering.statusClass} flex items-center gap-2.5 px-3.5 py-3 rounded-lg mb-5">
                 <i class="fas fa-tint watering-icon text-base"></i>
@@ -309,38 +347,12 @@ import { getWateringStatus, formatTemp } from './logic.js';
             <div class="mb-5">
                 <div class="text-[0.7rem] font-semibold uppercase tracking-widest text-neutral-400 mb-2.5">Care Requirements</div>
                 <div class="grid grid-cols-2 gap-2.5 max-md:grid-cols-1">
-                    <div class="bg-neutral-50 p-3 rounded-lg">
-                        <div class="text-[0.7rem] text-neutral-400 uppercase tracking-wide font-semibold"><i class="fas fa-tint"></i> Watering</div>
-                        <div class="text-sm font-medium">${esc(plant.watering_frequency_text)}</div>
-                    </div>
-                    <div class="bg-neutral-50 p-3 rounded-lg">
-                        <div class="text-[0.7rem] text-neutral-400 uppercase tracking-wide font-semibold"><i class="fas fa-sun"></i> Light</div>
-                        <div class="text-sm font-medium">${esc(plant.light)}</div>
-                    </div>
-                    <div class="bg-neutral-50 p-3 rounded-lg">
-                        <div class="text-[0.7rem] text-neutral-400 uppercase tracking-wide font-semibold"><i class="fas fa-water"></i> Humidity</div>
-                        <div class="text-sm font-medium">${esc(plant.humidity)}</div>
-                    </div>
-                    <div class="bg-neutral-50 p-3 rounded-lg">
-                        <div class="text-[0.7rem] text-neutral-400 uppercase tracking-wide font-semibold"><i class="fas fa-thermometer-half"></i> Temperature</div>
-                        <div class="text-sm font-medium">${formatTemp(esc(plant.temperature))}</div>
-                    </div>
-                    <div class="bg-neutral-50 p-3 rounded-lg">
-                        <div class="text-[0.7rem] text-neutral-400 uppercase tracking-wide font-semibold"><i class="fas fa-mountain"></i> Soil</div>
-                        <div class="text-sm font-medium">${esc(plant.soil)}</div>
-                    </div>
+                    ${careCells}
                 </div>
             </div>
 
-            <div class="mb-5">
-                <div class="text-[0.7rem] font-semibold uppercase tracking-widest text-neutral-400 mb-2.5">Common Issues</div>
-                ${issuesHTML}
-            </div>
-
-            <div class="mb-5">
-                <div class="text-[0.7rem] font-semibold uppercase tracking-widest text-neutral-400 mb-2.5">Useful Tips</div>
-                ${tipsHTML}
-            </div>
+            ${issuesBlock}
+            ${tipsBlock}
 
             <div class="flex gap-3 mt-6 pt-4 border-t border-neutral-100">
                 ${actionsHTML}
@@ -378,21 +390,21 @@ import { getWateringStatus, formatTemp } from './logic.js';
         document.getElementById('plantId').value = plant.id;
         document.getElementById('plantName').value = plant.name;
         document.getElementById('plantNickname').value = plant.nickname || '';
-        document.getElementById('plantType').value = plant.type;
-        document.getElementById('plantDescription').value = plant.description;
-        document.getElementById('wateringText').value = plant.watering_frequency_text;
+        document.getElementById('plantType').value = plant.type || '';
+        document.getElementById('plantDescription').value = plant.description || '';
         document.getElementById('wateringMin').value = plant.watering_min_days;
         document.getElementById('wateringMax').value = plant.watering_max_days;
-        document.getElementById('plantLight').value = plant.light;
-        document.getElementById('plantHumidity').value = plant.humidity;
-        document.getElementById('plantTemperature').value = plant.temperature;
-        document.getElementById('plantSoil').value = plant.soil;
+        document.getElementById('plantLight').value = plant.light || '';
+        document.getElementById('plantHumidity').value = plant.humidity || '';
+        document.getElementById('plantTemperature').value = plant.temperature || '';
+        document.getElementById('plantSoil').value = plant.soil || '';
 
         currentIssues = [...(plant.common_issues || [])];
         currentTips = [...(plant.useful_tips || [])];
         renderListItems(issuesItems, currentIssues);
         renderListItems(tipsItems, currentTips);
 
+        selectedImageFile = null;
         document.getElementById('removeImage').checked = false;
         if (plant.image_url) {
             imagePreview.innerHTML = `<img src="../../${esc(plant.image_url)}" alt="Current">`;
@@ -421,7 +433,6 @@ import { getWateringStatus, formatTemp } from './logic.js';
             nickname: document.getElementById('plantNickname').value.trim(),
             type: document.getElementById('plantType').value.trim(),
             description: document.getElementById('plantDescription').value.trim(),
-            watering_frequency_text: document.getElementById('wateringText').value.trim(),
             watering_min_days: document.getElementById('wateringMin').value,
             watering_max_days: document.getElementById('wateringMax').value,
             light: document.getElementById('plantLight').value.trim(),
@@ -430,10 +441,9 @@ import { getWateringStatus, formatTemp } from './logic.js';
             soil: document.getElementById('plantSoil').value.trim(),
         };
 
-        // Client-side validation
+        // Only a name and the watering window are required now.
         const errors = [];
-        const required = ['name', 'type', 'description', 'watering_frequency_text',
-            'watering_min_days', 'watering_max_days', 'light', 'humidity', 'temperature', 'soil'];
+        const required = ['name', 'watering_min_days', 'watering_max_days'];
 
         required.forEach(field => {
             if (!fields[field]) {
@@ -444,7 +454,7 @@ import { getWateringStatus, formatTemp } from './logic.js';
         });
 
         if (errors.length > 0) {
-            showFormError('Please fill in all required fields');
+            showFormError('Please add a name and how often it needs water');
             return;
         }
 
@@ -462,12 +472,13 @@ import { getWateringStatus, formatTemp } from './logic.js';
         }
 
         Object.entries(fields).forEach(([key, val]) => formData.append(key, val));
+        // Frequency text is derived from the window, not typed by the user.
+        formData.append('watering_frequency_text', wateringFrequencyText(minDays, maxDays));
         formData.append('common_issues', JSON.stringify(currentIssues));
         formData.append('useful_tips', JSON.stringify(currentTips));
 
-        const imageFile = document.getElementById('plantImage').files[0];
-        if (imageFile) {
-            formData.append('image', imageFile);
+        if (selectedImageFile) {
+            formData.append('image', selectedImageFile);
         }
 
         if (id && document.getElementById('removeImage').checked) {
@@ -498,17 +509,11 @@ import { getWateringStatus, formatTemp } from './logic.js';
     }
 
     function getFieldElement(field) {
+        // Only the required fields need to be flagged invalid on submit.
         const map = {
             name: 'plantName',
-            type: 'plantType',
-            description: 'plantDescription',
-            watering_frequency_text: 'wateringText',
             watering_min_days: 'wateringMin',
             watering_max_days: 'wateringMax',
-            light: 'plantLight',
-            humidity: 'plantHumidity',
-            temperature: 'plantTemperature',
-            soil: 'plantSoil',
         };
         return document.getElementById(map[field]);
     }
@@ -537,6 +542,8 @@ import { getWateringStatus, formatTemp } from './logic.js';
         `;
         imagePreview.classList.remove('has-image');
         document.getElementById('plantImage').value = '';
+        document.getElementById('plantCamera').value = '';
+        selectedImageFile = null;
     }
 
     // --- List items (issues/tips) ---
@@ -699,29 +706,39 @@ import { getWateringStatus, formatTemp } from './logic.js';
         }
     });
 
-    // Image preview
-    document.getElementById('plantImage').addEventListener('change', e => {
-        const file = e.target.files[0];
+    // Image selection: from the file picker, the camera, or a drag-drop, all
+    // routed through one handler that validates and previews the chosen file.
+    function handleImageFile(file, inputEl) {
         if (!file) return;
 
         const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
         if (!allowed.includes(file.type)) {
             showToast('Invalid image type. Use JPEG, PNG, WebP, or GIF', true);
-            e.target.value = '';
+            if (inputEl) inputEl.value = '';
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
             showToast('Image must be under 5MB', true);
-            e.target.value = '';
+            if (inputEl) inputEl.value = '';
             return;
         }
 
+        selectedImageFile = file;
+        document.getElementById('removeImage').checked = false;
         const reader = new FileReader();
         reader.onload = ev => {
             imagePreview.innerHTML = `<img src="${ev.target.result}" alt="Preview">`;
             imagePreview.classList.add('has-image');
         };
         reader.readAsDataURL(file);
+    }
+
+    document.getElementById('plantImage').addEventListener('change', e => handleImageFile(e.target.files[0], e.target));
+    document.getElementById('plantCamera').addEventListener('change', e => handleImageFile(e.target.files[0], e.target));
+    document.getElementById('cameraBtn').addEventListener('click', () => document.getElementById('plantCamera').click());
+    document.getElementById('removeImage').addEventListener('change', e => {
+        // Ticking "remove" discards any freshly picked photo too.
+        if (e.target.checked) resetImagePreview();
     });
 
     // Escape key closes top modal

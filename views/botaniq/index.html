@@ -134,44 +134,45 @@
                             <input type="text" id="plantNickname" maxlength="255" placeholder="Optional" class="form-input">
                         </div>
                         <div class="flex flex-col">
-                            <label for="plantType" class="text-xs font-medium text-neutral-500 mb-1">Type <span class="text-red-600">*</span></label>
-                            <input type="text" id="plantType" required placeholder="e.g. Indoor bonsai tree" class="form-input">
+                            <label for="plantType" class="text-xs font-medium text-neutral-500 mb-1">Type</label>
+                            <input type="text" id="plantType" placeholder="e.g. Indoor bonsai tree" class="form-input">
                         </div>
                         <div class="flex flex-col col-span-full">
-                            <label for="plantDescription" class="text-xs font-medium text-neutral-500 mb-1">Description <span class="text-red-600">*</span></label>
-                            <textarea id="plantDescription" rows="3" required class="form-input"></textarea>
+                            <label for="plantDescription" class="text-xs font-medium text-neutral-500 mb-1">Description</label>
+                            <textarea id="plantDescription" rows="3" class="form-input"></textarea>
                         </div>
 
-                        <div class="col-span-full text-xs font-semibold uppercase tracking-widest text-neutral-400 pt-2 border-t border-neutral-100">Watering</div>
-                        <div class="flex flex-col">
-                            <label for="wateringText" class="text-xs font-medium text-neutral-500 mb-1">Frequency Description <span class="text-red-600">*</span></label>
-                            <input type="text" id="wateringText" required placeholder="e.g. Every 5-7 days" class="form-input">
+                        <div class="col-span-full pt-2 border-t border-neutral-100">
+                            <div class="text-xs font-semibold uppercase tracking-widest text-neutral-400">Watering</div>
+                            <p class="text-xs text-neutral-500 mt-1 mb-0 leading-relaxed">How many days between waterings? This drives the schedule and the "next watering" reminder. A range is fine; use the same number for both if it's exact.</p>
                         </div>
                         <div class="flex flex-col">
-                            <label for="wateringMin" class="text-xs font-medium text-neutral-500 mb-1">Min Days <span class="text-red-600">*</span></label>
-                            <input type="number" id="wateringMin" min="1" max="365" required class="form-input">
+                            <label for="wateringMin" class="text-xs font-medium text-neutral-500 mb-1">Soonest, in days <span class="text-red-600">*</span></label>
+                            <input type="number" id="wateringMin" min="1" max="365" required placeholder="e.g. 5" class="form-input">
+                            <span class="text-[0.7rem] text-neutral-400 mt-1">Don't water before this many days</span>
                         </div>
                         <div class="flex flex-col">
-                            <label for="wateringMax" class="text-xs font-medium text-neutral-500 mb-1">Max Days <span class="text-red-600">*</span></label>
-                            <input type="number" id="wateringMax" min="1" max="365" required class="form-input">
+                            <label for="wateringMax" class="text-xs font-medium text-neutral-500 mb-1">Latest, in days <span class="text-red-600">*</span></label>
+                            <input type="number" id="wateringMax" min="1" max="365" required placeholder="e.g. 7" class="form-input">
+                            <span class="text-[0.7rem] text-neutral-400 mt-1">Water by this many days at the latest</span>
                         </div>
 
-                        <div class="col-span-full text-xs font-semibold uppercase tracking-widest text-neutral-400 pt-2 border-t border-neutral-100">Environment</div>
+                        <div class="col-span-full text-xs font-semibold uppercase tracking-widest text-neutral-400 pt-2 border-t border-neutral-100">Environment <span class="normal-case tracking-normal font-normal text-neutral-400">(all optional)</span></div>
                         <div class="flex flex-col">
-                            <label for="plantLight" class="text-xs font-medium text-neutral-500 mb-1">Light <span class="text-red-600">*</span></label>
-                            <input type="text" id="plantLight" required placeholder="e.g. Bright indirect light" class="form-input">
+                            <label for="plantLight" class="text-xs font-medium text-neutral-500 mb-1">Light</label>
+                            <input type="text" id="plantLight" placeholder="e.g. Bright indirect light" class="form-input">
                         </div>
                         <div class="flex flex-col">
-                            <label for="plantHumidity" class="text-xs font-medium text-neutral-500 mb-1">Humidity <span class="text-red-600">*</span></label>
-                            <input type="text" id="plantHumidity" required placeholder="e.g. Moderate to high" class="form-input">
+                            <label for="plantHumidity" class="text-xs font-medium text-neutral-500 mb-1">Humidity</label>
+                            <input type="text" id="plantHumidity" placeholder="e.g. Moderate to high" class="form-input">
                         </div>
                         <div class="flex flex-col">
-                            <label for="plantTemperature" class="text-xs font-medium text-neutral-500 mb-1">Temperature (°C) <span class="text-red-600">*</span></label>
-                            <input type="text" id="plantTemperature" required placeholder="e.g. 18-25" class="form-input">
+                            <label for="plantTemperature" class="text-xs font-medium text-neutral-500 mb-1">Temperature (°C)</label>
+                            <input type="text" id="plantTemperature" placeholder="e.g. 18-25" class="form-input">
                         </div>
                         <div class="flex flex-col">
-                            <label for="plantSoil" class="text-xs font-medium text-neutral-500 mb-1">Soil <span class="text-red-600">*</span></label>
-                            <input type="text" id="plantSoil" required placeholder="e.g. Well-draining mix" class="form-input">
+                            <label for="plantSoil" class="text-xs font-medium text-neutral-500 mb-1">Soil</label>
+                            <input type="text" id="plantSoil" placeholder="e.g. Well-draining mix" class="form-input">
                         </div>
 
                         <div class="col-span-full text-xs font-semibold uppercase tracking-widest text-neutral-400 pt-2 border-t border-neutral-100">Details</div>
@@ -206,6 +207,11 @@
                                     <span>Click or drag to upload</span>
                                 </div>
                             </div>
+                            <!-- Camera capture: on a phone this opens the camera directly; on desktop it falls back to a file picker. -->
+                            <input type="file" id="plantCamera" accept="image/*" capture="environment" class="hidden">
+                            <button type="button" id="cameraBtn" class="mt-2 self-start inline-flex items-center gap-2 bg-neutral-100 text-neutral-700 px-3.5 py-2 rounded-lg text-sm font-medium border-none cursor-pointer transition-colors hover:bg-neutral-200">
+                                <i class="fas fa-camera"></i> Take a photo
+                            </button>
                             <label class="remove-image-label" id="removeImageLabel" style="display: none;">
                                 <input type="checkbox" id="removeImage"> Remove current image
                             </label>
