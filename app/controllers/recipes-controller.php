@@ -114,7 +114,7 @@ function assertOwnRecipe(int $id, array $user): void
 function recipeSelectSql(): string
 {
     return "
-    SELECT r.id, r.user_id, r.title, r.description, r.created_at, r.updated_at,
+    SELECT r.id, r.user_id, r.title, r.description, r.servings, r.created_at, r.updated_at,
            COALESCE(NULLIF(u.display_name, ''), NULLIF(u.username, ''), 'Anonymous') AS author,
            u.avatar_url AS author_avatar,
            i.uuid AS image_uuid, i.mime_type AS image_mime,
@@ -131,6 +131,7 @@ function formatRecipe(array $row, ?array $viewer): array
         'id'           => (int) $row['id'],
         'title'        => $row['title'],
         'description'  => $row['description'],
+        'servings'     => $row['servings'] !== null ? (int) $row['servings'] : null,
         'author'       => $row['author'],
         'author_avatar' => $row['author_avatar'],
         'image_url'    => $row['image_uuid'] !== null
@@ -242,6 +243,17 @@ function validateDocument(array $data): array
     $description = sanitize((string) ($data['description'] ?? ''));
     if (mb_strlen($description) > 1000) $errors[] = 'Description must be 1000 characters or less';
 
+    // Optional base serving count. Mirrors validateDraft() in logic.js.
+    $servingsRaw = trim((string) ($data['servings'] ?? ''));
+    $servings = null;
+    if ($servingsRaw !== '') {
+        if (ctype_digit($servingsRaw) && (int) $servingsRaw >= 1 && (int) $servingsRaw <= 100) {
+            $servings = (int) $servingsRaw;
+        } else {
+            $errors[] = 'Servings must be a whole number between 1 and 100';
+        }
+    }
+
     $rawIngredients = $data['ingredients'] ?? null;
     $rawSteps       = $data['steps'] ?? null;
     if (!is_array($rawIngredients) || count($rawIngredients) < 1) $errors[] = 'At least one ingredient is required';
@@ -286,6 +298,7 @@ function validateDocument(array $data): array
     return [
         'title'       => $title,
         'description' => $description === '' ? null : $description,
+        'servings'    => $servings,
         'ingredients' => $ingredients,
         'steps'       => $steps,
     ];
@@ -309,12 +322,12 @@ function saveRecipe(?int $id, array $user): void
     $db->beginTransaction();
     try {
         if ($id === null) {
-            $stmt = $db->prepare('INSERT INTO recipes (user_id, title, description) VALUES (?, ?, ?)');
-            $stmt->execute([(int) $user['id'], $doc['title'], $doc['description']]);
+            $stmt = $db->prepare('INSERT INTO recipes (user_id, title, description, servings) VALUES (?, ?, ?, ?)');
+            $stmt->execute([(int) $user['id'], $doc['title'], $doc['description'], $doc['servings']]);
             $id = (int) $db->lastInsertId();
         } else {
-            $stmt = $db->prepare('UPDATE recipes SET title = ?, description = ? WHERE id = ? AND user_id = ?');
-            $stmt->execute([$doc['title'], $doc['description'], $id, (int) $user['id']]);
+            $stmt = $db->prepare('UPDATE recipes SET title = ?, description = ?, servings = ? WHERE id = ? AND user_id = ?');
+            $stmt->execute([$doc['title'], $doc['description'], $doc['servings'], $id, (int) $user['id']]);
             $db->prepare('DELETE FROM recipe_ingredients WHERE recipe_id = ?')->execute([$id]);
             $db->prepare('DELETE FROM recipe_steps WHERE recipe_id = ?')->execute([$id]);
         }

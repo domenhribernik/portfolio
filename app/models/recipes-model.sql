@@ -12,12 +12,21 @@ CREATE TABLE IF NOT EXISTS recipes (
     image_id INT DEFAULT NULL,
     title VARCHAR(150) NOT NULL,
     description VARCHAR(1000) DEFAULT NULL,
+    -- Base serving count ("Serves N"), set by the author. Optional: older
+    -- recipes have none, and the cook only gets a scaling control when it is
+    -- set. Bounds (1..100) are enforced in the controller.
+    servings INT DEFAULT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_recipes_user (user_id),
     CONSTRAINT fk_recipes_user  FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
     CONSTRAINT fk_recipes_image FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Existing installs (CREATE TABLE IF NOT EXISTS above only helps fresh ones):
+-- add the servings column once. MySQL has no ADD COLUMN IF NOT EXISTS, so run
+-- this by hand and ignore the "duplicate column" error if already applied.
+-- ALTER TABLE recipes ADD COLUMN servings INT DEFAULT NULL AFTER description;
 
 CREATE TABLE IF NOT EXISTS recipe_ingredients (
     id INT AUTO_INCREMENT PRIMARY KEY,

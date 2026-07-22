@@ -3,6 +3,7 @@ import {
     parseTokens, usedIngredientKeys, nextIngKey, replaceTokenWithText,
     validateDraft, buildPayload, fmtTimer, timerState,
     createCookSession, advance, back, isLastStep, starFill, avgLabel,
+    servingsFactor, scaleIngredients,
 } from './logic.js';
 
 const API = '../../app/controllers/recipes-controller.php';
@@ -13,6 +14,7 @@ let isDemo = true;
 let recipes = [];
 let listLoaded = false;
 let currentRecipe = null;
+let servingTarget = null;  // people the cook is scaling the current recipe for
 let draft = null;          // editor working copy
 let lastStepFocus = null;  // {idx, pos} caret in the last focused step textarea
 let cook = null;           // {phase, checked, session, endAt, rang}
@@ -44,6 +46,7 @@ const cookDone       = $('cookDone');
 const editorHeading  = $('editorHeading');
 const titleInput     = $('titleInput');
 const descInput      = $('descInput');
+const servingsInput  = $('servingsInput');
 const coverInput     = $('coverInput');
 const coverPreview   = $('coverPreview');
 const ingRows        = $('ingRows');
@@ -161,6 +164,7 @@ async function openRecipe(id, push = true) {
         const data = await api(`${API}?resource=recipe&id=${id}`);
         adoptEnvelope(data);
         currentRecipe = data.recipe;
+        servingTarget = currentRecipe.servings || null;
         renderDetail();
     } catch (e) {
         detailBody.innerHTML = `
@@ -324,8 +328,44 @@ $('listRetryBtn').addEventListener('click', loadList);
 $('backToListBtn').addEventListener('click', () => goList());
 
 // --- Detail screen ---
+
+// The current recipe's ingredients scaled to the chosen serving target. When
+// the recipe has no base servings (or the target matches it), the factor is 1
+// and quantities are unchanged. Steps and the checklist read from this too, so
+// every quantity on the page moves together.
+function activeIngredients() {
+    return scaleIngredients(currentRecipe.ingredients, servingsFactor(currentRecipe.servings, servingTarget));
+}
+
+function renderServingsControl() {
+    const r = currentRecipe;
+    if (!r.servings) return '';
+    const scaled = servingTarget !== r.servings;
+    return `
+        <div class="flex items-center gap-2 shrink-0">
+            <span class="text-[11px] uppercase tracking-[0.14em] text-cocoa font-bold">Serves</span>
+            <div class="inline-flex items-center border border-linen rounded-lg overflow-hidden bg-beige/40">
+                <button id="servingsDown" type="button" aria-label="Fewer servings" class="px-2.5 py-1 text-cocoa hover:text-emberdk hover:bg-ember/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent" ${servingTarget <= 1 ? 'disabled' : ''}><i class="fas fa-minus text-xs pointer-events-none"></i></button>
+                <span id="servingsValue" class="px-2.5 font-mono text-sm font-semibold min-w-[2ch] text-center select-none">${servingTarget}</span>
+                <button id="servingsUp" type="button" aria-label="More servings" class="px-2.5 py-1 text-cocoa hover:text-emberdk hover:bg-ember/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent" ${servingTarget >= 100 ? 'disabled' : ''}><i class="fas fa-plus text-xs pointer-events-none"></i></button>
+            </div>
+            ${scaled ? `<button id="servingsReset" type="button" class="text-xs text-emberdk font-semibold hover:underline">from ${r.servings}, reset</button>` : ''}
+        </div>`;
+}
+
+function wireServingsControl() {
+    const setTarget = (n) => {
+        servingTarget = Math.min(100, Math.max(1, n));
+        renderDetail();
+    };
+    $('servingsDown')?.addEventListener('click', () => setTarget(servingTarget - 1));
+    $('servingsUp')?.addEventListener('click', () => setTarget(servingTarget + 1));
+    $('servingsReset')?.addEventListener('click', () => setTarget(currentRecipe.servings));
+}
+
 function renderDetail() {
     const r = currentRecipe;
+    const ingredients = activeIngredients();
     const hasTimers = r.steps.some(s => s.duration_seconds);
     detailBody.innerHTML = `
         <div class="rounded-2xl overflow-hidden border border-linen mb-6">${coverHTML(r, 'h-52 sm:h-64')}</div>
@@ -360,9 +400,12 @@ function renderDetail() {
 
         <div class="grid grid-cols-1 md:grid-cols-[2fr,3fr] gap-6 items-start mt-8">
             <div class="bg-card border border-linen rounded-2xl p-5 sm:p-6">
-                <h3 class="font-display font-semibold text-xl mt-0 mb-3">Ingredients</h3>
+                <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
+                    <h3 class="font-display font-semibold text-xl m-0">Ingredients</h3>
+                    ${renderServingsControl()}
+                </div>
                 <ul class="list-none m-0 p-0 divide-y divide-linen/70">
-                    ${r.ingredients.map(i => `
+                    ${ingredients.map(i => `
                         <li class="flex items-baseline justify-between gap-3 py-2">
                             <span>${esc(i.name)}</span>
                             <span class="font-mono text-sm text-cocoa whitespace-nowrap">${esc(i.quantity)}</span>
@@ -376,7 +419,7 @@ function renderDetail() {
                         <li class="flex gap-3.5">
                             <span class="font-display italic font-semibold text-ember text-xl leading-none pt-0.5 w-7 shrink-0 text-right select-none">${i + 1}</span>
                             <div class="min-w-0">
-                                <p class="m-0 leading-relaxed">${stepBodyHTML(s.body, r.ingredients)}</p>
+                                <p class="m-0 leading-relaxed">${stepBodyHTML(s.body, ingredients)}</p>
                                 ${s.duration_seconds ? `<span class="inline-flex items-center gap-1.5 mt-1.5 font-mono text-xs text-emberdk bg-ember/10 border border-ember/25 rounded-full px-2.5 py-0.5">
                                     <i class="fas fa-stopwatch"></i>${esc(fmtDurationHuman(s.duration_seconds))}</span>` : ''}
                             </div>
@@ -389,6 +432,7 @@ function renderDetail() {
     `;
 
     renderRatingWidget();
+    wireServingsControl();
     $('startCookingBtn').addEventListener('click', enterCookMode);
     if (r.can_edit) {
         $('editRecipeBtn').addEventListener('click', () => openEditor(r));
@@ -463,6 +507,7 @@ function openEditor(recipe = null) {
             id: recipe.id,
             title: recipe.title,
             description: recipe.description || '',
+            servings: recipe.servings ? String(recipe.servings) : '',
             ingredients: recipe.ingredients.map(i => ({ ...i })),
             steps: recipe.steps.map(s => ({
                 body: s.body,
@@ -474,7 +519,7 @@ function openEditor(recipe = null) {
         editorHeading.textContent = 'Edit recipe';
     } else {
         draft = {
-            id: null, title: '', description: '',
+            id: null, title: '', description: '', servings: '',
             ingredients: [], steps: [{ body: '', minutes: '' }],
             coverFile: null, coverUrl: null,
         };
@@ -483,6 +528,7 @@ function openEditor(recipe = null) {
     }
     titleInput.value = draft.title;
     descInput.value = draft.description;
+    servingsInput.value = draft.servings;
     coverInput.value = '';
     renderCoverPreview();
     renderIngRows();
@@ -689,6 +735,7 @@ function insertToken(ing) {
 
 titleInput.addEventListener('input', () => { draft.title = titleInput.value; });
 descInput.addEventListener('input', () => { draft.description = descInput.value; });
+servingsInput.addEventListener('input', () => { draft.servings = servingsInput.value; });
 coverInput.addEventListener('change', () => {
     if (coverInput.files && coverInput.files[0]) {
         draft.coverFile = coverInput.files[0];
@@ -738,6 +785,7 @@ editorSaveBtn.addEventListener('click', async () => {
         draft = null;
         listLoaded = false;
         currentRecipe = saved;
+        servingTarget = saved.servings || null;
         toast('Recipe saved');
         history.pushState({}, '', `?id=${saved.id}`);
         showScreen('detail');
@@ -832,13 +880,14 @@ function renderCook() {
 
 function renderCookChecklist() {
     const r = currentRecipe;
+    const ingredients = activeIngredients();
     cookChecklist.innerHTML = `
         <div class="bg-card border border-linen rounded-2xl p-5 sm:p-7 max-w-xl mx-auto">
             <p class="text-[11px] uppercase tracking-[0.18em] text-cocoa font-bold m-0">Mise en place</p>
             <h3 class="font-display font-semibold text-2xl mt-1 mb-1">Get everything on the counter.</h3>
             <p class="text-sm text-cocoa mt-0 mb-5">Tick things off as you gather them, or skip straight ahead.</p>
             <div class="flex flex-col gap-1.5">
-                ${r.ingredients.map((ing, i) => {
+                ${ingredients.map((ing, i) => {
                     const checked = cook.checked.has(i);
                     return `
                     <button type="button" data-check="${i}" class="flex items-center gap-3 text-left rounded-xl border px-3.5 py-2.5 transition-colors
@@ -851,7 +900,7 @@ function renderCookChecklist() {
                 }).join('')}
             </div>
             <div class="flex items-center justify-between gap-3 mt-6 flex-wrap">
-                <span id="checklistProgress" class="text-sm text-cocoa font-semibold">${cook.checked.size} / ${r.ingredients.length} ready</span>
+                <span id="checklistProgress" class="text-sm text-cocoa font-semibold">${cook.checked.size} / ${ingredients.length} ready</span>
                 <button id="cookStartBtn" class="bg-ember hover:bg-emberdk text-card font-semibold px-5 py-2.5 rounded-xl shadow-lift transition-colors">
                     Got everything<i class="fas fa-arrow-right ml-2"></i>
                 </button>
@@ -906,6 +955,7 @@ function tick() {
 
 function renderCookSteps() {
     const r = currentRecipe;
+    const ingredients = activeIngredients();
     const idx = cook.session.index;
     cookSteps.innerHTML = `
         <div class="max-w-2xl mx-auto flex flex-col gap-3">
@@ -916,7 +966,7 @@ function renderCookSteps() {
                     return `
                     <div class="step-current bg-card border-2 border-ember rounded-2xl p-5 sm:p-6">
                         <p class="text-[11px] uppercase tracking-[0.18em] text-ember font-bold m-0">Step ${i + 1} of ${r.steps.length}</p>
-                        <p class="text-lg sm:text-xl leading-relaxed mt-2 mb-0">${stepBodyHTML(s.body, r.ingredients)}</p>
+                        <p class="text-lg sm:text-xl leading-relaxed mt-2 mb-0">${stepBodyHTML(s.body, ingredients)}</p>
                         ${s.duration_seconds ? `
                         <div class="cook-timer ${t.done ? 'timer-done' : ''} mt-4 bg-beige/60 border border-ember/30 rounded-xl px-5 py-3 inline-flex items-baseline gap-3">
                             <span class="cook-timer-digits font-mono font-semibold text-4xl sm:text-5xl text-emberdk tabular-nums">${fmtTimer(t.remaining)}</span>
@@ -936,7 +986,7 @@ function renderCookSteps() {
                     <span class="w-6 shrink-0 text-right font-display italic font-semibold ${state === 'past' ? 'text-cocoa' : 'text-ember/70'} select-none">
                         ${state === 'past' ? '<i class="fas fa-check text-xs not-italic"></i>' : i + 1}</span>
                     <div class="min-w-0 text-sm leading-relaxed ${state === 'past' ? 'line-through decoration-cocoa/40' : ''}">
-                        ${stepBodyHTML(s.body, r.ingredients)}
+                        ${stepBodyHTML(s.body, ingredients)}
                         ${s.duration_seconds ? `<span class="font-mono text-xs text-cocoa ml-1.5 whitespace-nowrap"><i class="fas fa-stopwatch mr-1"></i>${esc(fmtDurationHuman(s.duration_seconds))}</span>` : ''}
                     </div>
                 </div>`;

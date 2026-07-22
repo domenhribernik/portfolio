@@ -70,6 +70,14 @@ export function validateDraft(draft) {
         errors.push('Description must be 1000 characters or less');
     }
 
+    const servingsRaw = String(draft.servings ?? '').trim();
+    if (servingsRaw !== '') {
+        const n = Number(servingsRaw);
+        if (!Number.isInteger(n) || n < 1 || n > 100) {
+            errors.push('Servings must be a whole number between 1 and 100');
+        }
+    }
+
     const ingredients = (draft.ingredients ?? []).filter(i => String(i.name ?? '').trim() !== '');
     if (ingredients.length === 0) errors.push('Add at least one ingredient');
     if (ingredients.length > 100) errors.push('Too many ingredients (max 100)');
@@ -93,12 +101,90 @@ export function validateDraft(draft) {
     return errors;
 }
 
+// --- Servings scaling ---
+//
+// A recipe carries an optional base serving count ("Serves N"). When the cook
+// asks to make it for a different number of people, every ingredient quantity
+// is scaled by target/base. Quantities are free text ("500 g", "1/2 tsp",
+// "a pinch"): scaling touches the numeric parts and leaves the rest verbatim.
+
+/** Scale factor for cooking `target` servings of a recipe that serves `base`.
+ *  Returns 1 (no scaling) unless both are positive numbers. */
+export function servingsFactor(base, target) {
+    const b = Number(base);
+    const t = Number(target);
+    if (!Number.isFinite(b) || !Number.isFinite(t) || b <= 0 || t <= 0) return 1;
+    return t / b;
+}
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+/** Render a scaled amount the way a cook would write it: whole numbers stay
+ *  whole, near halves/thirds/quarters/eighths become fractions ("1 1/2"),
+ *  anything else falls back to a short decimal. */
+export function formatQuantity(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n < 0) return '';
+    const whole = Math.floor(n + 1e-9);
+    const frac = n - whole;
+    if (frac <= 1e-6) return String(whole);
+    for (const den of [2, 3, 4, 8]) {
+        const num = Math.round(frac * den);
+        if (num > 0 && num < den && Math.abs(frac - num / den) <= 0.02) {
+            const g = gcd(num, den);
+            const fracStr = `${num / g}/${den / g}`;
+            return whole > 0 ? `${whole} ${fracStr}` : fracStr;
+        }
+    }
+    return String(Math.round(n * 100) / 100);
+}
+
+// Numeric runs inside a quantity string, longest match first so a mixed
+// number ("1 1/2") wins over its leading integer, and a fraction over a plain
+// integer. Everything else in the string (units, ranges, words) is verbatim.
+const AMOUNT_RE = /\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?|\.\d+/g;
+
+function parseAmount(token) {
+    const mixed = /^(\d+)\s+(\d+)\/(\d+)$/.exec(token);
+    if (mixed) return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+    const frac = /^(\d+)\/(\d+)$/.exec(token);
+    if (frac) return Number(frac[1]) / Number(frac[2]);
+    return Number(token);
+}
+
+/** Scale every numeric run in a free-text quantity by `factor`, leaving units
+ *  and non-numeric quantities ("a pinch") untouched. A factor of 1 (or an
+ *  invalid/non-positive one) returns the quantity unchanged. */
+export function scaleQuantity(quantity, factor) {
+    const s = String(quantity ?? '');
+    const f = Number(factor);
+    if (!Number.isFinite(f) || f <= 0 || f === 1) return s;
+    return s.replace(AMOUNT_RE, token => formatQuantity(parseAmount(token) * f));
+}
+
+/** A copy of the ingredient list with every quantity scaled by `factor`.
+ *  Keys and names are untouched so step tokens still resolve. */
+export function scaleIngredients(ingredients, factor) {
+    return (ingredients ?? []).map(ing => ({
+        ...ing,
+        quantity: scaleQuantity(ing.quantity, factor),
+    }));
+}
+
 /** A minutes input's value as a number, or null when blank/absent. */
 function parseMinutes(value) {
     const s = String(value ?? '').trim();
     if (s === '') return null;
     const n = Number(s);
     return Number.isFinite(n) ? n : null;
+}
+
+/** A servings input's value as a positive integer, or null when blank/invalid. */
+export function parseServings(value) {
+    const s = String(value ?? '').trim();
+    if (s === '') return null;
+    const n = Number(s);
+    return Number.isInteger(n) && n > 0 ? n : null;
 }
 
 /**
@@ -127,6 +213,7 @@ export function buildPayload(draft) {
     return {
         title: String(draft.title ?? '').trim(),
         description: String(draft.description ?? '').trim(),
+        servings: parseServings(draft.servings),
         ingredients,
         steps,
     };

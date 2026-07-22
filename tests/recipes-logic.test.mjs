@@ -6,7 +6,91 @@ import {
     parseTokens, usedIngredientKeys, nextIngKey, replaceTokenWithText,
     stripDanglingTokens, validateDraft, buildPayload, fmtTimer, timerState,
     createCookSession, advance, back, isLastStep, starFill, avgLabel,
+    servingsFactor, formatQuantity, scaleQuantity, scaleIngredients,
 } from '../views/recipes/logic.js';
+
+// --- Servings scaling ---
+
+test('formatQuantity keeps whole numbers whole', () => {
+    assert.equal(formatQuantity(1), '1');
+    assert.equal(formatQuantity(750), '750');
+    assert.equal(formatQuantity(1000), '1000');
+});
+
+test('formatQuantity renders common cooking fractions', () => {
+    assert.equal(formatQuantity(0.5), '1/2');
+    assert.equal(formatQuantity(0.25), '1/4');
+    assert.equal(formatQuantity(0.75), '3/4');
+    assert.equal(formatQuantity(1 / 3), '1/3');
+    assert.equal(formatQuantity(2 / 3), '2/3');
+    assert.equal(formatQuantity(0.125), '1/8');
+    assert.equal(formatQuantity(0.375), '3/8');
+});
+
+test('formatQuantity renders mixed numbers for whole + fraction', () => {
+    assert.equal(formatQuantity(1.5), '1 1/2');
+    assert.equal(formatQuantity(2.25), '2 1/4');
+    assert.equal(formatQuantity(3 + 2 / 3), '3 2/3');
+});
+
+test('formatQuantity falls back to a trimmed decimal for odd values', () => {
+    assert.equal(formatQuantity(0.1), '0.1');
+    assert.equal(formatQuantity(1.7), '1.7');
+});
+
+test('scaleQuantity scales the numeric part and keeps the unit text', () => {
+    assert.equal(scaleQuantity('500 g', 2), '1000 g');
+    assert.equal(scaleQuantity('250 ml', 0.5), '125 ml');
+    assert.equal(scaleQuantity('2 cups', 0.5), '1 cups');
+    assert.equal(scaleQuantity('500g', 2), '1000g'); // no-space unit preserved
+});
+
+test('scaleQuantity scales fractions and mixed numbers into cook-friendly forms', () => {
+    assert.equal(scaleQuantity('1/2 tsp', 3), '1 1/2 tsp');
+    assert.equal(scaleQuantity('1 1/2 cups', 2), '3 cups');
+    assert.equal(scaleQuantity('3/4 cup', 2), '1 1/2 cup');
+});
+
+test('scaleQuantity scales every number, so ranges stay ranges', () => {
+    assert.equal(scaleQuantity('2-3 tbsp', 2), '4-6 tbsp');
+});
+
+test('scaleQuantity leaves non-numeric and identity-factor quantities untouched', () => {
+    assert.equal(scaleQuantity('a pinch', 2), 'a pinch');
+    assert.equal(scaleQuantity('to taste', 3), 'to taste');
+    assert.equal(scaleQuantity('500 g', 1), '500 g');
+    assert.equal(scaleQuantity('500 g', 0), '500 g');
+    assert.equal(scaleQuantity('', 2), '');
+    assert.equal(scaleQuantity(null, 2), '');
+});
+
+test('scaleIngredients scales quantities while preserving key and name', () => {
+    const ings = [
+        { key: 1, name: 'Flour', quantity: '500 g' },
+        { key: 2, name: 'Salt', quantity: 'a pinch' },
+    ];
+    const scaled = scaleIngredients(ings, servingsFactor(4, 8));
+    assert.deepEqual(scaled, [
+        { key: 1, name: 'Flour', quantity: '1000 g' },
+        { key: 2, name: 'Salt', quantity: 'a pinch' },
+    ]);
+    // Original list is not mutated.
+    assert.equal(ings[0].quantity, '500 g');
+    assert.deepEqual(scaleIngredients(undefined, 2), []);
+});
+
+test('servingsFactor is target over base, and 1 when either is missing or non-positive', () => {
+    assert.equal(servingsFactor(4, 8), 2);
+    assert.equal(servingsFactor(4, 2), 0.5);
+    assert.equal(servingsFactor(4, 4), 1);
+    // No base to scale from, or nonsense inputs: never scale.
+    assert.equal(servingsFactor(null, 8), 1);
+    assert.equal(servingsFactor(4, null), 1);
+    assert.equal(servingsFactor(0, 8), 1);
+    assert.equal(servingsFactor(4, 0), 1);
+    assert.equal(servingsFactor(4, -3), 1);
+    assert.equal(servingsFactor('', ''), 1);
+});
 
 // --- Tokens ---
 
@@ -88,6 +172,32 @@ test('validateDraft ignores blank rows when counting', () => {
     draft.ingredients.push({ key: 3, name: '   ', quantity: '' });
     draft.steps.push({ body: '', minutes: '' });
     assert.deepEqual(validateDraft(draft), []);
+});
+
+test('validateDraft treats servings as optional but bounds it when given', () => {
+    const draft = validDraft();
+    assert.deepEqual(validateDraft(draft), []);            // absent is fine
+    draft.servings = '';
+    assert.deepEqual(validateDraft(draft), []);            // blank is fine
+    draft.servings = '4';
+    assert.deepEqual(validateDraft(draft), []);            // valid whole number
+    draft.servings = '0';
+    assert.equal(validateDraft(draft).length, 1);
+    draft.servings = '2.5';
+    assert.equal(validateDraft(draft).length, 1);
+    draft.servings = '101';
+    assert.equal(validateDraft(draft).length, 1);
+    draft.servings = 'lots';
+    assert.equal(validateDraft(draft).length, 1);
+});
+
+test('buildPayload carries servings as an integer, null when blank', () => {
+    const draft = validDraft();
+    assert.equal(buildPayload(draft).servings, null);
+    draft.servings = '4';
+    assert.equal(buildPayload(draft).servings, 4);
+    draft.servings = '  ';
+    assert.equal(buildPayload(draft).servings, null);
 });
 
 test('validateDraft bounds step durations', () => {

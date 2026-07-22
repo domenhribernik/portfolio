@@ -149,6 +149,13 @@
                 <textarea id="descInput" rows="2" maxlength="1000" placeholder="What makes this one worth cooking?"
                           class="w-full bg-beige/50 border border-linen rounded-xl px-3 py-2 text-base focus:outline-none focus:border-ember resize-y"></textarea>
 
+                <label for="servingsInput" class="block text-[11px] uppercase tracking-[0.18em] text-cocoa font-bold mt-5 mb-1.5">Serves <span class="normal-case tracking-normal font-medium text-cocoa/70">(optional, no. of people)</span></label>
+                <div class="flex items-center gap-2">
+                    <input id="servingsInput" type="number" min="1" max="100" inputmode="numeric" autocomplete="off" placeholder="4"
+                           class="w-24 bg-beige/50 border border-linen rounded-xl px-3 py-2 text-base font-mono focus:outline-none focus:border-ember">
+                    <span class="text-sm text-cocoa">people. Cooks can rescale the ingredients from this.</span>
+                </div>
+
                 <label class="block text-[11px] uppercase tracking-[0.18em] text-cocoa font-bold mt-5 mb-1.5">Cover photo <span class="normal-case tracking-normal font-medium text-cocoa/70">(optional)</span></label>
                 <div class="flex items-center gap-4 flex-wrap">
                     <div id="coverPreview" class="w-36 h-24 rounded-xl border border-linen bg-beige/60 overflow-hidden flex items-center justify-center text-cocoa/50">
