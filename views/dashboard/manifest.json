@@ -1,6 +1,6 @@
 {
-  "name": "Hub",
-  "short_name": "Hub",
+  "name": "Dashboard",
+  "short_name": "Dashboard",
   "start_url": "./",
   "scope": "../../",
   "display": "standalone",

@@ -150,14 +150,14 @@ function googleLogin(): void
         ]);
         $userId = (int) $write->lastInsertId();
 
-        // Seed the personal hub shelf with the admin-marked default tiles.
-        // Best-effort: a shelf without defaults is recoverable, a failed
-        // signup is not.
+        // Seed the personal Dashboard shelf with the admin-marked default
+        // tiles. Best-effort: a shelf without defaults is recoverable, a
+        // failed signup is not.
         try {
-            require_once __DIR__ . '/../services/hub-shelf-service.php';
-            seedDefaultHubApps($write, $userId);
+            require_once __DIR__ . '/../services/dashboard-shelf-service.php';
+            seedDefaultDashboardApps($write, $userId);
         } catch (Throwable $e) {
-            error_log('Default hub shelf seeding failed for user ' . $userId . ': ' . $e->getMessage());
+            error_log('Default Dashboard shelf seeding failed for user ' . $userId . ': ' . $e->getMessage());
         }
     }
 

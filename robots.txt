@@ -2,7 +2,7 @@ User-agent: *
 Disallow: /app/
 Disallow: /views/account/
 Disallow: /views/admin/
-Disallow: /views/hub/
+Disallow: /views/dashboard/
 Disallow: /views/vrata/
 Disallow: /views/download/
 Disallow: /views/list/

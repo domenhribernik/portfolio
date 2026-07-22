@@ -89,8 +89,8 @@
                     Users<span class="tab-count" id="count-users"></span></button>
                 <button type="button" class="tab" role="tab" data-tab="projects" aria-controls="panel-projects">
                     Projects<span class="tab-count" id="count-projects"></span></button>
-                <button type="button" class="tab" role="tab" data-tab="hub" aria-controls="panel-hub">
-                    Hub tiles<span class="tab-count" id="count-hub"></span></button>
+                <button type="button" class="tab" role="tab" data-tab="dashboard" aria-controls="panel-dashboard">
+                    Dashboard tiles<span class="tab-count" id="count-dashboard"></span></button>
                 <button type="button" class="tab" role="tab" data-tab="leads" aria-controls="panel-leads">
                     Leads<span class="tab-count" id="count-leads"></span></button>
                 <button type="button" class="tab" role="tab" data-tab="marketing" aria-controls="panel-marketing">
@@ -271,66 +271,66 @@
                 </div>
             </section>
 
-            <!-- Tab: Hub tiles -->
-            <section id="panel-hub" class="tab-panel hidden space-y-6" role="tabpanel">
+            <!-- Tab: Dashboard tiles -->
+            <section id="panel-dashboard" class="tab-panel hidden space-y-6" role="tabpanel">
                 <div class="card p-6">
                     <h2 class="section-title">Tile composer</h2>
-                    <p class="text-stone text-sm mb-4">Tiles on the Hub launcher. Each user picks their own shelf on
-                        the Hub itself, limited to what they may see: a tile with no project is available to any
+                    <p class="text-stone text-sm mb-4">Tiles on the Dashboard launcher. Each user picks their own shelf on
+                        the Dashboard itself, limited to what they may see: a tile with no project is available to any
                         signed-in user, otherwise a role in the tile's project is required (admins may pick
                         everything). Tiles marked <span class="font-mono text-xs">default</span> are placed on every
                         new user's shelf at signup.</p>
-                    <form id="hub-form" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
+                    <form id="dashboard-form" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
                         <div>
-                            <label for="hub-name" class="field-label">Name</label>
-                            <input id="hub-name" type="text" class="field-input" required placeholder="Botaniq">
+                            <label for="dashboard-name" class="field-label">Name</label>
+                            <input id="dashboard-name" type="text" class="field-input" required placeholder="Botaniq">
                         </div>
                         <div>
-                            <label for="hub-url" class="field-label">Url</label>
-                            <input id="hub-url" type="text" class="field-input" required
+                            <label for="dashboard-url" class="field-label">Url</label>
+                            <input id="dashboard-url" type="text" class="field-input" required
                                 placeholder="/views/botaniq/">
                         </div>
                         <div>
-                            <label for="hub-icon" class="field-label">Icon</label>
-                            <input id="hub-icon" type="text" class="field-input" placeholder="fa-solid fa-leaf">
+                            <label for="dashboard-icon" class="field-label">Icon</label>
+                            <input id="dashboard-icon" type="text" class="field-input" placeholder="fa-solid fa-leaf">
                         </div>
                         <div class="sm:col-span-2">
-                            <label for="hub-gradient" class="field-label">Gradient</label>
+                            <label for="dashboard-gradient" class="field-label">Gradient</label>
                             <div class="flex items-center gap-2">
-                                <span id="hub-gradient-swatch" class="hub-swatch shrink-0" aria-hidden="true"></span>
-                                <input id="hub-gradient" type="text" class="field-input flex-1 min-w-0"
+                                <span id="dashboard-gradient-swatch" class="dashboard-swatch shrink-0" aria-hidden="true"></span>
+                                <input id="dashboard-gradient" type="text" class="field-input flex-1 min-w-0"
                                     placeholder="linear-gradient(45deg, #d4451f 0%, #f2b705 100%)">
-                                <button type="button" id="hub-gradient-random" class="btn-ghost shrink-0"
+                                <button type="button" id="dashboard-gradient-random" class="btn-ghost shrink-0"
                                     title="Generate a random on-theme gradient">
                                     <i class="fa-solid fa-shuffle" aria-hidden="true"></i> Random</button>
                             </div>
                         </div>
                         <div>
-                            <label for="hub-project" class="field-label">Project</label>
-                            <select id="hub-project" class="field-input"></select>
+                            <label for="dashboard-project" class="field-label">Project</label>
+                            <select id="dashboard-project" class="field-input"></select>
                         </div>
                         <div>
-                            <label for="hub-sort" class="field-label">Sort order</label>
-                            <input id="hub-sort" type="number" class="field-input" value="0">
+                            <label for="dashboard-sort" class="field-label">Sort order</label>
+                            <input id="dashboard-sort" type="number" class="field-input" value="0">
                         </div>
-                        <label for="hub-default"
+                        <label for="dashboard-default"
                             class="flex items-center gap-2 font-mono text-[10px] tracking-widest uppercase text-stone pb-3 cursor-pointer">
-                            <input id="hub-default" type="checkbox" class="accent-clay">
+                            <input id="dashboard-default" type="checkbox" class="accent-clay">
                             default for new users
                         </label>
                         <div class="flex gap-3">
-                            <button type="submit" id="hub-submit" class="btn-clay">Add tile</button>
-                            <button type="button" id="hub-cancel" class="btn-ghost hidden">Cancel</button>
+                            <button type="submit" id="dashboard-submit" class="btn-clay">Add tile</button>
+                            <button type="button" id="dashboard-cancel" class="btn-ghost hidden">Cancel</button>
                         </div>
                     </form>
                 </div>
 
                 <div class="card p-6">
                     <h2 class="section-title mb-4">Tiles</h2>
-                    <input id="hub-search" type="search" class="field-input mb-4"
+                    <input id="dashboard-search" type="search" class="field-input mb-4"
                         placeholder="Filter by name, url or project…" autocomplete="off">
-                    <ul id="hub-list" class="space-y-2 max-h-[58vh] overflow-y-auto pr-1"></ul>
-                    <p id="hub-empty" class="hidden font-mono text-xs text-faint mt-2">No tiles match.</p>
+                    <ul id="dashboard-list" class="space-y-2 max-h-[58vh] overflow-y-auto pr-1"></ul>
+                    <p id="dashboard-empty" class="hidden font-mono text-xs text-faint mt-2">No tiles match.</p>
                 </div>
             </section>
 

@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#f6f2ea">
-    <title>Hub</title>
+    <title>Dashboard</title>
     <link rel="manifest" href="./manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Hub">
+    <meta name="apple-mobile-web-app-title" content="Dashboard">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,14 +55,20 @@
         <header class="mb-8">
             <div
                 class="flex items-baseline justify-between font-mono text-[11px] tracking-[0.2em] uppercase text-stone border-b border-ink/15 pb-3">
-                <span>DH // HUB</span>
+                <span>DH // DASHBOARD</span>
                 <span id="today"></span>
             </div>
             <div class="flex items-end justify-between gap-4 mt-5">
                 <h1 class="font-display font-extrabold uppercase tracking-tight text-4xl sm:text-5xl">
-                    Hub<span class="text-clay">.</span></h1>
-                <button id="btn-edit" type="button" class="press hidden font-mono text-[11px] tracking-[0.15em] uppercase border border-ink px-3 py-2 hover:bg-ink hover:text-paper transition-colors">
-                    <i class="fa-solid fa-sliders mr-1" aria-hidden="true"></i> Edit shelf</button>
+                    Dashboard<span class="text-clay">.</span></h1>
+                <div id="controls" class="hidden flex items-center gap-2 shrink-0">
+                    <button id="btn-apps" type="button" aria-label="Choose apps"
+                        class="press inline-flex items-center justify-center gap-1.5 font-mono text-[11px] tracking-[0.15em] uppercase border border-ink h-9 w-9 sm:w-auto sm:px-3 hover:bg-ink hover:text-paper transition-colors">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i><span class="hidden sm:inline">Apps</span></button>
+                    <button id="btn-arrange" type="button" aria-pressed="false" aria-label="Arrange shelf"
+                        class="press inline-flex items-center justify-center gap-1.5 font-mono text-[11px] tracking-[0.15em] uppercase border border-ink h-9 w-9 sm:w-auto sm:px-3 hover:bg-ink hover:text-paper transition-colors">
+                        <i id="arrange-icon" class="fa-solid fa-sliders" aria-hidden="true"></i><span id="arrange-label" class="hidden sm:inline">Arrange</span></button>
+                </div>
             </div>
             <p id="shelf-note" class="font-mono text-xs text-stone mt-2">opening the shelf…</p>
         </header>
@@ -91,7 +97,7 @@
             </div>
         </section>
 
-        <!-- The grid -->
+        <!-- The grid (folders + app tiles; arrange mode appends a New folder tile) -->
         <section id="view-grid" class="hidden">
             <ul id="tile-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3"></ul>
         </section>
@@ -123,11 +129,35 @@
 
         <footer
             class="mt-14 pb-8 flex items-center justify-between font-mono text-[10px] tracking-[0.2em] uppercase text-stone/70">
-            <span>hub · launcher</span>
+            <span>dashboard · launcher</span>
             <span>hribernik / portfolio</span>
         </footer>
 
     </main>
+
+    <!-- Screen-reader announcements for keyboard reordering -->
+    <p id="live-region" class="sr-only" aria-live="polite"></p>
+
+    <!-- Folder panel: opens a folder's tiles. Same overlay grammar as the picker. -->
+    <div id="folder-panel" class="hidden fixed inset-0 z-40" role="dialog" aria-modal="true" aria-labelledby="folder-title">
+        <div id="folder-backdrop" class="absolute inset-0 bg-ink/40"></div>
+        <div class="picker-panel relative max-w-md mx-4 sm:mx-auto mt-[10dvh] mb-8 bg-card border border-ink max-h-[80dvh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-ink/15 px-5 py-4 gap-3">
+                <div class="min-w-0 flex-1">
+                    <p class="font-mono text-[11px] tracking-[0.2em] uppercase text-stone">folder</p>
+                    <h2 id="folder-title" class="font-display font-extrabold uppercase text-xl leading-tight truncate">Folder</h2>
+                    <input id="folder-rename" type="text" maxlength="60"
+                        class="hidden font-display font-extrabold uppercase text-xl leading-tight bg-transparent border-b border-ink/40 focus:border-clay outline-none w-full"
+                        aria-label="Folder name">
+                </div>
+                <button id="btn-folder-close" type="button" aria-label="Close"
+                    class="press border border-ink w-9 h-9 shrink-0 hover:bg-ink hover:text-paper transition-colors">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <ul id="folder-tiles" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 sm:gap-3 overflow-y-auto px-5 py-4 flex-1"></ul>
+            <p id="folder-note" class="font-mono text-[11px] text-stone border-t border-ink/15 px-5 py-3">tap an app to open it</p>
+        </div>
+    </div>
 
     <!-- Shelf picker overlay: every app the account may show, toggled per tap -->
     <div id="picker" class="hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="picker-title">

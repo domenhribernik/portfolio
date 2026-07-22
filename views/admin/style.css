@@ -233,9 +233,9 @@ select.field-input {
     border-color: rgba(28, 26, 23, 0.18);
 }
 
-/* ---------- Gradient swatch (hub tile composer + list) ---------- */
+/* ---------- Gradient swatch (dashboard tile composer + list) ---------- */
 
-.hub-swatch {
+.dashboard-swatch {
     display: inline-block;
     width: 34px;
     height: 34px;
@@ -244,7 +244,7 @@ select.field-input {
     background: var(--swatch, #f6f2ea);
 }
 
-.hub-swatch-sm {
+.dashboard-swatch-sm {
     width: 16px;
     height: 16px;
     border-radius: 2px;

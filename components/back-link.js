@@ -1,5 +1,5 @@
 // Wires the anchor with id="back-link" (a view's back arrow) so it returns
-// to wherever the user came from on this site (e.g. the hub launcher)
+// to wherever the user came from on this site (e.g. the Dashboard launcher)
 // instead of always following its hardcoded href. The href stays as the
 // fallback for direct visits and cross-origin referrers, so the arrow still
 // leads to the homepage when there is nothing to go back to.

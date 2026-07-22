@@ -2,7 +2,7 @@
 // Run: node --test tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveTab, filterProjects, filterHubApps, filterLeads, buildHubPayload, swapPlan, hslToHex, randomGradient, accentFromGradient, buildPromoMessage, promoMailtoHref, PRICING_URL } from '../views/admin/logic.js';
+import { resolveTab, filterProjects, filterDashboardApps, filterLeads, buildDashboardPayload, swapPlan, hslToHex, randomGradient, accentFromGradient, buildPromoMessage, promoMailtoHref, PRICING_URL } from '../views/admin/logic.js';
 
 // ── Marketing: promo message builder ──
 test('buildPromoMessage: generic template pitches the calculator and links to pricing', () => {
@@ -63,7 +63,7 @@ function brightness(hex) {
 test('resolveTab maps location hashes to tab ids, defaulting to users', () => {
     assert.equal(resolveTab('#users'), 'users');
     assert.equal(resolveTab('#projects'), 'projects');
-    assert.equal(resolveTab('#hub'), 'hub');
+    assert.equal(resolveTab('#dashboard'), 'dashboard');
     assert.equal(resolveTab('#leads'), 'leads');
     assert.equal(resolveTab('#marketing'), 'marketing');
     assert.equal(resolveTab(''), 'users');
@@ -99,16 +99,16 @@ test('filterProjects matches key or name, case-insensitively', () => {
     assert.deepEqual(filterProjects(projects, 'zzz'), []);
 });
 
-test('filterHubApps matches name, url, and project key', () => {
+test('filterDashboardApps matches name, url, and project key', () => {
     const apps = [
         { name: 'Botaniq', url: '/views/botaniq/', project_key: 'botaniq' },
         { name: 'Lists', url: '/views/list/', project_key: 'list' },
         { name: 'Public thing', url: '/views/rocks/', project_key: null },
     ];
-    assert.deepEqual(filterHubApps(apps, 'lists'), [apps[1]]);
-    assert.deepEqual(filterHubApps(apps, 'views/list'), [apps[1]]);
-    assert.deepEqual(filterHubApps(apps, 'rocks'), [apps[2]]);
-    assert.deepEqual(filterHubApps(apps, ''), apps);
+    assert.deepEqual(filterDashboardApps(apps, 'lists'), [apps[1]]);
+    assert.deepEqual(filterDashboardApps(apps, 'views/list'), [apps[1]]);
+    assert.deepEqual(filterDashboardApps(apps, 'rocks'), [apps[2]]);
+    assert.deepEqual(filterDashboardApps(apps, ''), apps);
 });
 
 test('a tile with no project matches the word "everyone", as rendered', () => {
@@ -116,12 +116,12 @@ test('a tile with no project matches the word "everyone", as rendered', () => {
         { name: 'Botaniq', url: '/views/botaniq/', project_key: 'botaniq' },
         { name: 'Public thing', url: '/views/rocks/', project_key: null },
     ];
-    assert.deepEqual(filterHubApps(apps, 'everyone'), [apps[1]]);
+    assert.deepEqual(filterDashboardApps(apps, 'everyone'), [apps[1]]);
 });
 
-test('buildHubPayload trims fields and resolves the project select value', () => {
+test('buildDashboardPayload trims fields and resolves the project select value', () => {
     assert.deepEqual(
-        buildHubPayload({
+        buildDashboardPayload({
             name: ' Botaniq ', url: ' /views/botaniq/ ',
             icon: 'fa-solid fa-leaf', gradient: 'linear-gradient(45deg, #000 0%, #fff 100%)',
             project: '5', sort: '20', isDefault: true,
@@ -134,18 +134,18 @@ test('buildHubPayload trims fields and resolves the project select value', () =>
     );
 });
 
-test('buildHubPayload omits blank icon/gradient and maps empty project to null', () => {
+test('buildDashboardPayload omits blank icon/gradient and maps empty project to null', () => {
     assert.deepEqual(
-        buildHubPayload({ name: 'X', url: '/views/x/', icon: '  ', gradient: '', project: '', sort: '' }),
+        buildDashboardPayload({ name: 'X', url: '/views/x/', icon: '  ', gradient: '', project: '', sort: '' }),
         { name: 'X', url: '/views/x/', project_id: null, sort_order: 0, is_default: false }
     );
 });
 
-test('buildHubPayload carries the default-for-new-users flag as a boolean', () => {
+test('buildDashboardPayload carries the default-for-new-users flag as a boolean', () => {
     const base = { name: 'X', url: '/views/x/', icon: '', gradient: '', project: '', sort: '0' };
-    assert.equal(buildHubPayload({ ...base, isDefault: true }).is_default, true);
-    assert.equal(buildHubPayload({ ...base, isDefault: false }).is_default, false);
-    assert.equal(buildHubPayload(base).is_default, false);
+    assert.equal(buildDashboardPayload({ ...base, isDefault: true }).is_default, true);
+    assert.equal(buildDashboardPayload({ ...base, isDefault: false }).is_default, false);
+    assert.equal(buildDashboardPayload(base).is_default, false);
 });
 
 test('hslToHex converts the primary/secondary corners exactly', () => {

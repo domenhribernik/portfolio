@@ -176,8 +176,8 @@
             "status": { "title": "na", "description": "na", "canonical": "na", "og": "na", "jsonld": "na", "h1": "na", "crawlable": "na", "robots": "done", "sitemap": "na", "indexed": "na", "cwv": "na" }
         },
         {
-            "path": "views/hub",
-            "name": "Hub (private)",
+            "path": "views/dashboard",
+            "name": "Dashboard (private)",
             "tier": "private",
             "status": { "title": "na", "description": "na", "canonical": "na", "og": "na", "jsonld": "na", "h1": "na", "crawlable": "na", "robots": "done", "sitemap": "na", "indexed": "na", "cwv": "na" }
         },

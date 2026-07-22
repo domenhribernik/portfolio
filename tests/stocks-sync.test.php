@@ -9,7 +9,7 @@ declare(strict_types=1);
 // and LJSE_BASE_URL / TELEGRAM_API_BASE point at it. The stub serves scenario
 // JSON written by this suite and logs every call, so "Telegram got exactly one
 // message" is a file assertion. The service itself is exercised in-process
-// (like the hub seeding function), with DB_* pointed at the LOCAL scratch DB;
+// (like the dashboard seeding function), with DB_* pointed at the LOCAL scratch DB;
 // the refresh action goes through a first built-in server over HTTP.
 //
 // Requires the seeded admin@test.local / guest@test.local users and the

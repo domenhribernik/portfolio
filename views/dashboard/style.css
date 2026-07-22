@@ -1,0 +1,486 @@
+/* Dashboard launcher: supplemental styles Tailwind can't cleanly express
+   (keyframes, per-tile accent, tint-fill press, skeleton shimmer, the
+   arrange-mode drag affordances and folders). Everything else is Tailwind
+   in index.html.
+
+   Tiles are flat, square outline buttons: no border-radius, no offset
+   shadow. Each app tile's stored gradient collapses to a single flat
+   --accent (its first hex, set inline by script.js) that colors the border
+   and icon; hover/press wash the button with a faint mix of that accent.
+   Folder tiles carry the ink border instead and show a 2x2 icon preview. */
+
+:root {
+    --ink: #1c1a17;
+    --card: #fffdf8;
+    --paper-2: #efe9dd;
+    /* Semantic stacking: folder panel (40) < picker (50) < drag ghost (60). */
+    --z-drag: 60;
+}
+
+/* Faint dotted paper grid for depth */
+body {
+    background-image: radial-gradient(rgba(28, 26, 23, 0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Entrance: each tile rises and fades in, staggered by script.js */
+@keyframes tile-rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#tile-grid > li,
+#folder-tiles > li {
+    opacity: 0;
+    animation: tile-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Re-renders during arranging use FLIP for motion, not the entrance rise. */
+#tile-grid.no-entrance > li,
+#folder-tiles.no-entrance > li {
+    opacity: 1;
+    animation: none;
+}
+
+/* Flat, square accent button */
+.tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    aspect-ratio: 1 / 1;
+    padding: 10px 8px;
+    background: var(--card);
+    border: 1.5px solid var(--accent, var(--ink));
+    color: var(--ink);
+    text-align: center;
+    transition: background 0.16s ease, transform 0.1s ease;
+    touch-action: manipulation;
+    /* Anchors drag natively on desktop, which would hijack the arrange drag. */
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
+.tile-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--accent, var(--ink));
+}
+
+.tile-name {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    line-height: 1.05;
+    color: var(--ink);
+    max-width: 100%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+@media (min-width: 640px) {
+    .tile-icon {
+        font-size: 1.7rem;
+    }
+    .tile-name {
+        font-size: 0.78rem;
+    }
+}
+
+/* Hover/press tint-fill. color-mix keeps the wash tied to each tile's accent
+   without script.js having to compute a second color. */
+@media (hover: hover) {
+    .tile:hover {
+        background: color-mix(in srgb, var(--accent) 12%, var(--card));
+    }
+}
+
+.tile:focus-visible {
+    outline: none;
+    background: color-mix(in srgb, var(--accent) 12%, var(--card));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.tile:active {
+    background: color-mix(in srgb, var(--accent) 22%, var(--card));
+    transform: translateY(1px);
+}
+
+/* ------------------------------------------------------------------
+   Folder tile: ink border, a 2x2 mini preview of member icons.
+   ------------------------------------------------------------------ */
+.folder-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    padding: 10px 8px;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    text-align: center;
+    transition: background 0.16s ease, transform 0.1s ease, box-shadow 0.16s ease;
+    touch-action: manipulation;
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
+.folder-preview {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+    width: 1.9rem;
+    height: 1.9rem;
+    place-content: center;
+}
+
+.folder-preview i {
+    font-size: 0.7rem;
+    line-height: 1;
+    color: var(--slot-accent, var(--stone, #6b6256));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.folder-preview .slot-empty {
+    /* keep the grid square even with fewer than four icons */
+    visibility: hidden;
+}
+
+.folder-name {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    line-height: 1.05;
+    color: var(--ink);
+    max-width: 100%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+@media (min-width: 640px) {
+    .folder-name {
+        font-size: 0.78rem;
+    }
+    .folder-preview {
+        width: 2.1rem;
+        height: 2.1rem;
+    }
+    .folder-preview i {
+        font-size: 0.78rem;
+    }
+}
+
+@media (hover: hover) {
+    .folder-tile:hover {
+        background: color-mix(in srgb, var(--ink) 6%, var(--card));
+    }
+}
+
+.folder-tile:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 45%, transparent);
+}
+
+/* A folder lit up as the drop target while a tile hovers over it. */
+.folder-tile.drop-target {
+    background: color-mix(in srgb, var(--ink) 12%, var(--card));
+    box-shadow: 0 0 0 2px var(--ink);
+    transform: scale(1.03);
+}
+
+/* Just-created, still-empty folder: dashed while it waits for a name/apps. */
+.folder-tile.is-new {
+    border-style: dashed;
+}
+
+.folder-name-input {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    line-height: 1.1;
+    text-align: center;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--ink);
+    color: var(--ink);
+    outline: none;
+}
+
+/* ------------------------------------------------------------------
+   New-folder affordance (arrange mode only).
+   ------------------------------------------------------------------ */
+.new-folder-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    padding: 10px 8px;
+    background: transparent;
+    border: 1.5px dashed color-mix(in srgb, var(--ink) 45%, transparent);
+    color: color-mix(in srgb, var(--ink) 65%, transparent);
+    text-align: center;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.new-folder-tile i {
+    font-size: 1.3rem;
+}
+
+.new-folder-tile span {
+    font-family: "Space Mono", monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+@media (hover: hover) {
+    .new-folder-tile:hover {
+        background: color-mix(in srgb, var(--ink) 5%, transparent);
+        border-color: var(--ink);
+        color: var(--ink);
+    }
+}
+
+.new-folder-tile:focus-visible {
+    outline: none;
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+/* ------------------------------------------------------------------
+   Arrange mode: tiles become draggable. A quiet dashed ring signals
+   editability (no jiggle, matching the site's restrained motion).
+   ------------------------------------------------------------------ */
+.arranging .tile,
+.arranging .folder-tile {
+    cursor: grab;
+    outline: 1px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+    outline-offset: 3px;
+}
+
+.arranging .tile:active,
+.arranging .folder-tile:active {
+    cursor: grabbing;
+}
+
+/* The lifted clone that follows the pointer. */
+.drag-ghost {
+    position: fixed;
+    z-index: var(--z-drag);
+    margin: 0;
+    pointer-events: none;
+    box-shadow: 0 12px 28px -8px rgba(28, 26, 23, 0.45);
+    transform: scale(1.06);
+    opacity: 0.97;
+    will-change: transform, top, left;
+}
+
+/* The origin slot while its tile is lifted: a faint dashed footprint. */
+.tile-origin {
+    opacity: 0;
+}
+
+.tile-origin::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1.5px dashed color-mix(in srgb, var(--ink) 35%, transparent);
+    background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+
+#tile-grid > li,
+#folder-tiles > li {
+    position: relative;
+}
+
+/* FLIP: neighbours slide to their new slot when the order changes. */
+.flip {
+    transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* State-card buttons (sign in / retry) and header controls: flat, subtle. */
+.press {
+    transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease;
+}
+
+a.press:active,
+button.press:active {
+    transform: translateY(1px);
+}
+
+#btn-arrange[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--card);
+}
+
+/* Skeleton shimmer while the shelf loads */
+@keyframes shimmer {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.skeleton-tile {
+    position: relative;
+    overflow: hidden;
+    background: var(--paper-2);
+    border: 1px solid rgba(28, 26, 23, 0.12);
+}
+
+.skeleton-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 253, 248, 0.9) 50%, transparent 70%);
+    animation: shimmer 1.4s infinite;
+}
+
+/* ------------------------------------------------------------------
+   Folder panel + shelf picker: shared overlay grammar.
+   ------------------------------------------------------------------ */
+@keyframes panel-rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.picker-panel {
+    animation: panel-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.picker-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 2px;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.1);
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+#picker-list li:last-child .picker-row {
+    border-bottom: none;
+}
+
+@media (hover: hover) {
+    .picker-row:hover {
+        background: color-mix(in srgb, var(--accent, var(--ink)) 8%, transparent);
+    }
+}
+
+.picker-row:focus-visible {
+    outline: none;
+    background: color-mix(in srgb, var(--accent, var(--ink)) 8%, transparent);
+}
+
+.picker-row[data-busy] {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.picker-icon {
+    width: 1.6rem;
+    text-align: center;
+    font-size: 1.15rem;
+    color: var(--accent, var(--ink));
+}
+
+.picker-name {
+    flex: 1;
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+
+/* Square editorial checkbox; fills with the tile's accent when on */
+.picker-box {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--ink);
+    color: var(--card);
+    font-size: 0.7rem;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.picker-box.on {
+    background: var(--accent, var(--ink));
+    border-color: var(--accent, var(--ink));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #tile-grid > li,
+    #folder-tiles > li {
+        animation: none;
+        opacity: 1;
+    }
+    .skeleton-tile::after {
+        animation: none;
+    }
+    .picker-panel {
+        animation: none;
+    }
+    .flip {
+        transition: none;
+    }
+    .drag-ghost {
+        transform: none;
+    }
+    .tile,
+    .folder-tile,
+    .new-folder-tile,
+    .press,
+    .picker-row,
+    .picker-box {
+        transition: none;
+    }
+}

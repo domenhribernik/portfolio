@@ -2,7 +2,7 @@
 // unit-tested with `node --test tests/` (no dependencies, no build step).
 // script.js imports this as an ES module.
 
-const TABS = ['users', 'projects', 'hub', 'leads', 'marketing'];
+const TABS = ['users', 'projects', 'dashboard', 'leads', 'marketing'];
 
 export function resolveTab(hash) {
     const id = (hash || '').replace(/^#/, '');
@@ -29,7 +29,7 @@ export function filterLeads(quotes, query) {
         || (quote.special_requests || '').toLowerCase().includes(q));
 }
 
-export function filterHubApps(apps, query) {
+export function filterDashboardApps(apps, query) {
     const q = (query || '').trim().toLowerCase();
     if (!q) return apps;
     return apps.filter(a =>
@@ -73,7 +73,7 @@ export function hslToHex(h, s, l) {
 
 // Builds a random on-theme gradient with a FIXED angle and 0%/100% stops, so
 // every generated gradient has "the same distance". The first stop is locked
-// to a dark, saturated band (l≈42) so it always works as the hub's legible
+// to a dark, saturated band (l≈42) so it always works as the dashboard's legible
 // border/icon accent on the paper background; the second stop is a lighter,
 // hue-shifted companion. `rng` is injectable for deterministic tests.
 export function randomGradient(rng = Math.random) {
@@ -84,9 +84,9 @@ export function randomGradient(rng = Math.random) {
 }
 
 // Extracts the first hex color from a stored gradient string to use as the
-// flat accent (border/icon) on the hub and in the admin tile list. Falls back
+// flat accent (border/icon) on the dashboard and in the admin tile list. Falls back
 // to ink when the gradient has no hex color. Mirrors the same one-liner the
-// hub view uses inline; kept here so it can be unit-tested.
+// dashboard view uses inline; kept here so it can be unit-tested.
 export function accentFromGradient(gradient) {
     const m = /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/.exec(gradient || '');
     return m ? m[0] : '#1c1a17';
@@ -187,7 +187,7 @@ export function promoMailtoHref({ email = '', subject = '', body = '' } = {}) {
 
 // Blank icon/gradient are omitted so the controller's defaults apply.
 // is_default marks the tile for seeding onto every NEW user's shelf.
-export function buildHubPayload({ name, url, icon, gradient, project, sort, isDefault }) {
+export function buildDashboardPayload({ name, url, icon, gradient, project, sort, isDefault }) {
     const body = {
         name: name.trim(),
         url: url.trim(),

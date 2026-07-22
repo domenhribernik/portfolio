@@ -1,8 +1,8 @@
-import { resolveTab, filterProjects, filterHubApps, filterLeads, buildHubPayload, swapPlan, randomGradient, accentFromGradient, buildPromoMessage, promoMailtoHref, PRICING_URL } from './logic.js';
+import { resolveTab, filterProjects, filterDashboardApps, filterLeads, buildDashboardPayload, swapPlan, randomGradient, accentFromGradient, buildPromoMessage, promoMailtoHref, PRICING_URL } from './logic.js';
 
 const ADMIN_API = '../../app/controllers/admin-controller.php';
 const AUTH_API = '../../app/controllers/auth-controller.php';
-const HUB_API = '../../app/controllers/hub-controller.php';
+const DASHBOARD_API = '../../app/controllers/dashboard-controller.php';
 const PRICING_API = '../../app/controllers/pricing-controller.php';
 
 let selectedUserId = null;
@@ -26,7 +26,7 @@ async function apiFetch(base, params, options = {}) {
 }
 
 const adminFetch = (params, options) => apiFetch(ADMIN_API, params, options);
-const hubFetch = (params, options) => apiFetch(HUB_API, params, options);
+const dashboardFetch = (params, options) => apiFetch(DASHBOARD_API, params, options);
 const pricingFetch = (params, options) => apiFetch(PRICING_API, params, options);
 
 // ------------------------------------------------------------------
@@ -54,7 +54,7 @@ async function copyText(text, okMsg = 'Copied') {
 }
 
 // ------------------------------------------------------------------
-//  Tabs (hash-routed: #users / #projects / #hub)
+//  Tabs (hash-routed: #users / #projects / #dashboard)
 // ------------------------------------------------------------------
 
 const tabButtons = document.querySelectorAll('.tab');
@@ -65,7 +65,7 @@ function setTab(id, updateHash = false) {
         t.classList.toggle('active', active);
         t.setAttribute('aria-selected', String(active));
     });
-    ['users', 'projects', 'hub', 'leads', 'marketing'].forEach(p => {
+    ['users', 'projects', 'dashboard', 'leads', 'marketing'].forEach(p => {
         document.getElementById('panel-' + p).classList.toggle('hidden', p !== id);
     });
     if (updateHash) history.replaceState(null, '', '#' + id);
@@ -101,7 +101,7 @@ async function boot() {
     document.getElementById('view-loading').classList.add('hidden');
     document.getElementById('view-dash').classList.remove('hidden');
 
-    await Promise.all([loadUsers(), loadProjects(), loadHubApps(), loadLeads()]);
+    await Promise.all([loadUsers(), loadProjects(), loadDashboardApps(), loadLeads()]);
 }
 
 // ------------------------------------------------------------------
@@ -526,23 +526,23 @@ async function loadProjects() {
     fillActiveProjects(document.getElementById('grant-project'));
     fillActiveProjects(document.getElementById('grant-all-project'));
 
-    // Hub tile project picker: blank option = visible to any signed-in user.
+    // Dashboard tile project picker: blank option = visible to any signed-in user.
     // Inactive projects stay listed since tiles may already link to them.
-    const hubSelect = document.getElementById('hub-project');
-    const previous = hubSelect.value;
-    hubSelect.replaceChildren();
+    const dashboardSelect = document.getElementById('dashboard-project');
+    const previous = dashboardSelect.value;
+    dashboardSelect.replaceChildren();
     const blank = document.createElement('option');
     blank.value = '';
     blank.textContent = 'everyone (any signed-in user)';
-    hubSelect.appendChild(blank);
+    dashboardSelect.appendChild(blank);
     projects.forEach(p => {
         const opt = document.createElement('option');
         opt.value = String(p.id);
         opt.textContent = `${p.project_key} (${p.name})${p.active ? '' : ' · disabled'}`;
-        hubSelect.appendChild(opt);
+        dashboardSelect.appendChild(opt);
     });
-    hubSelect.value = previous;
-    if (hubSelect.selectedIndex === -1) hubSelect.value = '';
+    dashboardSelect.value = previous;
+    if (dashboardSelect.selectedIndex === -1) dashboardSelect.value = '';
 }
 
 function renderProjects() {
@@ -608,34 +608,34 @@ document.getElementById('project-form').addEventListener('submit', async (e) => 
 });
 
 // ------------------------------------------------------------------
-//  Hub apps
+//  Dashboard apps
 // ------------------------------------------------------------------
 
-let hubApps = [];
-let editingHubAppId = null;
+let dashboardApps = [];
+let editingDashboardAppId = null;
 
-async function loadHubApps() {
+async function loadDashboardApps() {
     try {
-        hubApps = await hubFetch({ all: 1 });
+        dashboardApps = await dashboardFetch({ all: 1 });
     } catch (err) {
         toast(err.message, true);
         return;
     }
-    setCount('count-hub', hubApps.length);
-    renderHubApps();
+    setCount('count-dashboard', dashboardApps.length);
+    renderDashboardApps();
 }
 
-function renderHubApps() {
-    const visible = filterHubApps(hubApps, document.getElementById('hub-search').value);
+function renderDashboardApps() {
+    const visible = filterDashboardApps(dashboardApps, document.getElementById('dashboard-search').value);
     // Reordering only makes sense on the full, unfiltered list.
-    const filtered = visible.length !== hubApps.length;
+    const filtered = visible.length !== dashboardApps.length;
 
-    const list = document.getElementById('hub-list');
+    const list = document.getElementById('dashboard-list');
     list.replaceChildren();
-    document.getElementById('hub-empty').classList.toggle('hidden', visible.length > 0);
+    document.getElementById('dashboard-empty').classList.toggle('hidden', visible.length > 0);
 
     visible.forEach(app => {
-        const i = hubApps.indexOf(app);
+        const i = dashboardApps.indexOf(app);
         const li = document.createElement('li');
         li.className = 'flex items-center justify-between gap-3 border border-hairline bg-paper rounded-[3px] px-4 py-2.5';
 
@@ -644,9 +644,9 @@ function renderHubApps() {
         const led = document.createElement('span');
         led.className = 'led ' + (app.active ? 'led-ok' : 'led-off');
         const swatch = document.createElement('span');
-        swatch.className = 'hub-swatch hub-swatch-sm shrink-0';
+        swatch.className = 'dashboard-swatch dashboard-swatch-sm shrink-0';
         swatch.style.setProperty('--swatch', app.gradient);
-        // Mirror the hub: the icon carries the tile's flat accent (first hex).
+        // Mirror the dashboard: the icon carries the tile's flat accent (first hex).
         const icon = document.createElement('i');
         icon.className = app.icon + ' w-4 text-center shrink-0';
         icon.style.color = accentFromGradient(app.gradient);
@@ -664,27 +664,27 @@ function renderHubApps() {
         upBtn.className = 'btn-ghost';
         upBtn.textContent = '↑';
         upBtn.disabled = filtered || i === 0;
-        upBtn.addEventListener('click', () => moveHubApp(i, -1));
+        upBtn.addEventListener('click', () => moveDashboardApp(i, -1));
 
         const downBtn = document.createElement('button');
         downBtn.className = 'btn-ghost';
         downBtn.textContent = '↓';
-        downBtn.disabled = filtered || i === hubApps.length - 1;
-        downBtn.addEventListener('click', () => moveHubApp(i, 1));
+        downBtn.disabled = filtered || i === dashboardApps.length - 1;
+        downBtn.addEventListener('click', () => moveDashboardApp(i, 1));
 
         const editBtn = document.createElement('button');
         editBtn.className = 'btn-ghost';
         editBtn.textContent = 'Edit';
-        editBtn.addEventListener('click', () => startHubEdit(app));
+        editBtn.addEventListener('click', () => startDashboardEdit(app));
 
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'btn-ghost';
         toggleBtn.textContent = app.active ? 'Disable' : 'Enable';
         toggleBtn.addEventListener('click', async () => {
             try {
-                const res = await hubFetch({ id: app.id }, { method: 'PUT', body: { active: !app.active } });
+                const res = await dashboardFetch({ id: app.id }, { method: 'PUT', body: { active: !app.active } });
                 toast(res.message);
-                loadHubApps();
+                loadDashboardApps();
             } catch (err) {
                 toast(err.message, true);
             }
@@ -696,10 +696,10 @@ function renderHubApps() {
         deleteBtn.addEventListener('click', async () => {
             if (!confirm(`Delete the "${app.name}" tile?`)) return;
             try {
-                const res = await hubFetch({ id: app.id }, { method: 'DELETE' });
+                const res = await dashboardFetch({ id: app.id }, { method: 'DELETE' });
                 toast(res.message);
-                if (editingHubAppId === app.id) resetHubForm();
-                loadHubApps();
+                if (editingDashboardAppId === app.id) resetDashboardForm();
+                loadDashboardApps();
             } catch (err) {
                 toast(err.message, true);
             }
@@ -711,16 +711,16 @@ function renderHubApps() {
     });
 }
 
-document.getElementById('hub-search').addEventListener('input', renderHubApps);
+document.getElementById('dashboard-search').addEventListener('input', renderDashboardApps);
 
-async function moveHubApp(i, dir) {
+async function moveDashboardApp(i, dir) {
     const j = i + dir;
-    if (j < 0 || j >= hubApps.length) return;
+    if (j < 0 || j >= dashboardApps.length) return;
     try {
-        for (const update of swapPlan(hubApps[i], hubApps[j], dir)) {
-            await hubFetch({ id: update.id }, { method: 'PUT', body: { sort_order: update.sort_order } });
+        for (const update of swapPlan(dashboardApps[i], dashboardApps[j], dir)) {
+            await dashboardFetch({ id: update.id }, { method: 'PUT', body: { sort_order: update.sort_order } });
         }
-        loadHubApps();
+        loadDashboardApps();
     } catch (err) {
         toast(err.message, true);
     }
@@ -729,61 +729,61 @@ async function moveHubApp(i, dir) {
 // Reflect the current gradient value in the composer swatch. An empty field
 // falls back to the paper placeholder so the swatch never renders as black.
 function syncGradientSwatch() {
-    const value = document.getElementById('hub-gradient').value.trim();
-    document.getElementById('hub-gradient-swatch')
+    const value = document.getElementById('dashboard-gradient').value.trim();
+    document.getElementById('dashboard-gradient-swatch')
         .style.setProperty('--swatch', value || '#f6f2ea');
 }
 
-function startHubEdit(app) {
-    editingHubAppId = app.id;
-    document.getElementById('hub-name').value = app.name;
-    document.getElementById('hub-url').value = app.url;
-    document.getElementById('hub-icon').value = app.icon;
-    document.getElementById('hub-gradient').value = app.gradient;
-    document.getElementById('hub-project').value = app.project_id === null ? '' : String(app.project_id);
-    document.getElementById('hub-sort').value = app.sort_order;
-    document.getElementById('hub-default').checked = app.is_default === 1;
-    document.getElementById('hub-submit').textContent = 'Save tile';
-    document.getElementById('hub-cancel').classList.remove('hidden');
+function startDashboardEdit(app) {
+    editingDashboardAppId = app.id;
+    document.getElementById('dashboard-name').value = app.name;
+    document.getElementById('dashboard-url').value = app.url;
+    document.getElementById('dashboard-icon').value = app.icon;
+    document.getElementById('dashboard-gradient').value = app.gradient;
+    document.getElementById('dashboard-project').value = app.project_id === null ? '' : String(app.project_id);
+    document.getElementById('dashboard-sort').value = app.sort_order;
+    document.getElementById('dashboard-default').checked = app.is_default === 1;
+    document.getElementById('dashboard-submit').textContent = 'Save tile';
+    document.getElementById('dashboard-cancel').classList.remove('hidden');
     syncGradientSwatch();
-    document.getElementById('hub-name').focus();
+    document.getElementById('dashboard-name').focus();
 }
 
-function resetHubForm() {
-    editingHubAppId = null;
-    document.getElementById('hub-form').reset();
-    document.getElementById('hub-project').value = '';
-    document.getElementById('hub-sort').value = '0';
-    document.getElementById('hub-submit').textContent = 'Add tile';
-    document.getElementById('hub-cancel').classList.add('hidden');
+function resetDashboardForm() {
+    editingDashboardAppId = null;
+    document.getElementById('dashboard-form').reset();
+    document.getElementById('dashboard-project').value = '';
+    document.getElementById('dashboard-sort').value = '0';
+    document.getElementById('dashboard-submit').textContent = 'Add tile';
+    document.getElementById('dashboard-cancel').classList.add('hidden');
     syncGradientSwatch();
 }
 
-document.getElementById('hub-cancel').addEventListener('click', resetHubForm);
-document.getElementById('hub-gradient').addEventListener('input', syncGradientSwatch);
-document.getElementById('hub-gradient-random').addEventListener('click', () => {
-    document.getElementById('hub-gradient').value = randomGradient();
+document.getElementById('dashboard-cancel').addEventListener('click', resetDashboardForm);
+document.getElementById('dashboard-gradient').addEventListener('input', syncGradientSwatch);
+document.getElementById('dashboard-gradient-random').addEventListener('click', () => {
+    document.getElementById('dashboard-gradient').value = randomGradient();
     syncGradientSwatch();
 });
 
-document.getElementById('hub-form').addEventListener('submit', async (e) => {
+document.getElementById('dashboard-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const body = buildHubPayload({
-        name: document.getElementById('hub-name').value,
-        url: document.getElementById('hub-url').value,
-        icon: document.getElementById('hub-icon').value,
-        gradient: document.getElementById('hub-gradient').value,
-        project: document.getElementById('hub-project').value,
-        sort: document.getElementById('hub-sort').value,
-        isDefault: document.getElementById('hub-default').checked,
+    const body = buildDashboardPayload({
+        name: document.getElementById('dashboard-name').value,
+        url: document.getElementById('dashboard-url').value,
+        icon: document.getElementById('dashboard-icon').value,
+        gradient: document.getElementById('dashboard-gradient').value,
+        project: document.getElementById('dashboard-project').value,
+        sort: document.getElementById('dashboard-sort').value,
+        isDefault: document.getElementById('dashboard-default').checked,
     });
     try {
-        const res = editingHubAppId === null
-            ? await hubFetch({}, { method: 'POST', body })
-            : await hubFetch({ id: editingHubAppId }, { method: 'PUT', body });
+        const res = editingDashboardAppId === null
+            ? await dashboardFetch({}, { method: 'POST', body })
+            : await dashboardFetch({ id: editingDashboardAppId }, { method: 'PUT', body });
         toast(res.message);
-        resetHubForm();
-        loadHubApps();
+        resetDashboardForm();
+        loadDashboardApps();
     } catch (err) {
         toast(err.message, true);
     }
