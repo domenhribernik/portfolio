@@ -9,16 +9,19 @@
     - Hooktheory — has an API that exposes chord probability data, letting you query what chords most commonly follow a given progression. Useful for theory-based suggestions rather than song-specific lookups. Hooktheory
     - Songsterr — provides guitar, bass, and drum tabs/chords and doesn't require an API key, though it has no CORS support so you'd need to proxy through your PHP backend.
 - Add webp to image service, and then also figure out the jpg edge case
+- Fix drag and drop on dashboard (IOS and android issue)
+
 ## Refactoring
 - Go through controllers and refactor them
 - Debug camera not working
-- Unify the homepage and views otd
 - Remove google analytics on localhost
 - Finish pricing project, fix ip logging in db
 - Refactor app/admin into subprojects for admin page
+- Refactor title to remove | text (not nice on browser)
+- apiFetch(...) function can be refactored into a common util, or api service, since it's used in multiple projects - duplication of code
 
 ## Project Ideas
-- **Pricing page** - finish the pricing page and have a copy ready to send out to potential clients
+- **Offline plane tracker** - location is always on device, have a service track the points, and render it on leaflet map, you click start and it works in the background. The issue is that I don't know if this is possible for web, or pwe, if the app is open in browser that has no internet and is in the background, can you stop the js process from getting halted or is there a way, possible with pwe? Can't post to db without internet connection, so quesiton if this is usable for anyone but myself, for seeing where I'm flying and what is visible from the plane - possible add on from d3 for visualization? How do I handle tailwind, and other libraries not loading due to no internet - generally for dev when offline, and in this project for production as well.
 - **ASCII art converter** — transform images to ASCII (lightest to darkest); already have a project, put it on the portfolio
 - **Pixel encoder to YouTube video** — encode data into video frames (B&W and RGB); explore glitch AI art angle to avoid content removal
 - **QR / barcode generator**

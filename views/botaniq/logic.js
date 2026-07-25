@@ -1,7 +1,4 @@
-// DOM-free watering-schedule + formatting logic for the Botaniq plant tracker,
-// unit-tested by tests/botaniq-logic.test.mjs (node --test tests/). The page's
-// script.js imports this as an ES module. `now` is injected so the schedule
-// math is deterministic under test; in the browser it defaults to the clock.
+// DOM-free watering-schedule + formatting logic for the Botaniq plant tracker, unit-tested by tests/botaniq-logic.test.mjs (node --test tests/). The page's script.js imports this as an ES module. `now` is injected so the schedule math is deterministic under test; in the browser it defaults to the clock.
 
 /**
  * Work out when a plant is next due for water, as a status label plus a CSS

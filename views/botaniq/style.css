@@ -58,7 +58,6 @@ body {
     border-color: #dc2626;
 }
 
-/* List input (issues/tips) */
 .list-input {
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -126,7 +125,6 @@ body {
     background: #d5d5d5;
 }
 
-/* Image upload */
 .image-upload {
     position: relative;
 }
@@ -181,7 +179,6 @@ body {
     cursor: pointer;
 }
 
-/* Form error */
 .form-error {
     background: #fef2f2;
     border: 1px solid #fecaca;
@@ -192,7 +189,6 @@ body {
     margin-top: 1rem;
 }
 
-/* Toast animations */
 .toast {
     animation: toastIn 0.3s ease;
 }
@@ -211,7 +207,6 @@ body {
     to { opacity: 0; transform: translateY(10px); }
 }
 
-/* Loading spinner */
 .loading-spinner {
     width: 32px;
     height: 32px;

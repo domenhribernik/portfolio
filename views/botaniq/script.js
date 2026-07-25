@@ -6,9 +6,7 @@ import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js
 
     const API = '../../app/controllers/plants-controller.php';
     const LOCK_TITLE = 'Sign in to manage your own plants';
-    // Base classes for the compact watering pill on a card. Shared by the card
-    // template and the 60s countdown refresh so the two can never drift apart;
-    // the status class (status-ok/soon/overdue) is appended per plant.
+    // Base classes for the compact watering pill on a card. Shared by the card template and the 60s countdown refresh so the two can never drift apart; the status class (status-ok/soon/overdue) is appended per plant.
     const CARD_PILL_CLS = 'watering-countdown flex items-center gap-2 px-3 py-2 rounded-lg';
 
     // --- State ---
@@ -18,8 +16,6 @@ import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js
     let currentIssues = [];
     let currentTips = [];
     let countdownInterval = null;
-    // The image chosen for the form, from either the file picker or the camera.
-    // Both inputs feed this, and submit reads it, so the two never fight.
     let selectedImageFile = null;
 
     // --- DOM refs ---
@@ -242,7 +238,6 @@ import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js
     }
 
     // --- Watering countdown ---
-    // getWateringStatus + formatTemp live in logic.js (tested); imported above.
 
     function startCountdownUpdates() {
         if (countdownInterval) clearInterval(countdownInterval);
@@ -441,7 +436,6 @@ import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js
             soil: document.getElementById('plantSoil').value.trim(),
         };
 
-        // Only a name and the watering window are required now.
         const errors = [];
         const required = ['name', 'watering_min_days', 'watering_max_days'];
 
@@ -472,7 +466,6 @@ import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js
         }
 
         Object.entries(fields).forEach(([key, val]) => formData.append(key, val));
-        // Frequency text is derived from the window, not typed by the user.
         formData.append('watering_frequency_text', wateringFrequencyText(minDays, maxDays));
         formData.append('common_issues', JSON.stringify(currentIssues));
         formData.append('useful_tips', JSON.stringify(currentTips));
@@ -509,7 +502,6 @@ import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js
     }
 
     function getFieldElement(field) {
-        // Only the required fields need to be flagged invalid on submit.
         const map = {
             name: 'plantName',
             watering_min_days: 'wateringMin',
@@ -737,11 +729,9 @@ import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js
     document.getElementById('plantCamera').addEventListener('change', e => handleImageFile(e.target.files[0], e.target));
     document.getElementById('cameraBtn').addEventListener('click', () => document.getElementById('plantCamera').click());
     document.getElementById('removeImage').addEventListener('change', e => {
-        // Ticking "remove" discards any freshly picked photo too.
         if (e.target.checked) resetImagePreview();
     });
 
-    // Escape key closes top modal
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             const activeModal = document.querySelector('.modal-overlay.active');
@@ -749,6 +739,5 @@ import { getWateringStatus, formatTemp, wateringFrequencyText } from './logic.js
         }
     });
 
-    // --- Init ---
     loadPlants();
 })();
