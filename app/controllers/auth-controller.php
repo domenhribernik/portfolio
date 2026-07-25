@@ -15,8 +15,7 @@ const PASSWORD_MAX_LENGTH = 200;
 const MAX_FAILURES_PER_IDENTIFIER = 5;
 const MAX_FAILURES_PER_IP = 20;
 const RATE_WINDOW_MINUTES = 15;
-// Verified against on unknown identifiers so response timing does not reveal
-// whether an account exists.
+// Verified against on unknown identifiers so response timing does not reveal whether an account exists.
 const DUMMY_HASH = '$2y$10$rcXYOPqsXA82.LrT87b55OepL5d3VweQgkBZUE37rHaseG20KQOJC';
 
 $method   = $_SERVER['REQUEST_METHOD'];

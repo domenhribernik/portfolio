@@ -1,7 +1,3 @@
--- Auth schema: global users, DB-backed sessions, per-project roles,
--- admin-issued password resets, and login rate limiting.
--- Run manually in phpMyAdmin. Safe to re-run.
-
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     google_sub VARCHAR(32) DEFAULT NULL UNIQUE,
