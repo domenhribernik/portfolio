@@ -4,6 +4,7 @@
 
 import {
     fmtNum, fmtEur, fmtPct, fmtQty, fmtDateSl, parseSlNum,
+    parseDateSl, toDateSl, todayIso,
     computeHoldings, enrichHoldings, expectedDividends, upcomingDividends,
     changePct, weekPos52, evaluateAlerts,
     sparklinePath, niceTicks, seriesToPath,
@@ -481,7 +482,7 @@ async function openDrawer(instrumentId) {
     drawer.querySelector('[data-act="buy"]').addEventListener('click', () => {
         $('txInstrument').value = String(instrumentId);
         if (i.last !== null) $('txPrice').value = fmtNum(i.last).replace(/ /g, '');
-        $('txDate').value = new Date().toISOString().slice(0, 10);
+        $('txDate').value = toDateSl(todayIso());
         location.hash = '#transakcije';
         $('txQty').focus();
     });
@@ -661,7 +662,7 @@ function startTxEdit(id) {
     $('txQty').value = fmtQty(t.quantity);
     $('txPrice').value = fmtNum(t.price).replace(/ /g, '');
     $('txFees').value = t.fees ? fmtNum(t.fees).replace(/ /g, '') : '';
-    $('txDate').value = t.trade_date;
+    $('txDate').value = toDateSl(t.trade_date);
     $('txNote').value = t.note || '';
     $('txSubmit').textContent = 'Shrani';
     $('txCancel').classList.remove('hidden');
@@ -694,12 +695,12 @@ async function submitTx(event) {
         quantity: parseSlNum($('txQty').value),
         price: parseSlNum($('txPrice').value),
         fees: parseSlNum($('txFees').value) ?? 0,
-        trade_date: $('txDate').value,
+        trade_date: parseDateSl($('txDate').value),
         note: $('txNote').value.trim(),
     };
     if (body.quantity === null || body.quantity <= 0) return showError('Vpiši veljavno količino.');
     if (body.price === null || body.price < 0) return showError('Vpiši veljavno ceno.');
-    if (!body.trade_date) return showError('Izberi datum.');
+    if (!body.trade_date) return showError('Vpiši datum v obliki dd.mm.llll, npr. 25.07.2026.');
 
     const editing = $('txId').value !== '';
     const url = API + '?resource=transactions' + (editing ? '&id=' + $('txId').value : '');
@@ -738,7 +739,7 @@ function markSettled(hostId, selector) {
 
 function renderDividends() {
     const held = holdings();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayIso();
 
     // Only what is still ahead: paid-out rows stay in the DB as history but
     // leave the calendar. Undated announcements (NLB's December installment)
@@ -915,7 +916,16 @@ function wireForms() {
     $('txForm').addEventListener('submit', submitTx);
     $('txCancel').addEventListener('click', resetTxForm);
     $('txSide').addEventListener('change', syncTxLabels);
-    $('txDate').value = new Date().toISOString().slice(0, 10);
+    $('txDate').value = toDateSl(todayIso());
+
+    // Date fields are typed, not picked: on blur anything understood is rewritten
+    // in canonical dd.mm.llll form, so what stays on screen is what gets stored.
+    ['txDate', 'divExDate', 'divPayDate'].forEach((id) => {
+        $(id).addEventListener('change', (event) => {
+            const iso = parseDateSl(event.target.value);
+            if (iso) event.target.value = toDateSl(iso);
+        });
+    });
 
     $('alertForm').addEventListener('submit', submitAlert);
     $('alertKind').addEventListener('change', syncAlertLabels);
@@ -926,10 +936,15 @@ function wireForms() {
         const body = {
             instrument_id: Number($('divInstrument').value),
             amount: parseSlNum($('divAmount').value),
-            ex_date: $('divExDate').value || null,
-            pay_date: $('divPayDate').value || null,
+            ex_date: parseDateSl($('divExDate').value),
+            pay_date: parseDateSl($('divPayDate').value),
         };
         if (body.amount === null || body.amount <= 0) return showError('Vpiši veljaven znesek.');
+        for (const id of ['divExDate', 'divPayDate']) {
+            if ($(id).value.trim() !== '' && parseDateSl($(id).value) === null) {
+                return showError('Vpiši datum v obliki dd.mm.llll, npr. 25.07.2026.');
+            }
+        }
         const res = await fetch(API + '?resource=dividends', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

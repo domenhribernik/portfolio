@@ -179,7 +179,8 @@
                         </label>
                         <label class="field">
                             <span>Datum</span>
-                            <input id="txDate" type="date" required>
+                            <input id="txDate" inputmode="numeric" maxlength="12" placeholder="dd.mm.llll"
+                                   title="Datum v obliki dd.mm.llll, npr. 25.07.2026" required>
                         </label>
                         <label class="field col-span-2">
                             <span>Opomba</span>
@@ -225,11 +226,13 @@
                                     </label>
                                     <label class="field">
                                         <span>Presečni dan</span>
-                                        <input id="divExDate" type="date">
+                                        <input id="divExDate" inputmode="numeric" maxlength="12" placeholder="dd.mm.llll"
+                                               title="Datum v obliki dd.mm.llll, npr. 25.07.2026">
                                     </label>
                                     <label class="field col-span-2 md:col-span-1">
                                         <span>Izplačilo</span>
-                                        <input id="divPayDate" type="date">
+                                        <input id="divPayDate" inputmode="numeric" maxlength="12" placeholder="dd.mm.llll"
+                                               title="Datum v obliki dd.mm.llll, npr. 25.07.2026">
                                     </label>
                                 </div>
                                 <button type="submit" class="btn-press mt-3 font-mono font-bold text-xs uppercase tracking-widest bg-ink text-paper border border-ink rounded-[3px] px-5 py-2.5 hover:bg-clay hover:border-clay transition">Zabeleži</button>

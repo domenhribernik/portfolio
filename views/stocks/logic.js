@@ -42,6 +42,49 @@ export function fmtDateSl(iso) {
     return `${d}. ${m}. ${y}`;
 }
 
+const pad2 = (n) => String(n).padStart(2, '0');
+
+/**
+ * A typed date to ISO yyyy-mm-dd, or null when it isn't a real day.
+ *
+ * The date fields are plain text, not <input type="date">, because a native
+ * date field renders in the BROWSER's locale: a US-locale browser shows this
+ * Slovenian page a mm/dd/yyyy field and swaps day and month on the way in.
+ * Accepted here: dd.mm.yyyy (the Slovenian form, also with / or - separators
+ * and stray spaces), a bare ddmmyyyy digit run for numeric keypads, and ISO
+ * yyyy-mm-dd so a pasted machine date still lands.
+ */
+export function parseDateSl(text) {
+    const raw = String(text ?? '').trim();
+    if (raw === '') return null;
+
+    let y, m, d;
+    const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    const sl = raw.match(/^(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{4})\.?$/);
+    const digits = raw.match(/^(\d{2})(\d{2})(\d{4})$/);
+    if (iso) [, y, m, d] = iso;
+    else if (sl) [, d, m, y] = sl;
+    else if (digits) [, d, m, y] = digits;
+    else return null;
+
+    [y, m, d] = [Number(y), Number(m), Number(d)];
+    // Round-trip through UTC so 31.02. and friends are rejected, not rolled.
+    const probe = new Date(Date.UTC(y, m - 1, d));
+    if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== m - 1 || probe.getUTCDate() !== d) return null;
+    return `${y}-${pad2(m)}-${pad2(d)}`;
+}
+
+/** ISO yyyy-mm-dd to the dd.mm.yyyy string a date field carries; '' if unset. */
+export function toDateSl(iso) {
+    const m = String(iso ?? '').slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? `${m[3]}.${m[2]}.${m[1]}` : '';
+}
+
+/** Today as ISO yyyy-mm-dd in the viewer's own timezone, not UTC. */
+export function todayIso(now = new Date()) {
+    return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+}
+
 /**
  * FIFO ledger math: fold a flat transaction list (any order) into per-
  * instrument holdings. Buy fees load the lot's cost basis, sell fees reduce

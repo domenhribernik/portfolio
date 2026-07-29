@@ -11,3 +11,5 @@ vendor
 !/app/cache/.gitkeep
 /app/data/*
 !/app/data/.gitkeep
+/stocks-sync.log
+__pycache__/

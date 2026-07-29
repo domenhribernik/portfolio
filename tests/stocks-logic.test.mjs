@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { fmtEur, fmtPct, fmtQty, fmtDateSl, computeHoldings, cgtRatePct, taxReport, changePct, weekPos52, evaluateAlerts, sparklinePath, niceTicks, seriesToPath, enrichHoldings, groupBySegment, portfolioTimeline, parseSlNum, expectedDividends, upcomingDividends } from '../views/stocks/logic.js';
+import { fmtEur, fmtPct, fmtQty, fmtDateSl, parseDateSl, toDateSl, todayIso, computeHoldings, cgtRatePct, taxReport, changePct, weekPos52, evaluateAlerts, sparklinePath, niceTicks, seriesToPath, enrichHoldings, groupBySegment, portfolioTimeline, parseSlNum, expectedDividends, upcomingDividends } from '../views/stocks/logic.js';
 
 // The space before € is U+00A0 so the amount never wraps away from its unit.
 test('fmtEur renders Slovenian format with dot thousands and comma decimals', () => {
@@ -38,6 +38,57 @@ test('fmtQty drops trailing zeros but keeps real fractions', () => {
 test('fmtDateSl renders a Slovenian short date', () => {
     assert.equal(fmtDateSl('2026-07-18'), '18. 7. 2026');
     assert.equal(fmtDateSl(null), '–');
+});
+
+// The date fields are typed text (a native date input follows the browser's
+// locale, which swaps day and month for anyone on a US-locale browser), so
+// day-first entry has to survive every separator a person actually types.
+test('parseDateSl reads day-first dates into ISO', () => {
+    assert.equal(parseDateSl('25.07.2026'), '2026-07-25');
+    assert.equal(parseDateSl('5.7.2026'), '2026-07-05');
+    assert.equal(parseDateSl('25. 7. 2026'), '2026-07-25');
+    assert.equal(parseDateSl('25/07/2026'), '2026-07-25');
+    assert.equal(parseDateSl('25-07-2026'), '2026-07-25');
+});
+
+test('parseDateSl accepts a bare digit run and a pasted ISO date', () => {
+    assert.equal(parseDateSl('25072026'), '2026-07-25');
+    assert.equal(parseDateSl('2026-07-25'), '2026-07-25');
+});
+
+test('parseDateSl never reads a date the American way round', () => {
+    // 07.12.2026 is 7 December here, never 12 July.
+    assert.equal(parseDateSl('07.12.2026'), '2026-12-07');
+});
+
+test('parseDateSl rejects impossible days instead of rolling them over', () => {
+    assert.equal(parseDateSl('31.02.2026'), null);
+    assert.equal(parseDateSl('29.02.2025'), null);
+    assert.equal(parseDateSl('29.02.2024'), '2024-02-29'); // leap year
+    assert.equal(parseDateSl('25.13.2026'), null);
+    assert.equal(parseDateSl('00.07.2026'), null);
+});
+
+test('parseDateSl treats empty and unreadable input as no date', () => {
+    assert.equal(parseDateSl(''), null);
+    assert.equal(parseDateSl('   '), null);
+    assert.equal(parseDateSl(null), null);
+    assert.equal(parseDateSl('jutri'), null);
+    assert.equal(parseDateSl('25.7.26'), null); // two-digit years are ambiguous
+});
+
+test('toDateSl round-trips an ISO date back into the field', () => {
+    assert.equal(toDateSl('2026-07-05'), '05.07.2026');
+    assert.equal(parseDateSl(toDateSl('2026-07-05')), '2026-07-05');
+    assert.equal(toDateSl(null), '');
+    assert.equal(toDateSl('not a date'), '');
+});
+
+test('todayIso reads the local day, not the UTC one', () => {
+    // 01:30 CEST on 25 July is still 23:30 UTC on the 24th; the form must
+    // default to the day the user is living in.
+    const localMidnightish = new Date(2026, 6, 25, 1, 30);
+    assert.equal(todayIso(localMidnightish), '2026-07-25');
 });
 
 // FIFO ledger math. Transactions arrive in arbitrary order; holdings are per
