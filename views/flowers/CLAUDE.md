@@ -45,15 +45,15 @@ paused and spin on card hover). Generate clears `#bouquet-root`, calls
 - `bouquetSeats(n, sizes)` (logic.js) returns collision-free dome seats. n=1..3 stay literal;
   n>=4 seed on a golden-angle spiral, then a deterministic repulsion relaxation pushes heads
   apart by their `sizes` (per-instance `HEAD_RADII` at scale 1, passed by `buildBouquet`).
-  Seat 0 is the pinned focal center (no longer "center-out ordered": relaxation binds seat i
-  to instance i, so seats can't be re-sorted by radius). Two heads may sit `PACK_FACTOR` (0.6)
-  of their summed radii apart, so they kiss and interleave rather than reading as gappy; a
-  final one-shot scale-down (`SHRINK_FLOOR` 0.75) guarantees the no-overlap invariant even for
-  12 big heads. Height/tilt/scale come from `domeProfile(r)` (a radius->silhouette table) plus
-  a small golden low-discrepancy upward-only stagger, so co-radius heads never share a plane.
-  `orderToInstances` still round-robins types and promotes a `focal` flower to seat 0.
-  The no-overlap and dome-silhouette invariants are unit-tested against the exported constants,
-  so calibrating the constants can't silently break them.
+  Seat 0 is the pinned focal center, and relaxation binds seat i to instance i, so seats
+  can't be re-sorted by radius. Two heads may sit `PACK_FACTOR` (0.6) of their summed radii
+  apart, so they kiss and interleave rather than reading as gappy; a final one-shot
+  scale-down (`SHRINK_FLOOR` 0.75) guarantees the no-overlap invariant even for 12 big heads.
+  Height/tilt/scale come from `domeProfile(r)` (a radius->silhouette table) plus a small
+  golden low-discrepancy upward-only stagger, so co-radius heads never share a plane.
+  `orderToInstances` round-robins types and promotes a `focal` flower to seat 0. The
+  no-overlap and dome-silhouette invariants are unit-tested against the exported constants,
+  so recalibrating them can't silently break the packing.
 - Variants cycle per instance (`i % variants.length`), so three roses come in three colorways.
 - `MAX_STEMS` (12) caps the order; the UI enforces it in the steppers.
 - **Stems curve into a hand-tied bundle.** `stemPath(seat, {segments, seed, footY})` (logic.js)

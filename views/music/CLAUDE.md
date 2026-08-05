@@ -17,9 +17,9 @@ Guitar backing tracks app with three screens sharing one retro tape-deck design 
 ## Chord cards, tabs, suggestions
 
 - [chord-card.js](chord-card.js) (plain script, loaded by all three screens before their `script.js`) renders a popover with an SVG fretboard diagram and a Karplus-Strong strum via Web Audio. It is **fully local**: open voicings for common chords plus movable E/A barre shapes for every other root. Clickable chord elements get a `data-chord-anchor` attribute (the card's outside-click dismissal depends on it). API: `ChordCard.show(name, anchorEl)`, `.parse(name)`, `.findVoicing(pc, quality)`.
-- Tab links come from [app/proxys/tabs-proxy.php](../../app/proxys/tabs-proxy.php) (Songsterr search, 30-day cache in `app/cache/tabs-cache.json`); the player prefetches per track on first deck open and shows a "Tab" button only on a hit.
+- Tab links come from [app/proxys/tabs-proxy.php](../../app/proxys/tabs-proxy.php) (Songsterr search, 30-day cache); the player prefetches per track on first deck open and shows a "Tab" button only on a hit.
 - The editor's "next chord ideas" strip is a local theory engine (key inference over the chords used, then degree-transition lookups), not an API call.
-- **Dead/blocked APIs, do not retry:** Uberchord (`api.uberchord.com`) is dead (no HTTP response, service shut down) and the Scales-Chords embed JS returns 403 server-side. That is why diagrams and chord sounds are implemented locally. Hooktheory's API requires an account (no credentials in `.env`), hence the local suggestion engine.
+- **Dead/blocked APIs, do not retry:** Uberchord (`api.uberchord.com`) is shut down, the Scales-Chords embed JS returns 403 server-side, and Hooktheory requires an account. That is why diagrams, chord sounds and suggestions are all implemented locally.
 
 ## Backend
 

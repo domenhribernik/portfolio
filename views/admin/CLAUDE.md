@@ -61,7 +61,6 @@ First integration of the full pattern: the list view (`list_collection_access` i
 
 ## Frontend contract for gated views
 
-- Cookie-authed controllers must send `Cache-Control: no-store` and must NOT send `Access-Control-Allow-Origin` (see root CLAUDE.md gotchas).
-- Use [components/auth-gate.js](../../components/auth-gate.js)'s `gatedFetch()` on the view's own boot-time fetch instead of hand-rolling the branching: 401 -> render a sign-in gate linking to `loginUrl()` (`../account/?redirect=<path>`), 403 -> render a "no access yet" gate. The gate's markup and styling are the view's own (see root CLAUDE.md styling rules), only this classification logic and the redirect URL are shared. No current consumer (`views/botaniq` moved to a public read-only demo with per-user rows and now uses only `loginUrl()`); the helper stays for the next whole-page-gated view.
+- Response headers (`no-store`, no wildcard CORS) and the `gatedFetch()` 401/403 contract are in the root CLAUDE.md; don't restate them per view. `gatedFetch` currently has no consumer (`views/botaniq` moved to a public read-only demo and uses only `loginUrl()`), it stays for the next whole-page-gated view.
 - Reveal admin-only UI only when `me.user.is_admin` is true (the server re-checks anyway; the flag is cosmetic).
 - Handle 401 on background polls by showing the signed-out gate, sessions expire.

@@ -76,16 +76,24 @@ Labels: <20 Trivial, <40 Easy, <60 Medium, <80 Hard, else Brutal. Returned `brea
 
 `openCounts` is precomputed once per `score()` call as an `Int8Array` — don't re-scan walls per metric.
 
-### Why these metrics, and what changed
+### Design rules behind the metrics (don't undo these)
 
-- `branchNorm` (mean openings ÷ 4) was removed: for any spanning tree mean openings is ~2(n-1)/n ≈ 2, so this metric was nearly constant across all algorithms — it didn't differentiate Prim's from DFS.
-- `junctionRatio` (degree ≥3 cells) was added then removed: it's nearly redundant with `deadEndNorm` (both measure how branchy the spanning tree is — a tree with more branches has both more leaves and more internal junctions). Its 0.08 weight was redistributed to `decisionDensity` and `trapNorm`.
-- `decisionRatio` was a binary "≥3 openings" flag; replaced with `decisionDensity` so a 4-way crossing weighs more than a T-junction.
-- `solutionRatio` (path / total) cancelled size out — a 50-cell path in 100 cells read the same as a 200-cell path in 400. Replaced with `pathNorm` (absolute length / 300) so longer absolute paths score higher. This also makes "farthest pair" placement read as harder than "random", which it genuinely is for the solver.
-- **All structural metrics are now calibrated against observed realistic maxes** rather than theoretical ones. The previous version normalized against worst-case theoretical bounds, so the bars hovered at 10-30% even for hard mazes. New divisors: `decisionDensity / 0.7`, `deadEndNorm / 2 (per path cell)`, `trapNorm / 6`. A genuinely branchy maze now fills these bars.
-- `trapNorm` previously divided by √total (size-aware). Removed: size is already a separate metric, and the √total divisor was so large it kept the trap bar tiny for big mazes.
-- **Structural metrics are path-relative, not maze-wide**. Earlier versions counted dead ends across the whole maze; replaced with off-path dead ends per path cell. Reasoning: a solver only experiences cells they walk through, so dead ends in unreachable corners shouldn't inflate the score. `pathFactor = min(pathLen/30, 1)` further damps decisions and traps when the solution is too short to contain meaningful difficulty.
-- `sizeNorm` is weighted heavily (0.27): a 60×60 DFS maze is intrinsically more taxing than a 5×5 of the same algorithm even when the structural metrics are identical. Without this, small mazes could trivially score "Brutal" with a tortuous solution.
+- **Structural metrics are path-relative, not maze-wide.** A solver only experiences cells
+  they walk through, so dead ends in unreachable corners must not inflate the score. Count
+  off-path dead ends *per path cell*, never maze-wide.
+- **Calibrate divisors against observed realistic maxes, not theoretical bounds.** An
+  earlier version normalized against worst-case theory and the bars hovered at 10-30% even
+  for hard mazes. Hence `decisionDensity / 0.7`, `deadEndNorm / 2`, `trapNorm / 6`.
+- **`sizeNorm` is weighted heavily (0.27) on purpose**: a 60×60 DFS maze is intrinsically
+  more taxing than a 5×5 of the same algorithm. Without it, small mazes score "Brutal" off
+  one tortuous solution.
+- **Removed, do not reintroduce:** `branchNorm` (mean openings ÷ 4, ≈2 for *any* spanning
+  tree, so it never differentiated Prim's from DFS), `junctionRatio` (nearly redundant with
+  `deadEndNorm`, both measure branchiness), `decisionRatio` (binary "≥3 openings" flag,
+  superseded by `decisionDensity` so a 4-way crossing outweighs a T-junction),
+  `solutionRatio` (path / total cancelled size out; `pathNorm` replaced it, which is also
+  what makes "farthest pair" read as harder than "random"). `trapNorm` no longer divides by
+  √total, size is already its own metric.
 
 ## Entrance/exit placement
 

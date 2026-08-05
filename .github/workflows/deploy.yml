@@ -64,6 +64,8 @@ jobs:
             package.json,
             README.md,
             CLAUDE.md,
+            **/CLAUDE.md,
+            views/store/PLAN.md,
             views/slovenia/**,
             views/quizz/**,
             views/download/**,
