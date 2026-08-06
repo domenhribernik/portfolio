@@ -71,13 +71,16 @@ ALTER TABLE dashboard_user_apps ADD COLUMN IF NOT EXISTS position INT NOT NULL D
 
 -- ------------------------------------------------------------------
 -- 3. Prune tiles that are not launcher tools: everything academic and
---    professional, plus the showcase-only passion views (Nebo, IP
---    Locator, Blog). Deleting a tile cascades its dashboard_user_apps rows.
+--    professional, plus the showcase-only passion views (IP Locator, Blog).
+--    Deleting a tile cascades its dashboard_user_apps rows.
 --    No-ops where the rows never existed.
+--
+--    Nebo was on this list until 2026-08-06 and is deliberately NOT any more:
+--    it is now a default launcher tile (see dashboard-tiles-2026-08.sql and
+--    section 8 below). Re-adding it here would delete it and every shelf row.
 -- ------------------------------------------------------------------
 
 DELETE FROM dashboard_apps WHERE url IN (
-    '/views/nebo/',
     '/views/ip/',
     '/views/blog/',
     '/views/thesis/',
@@ -198,9 +201,9 @@ WHERE NOT EXISTS (SELECT 1 FROM dashboard_apps h WHERE h.url LIKE '/views/music%
 ON DUPLICATE KEY UPDATE dashboard_apps.name = dashboard_apps.name;
 
 -- ------------------------------------------------------------------
--- 8. The default shelf: the per-user-data apps plus the two most
---    shareable ones. Seeded to every NEW user at signup; editable
---    later per tile in the views/admin dashboard.
+-- 8. The default shelf: the per-user-data apps, the two most shareable ones,
+--    and Nebo. Seeded to every NEW user at signup; editable later per tile in
+--    the views/admin dashboard.
 -- ------------------------------------------------------------------
 
 UPDATE dashboard_apps SET is_default = 1
@@ -209,7 +212,8 @@ UPDATE dashboard_apps SET is_default = 1
     OR url LIKE '/views/workout%'
     OR url LIKE '/views/recipes%'
     OR url LIKE '/views/tarok%'
-    OR url LIKE '/views/flowers%';
+    OR url LIKE '/views/flowers%'
+    OR url LIKE '/views/nebo%';
 
 -- ------------------------------------------------------------------
 -- 9. One-time backfill: put the default tiles on every EXISTING active

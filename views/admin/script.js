@@ -198,14 +198,21 @@ function renderProfile(data) {
     document.getElementById('d-name').textContent = u.display_name || u.username || u.email;
     document.getElementById('d-email').textContent = u.email;
 
-    const avatar = document.getElementById('d-avatar');
+    // Build the avatar element only when there is a picture to put in it, so the
+    // static markup never carries a source-less image tag. The initials chip is
+    // the default and the avatar is inserted ahead of it.
     const fallback = document.getElementById('d-avatar-fallback');
+    document.getElementById('d-avatar')?.remove();
     if (u.avatar_url) {
+        const avatar = document.createElement('img');
+        avatar.id = 'd-avatar';
         avatar.src = u.avatar_url;
-        avatar.classList.remove('hidden');
+        avatar.alt = '';
+        avatar.referrerPolicy = 'no-referrer';
+        avatar.className = 'w-12 h-12 rounded-[3px] border border-hairline object-cover';
+        fallback.before(avatar);
         fallback.classList.add('hidden');
     } else {
-        avatar.classList.add('hidden');
         fallback.classList.remove('hidden');
         fallback.textContent = (u.display_name || u.email || '?').charAt(0).toUpperCase();
     }
@@ -734,6 +741,24 @@ function syncGradientSwatch() {
         .style.setProperty('--swatch', value || '#f6f2ea');
 }
 
+// Same class list the controller accepts (dashboard-controller.php validateAppFields),
+// so a class that would come back as a 400 shows the fallback glyph instead.
+const ICON_CLASS_RE = /^[a-z0-9 -]{1,100}$/;
+
+// Draw the composer's icon exactly as the tile will: the FontAwesome classes as
+// typed, tinted with the gradient's first hex, mirroring the tile list and
+// views/dashboard. An empty field previews the server default.
+function syncIconPreview() {
+    const raw = document.getElementById('dashboard-icon').value.trim();
+    const gradient = document.getElementById('dashboard-gradient').value.trim();
+    const valid = raw === '' || ICON_CLASS_RE.test(raw);
+    const glyph = document.querySelector('#dashboard-icon-preview i');
+    glyph.className = valid ? (raw || 'fa-solid fa-cube') : 'fa-solid fa-circle-question';
+    glyph.style.color = valid ? accentFromGradient(gradient) : '#a49a8a';
+    document.getElementById('dashboard-icon-preview').title = valid
+        ? '' : 'Lowercase FontAwesome classes only, e.g. "fa-solid fa-leaf"';
+}
+
 function startDashboardEdit(app) {
     editingDashboardAppId = app.id;
     document.getElementById('dashboard-name').value = app.name;
@@ -746,6 +771,7 @@ function startDashboardEdit(app) {
     document.getElementById('dashboard-submit').textContent = 'Save tile';
     document.getElementById('dashboard-cancel').classList.remove('hidden');
     syncGradientSwatch();
+    syncIconPreview();
     document.getElementById('dashboard-name').focus();
 }
 
@@ -754,17 +780,29 @@ function resetDashboardForm() {
     document.getElementById('dashboard-form').reset();
     document.getElementById('dashboard-project').value = '';
     document.getElementById('dashboard-sort').value = '0';
+    // Start every new tile from a usable gradient rather than an empty field:
+    // picking a colour is the step people stall on, and it is easy to reroll.
+    document.getElementById('dashboard-gradient').value = randomGradient();
     document.getElementById('dashboard-submit').textContent = 'Add tile';
     document.getElementById('dashboard-cancel').classList.add('hidden');
     syncGradientSwatch();
+    syncIconPreview();
 }
 
 document.getElementById('dashboard-cancel').addEventListener('click', resetDashboardForm);
-document.getElementById('dashboard-gradient').addEventListener('input', syncGradientSwatch);
+document.getElementById('dashboard-icon').addEventListener('input', syncIconPreview);
+document.getElementById('dashboard-gradient').addEventListener('input', () => {
+    syncGradientSwatch();
+    syncIconPreview();
+});
 document.getElementById('dashboard-gradient-random').addEventListener('click', () => {
     document.getElementById('dashboard-gradient').value = randomGradient();
     syncGradientSwatch();
+    syncIconPreview();
 });
+
+// Prime the composer at load: a random gradient in the field, both previews drawn.
+resetDashboardForm();
 
 document.getElementById('dashboard-form').addEventListener('submit', async (e) => {
     e.preventDefault();

@@ -159,8 +159,8 @@
                         <!-- Profile -->
                         <div class="card p-6">
                             <div class="flex items-start gap-4">
-                                <img id="d-avatar" src="" alt="" referrerpolicy="no-referrer"
-                                    class="hidden w-12 h-12 rounded-[3px] border border-hairline object-cover">
+                                <!-- script.js builds the avatar picture only when the user has one;
+                                     until then this initials chip stands in its place. -->
                                 <div id="d-avatar-fallback"
                                     class="w-12 h-12 rounded-[3px] border border-hairline bg-paper2 flex items-center justify-center font-display text-clay text-xl font-semibold">
                                     ?</div>
@@ -290,9 +290,18 @@
                             <input id="dashboard-url" type="text" class="field-input" required
                                 placeholder="/views/botaniq/">
                         </div>
-                        <div>
+                        <div class="sm:col-span-2">
                             <label for="dashboard-icon" class="field-label">Icon</label>
-                            <input id="dashboard-icon" type="text" class="field-input" placeholder="fa-solid fa-leaf">
+                            <div class="flex items-center gap-2">
+                                <span id="dashboard-icon-preview" class="dashboard-swatch dashboard-icon-preview shrink-0"
+                                    aria-hidden="true"><i class="fa-solid fa-cube"></i></span>
+                                <input id="dashboard-icon" type="text" class="field-input flex-1 min-w-0"
+                                    placeholder="fa-solid fa-leaf">
+                                <a href="https://fontawesome.com/search?ic=free" target="_blank" rel="noopener"
+                                    class="btn-ghost shrink-0 inline-block"
+                                    title="Find a Font Awesome icon, then copy its class here">
+                                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Browse</a>
+                            </div>
                         </div>
                         <div class="sm:col-span-2">
                             <label for="dashboard-gradient" class="field-label">Gradient</label>

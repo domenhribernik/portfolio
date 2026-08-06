@@ -104,7 +104,7 @@ Views written before this convention still use native date fields (`views/iliana
 ### Backend (PHP and Python)
 
 - [app/config/](app/config/): database access and other configuration (`database.php`, `dev-mode.php`, `auth.php`)
-- [app/models/](app/models/): SQL / data storage definitions
+- [app/models/](app/models/): SQL / data storage definitions, one `<name>-model.sql` per feature. Run-once data scripts (backfills, tile seeds, one-off migrations) go in [app/models/seeds/](app/models/seeds/) instead, so the schema files stay easy to scan
 - [app/controllers/](app/controllers/): CRUD operations for the database
 - [app/services/](app/services/): higher-level functions composing controllers
 - [app/proxys/](app/proxys/): external API proxies (hiding API keys) and small endpoints

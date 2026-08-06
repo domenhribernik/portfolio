@@ -250,6 +250,16 @@ select.field-input {
     border-radius: 2px;
 }
 
+/* Same 34px chip as the gradient swatch, but showing the icon itself on paper. */
+.dashboard-icon-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f6f2ea;
+    font-size: 15px;
+    color: #1c1a17;
+}
+
 /* ---------- Section titles ---------- */
 
 .section-title {
