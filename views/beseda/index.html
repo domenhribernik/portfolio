@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beseda | Learn Slovenian, One Word a Day</title>
+    <meta name="description" content="A free way to learn Slovenian. A new word every day with real example sentences where every word tells you what it means, plus topic vocabulary and quizzes. No account needed.">
+    <link rel="canonical" href="https://domenhribernik.com/views/beseda/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Beseda, learn Slovenian one word a day">
+    <meta property="og:description" content="A free Slovenian word of the day with real example sentences where every word tells you what it means. Duolingo doesn't teach Slovenian. This does.">
+    <meta property="og:url" content="https://domenhribernik.com/views/beseda/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Beseda",
+      "url": "https://domenhribernik.com/views/beseda/",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any",
+      "inLanguage": "en",
+      "teaches": "Slovenian language",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@type": "Person", "name": "Domen Hribernik" }
+    }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        faint: '#a49a8a',
+                        clay: '#d4451f',
+                        claydk: '#b8371a',
+                        cobalt: '#1f35e0',
+                        pine: '#2f5b53',
+                        marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.12)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans bg-paper text-ink min-h-screen leading-relaxed">
+
+<div class="max-w-[1080px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+
+    <!-- ============ Masthead ============ -->
+    <header class="reveal reveal-1 border-b-2 border-ink pb-6 mb-8">
+        <div class="flex items-center justify-between gap-4 mb-6">
+            <a id="back-link" href="../../" class="shrink-0 text-stone no-underline hover:text-clay transition-colors font-mono text-sm">&larr; back</a>
+            <span class="hidden sm:inline font-mono text-[0.72rem] tracking-[0.24em] uppercase text-stone text-right">Slovenian &middot; free &middot; no account needed</span>
+        </div>
+
+        <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+            <div class="min-w-0">
+                <h1 class="font-display font-extrabold uppercase text-[clamp(3rem,11vw,6.5rem)] leading-[0.84] tracking-[-0.035em]">Beseda</h1>
+                <p class="mt-4 max-w-[62ch] text-stone text-[clamp(0.95rem,2vw,1.08rem)]">
+                    Duolingo doesn't teach Slovenian, and the apps that do want your money.
+                    So: one word every day, in sentences where <em class="not-italic text-ink font-medium">every word tells you what it means</em>.
+                </p>
+            </div>
+
+            <!-- Streak pill, always visible -->
+            <div id="streakPill" class="shrink-0 flex items-center gap-3 border border-hairline bg-card px-4 py-2.5" style="--acc:#d4451f">
+                <svg class="w-5 h-5 text-clay shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2c.4 3.3-1.6 4.6-2.8 6C7.7 9.7 7 11.2 7 13a5 5 0 0 0 10 0c0-2.3-1.2-3.6-2.3-5-.4 1-1 1.7-1.8 2 .4-2.6-.5-5.6-.9-8Z"/>
+                </svg>
+                <div class="leading-none">
+                    <div class="font-mono text-[0.72rem] tracking-[0.2em] uppercase text-stone mb-1">Streak</div>
+                    <div><span id="streakCount" class="font-display font-extrabold text-xl leading-none">0</span><span class="text-stone text-sm ml-1">days</span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============ Loading / error ============ -->
+    <div id="loading" class="py-16 text-center font-mono text-sm text-stone">Loading today's word&hellip;</div>
+    <div id="error" class="hidden py-12 border border-clay/40 bg-clay/5 px-5">
+        <p class="font-mono text-[0.72rem] tracking-[0.2em] uppercase text-clay mb-2">Couldn't load</p>
+        <p class="text-stone" id="errorText">The word list didn't load. Refresh the page to try again.</p>
+    </div>
+
+    <main id="app" class="hidden">
+
+        <!-- ============ Word of the day ============ -->
+        <section class="reveal reveal-2 mb-14" style="--acc:#2f5b53" aria-labelledby="wordHeading">
+            <div class="flex items-baseline justify-between gap-4 border-b border-hairline pb-2 mb-7">
+                <h2 id="wordHeading" class="font-mono text-[0.72rem] tracking-[0.24em] uppercase text-pine">Beseda dneva &middot; word of the day</h2>
+                <time id="todayLabel" class="font-mono text-[0.72rem] text-stone"></time>
+            </div>
+
+            <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] md:gap-12 items-start">
+                <!-- The word itself -->
+                <div>
+                    <p id="theWord" class="word-drop font-display font-extrabold text-[clamp(2.8rem,9vw,5rem)] leading-[0.9] tracking-[-0.035em] break-words"></p>
+                    <p id="wordMeta" class="mt-3 font-mono text-[0.72rem] tracking-[0.14em] uppercase text-stone"></p>
+                    <p id="wordGloss" class="mt-5 text-[clamp(1.15rem,2.6vw,1.5rem)] leading-snug text-ink"></p>
+
+                    <div class="mt-8 flex flex-wrap items-center gap-3">
+                        <button id="markDone" type="button"
+                                class="press font-mono text-[0.72rem] tracking-[0.18em] uppercase bg-ink text-paper px-6 py-3.5 rounded-[2px]">
+                            Mark as learned
+                        </button>
+                        <button id="startDaily" type="button"
+                                class="press-ghost font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone border border-hairline px-5 py-3.5 rounded-[2px]">
+                            Quick quiz
+                        </button>
+                    </div>
+                    <p id="doneNote" class="hidden mt-4 font-mono text-[0.72rem] text-pine">Done today. See you tomorrow.</p>
+                </div>
+
+                <!-- Examples -->
+                <div class="border-l-0 md:border-l md:border-hairline md:pl-10">
+                    <p class="font-mono text-[0.72rem] tracking-[0.2em] uppercase text-stone mb-4">
+                        In use <span class="text-faint normal-case tracking-normal">(hover any word)</span>
+                    </p>
+                    <ol id="examples" class="space-y-6"></ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ Streak ============ -->
+        <section class="reveal reveal-3 mb-14" style="--acc:#d4451f" aria-labelledby="streakHeading">
+            <div class="flex items-baseline justify-between gap-4 border-b border-hairline pb-2 mb-6">
+                <h2 id="streakHeading" class="font-mono text-[0.72rem] tracking-[0.24em] uppercase text-clay">This week</h2>
+                <span id="longestLabel" class="font-mono text-[0.72rem] text-stone"></span>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-6">
+                <ol id="weekDots" class="flex gap-2" aria-label="Practice over the last seven days"></ol>
+                <p id="syncNote" class="font-mono text-[0.72rem] text-stone max-w-[46ch]">
+                    Your streak lives in this browser.
+                    <a id="signinLink" href="../account/" class="text-clay underline underline-offset-2 hover:text-claydk">Sign in</a>
+                    to keep it everywhere.
+                </p>
+                <p id="accountChip" class="hidden items-center gap-2 font-mono text-[0.72rem] text-stone">
+                    <img id="accountAvatar" alt="" referrerpolicy="no-referrer"
+                         src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                         class="w-5 h-5 rounded-full border border-hairline bg-paper2">
+                    <span id="accountName"></span> &middot; synced
+                </p>
+            </div>
+        </section>
+
+        <!-- ============ Topics ============ -->
+        <section id="topicsSection" class="reveal reveal-4 mb-14" style="--acc:#1f35e0" aria-labelledby="topicsHeading">
+            <div class="flex items-baseline justify-between gap-4 border-b-2 border-ink pb-2 mb-1">
+                <h2 id="topicsHeading" class="font-display font-extrabold uppercase text-[clamp(1.1rem,2.4vw,1.5rem)] tracking-[0.02em]">Topics</h2>
+                <span class="font-mono text-[0.72rem] tracking-[0.2em] uppercase text-stone">Browse or drill</span>
+            </div>
+            <ol id="topicList" class="topic-index"></ol>
+        </section>
+
+        <!-- ============ Topic detail ============ -->
+        <section id="topicPanel" class="hidden mb-14" style="--acc:#1f35e0" aria-labelledby="topicTitle" tabindex="-1">
+            <div class="flex items-baseline justify-between gap-4 border-b-2 border-ink pb-2 mb-6">
+                <h2 id="topicTitle" class="font-display font-extrabold uppercase text-[clamp(1.3rem,3vw,2rem)] tracking-[0.02em]"></h2>
+                <a href="#" id="closeTopic" class="font-mono text-[0.72rem] tracking-[0.2em] uppercase text-stone hover:text-cobalt no-underline">&times; close</a>
+            </div>
+            <div class="flex flex-wrap gap-3 mb-8">
+                <button id="startTopicQuiz" type="button"
+                        class="press font-mono text-[0.72rem] tracking-[0.18em] uppercase bg-ink text-paper px-6 py-3.5 rounded-[2px]">
+                    Quiz me
+                </button>
+                <button id="startCloze" type="button"
+                        class="press-ghost font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone border border-hairline px-5 py-3.5 rounded-[2px]">
+                    Fill the gap
+                </button>
+            </div>
+            <ol id="topicWords" class="word-table"></ol>
+            <div id="topicExamples" class="mt-10"></div>
+        </section>
+
+        <!-- ============ Quiz ============ -->
+        <section id="quizPanel" class="hidden mb-14" style="--acc:#d4451f" aria-live="polite" tabindex="-1">
+            <div class="flex items-baseline justify-between gap-4 border-b-2 border-ink pb-2 mb-6">
+                <h2 id="quizTitle" class="font-display font-extrabold uppercase text-[clamp(1.1rem,2.4vw,1.5rem)] tracking-[0.02em]">Quiz</h2>
+                <span id="quizProgress" class="font-mono text-[0.72rem] tracking-[0.2em] uppercase text-stone"></span>
+            </div>
+
+            <div id="quizBody">
+                <p id="quizPrompt" class="font-display font-extrabold text-[clamp(1.8rem,6vw,3.2rem)] leading-[0.95] tracking-[-0.03em] mb-2"></p>
+                <p id="quizHint" class="font-mono text-[0.72rem] tracking-[0.16em] uppercase text-stone mb-7"></p>
+                <ol id="quizOptions" class="option-list"></ol>
+            </div>
+
+            <div id="quizResult" class="hidden">
+                <p id="quizScore" class="font-display font-extrabold text-[clamp(2rem,7vw,3.6rem)] leading-none tracking-[-0.03em]"></p>
+                <p id="quizVerdict" class="mt-3 text-stone"></p>
+                <div class="mt-7 flex flex-wrap gap-3">
+                    <button id="quizAgain" type="button" class="press font-mono text-[0.72rem] tracking-[0.18em] uppercase bg-ink text-paper px-6 py-3.5 rounded-[2px]">Again</button>
+                    <button id="quizClose" type="button" class="press-ghost font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone border border-hairline px-5 py-3.5 rounded-[2px]">Done</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============ Colophon ============ -->
+    <footer class="reveal reveal-6 mt-16 pt-4 border-t-2 border-ink">
+        <div class="border-t border-hairline pt-4 flex flex-wrap gap-x-8 gap-y-2 justify-between">
+            <p class="font-mono text-[0.72rem] text-stone/80 max-w-[70ch]">
+                Words and glosses from
+                <a href="https://kaikki.org/dictionary/Slovene/" class="underline underline-offset-2 hover:text-clay">Wiktionary via kaikki.org</a>,
+                sentences from <a href="https://tatoeba.org" class="underline underline-offset-2 hover:text-clay">Tatoeba</a>,
+                frequency from <a href="https://github.com/hermitdave/FrequencyWords" class="underline underline-offset-2 hover:text-clay">FrequencyWords</a>.
+                All CC BY-SA / CC BY; this derived data is CC BY-SA 4.0.
+            </p>
+            <p class="font-mono text-[0.72rem] text-stone/60">Built by Domen Hribernik</p>
+        </div>
+    </footer>
+
+</div>
+
+<!-- Shared gloss tooltip, positioned by script.js so it never clips off-screen -->
+<div id="tooltip" class="gloss-tip" role="tooltip" aria-hidden="true"></div>
+
+<script src="../../components/back-link.js"></script>
+<script type="module" src="script.js"></script>
+<script src="../../components/gtranslate.js"></script>
+</body>
+</html>

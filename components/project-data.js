@@ -109,6 +109,16 @@ export const projects = {
     },
     iconClass: "fa fa-trophy",
   },
+  beseda: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #2f5b53 0%, #7fa89c 100%)",
+    title: "Beseda",
+    description: "Duolingo doesn't teach Slovenian and the apps that do want your money, so here is a free one. A new word every day inside real sentences, where hovering any word tells you what it means. Keep a streak going if that helps you show up.",
+    links: {
+      visitSite: "views/beseda",
+    },
+    iconClass: "fas fa-language",
+  },
   botaniq: {
     category: "passion",
     gradient: "linear-gradient(45deg, #56ab2f 0%, #a8e063 100%)",

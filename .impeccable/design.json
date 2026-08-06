@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-06T00:00:00.000Z",
+  "title": "Design System: Domen Hribernik Portfolio",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Gallery Paper",
+        "canonical": "oklch(96% 0.012 85)",
+        "tonalRamp": ["oklch(20% 0.012 85)", "oklch(31% 0.012 85)", "oklch(42% 0.012 85)", "oklch(53% 0.012 85)", "oklch(64% 0.012 85)", "oklch(76% 0.012 85)", "oklch(88% 0.012 85)", "oklch(96% 0.012 85)"]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Shadowed Paper",
+        "canonical": "oklch(93% 0.017 82)",
+        "tonalRamp": ["oklch(19% 0.017 82)", "oklch(30% 0.017 82)", "oklch(41% 0.017 82)", "oklch(52% 0.017 82)", "oklch(63% 0.017 82)", "oklch(75% 0.017 82)", "oklch(86% 0.017 82)", "oklch(93% 0.017 82)"]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card Stock",
+        "canonical": "oklch(99% 0.008 92)",
+        "tonalRamp": ["oklch(21% 0.008 92)", "oklch(32% 0.008 92)", "oklch(43% 0.008 92)", "oklch(54% 0.008 92)", "oklch(66% 0.008 92)", "oklch(78% 0.008 92)", "oklch(90% 0.008 92)", "oklch(99% 0.008 92)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Press Ink",
+        "canonical": "oklch(19% 0.008 70)",
+        "tonalRamp": ["oklch(15% 0.008 70)", "oklch(19% 0.008 70)", "oklch(30% 0.008 70)", "oklch(42% 0.008 70)", "oklch(55% 0.008 70)", "oklch(68% 0.008 70)", "oklch(82% 0.008 70)", "oklch(94% 0.008 70)"]
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Stone Grey",
+        "canonical": "oklch(46% 0.02 75)",
+        "tonalRamp": ["oklch(15% 0.02 75)", "oklch(26% 0.02 75)", "oklch(37% 0.02 75)", "oklch(46% 0.02 75)", "oklch(59% 0.02 75)", "oklch(70% 0.02 75)", "oklch(82% 0.02 75)", "oklch(93% 0.02 75)"]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Faint Stone",
+        "canonical": "oklch(68% 0.02 78)",
+        "tonalRamp": ["oklch(15% 0.02 78)", "oklch(26% 0.02 78)", "oklch(37% 0.02 78)", "oklch(48% 0.02 78)", "oklch(59% 0.02 78)", "oklch(68% 0.02 78)", "oklch(82% 0.02 78)", "oklch(93% 0.02 78)"]
+      },
+      "clay": {
+        "role": "primary",
+        "displayName": "Kiln Clay",
+        "canonical": "oklch(59% 0.19 38)",
+        "tonalRamp": ["oklch(20% 0.09 38)", "oklch(30% 0.13 38)", "oklch(40% 0.17 38)", "oklch(50% 0.19 38)", "oklch(59% 0.19 38)", "oklch(71% 0.15 38)", "oklch(83% 0.09 38)", "oklch(94% 0.04 38)"]
+      },
+      "clay-dk": {
+        "role": "primary",
+        "displayName": "Fired Clay",
+        "canonical": "oklch(52% 0.18 36)",
+        "tonalRamp": ["oklch(18% 0.08 36)", "oklch(28% 0.12 36)", "oklch(38% 0.16 36)", "oklch(45% 0.18 36)", "oklch(52% 0.18 36)", "oklch(66% 0.15 36)", "oklch(80% 0.09 36)", "oklch(93% 0.04 36)"]
+      },
+      "cobalt": {
+        "role": "secondary",
+        "displayName": "Poster Cobalt",
+        "canonical": "oklch(46% 0.26 268)",
+        "tonalRamp": ["oklch(19% 0.13 268)", "oklch(28% 0.18 268)", "oklch(37% 0.23 268)", "oklch(46% 0.26 268)", "oklch(57% 0.22 268)", "oklch(69% 0.16 268)", "oklch(82% 0.09 268)", "oklch(94% 0.04 268)"]
+      },
+      "cobalt-dk": {
+        "role": "secondary",
+        "displayName": "Deep Cobalt",
+        "canonical": "oklch(40% 0.25 268)",
+        "tonalRamp": ["oklch(17% 0.12 268)", "oklch(25% 0.17 268)", "oklch(33% 0.22 268)", "oklch(40% 0.25 268)", "oklch(53% 0.22 268)", "oklch(67% 0.16 268)", "oklch(81% 0.09 268)", "oklch(93% 0.04 268)"]
+      },
+      "pine": {
+        "role": "tertiary",
+        "displayName": "Deep Pine",
+        "canonical": "oklch(42% 0.055 178)",
+        "tonalRamp": ["oklch(16% 0.03 178)", "oklch(26% 0.04 178)", "oklch(34% 0.05 178)", "oklch(42% 0.055 178)", "oklch(55% 0.055 178)", "oklch(68% 0.045 178)", "oklch(82% 0.03 178)", "oklch(94% 0.015 178)"]
+      },
+      "marigold": {
+        "role": "tertiary",
+        "displayName": "Marigold",
+        "canonical": "oklch(80% 0.16 85)",
+        "tonalRamp": ["oklch(22% 0.07 85)", "oklch(33% 0.10 85)", "oklch(44% 0.13 85)", "oklch(56% 0.15 85)", "oklch(68% 0.16 85)", "oklch(80% 0.16 85)", "oklch(89% 0.10 85)", "oklch(96% 0.05 85)"]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Signal Red",
+        "canonical": "oklch(48% 0.19 27)",
+        "tonalRamp": ["oklch(18% 0.09 27)", "oklch(27% 0.13 27)", "oklch(36% 0.17 27)", "oklch(48% 0.19 27)", "oklch(60% 0.18 27)", "oklch(72% 0.14 27)", "oklch(84% 0.08 27)", "oklch(94% 0.04 27)"]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgba(28, 26, 23, 0.12)",
+        "tonalRamp": ["rgba(28, 26, 23, 0.04)", "rgba(28, 26, 23, 0.08)", "rgba(28, 26, 23, 0.12)", "rgba(28, 26, 23, 0.18)", "rgba(28, 26, 23, 0.22)", "rgba(28, 26, 23, 0.35)", "rgba(28, 26, 23, 0.5)", "rgba(28, 26, 23, 0.85)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page heroes only. Uppercase Bricolage Grotesque at 800, line-height 0.84. The homepage hero alone escalates to clamp(3.4rem, 14vw, 13rem) via .leaf.kinetic-hero." },
+      "headline": { "displayName": "Headline", "purpose": "Featured index rows and major section headings. Set with text-wrap: balance." },
+      "title": { "displayName": "Title", "purpose": "Section head bars and card titles." },
+      "body": { "displayName": "Body", "purpose": "All prose. Measure capped at 62ch on decks, 75ch on long reads." },
+      "label": { "displayName": "Label", "purpose": "Everything that names, counts, tags, or commands: eyebrows, nav links, buttons, field labels, status lines, corner tags. Never prose." }
+    },
+    "shadows": [
+      { "name": "hard-sm", "value": "3px 3px 0 var(--acc, #d4451f)", "purpose": "Wordmark monogram, ghost and secondary buttons. Hover only." },
+      { "name": "hard-std", "value": "6px 6px 0 var(--acc, #1f35e0)", "purpose": "Primary poster buttons and the colophon submit. Declared as --hard on .kinetic." },
+      { "name": "hard-escalate", "value": "9px 9px 0 #d4451f", "purpose": "The hero button on hover, where the shadow grows as the button lifts." },
+      { "name": "hard-type", "value": "text-shadow: 0.08em 0.08em 0 var(--acc)", "purpose": "Featured headline rows. Scaled in em so the offset stays proportional across the clamp range." },
+      { "name": "hard-ink", "value": "3px 3px 0 rgba(28, 26, 23, 0.85)", "purpose": "The tool-surface variant of the hard offset. Ink instead of accent." },
+      { "name": "ambient-lift", "value": "0 12px 30px rgba(28, 26, 23, 0.08)", "purpose": "Project cards on hover. The system's only soft shadow." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(212, 69, 31, 0.18)", "purpose": "Focused inputs, paired with the border inking to full ink. Never an outline." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for color and border transitions." },
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Arrow nudges and headline shadow pops. The signature exponential settle." },
+      { "name": "ease-lift", "value": "cubic-bezier(0.2, 0.8, 0.2, 1)", "purpose": "Button lift and press on the colophon submit." },
+      { "name": "dur-press", "value": "0.15s", "purpose": "Tool-surface button state changes. Fast enough to feel mechanical." },
+      { "name": "dur-state", "value": "0.25s", "purpose": "The system default: hover color, border, and shadow." },
+      { "name": "dur-reveal", "value": "0.7s", "purpose": "Hero entrance fades, staggered by animation-delay." }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "480px" },
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "container", "value": "1200px" },
+      { "name": "container-wide", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (poster)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The hero and colophon action. Solid ink slab resting flat on a hard accent offset; lifts toward the viewer on hover as the shadow grows.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">See the work <span class=\"ds-btn-primary__mark\">&#8595;</span></a>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.95rem 1.8rem; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; border: 2px solid #1c1a17; border-radius: 2px; background: #1c1a17; color: #f6f2ea; box-shadow: 6px 6px 0 #1f35e0; transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease; } .ds-btn-primary:hover, .ds-btn-primary:focus-visible { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 #d4451f; background: #d4451f; border-color: #d4451f; outline: none; } .ds-btn-primary__mark { transition: transform 0.2s ease; } .ds-btn-primary:hover .ds-btn-primary__mark { transform: translateY(3px); }"
+    },
+    {
+      "name": "Clay Button (tool)",
+      "kind": "button",
+      "refersTo": "button-clay",
+      "description": "The primary action on tool surfaces. Clay fill, ink hard-shadow, and a real press: active returns to origin as the shadow shrinks.",
+      "html": "<button class=\"ds-btn-clay\">Save changes</button>",
+      "css": ".ds-btn-clay { display: inline-block; background: #d4451f; color: #f6f2ea; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; padding: 11px 22px; border: none; border-radius: 3px; cursor: pointer; transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; } .ds-btn-clay:hover, .ds-btn-clay:focus-visible { background: #b8371a; transform: translate(-1px, -1px); box-shadow: 3px 3px 0 rgba(28, 26, 23, 0.85); outline: none; } .ds-btn-clay:active { transform: translate(0, 0); box-shadow: 1px 1px 0 rgba(28, 26, 23, 0.85); } .ds-btn-clay:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: none; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "The quiet secondary. Hairline border, stone text, no movement and no shadow: it inks to clay and stops there.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #6b6256; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 8px 14px; border: 1px solid rgba(28, 26, 23, 0.18); border-radius: 3px; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease; } .ds-btn-ghost:hover, .ds-btn-ghost:focus-visible { color: #d4451f; border-color: #d4451f; outline: none; } .ds-btn-ghost:disabled { opacity: 0.55; cursor: default; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Label above field, always. Ruled box on paper that inks its border, lifts to card stock, and takes a soft clay ring on focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field__label\">Email</span><input class=\"ds-field__input\" type=\"email\" placeholder=\"you@example.com\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field__label { font-family: 'Space Mono', monospace; font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: #6b6256; } .ds-field__input { width: 100%; background: #f6f2ea; border: 1px solid rgba(28, 26, 23, 0.18); border-radius: 3px; color: #1c1a17; font-family: 'Space Mono', monospace; font-size: 14px; padding: 10px 12px; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; } .ds-field__input::placeholder { color: #a49a8a; } .ds-field__input:focus { background: #fffdf8; border-color: #d4451f; box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.12); }"
+    },
+    {
+      "name": "Section Head",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Label, rule, count. The ordinal is set in outline and fills with the accent on hover; the rule flexes to fill the remaining width.",
+      "html": "<div class=\"ds-secthead\"><span class=\"ds-secthead__num\">01</span><span class=\"ds-secthead__label\">Selected work</span><span class=\"ds-secthead__rule\"></span></div>",
+      "css": ".ds-secthead { display: flex; align-items: center; gap: 1.1rem; } .ds-secthead__num { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(2rem, 6vw, 3.4rem); line-height: 0.9; color: transparent; -webkit-text-stroke: 2px #1c1a17; transition: color 0.3s ease, -webkit-text-stroke-color 0.3s ease; } .ds-secthead:hover .ds-secthead__num { color: #d4451f; -webkit-text-stroke-color: #d4451f; } .ds-secthead__label { font-family: 'Space Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.24em; font-size: 0.75rem; color: #d4451f; white-space: nowrap; } .ds-secthead__rule { flex: 1; height: 2px; background: #1c1a17; }"
+    },
+    {
+      "name": "Numbered Index Row",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The system's signature. Ordinal, content, arrow, divided by hairlines. The headline pops onto a hard accent text-shadow on hover or focus; the whole row is one stretched-link target.",
+      "html": "<li class=\"ds-row\"><a class=\"ds-row__cover\" href=\"#\" aria-label=\"Botaniq\"></a><span class=\"ds-row__num\">01</span><div class=\"ds-row__body\"><h3 class=\"ds-row__headline\">Botaniq</h3><p class=\"ds-row__deck\">A plant journal that tells you what your windowsill actually wants.</p></div><span class=\"ds-row__go\">&#8599;</span></li>",
+      "css": ".ds-row { --acc: #1f35e0; position: relative; isolation: isolate; display: grid; grid-template-columns: auto 1fr auto; align-items: start; column-gap: clamp(0.9rem, 2.5vw, 1.8rem); padding: clamp(1rem, 2.2vw, 1.4rem) clamp(0.4rem, 1.4vw, 1rem); border-bottom: 1px solid rgba(28, 26, 23, 0.22); list-style: none; } .ds-row__cover { position: absolute; inset: 0; z-index: 1; } .ds-row__num, .ds-row__body, .ds-row__go { position: relative; z-index: 2; pointer-events: none; } .ds-row__num { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.08em; color: #6b6256; padding-top: 0.6em; transition: color 0.25s ease; } .ds-row__headline { margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: -0.02em; line-height: 0.98; font-size: clamp(1.7rem, 4.2vw, 3.3rem); color: #1c1a17; text-wrap: balance; text-shadow: 0 0 0 transparent; transition: text-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s ease; } .ds-row__deck { margin: 0.5rem 0 0; max-width: 62ch; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.85rem; line-height: 1.5; color: #6b6256; } .ds-row__go { align-self: center; font-family: 'Space Mono', monospace; font-size: clamp(1.15rem, 2vw, 1.6rem); color: #d4451f; transition: color 0.25s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); } .ds-row:hover .ds-row__headline, .ds-row:focus-within .ds-row__headline { text-shadow: 0.08em 0.08em 0 var(--acc); } .ds-row:hover .ds-row__num, .ds-row:focus-within .ds-row__num, .ds-row:hover .ds-row__go, .ds-row:focus-within .ds-row__go { color: var(--acc); } .ds-row:hover .ds-row__go, .ds-row:focus-within .ds-row__go { transform: translate(4px, -4px); }"
+    },
+    {
+      "name": "Project Card",
+      "kind": "card",
+      "refersTo": "card-project",
+      "description": "The shared card rendered by <project-card>. The one component licensed to carry a soft ambient shadow, and only on hover.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card__image\"><span class=\"ds-card__badge\">New</span></div><div class=\"ds-card__content\"><h3 class=\"ds-card__title\">Rocks</h3><p class=\"ds-card__desc\">A procedural rock generator you can steer, built on Three.js.</p><div class=\"ds-card__footer\"><a class=\"ds-card__link\" href=\"#\">Visit site</a></div></div></article>",
+      "css": ".ds-card { background: #fffdf8; border: 1px solid rgba(28, 26, 23, 0.12); border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; max-width: 320px; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease, box-shadow 0.35s ease; } .ds-card:hover { transform: translateY(-4px); border-color: #d4451f; box-shadow: 0 12px 30px rgba(28, 26, 23, 0.08); } .ds-card__image { position: relative; height: 150px; background: #efe9dd; border-bottom: 1px solid rgba(28, 26, 23, 0.12); } .ds-card__badge { position: absolute; top: 0.75rem; right: 0.75rem; background: #1c1a17; color: #f6f2ea; padding: 0.2rem 0.6rem; border-radius: 2px; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; } .ds-card__content { display: flex; flex-direction: column; flex-grow: 1; padding: 1.5rem; } .ds-card__title { margin: 0 0 0.6rem; font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.3rem; font-weight: 800; color: #1c1a17; } .ds-card__desc { margin: 0 0 1.25rem; font-family: 'IBM Plex Sans', sans-serif; color: #6b6256; line-height: 1.6; font-size: 0.95rem; } .ds-card__footer { margin-top: auto; } .ds-card__link { display: inline-flex; align-items: center; gap: 0.4rem; color: #1c1a17; font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; font-size: 0.85rem; text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid #d4451f; transition: color 0.25s ease; } .ds-card__link:hover, .ds-card__link:focus-visible { color: #d4451f; outline: none; }"
+    },
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Mono uppercase in stone, inking to full ink on hover with a clay underline growing from the left.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav__link\" href=\"#\">Work</a><a class=\"ds-nav__link\" href=\"#\">About</a><a class=\"ds-nav__link\" href=\"#\">Blog</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 2.5rem; align-items: center; } .ds-nav__link { position: relative; font-family: 'Space Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.82rem; color: #6b6256; text-decoration: none; transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav__link:hover, .ds-nav__link:focus-visible { color: #1c1a17; outline: none; } .ds-nav__link::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px; background: #d4451f; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav__link:hover::after, .ds-nav__link:focus-visible::after { width: 100%; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Poster Press",
+    "overview": "This is a print shop, not a website theme. The stock is warm paper, the setting is broadsheet grammar (hairline rules, mono eyebrows, numbered index rows, a thick-over-thin double rule at the foot), and the boldness comes off a silkscreen press: oversized uppercase display type, offset hard-shadows in a single ink, a grain overlay on the largest surfaces. The two halves are not in tension, they are the same shop. The paper is quiet and precisely ruled so the ink can be loud in the few places it lands.\n\nThe components are refined and restrained. Hairline borders, small radii (2 to 4px, never more), color held back to focus and hover, nothing elevated at rest. The system spends its entire boldness budget on two things: the display type, and what happens when you touch something. A button sits flat as a solid ink slab until hover, when it lifts three pixels off a hard accent shadow. A headline sits flat until hover, when the same offset appears behind it as a text-shadow. That single gesture, repeated at every scale, is the system's signature.\n\nThe confirmed anti-reference is the site's own retired layer. The :root block in base-style.css still carries the previous dark theme: navy gradients (#0f172a, #1a202c), a 16px radius, Inter on body, gradient-filled hero text, and traces of the generic AI indigo #667eea in the contact card border and the globe icon's drop-shadow. That layer is legacy, kept alive only for views not yet converted. It is evidence of where this design came from, and it is explicitly not where new work goes.",
+    "keyCharacteristics": [
+      "Warm paper ground (#f6f2ea), never white, never a gradient",
+      "Uppercase Bricolage Grotesque at 800 for display, tracked negative",
+      "Space Mono in uppercase for every label, eyebrow, button, and status line",
+      "One accent per section, carried through a --acc variable",
+      "Flat at rest; hard offset shadows only as a response to state",
+      "Radius 2 to 4px, and 0 where a rule reads better than a box"
+    ],
+    "rules": [
+      { "name": "The One Accent Per Section Rule", "body": "Each section commits to exactly one accent and declares it once as --acc. Every hover, rule, number, and arrow inside that section reads from --acc. Two accents never appear within one section. The professional band runs clay; the featured index runs cobalt.", "section": "colors" },
+      { "name": "The Warm Neutral Rule", "body": "No neutral in this system is achromatic. Paper is warm, ink is warm, stone is warm, and every hairline and shadow is tinted from rgba(28, 26, 23, ...). A pure grey or a rgba(0,0,0,...) shadow reads as a foreign object on this stock.", "section": "colors" },
+      { "name": "The Mono Labels Everything Rule", "body": "If it names, counts, tags, or commands rather than reads, it is Space Mono, uppercase, tracked 0.12em or wider. Buttons, eyebrows, field labels, status lines, breadcrumbs, and counts all speak this one grammar. Prose never does.", "section": "typography" },
+      { "name": "The Tight Display Rule", "body": "Display and headline type is set tighter than it looks comfortable: line-height under 1.0, tracking negative to -0.035em. The size does the shouting, the spacing keeps it from sprawling.", "section": "typography" },
+      { "name": "The Fraunces Migration Rule", "body": "Bricolage Grotesque is the display face. Fraunces is the previous one and survives on views/projects, views/account, views/admin, views/stocks, views/compass, views/ip, views/download, views/recipes, and views/nebo, plus the body.editorial fallbacks in base-style.css. That is documented drift, not a second option. New surfaces use Bricolage; convert a Fraunces surface when you are already working in it, not as a separate errand.", "section": "typography" },
+      { "name": "The Rule Over Box Rule", "body": "Structure is drawn with rules, not containers. A section head is a label plus a 2 or 3px accent rule running to the edge; a list is rows separated by hairlines; the foot of a section is a thick-over-thin double rule. Reach for a bordered box only when the content genuinely needs enclosing, and never nest one inside another.", "section": "layout" },
+      { "name": "The Flat-At-Rest Rule", "body": "If an element has a shadow before the user touches it, that shadow is wrong. The one licensed exception is the project card's ambient hover lift.", "section": "elevation" },
+      { "name": "The Ink-Or-Accent Rule", "body": "A hard shadow is either the section accent (var(--acc), on poster surfaces) or ink at high alpha (rgba(28, 26, 23, 0.85), on tool surfaces). It is never a soft neutral drop shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do set every label, eyebrow, button, count, and status line in Space Mono, uppercase, tracked 0.12em or wider.",
+      "Do declare one --acc per section and read every hover, rule, ordinal, and arrow inside it from that variable.",
+      "Do give interactive elements a hard offset on state: translate(-3px, -3px) paired with Npx Npx 0 var(--acc), zero blur.",
+      "Do tint every shadow, border, and divider from rgba(28, 26, 23, ...).",
+      "Do cap body measure at 62ch on decks and 75ch on long reads.",
+      "Do reassert body { background: <color>; } in a view's own style.css. base-style.css paints body with a navy gradient via the background shorthand, and a gradient is a background-image, so it visually beats any Tailwind bg-* utility.",
+      "Do append transform: translateZ(0) and backface-visibility: hidden to stacked gradient or clip-path layers to stop hairline seams on high-DPI displays. Append, never replace an existing transform, and skip backface-visibility on anything rotating past 90deg.",
+      "Do ship a prefers-reduced-motion override with any new animation. 32 stylesheets already carry one.",
+      "Do give every hover affordance a :focus-visible equivalent, and make row-level targets a stretched link rather than a hover-only region."
+    ],
+    "donts": [
+      "Don't reach for Fraunces on a new surface. Bricolage Grotesque is the display face; Fraunces is drift being migrated out.",
+      "Don't use Inter, Roboto, Arial, or a system stack. The font-family: 'Inter' on body in base-style.css belongs to the retired dark theme.",
+      "Don't reintroduce the legacy indigo #667eea, the navy gradients (#0f172a, #1a202c, #2d3748), the 16px radius, or gradient-filled text. All four are the confirmed anti-reference, still visible in base-style.css :root and .hero h1.",
+      "Don't mix two accents inside one section.",
+      "Don't put a shadow on anything at rest, or use a soft blurred drop shadow anywhere except the project card's hover lift.",
+      "Don't exceed a 4px radius on any editorial surface. The 999px pill and 16px --border-radius in the :root block are legacy.",
+      "Don't use a pure grey, a pure black, or a pure white. Every neutral in this system is warm.",
+      "Don't ship a native <input type=\"date\">.",
+      "Don't apply the house palette to a showcase project that has committed to its own world."
+    ]
+  }
+}

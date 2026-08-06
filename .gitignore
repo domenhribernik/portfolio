@@ -13,3 +13,4 @@ vendor
 !/app/data/.gitkeep
 /stocks-sync.log
 __pycache__/
+/tools/beseda/cache/

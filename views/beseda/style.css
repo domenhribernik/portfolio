@@ -1,0 +1,376 @@
+/* ============================================================
+   Beseda: the poster press applied to a dictionary.
+   Layout and most styling live in Tailwind classes (index.html).
+   This file holds only what Tailwind can't cleanly express:
+   keyframes, pseudo-element decoration, the gloss tooltip,
+   JS-generated markup, and reduced-motion overrides.
+   ============================================================ */
+
+/* base-style.css is deliberately not loaded (its navy gradient would beat any
+   Tailwind bg-*), but reassert the ground so nothing can repaint it. */
+body {
+    background: #f6f2ea;
+}
+
+/* ---- Page-load reveal (house entrance) ---- */
+.reveal {
+    opacity: 0;
+    animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.reveal-1 { animation-delay: 0.04s; }
+.reveal-2 { animation-delay: 0.12s; }
+.reveal-3 { animation-delay: 0.22s; }
+.reveal-4 { animation-delay: 0.3s; }
+.reveal-6 { animation-delay: 0.42s; }
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- The authored moment: the word lands like a struck stamp ---- */
+.word-drop {
+    animation: strike 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: 0.22s;
+}
+
+@keyframes strike {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(1.06);
+        filter: blur(6px);
+    }
+    60% { filter: blur(0); }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+/* ---- Press signature: flat at rest, lifts off a hard accent shadow ---- */
+.press,
+.press-ghost {
+    transition: transform 0.14s ease-out, box-shadow 0.14s ease-out,
+                background-color 0.14s ease-out, color 0.14s ease-out;
+}
+
+.press:hover,
+.press:focus-visible,
+.press-ghost:hover,
+.press-ghost:focus-visible {
+    transform: translate(-3px, -3px);
+    box-shadow: 3px 3px 0 var(--acc, #d4451f);
+}
+
+.press-ghost:hover,
+.press-ghost:focus-visible {
+    color: #1c1a17;
+    border-color: #1c1a17;
+}
+
+.press:disabled,
+.press-ghost:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ---- Glossed words inside example sentences ---- */
+.gloss {
+    border-bottom: 1px dotted rgba(28, 26, 23, 0.42);
+    cursor: help;
+    transition: background-color 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+.gloss:hover,
+.gloss:focus-visible {
+    background: rgba(47, 91, 83, 0.12);
+    border-bottom-color: #2f5b53;
+    outline: none;
+}
+
+/* Words the dictionary didn't cover still read normally, just without a hint. */
+.plainword {
+    color: inherit;
+}
+
+/* ---- Shared tooltip. Positioned by script.js so it can't clip off-screen. ---- */
+.gloss-tip {
+    position: absolute;
+    z-index: 60;
+    max-width: 22rem;
+    padding: 0.5rem 0.7rem;
+    background: #1c1a17;
+    color: #f6f2ea;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 1rem;
+    line-height: 1.35;
+    border-radius: 3px;
+    box-shadow: 0 6px 20px rgba(28, 26, 23, 0.22);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.12s ease-out, transform 0.12s ease-out, visibility 0.12s;
+    pointer-events: none;
+}
+
+.gloss-tip.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.gloss-tip .tip-lemma {
+    display: block;
+    font-family: "Space Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #f2b705;
+    margin-bottom: 0.2rem;
+}
+
+/* ---- Example sentences ---- */
+.example-sl {
+    font-size: clamp(1rem, 2.3vw, 1.25rem);
+    line-height: 1.65;
+}
+
+.example-en {
+    display: none;
+}
+
+.example.is-revealed .example-en {
+    display: block;
+}
+
+.example-toggle {
+    font-family: "Space Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #6b6256;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.2);
+    transition: color 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+.example-toggle:hover {
+    color: #2f5b53;
+    border-color: #2f5b53;
+}
+
+/* ---- Week dots ---- */
+.day-dot {
+    width: 2.1rem;
+    height: 2.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(28, 26, 23, 0.22);
+    border-radius: 2px;
+    font-family: "Space Mono", monospace;
+    font-size: 0.72rem;
+    color: #a49a8a;
+    background: transparent;
+}
+
+.day-dot.is-done {
+    background: #d4451f;
+    border-color: #d4451f;
+    color: #f6f2ea;
+}
+
+.day-dot.is-today {
+    border-color: #1c1a17;
+    border-width: 2px;
+    color: #1c1a17;
+}
+
+.day-dot.is-done.is-today {
+    color: #f6f2ea;
+}
+
+/* ---- Topic index: ruled rows, not a card grid ---- */
+.topic-index li {
+    border-bottom: 1px solid rgba(28, 26, 23, 0.12);
+}
+
+.topic-row {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1.05rem 0.5rem;
+    text-align: left;
+    transition: background-color 0.14s ease-out;
+}
+
+.topic-row:hover,
+.topic-row:focus-visible {
+    background: #efe9dd;
+    outline: none;
+}
+
+/* The row nudges inward on hover. Done with transform rather than padding:
+   fourteen of these on screen at once, and animating padding relayouts the
+   whole list on every pointer move. */
+.topic-num,
+.topic-name {
+    transition: transform 0.14s ease-out, text-shadow 0.14s ease-out;
+}
+
+.topic-row:hover .topic-num,
+.topic-row:focus-visible .topic-num,
+.topic-row:hover .topic-name,
+.topic-row:focus-visible .topic-name {
+    transform: translateX(0.5rem);
+}
+
+.topic-row:hover .topic-name,
+.topic-row:focus-visible .topic-name {
+    text-shadow: 2px 2px 0 var(--acc, #1f35e0);
+}
+
+.topic-num {
+    font-family: "Space Mono", monospace;
+    font-size: 0.72rem;
+    color: #a49a8a;
+}
+
+.topic-name {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    line-height: 1.1;
+    transition: text-shadow 0.14s ease-out;
+}
+
+.topic-count {
+    font-family: "Space Mono", monospace;
+    font-size: 0.72rem;
+    color: #6b6256;
+    white-space: nowrap;
+}
+
+/* ---- Word table inside a topic ---- */
+.word-table li {
+    display: grid;
+    grid-template-columns: minmax(6rem, 1fr) minmax(0, 1.6fr) auto;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.12);
+}
+
+.word-table .wt-sl {
+    font-weight: 600;
+}
+
+.word-table .wt-en {
+    color: #6b6256;
+}
+
+.word-table .wt-meta {
+    font-family: "Space Mono", monospace;
+    font-size: 0.72rem;
+    color: #a49a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+}
+
+/* ---- Quiz options ---- */
+.option-list li + li {
+    margin-top: 0.6rem;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.95rem 1.1rem;
+    background: #fffdf8;
+    border: 1px solid rgba(28, 26, 23, 0.12);
+    border-radius: 3px;
+    font-size: 1rem;
+    transition: transform 0.12s ease-out, box-shadow 0.12s ease-out,
+                border-color 0.12s ease-out, background-color 0.12s ease-out;
+}
+
+.option:hover:not(:disabled),
+.option:focus-visible:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 2px 2px 0 var(--acc, #d4451f);
+    border-color: #1c1a17;
+    outline: none;
+}
+
+.option .option-key {
+    font-family: "Space Mono", monospace;
+    font-size: 0.72rem;
+    color: #a49a8a;
+    width: 1.2rem;
+    flex-shrink: 0;
+}
+
+.option.is-right {
+    background: rgba(47, 91, 83, 0.12);
+    border-color: #2f5b53;
+}
+
+.option.is-wrong {
+    background: rgba(179, 38, 30, 0.09);
+    border-color: #b3261e;
+}
+
+.option:disabled {
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
+/* The cloze gap sits in the sentence as a ruled blank. */
+.cloze-gap {
+    display: inline-block;
+    min-width: 5.5rem;
+    border-bottom: 2px solid #d4451f;
+    text-align: center;
+    font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .word-drop {
+        animation: none;
+        opacity: 1;
+        transform: none;
+        filter: none;
+    }
+
+    .press,
+    .press-ghost,
+    .option,
+    .topic-row,
+    .topic-num,
+    .topic-name,
+    .gloss,
+    .gloss-tip {
+        transition: none;
+    }
+
+    .press:hover,
+    .press-ghost:hover,
+    .option:hover:not(:disabled),
+    .topic-row:hover .topic-num,
+    .topic-row:hover .topic-name {
+        transform: none;
+    }
+}

@@ -1,0 +1,89 @@
+{
+  "_comment": "Curated topic vocabulary, themed after the Slovene Learning Online 1 syllabus. Hand-edited: this is the one part of the pipeline with human judgement in it. Every lemma must resolve in the dictionary or the build fails and names the offender; add a gloss to overrides.json rather than deleting a word you want taught. Order within a topic is the teaching order, not alphabetical.",
+  "topics": [
+    {
+      "id": "greetings",
+      "title": "Greetings and basics",
+      "icon": "fa-solid fa-hand",
+      "lemmas": ["zdravo", "živjo", "dober", "jutro", "dan", "večer", "noč", "hvala", "prosim", "oprosti", "nasvidenje", "da", "ne", "kako"]
+    },
+    {
+      "id": "people",
+      "title": "People and family",
+      "icon": "fa-solid fa-people-roof",
+      "lemmas": ["človek", "ženska", "moški", "otrok", "prijatelj", "ime", "družina", "mama", "oče", "brat", "sestra", "sin", "hči", "žena", "mož"]
+    },
+    {
+      "id": "numbers",
+      "title": "Numbers",
+      "icon": "fa-solid fa-hashtag",
+      "lemmas": ["ena", "dva", "tri", "štiri", "pet", "šest", "sedem", "osem", "devet", "deset", "sto", "tisoč", "prvi", "drugi"]
+    },
+    {
+      "id": "time",
+      "title": "Days and time",
+      "icon": "fa-solid fa-clock",
+      "lemmas": ["danes", "jutri", "včeraj", "zdaj", "ura", "minuta", "dan", "teden", "mesec", "leto", "ponedeljek", "torek", "sreda", "četrtek", "petek", "sobota", "nedelja"]
+    },
+    {
+      "id": "food",
+      "title": "Food and drink",
+      "icon": "fa-solid fa-utensils",
+      "lemmas": ["kruh", "voda", "mleko", "kava", "čaj", "meso", "riba", "sadje", "zelenjava", "jabolko", "sir", "jajce", "sol", "juha", "vino", "pivo"]
+    },
+    {
+      "id": "verbs",
+      "title": "Everyday verbs",
+      "icon": "fa-solid fa-person-running",
+      "lemmas": ["biti", "imeti", "iti", "delati", "jesti", "piti", "spati", "govoriti", "videti", "slišati", "vedeti", "hoteti", "moči", "dati", "vzeti", "priti"]
+    },
+    {
+      "id": "home",
+      "title": "At home",
+      "icon": "fa-solid fa-house",
+      "lemmas": ["hiša", "stanovanje", "soba", "kuhinja", "kopalnica", "vrata", "okno", "miza", "stol", "postelja", "ključ", "tla", "stena"]
+    },
+    {
+      "id": "town",
+      "title": "In town",
+      "icon": "fa-solid fa-city",
+      "lemmas": ["mesto", "ulica", "trg", "cesta", "trgovina", "banka", "pošta", "bolnišnica", "šola", "cerkev", "park", "postaja", "hotel"]
+    },
+    {
+      "id": "travel",
+      "title": "Getting around",
+      "icon": "fa-solid fa-train",
+      "lemmas": ["vlak", "avto", "avtobus", "letalo", "kolo", "ladja", "karta", "potnik", "pot", "prtljaga", "zemljevid"]
+    },
+    {
+      "id": "body",
+      "title": "Body and health",
+      "icon": "fa-solid fa-heart-pulse",
+      "lemmas": ["glava", "oko", "uho", "nos", "usta", "roka", "noga", "srce", "zob", "lasje", "hrbet", "prst", "koža"]
+    },
+    {
+      "id": "nature",
+      "title": "Nature and weather",
+      "icon": "fa-solid fa-mountain-sun",
+      "lemmas": ["sonce", "luna", "zvezda", "nebo", "morje", "gora", "reka", "jezero", "gozd", "drevo", "cvet", "dež", "sneg", "veter"]
+    },
+    {
+      "id": "colors",
+      "title": "Colours",
+      "icon": "fa-solid fa-palette",
+      "lemmas": ["bel", "črn", "rdeč", "moder", "zelen", "rumen", "siv", "rjav", "roza", "oranžen"]
+    },
+    {
+      "id": "feelings",
+      "title": "Feelings",
+      "icon": "fa-solid fa-face-smile",
+      "lemmas": ["srečen", "žalosten", "jezen", "utrujen", "lačen", "žejen", "ljubezen", "strah", "veselje", "bolan"]
+    },
+    {
+      "id": "animals",
+      "title": "Animals",
+      "icon": "fa-solid fa-paw",
+      "lemmas": ["pes", "mačka", "ptica", "riba", "konj", "krava", "ovca", "miš", "medved", "volk", "lisica"]
+    }
+  ]
+}

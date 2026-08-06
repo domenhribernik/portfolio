@@ -1,0 +1,34 @@
+{
+  "_comment": "Hand-written entries for words the English Wiktionary's Slovene section lacks. Two kinds: very common function words (which drag sentence coverage down badly when missing) and a handful of everyday nouns needed by seed/topics.json. Keep this list small and boring: it is the escape hatch, not a dictionary. `forms` lists inflections the corpus actually uses, since there is no paradigm table to fall back on.",
+  "words": {
+    "kar": { "en": "what, that which", "pos": "pron" },
+    "naj": { "en": "let, should", "pos": "particle" },
+    "res": { "en": "really, truly", "pos": "adv" },
+    "ob": { "en": "at, by, beside", "pos": "prep" },
+    "treba": { "en": "necessary, needed", "pos": "adv" },
+    "trenutno": { "en": "currently, at the moment", "pos": "adv" },
+    "kateri": { "en": "which, who", "pos": "pron", "forms": ["katera", "katero", "katerega", "katerem", "kateremu", "katere", "katerih", "katerim"] },
+    "toliko": { "en": "so much, so many", "pos": "adv" },
+    "točno": { "en": "exactly, precisely", "pos": "adv" },
+    "zame": { "en": "for me", "pos": "pron" },
+    "zate": { "en": "for you", "pos": "pron" },
+    "vsak": { "en": "each, every", "pos": "adj", "forms": ["vsaka", "vsako", "vsakega", "vsakem", "vsakemu", "vsaki", "vsake", "vsakih"] },
+    "saj": { "en": "after all, because", "pos": "conj" },
+    "tak": { "en": "such, like that", "pos": "adj", "forms": ["taka", "tako", "takega", "takem", "taki", "take"] },
+    "niti": { "en": "not even, neither", "pos": "conj" },
+    "okoli": { "en": "around, about", "pos": "prep" },
+    "proti": { "en": "towards, against", "pos": "prep" },
+    "čez": { "en": "over, across", "pos": "prep" },
+
+    "oprosti": { "en": "sorry, excuse me", "pos": "intj", "forms": ["oprostite"] },
+    "mama": { "en": "mum, mother", "pos": "noun", "gender": "f", "forms": ["mame", "mami", "mamo", "mamama", "mamam", "mamah"] },
+    "zelenjava": { "en": "vegetables", "pos": "noun", "gender": "f", "forms": ["zelenjave", "zelenjavi", "zelenjavo"] },
+    "stanovanje": { "en": "flat, apartment", "pos": "noun", "gender": "n", "forms": ["stanovanja", "stanovanju", "stanovanjem", "stanovanj", "stanovanjih"] },
+    "pošta": { "en": "post office, mail", "pos": "noun", "gender": "f", "forms": ["pošte", "pošti", "pošto"] },
+    "park": { "en": "park", "pos": "noun", "gender": "m", "forms": ["parka", "parku", "parkom", "parki", "parkov", "parkih"] },
+    "lasje": { "en": "hair", "pos": "noun", "gender": "m", "forms": ["las", "lasmi", "laseh", "lasu"] },
+    "roza": { "en": "pink", "pos": "adj" },
+    "žalosten": { "en": "sad", "pos": "adj", "forms": ["žalostna", "žalostno", "žalostni", "žalostne", "žalostnega", "žalostnem"] },
+    "žejen": { "en": "thirsty", "pos": "adj", "forms": ["žejna", "žejno", "žejni", "žejne", "žejnega"] }
+  }
+}

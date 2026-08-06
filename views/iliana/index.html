@@ -115,6 +115,19 @@
                 <rocks-showcase height="380px" speed="0.2" style="box-shadow: 0 4px 20px rgba(0,0,0,0.08);"></rocks-showcase>
             </section>
 
+            <!-- Slovenian word of the day -->
+            <section class="bg-white/95 rounded-xl p-5 md:p-[30px] mb-[30px] shadow-card transition-all">
+                <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 mb-5">
+                    <h2 class="col-start-2 font-script text-[2.3rem] font-semibold text-black text-center">A Word a Day</h2>
+                    <a href="../beseda/" title="Practise Slovenian"
+                       class="col-start-3 justify-self-end w-[38px] h-[38px] rounded-full bg-iliana-pink text-black flex items-center justify-center text-[0.95rem] no-underline transition-all hover:bg-iliana-pink-hover hover:scale-110 shrink-0">
+                        <i class="fas fa-book-open"></i>
+                    </a>
+                </div>
+                <p class="text-center text-[#666] text-base mb-[30px]">One Slovenian word every day. Hover any word in the sentence to see what it means 💕</p>
+                <beseda-widget show-streak="true" accent="#d4451f"></beseda-widget>
+            </section>
+
             <!-- Personality Test -->
             <section class="bg-white/95 rounded-xl p-5 md:p-[30px] mb-[30px] shadow-card transition-all">
                 <h2 class="font-script text-[2.3rem] font-semibold text-black mb-5 text-center">Our Personality Types</h2>
@@ -287,6 +300,7 @@
 
     <script src="script.js"></script>
     <script type="module" src="../../components/rocks/rocks-showcase.js"></script>
+    <script type="module" src="../../components/beseda/beseda-widget.js"></script>
 </body>
 
 </html>

@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://domenhribernik.com/</loc>
-        <lastmod>2026-07-17</lastmod>
+        <lastmod>2026-07-21</lastmod>
         <priority>1.0</priority>
     </url>
     <url>
@@ -12,7 +12,7 @@
     </url>
     <url>
         <loc>https://domenhribernik.com/views/music/</loc>
-        <lastmod>2026-07-14</lastmod>
+        <lastmod>2026-08-06</lastmod>
         <priority>0.8</priority>
     </url>
     <url>
@@ -26,8 +26,13 @@
         <priority>0.8</priority>
     </url>
     <url>
+        <loc>https://domenhribernik.com/views/beseda/</loc>
+        <lastmod>2026-08-06</lastmod>
+        <priority>0.8</priority>
+    </url>
+    <url>
         <loc>https://domenhribernik.com/views/botaniq/</loc>
-        <lastmod>2026-07-14</lastmod>
+        <lastmod>2026-08-06</lastmod>
         <priority>0.8</priority>
     </url>
     <url>
@@ -42,12 +47,12 @@
     </url>
     <url>
         <loc>https://domenhribernik.com/views/maze/</loc>
-        <lastmod>2026-07-14</lastmod>
+        <lastmod>2026-08-06</lastmod>
         <priority>0.4</priority>
     </url>
     <url>
         <loc>https://domenhribernik.com/views/sourdough/</loc>
-        <lastmod>2026-07-14</lastmod>
+        <lastmod>2026-08-06</lastmod>
         <priority>0.4</priority>
     </url>
     <url>
@@ -57,7 +62,7 @@
     </url>
     <url>
         <loc>https://domenhribernik.com/views/recipes/</loc>
-        <lastmod>2026-07-14</lastmod>
+        <lastmod>2026-08-06</lastmod>
         <priority>0.4</priority>
     </url>
     <url>
@@ -67,7 +72,7 @@
     </url>
     <url>
         <loc>https://domenhribernik.com/views/flowers/</loc>
-        <lastmod>2026-07-16</lastmod>
+        <lastmod>2026-08-06</lastmod>
         <priority>0.8</priority>
     </url>
     <url>
@@ -82,17 +87,17 @@
     </url>
     <url>
         <loc>https://domenhribernik.com/views/projects/</loc>
-        <lastmod>2026-07-17</lastmod>
+        <lastmod>2026-08-06</lastmod>
         <priority>0.7</priority>
     </url>
     <url>
         <loc>https://domenhribernik.com/views/store/</loc>
-        <lastmod>2026-07-17</lastmod>
+        <lastmod>2026-08-06</lastmod>
         <priority>0.4</priority>
     </url>
     <url>
         <loc>https://domenhribernik.com/views/rocks/</loc>
-        <lastmod>2026-07-14</lastmod>
+        <lastmod>2026-07-18</lastmod>
         <priority>0.4</priority>
     </url>
     <url>

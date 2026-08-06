@@ -47,12 +47,20 @@ the PHP suites with `C:\xampp\php\php.exe`. They spawn whatever interpreter runs
 | `music-controller.test.php` | Public reads, writes gated by `requireProjectRole('music', 'editor')`, analysis concurrency lock (fresh → 429, stale ignored) | Seam `MUSIC_ANALYSIS_LOCK`. Cases stop at the gate/lock/validation, so no Python or ffmpeg ever runs |
 | `vrata.test.php` | The SEC-03 contract: POST-only (bare GET → 405), key from the JSON body only (URL key ignored), same-origin + content-type backstops, per-IP rate limiting, session-role bypass, happy-path unlock/stream | A **second** server runs `fixtures/tuya-stub.php`, a fake Tuya that logs every call, with `TUYA_BASE_URL` pointed at it, so no real door is touched and denied requests can be asserted to reach Tuya **zero** times. Seams: `VRATA_MAX_ATTEMPTS`, `VRATA_ATTEMPT_WINDOW`, `VRATA_ATTEMPTS_FILE` |
 | `workout-controller.test.php` | Per-user rows, soft-delete reads, type immutability | |
+| `beseda-controller.test.php` | The streak merge (re-upload is idempotent, a merge adds rather than replaces), `requireLogin` on both verbs, day validation (junk skipped without failing the request, today+1 allowed, far future and ancient dropped), cross-user isolation | Creates `beseda_activity` if absent. No project row or role: the feature is open to anyone, so there is no gate to test |
 | `parlour-controller.test.php` | Room/guest/event-log protocol | Applies the model SQL itself, deletes every room it created |
 | `flowers-share.test.php` | Save/load/validation/pruning of the share endpoint | **No database.** Boots against the repo root, unlinks everything it created in `app/cache/flowers/` |
 | `download.test.php` | Graceful 503s, health booleans, URL validation, ffmpeg fail-fast, full prepare/file/cleanup lifecycle, python3 fallback, per-host cache cap | **No network, no yt-dlp, no ffmpeg, no DB.** Boots once per host flavor with `YTDLP_BIN` / `FFMPEG_BIN` / `DOWNLOAD_CACHE_MAX_MB` injected: dead paths, `/bin/false`, generated shell and python stubs, a `disable_functions=exec` boot |
 | `stats-proxy.test.php` | Exact per-extension counting, dev-tooling exclusions, same-day cache, the version stamp that busts it | **No database.** `STATS_ROOT` / `STATS_CACHE` point at a generated fixture tree; the proxy reads them via `getenv()` for exactly this reason |
 
 ## Python
+
+`beseda-build.test.py` unit-tests the content pipeline `tools/beseda/build.py`: the
+orthography fold (Wiktionary stores Slovene participles in a pronunciation spelling, and
+folding it wrong silently strips the gloss off every past tense in the corpus), lookup
+precedence when one spelling is several words, and the append-only merges that stop a
+rebuild from re-dating a word someone already saw. Stdlib `unittest`, no network and no
+large fixtures. The generated output is checked separately by `beseda-data.test.mjs`.
 
 `stocks-sync-py.test.py` unit-tests the cron wrapper `app/scripts/stocks-sync.py`: secret
 scrubbing (the report lands in the web root, so redaction is a **security property**), PHP
