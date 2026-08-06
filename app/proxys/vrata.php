@@ -110,6 +110,169 @@ function vrata_clear_failures(string $ip): void
 }
 
 // ------------------------------------------------------------------
+//  Server-side still capture
+// ------------------------------------------------------------------
+//
+// The Tesla browser only paints <video>, and anything decoded from it, while
+// the car is in Park, so views/vrata/frame cannot touch the HLS feed itself.
+// It asks for a snapshot instead: ffmpeg pulls one frame here and writes it
+// under shots/ for the page to point a plain <img> at.
+//
+// Each capture gets a fresh random name so the still is not sitting at a
+// guessable URL, and so the browser can never serve a stale cached copy. Only
+// the newest few are kept.
+
+const VRATA_SNAPSHOT_DIR = __DIR__ . '/../../views/vrata/frame/shots';
+const VRATA_SNAPSHOT_KEEP = 3;       // newest files to keep on disk
+const VRATA_SNAPSHOT_TRIES = 6;      // grabs before giving up on the warm-up
+const VRATA_SNAPSHOT_GAP = 3;        // seconds between grabs
+const VRATA_SNAPSHOT_TIMEOUT = 25;   // hard kill for one ffmpeg run
+const VRATA_SNAPSHOT_BUDGET = 45;    // total seconds of retrying
+const VRATA_BLANK_LUMA = 6;          // mean luma below this is the placeholder
+
+function vrata_ffmpeg_bin(): string
+{
+    $bin = $_ENV['FFMPEG_BIN'] ?? getenv('FFMPEG_BIN');
+    return is_string($bin) && $bin !== '' ? $bin : 'ffmpeg';
+}
+
+function vrata_has_ffmpeg(): bool
+{
+    // No `env` wrapper here: `command` is a shell builtin, so env would try to
+    // exec a binary by that name and always report 127.
+    exec('command -v ' . escapeshellarg(vrata_ffmpeg_bin()) . ' >/dev/null 2>&1', $out, $code);
+    return $code === 0;
+}
+
+/** Pulls a single frame off the HLS URL into $dest. */
+function vrata_grab_frame(string $url, string $dest): bool
+{
+    // XAMPP exports LD_LIBRARY_PATH=/opt/lampp/lib, whose old libstdc++ breaks
+    // the system ffmpeg; run it with that unset.
+    //
+    // ffmpeg must not keep reading the live playlist: it blocks indefinitely
+    // waiting for the next segment and ignores TERM inside a TLS read, hence
+    // -frames:v 1 plus timeout's -k kill.
+    $cmd = 'env -u LD_LIBRARY_PATH timeout -k 3 ' . VRATA_SNAPSHOT_TIMEOUT
+        . ' ' . escapeshellcmd(vrata_ffmpeg_bin()) . ' -y -loglevel error -nostdin'
+        . ' -i ' . escapeshellarg($url)
+        . ' -frames:v 1 -update 1 -q:v 4 ' . escapeshellarg($dest)
+        . ' </dev/null 2>&1';
+    exec($cmd, $out, $code);
+    return $code === 0 && is_file($dest) && filesize($dest) > 0;
+}
+
+/** Mean luma 0-255 of a JPEG, or null if it can't be read. */
+function vrata_mean_luma(string $file): ?float
+{
+    if (!function_exists('imagecreatefromjpeg')) return null;
+    $img = @imagecreatefromjpeg($file);
+    if (!$img) return null;
+
+    $w = imagesx($img);
+    $h = imagesy($img);
+    $stepX = max(1, (int) ($w / 32));
+    $stepY = max(1, (int) ($h / 18));
+    $sum = 0.0;
+    $n = 0;
+    for ($y = 0; $y < $h; $y += $stepY) {
+        for ($x = 0; $x < $w; $x += $stepX) {
+            $rgb = imagecolorat($img, $x, $y);
+            $sum += 0.299 * (($rgb >> 16) & 0xFF)
+                  + 0.587 * (($rgb >> 8) & 0xFF)
+                  + 0.114 * ($rgb & 0xFF);
+            $n++;
+        }
+    }
+    imagedestroy($img);
+    return $n > 0 ? $sum / $n : null;
+}
+
+/**
+ * Grabs frames until the camera's black "waking up" placeholder gives way to
+ * real picture, then publishes the still. Never returns.
+ */
+function vrata_snapshot(string $url): never
+{
+    @set_time_limit(90);
+
+    $tmp = tempnam(sys_get_temp_dir(), 'vrata') ?: null;
+    if ($tmp === null) {
+        vrata_respond(500, ['error' => 'tmp_failed']);
+    }
+    $tmpJpg = $tmp . '.jpg';
+    @unlink($tmp);
+
+    $got = false;
+    $blank = false;
+    $deadline = time() + VRATA_SNAPSHOT_BUDGET;
+    for ($i = 0; $i < VRATA_SNAPSHOT_TRIES; $i++) {
+        if ($i > 0) {
+            if (time() >= $deadline) break;
+            sleep(VRATA_SNAPSHOT_GAP);
+        }
+        if (!vrata_grab_frame($url, $tmpJpg)) continue;
+
+        $got = true;
+        $luma = vrata_mean_luma($tmpJpg);
+        // Unreadable luma (no GD) means we cannot tell, so take what we have.
+        if ($luma === null || $luma >= VRATA_BLANK_LUMA) {
+            $blank = false;
+            break;
+        }
+        $blank = true;
+    }
+
+    if (!$got) {
+        @unlink($tmpJpg);
+        // Distinguish "the host has no ffmpeg" from "the camera would not give
+        // us a frame": only the first is a deploy problem.
+        vrata_respond(502, [
+            'error' => vrata_has_ffmpeg() ? 'capture_failed' : 'ffmpeg_missing',
+        ]);
+    }
+
+    $bytes = @file_get_contents($tmpJpg);
+    @unlink($tmpJpg);
+    if ($bytes === false || $bytes === '') {
+        vrata_respond(502, ['error' => 'capture_failed']);
+    }
+
+    if (!is_dir(VRATA_SNAPSHOT_DIR) && !@mkdir(VRATA_SNAPSHOT_DIR, 0775, true) && !is_dir(VRATA_SNAPSHOT_DIR)) {
+        // The web server user needs write access to views/vrata/frame/.
+        vrata_respond(500, ['error' => 'write_failed']);
+    }
+
+    $name = 'shot-' . bin2hex(random_bytes(16)) . '.jpg';
+    if (@file_put_contents(VRATA_SNAPSHOT_DIR . '/' . $name, $bytes, LOCK_EX) === false) {
+        vrata_respond(500, ['error' => 'write_failed']);
+    }
+    @chmod(VRATA_SNAPSHOT_DIR . '/' . $name, 0664);
+    vrata_prune_snapshots();
+
+    vrata_respond(200, [
+        'ok' => true,
+        'ts' => time(),
+        'file' => 'shots/' . $name,
+        // True when every grab came back black: the picture is a placeholder,
+        // so the page can say "camera still waking" instead of lying.
+        'blank' => $blank,
+    ]);
+}
+
+/** Keeps only the newest few stills; the rest are dead weight. */
+function vrata_prune_snapshots(): void
+{
+    $files = glob(VRATA_SNAPSHOT_DIR . '/shot-*.jpg') ?: [];
+    if (count($files) <= VRATA_SNAPSHOT_KEEP) return;
+
+    usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
+    foreach (array_slice($files, VRATA_SNAPSHOT_KEEP) as $old) {
+        @unlink($old);
+    }
+}
+
+// ------------------------------------------------------------------
 //  Request guards
 // ------------------------------------------------------------------
 
@@ -161,7 +324,7 @@ if ($user !== null && Auth::hasProjectRole('vrata')) {
 }
 
 $action = isset($body['action']) && is_string($body['action']) ? $body['action'] : 'unlock';
-if (!in_array($action, ['unlock', 'stream'], true)) {
+if (!in_array($action, ['unlock', 'stream', 'snapshot'], true)) {
     vrata_respond(400, ['error' => 'unknown_action']);
 }
 
@@ -197,11 +360,9 @@ if (!$token) {
     vrata_respond(502, ['error' => 'token_failed']);
 }
 
-if ($action === 'stream') {
-    if ($camera_id === '') {
-        vrata_respond(500, ['error' => 'camera_not_configured']);
-    }
-
+/** Allocates a fresh HLS URL for the camera, or null on failure. */
+function vrata_allocate_stream(string $client_id, string $secret, string $base_url, string $camera_id, string $token): ?string
+{
     $timestamp = round(microtime(true) * 1000);
     $streamBody = json_encode(['type' => 'hls']);
     $path = "/v1.0/devices/$camera_id/stream/actions/allocate";
@@ -225,10 +386,24 @@ if ($action === 'stream') {
     $data = json_decode((string) curl_exec($ch), true);
 
     $url = $data['result']['url'] ?? null;
-    if (!$url) {
+    return is_string($url) && $url !== '' ? $url : null;
+}
+
+if ($action === 'stream' || $action === 'snapshot') {
+    if ($camera_id === '') {
+        vrata_respond(500, ['error' => 'camera_not_configured']);
+    }
+
+    $url = vrata_allocate_stream($client_id, $secret, $base_url, $camera_id, $token);
+    if ($url === null) {
         vrata_respond(502, ['error' => 'stream_failed']);
     }
-    vrata_respond(200, ['url' => $url]);
+
+    if ($action === 'stream') {
+        vrata_respond(200, ['url' => $url]);
+    }
+
+    vrata_snapshot($url);   // never returns
 }
 
 // Default action: unlock.
