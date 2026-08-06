@@ -150,9 +150,15 @@ function vrata_ffmpeg_bin(): ?string
     if ($resolved) return $bin;
     $resolved = true;
 
+    // A configured path is preferred but still verified: an FFMPEG_BIN typo
+    // must not send us into the retry loop only to fail 15s later.
     $env = $_ENV['FFMPEG_BIN'] ?? getenv('FFMPEG_BIN');
     if (is_string($env) && $env !== '') {
-        return $bin = $env;
+        if (str_contains($env, '/')) {
+            if (is_executable($env)) return $bin = $env;
+        } elseif (($found = vrata_which($env)) !== null) {
+            return $bin = $found;
+        }
     }
 
     $bundled = __DIR__ . '/../bin/ffmpeg';
@@ -162,13 +168,8 @@ function vrata_ffmpeg_bin(): ?string
         if (is_executable($bundled)) return $bin = $bundled;
     }
 
-    if (vrata_exec_available()) {
-        // No `env` wrapper: `command` is a shell builtin, so env would try to
-        // exec a binary by that name and always report 127.
-        exec('command -v ffmpeg 2>/dev/null', $out, $code);
-        if ($code === 0 && isset($out[0]) && $out[0] !== '') {
-            return $bin = $out[0];
-        }
+    if (($found = vrata_which('ffmpeg')) !== null) {
+        return $bin = $found;
     }
 
     foreach (['/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg', '/opt/bin/ffmpeg'] as $path) {
@@ -176,6 +177,16 @@ function vrata_ffmpeg_bin(): ?string
     }
 
     return $bin = null;
+}
+
+/** Resolves a bare command name on PATH, or null. */
+function vrata_which(string $name): ?string
+{
+    if (!vrata_exec_available()) return null;
+    // No `env` wrapper: `command` is a shell builtin, so env would try to exec
+    // a binary by that name and always report 127.
+    exec('command -v ' . escapeshellarg($name) . ' 2>/dev/null', $out, $code);
+    return $code === 0 && isset($out[0]) && $out[0] !== '' ? $out[0] : null;
 }
 
 /** Pulls a single frame off the HLS URL into $dest. */
@@ -233,6 +244,29 @@ function vrata_snapshot(string $url): never
 {
     @set_time_limit(90);
 
+    // Bail before the retry loop: with no ffmpeg to run, every grab fails
+    // instantly and the retries only burn 15s of the caller's time. Report
+    // what was searched, since prod has no console to check.
+    if (!vrata_exec_available()) {
+        vrata_respond(502, ['error' => 'exec_disabled']);
+    }
+    if (vrata_ffmpeg_bin() === null) {
+        // The common SFTP mistake: the binary is there but arrived without its
+        // executable bit, and PHP cannot chmod a file it does not own. Saying
+        // "missing" about a file sitting in place would send you hunting.
+        if (is_file(__DIR__ . '/../bin/ffmpeg')) {
+            vrata_respond(502, [
+                'error' => 'ffmpeg_not_executable',
+                'fix' => 'chmod 755 app/bin/ffmpeg',
+            ]);
+        }
+        vrata_respond(502, [
+            'error' => 'ffmpeg_missing',
+            'looked_in' => ['FFMPEG_BIN', 'app/bin/ffmpeg', 'PATH',
+                            '/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg', '/opt/bin/ffmpeg'],
+        ]);
+    }
+
     $tmp = tempnam(sys_get_temp_dir(), 'vrata') ?: null;
     if ($tmp === null) {
         vrata_respond(500, ['error' => 'tmp_failed']);
@@ -261,13 +295,10 @@ function vrata_snapshot(string $url): never
     }
 
     if (!$got) {
+        // ffmpeg exists and ran (the guards above proved it), so this is the
+        // camera or the stream, not the deploy.
         @unlink($tmpJpg);
-        // Three very different problems, and no console in the car to tell
-        // them apart: the host forbids running commands at all, there is no
-        // ffmpeg to run, or ffmpeg ran and the camera gave nothing.
-        $why = !vrata_exec_available() ? 'exec_disabled'
-             : (vrata_ffmpeg_bin() === null ? 'ffmpeg_missing' : 'capture_failed');
-        vrata_respond(502, ['error' => $why]);
+        vrata_respond(502, ['error' => 'capture_failed']);
     }
 
     $bytes = @file_get_contents($tmpJpg);
