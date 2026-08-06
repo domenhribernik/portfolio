@@ -47,6 +47,17 @@ $GUEST_SID = str_repeat('b', 64);
 
 $attemptsFile = __DIR__ . '/vrata-attempts.test.json';
 $stubLog      = __DIR__ . '/tuya-stub.test.log';
+// Never the real views/vrata/frame/shots: publishing prunes to the newest few.
+$shotsDir     = __DIR__ . '/vrata-shots.test';
+
+/** A runnable ffmpeg, or null. The decode test needs one; nothing else does. */
+function vrataTestFfmpeg(): ?string
+{
+    foreach ([DOC_ROOT . '/app/bin/ffmpeg', '/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg'] as $p) {
+        if (is_executable($p)) return $p;
+    }
+    return null;
+}
 
 $passed = 0;
 $failed = 0;
@@ -145,10 +156,14 @@ if ($adminId === 0 || $guestId === 0) {
 $pdo->prepare('DELETE FROM user_project_roles WHERE user_id = ? AND project_id = ?')
     ->execute([$guestId, $projectId]);
 
-register_shutdown_function(function () use ($pdo, $guestId, $projectId, $attemptsFile) {
+register_shutdown_function(function () use ($pdo, $guestId, $projectId, $attemptsFile, $shotsDir) {
     $pdo->prepare('DELETE FROM user_project_roles WHERE user_id = ? AND project_id = ?')
         ->execute([$guestId, $projectId]);
     @unlink($attemptsFile);
+    foreach (glob($shotsDir . '/*') ?: [] as $f) {
+        @unlink($f);
+    }
+    @rmdir($shotsDir);
     clearStubLog();
 });
 
@@ -179,6 +194,7 @@ $proxyEnv = $commonEnv + [
 
     'VRATA_KEY'            => VRATA_KEY,
     'VRATA_ATTEMPTS_FILE'  => $attemptsFile,
+    'VRATA_SNAPSHOT_DIR'   => $shotsDir,
     'VRATA_MAX_ATTEMPTS'   => '3',
     'VRATA_ATTEMPT_WINDOW' => '900',
 
@@ -287,7 +303,57 @@ check('unlock sends switch_1 true', str_contains($calls[1]['body'] ?? '', 'switc
 clearStubLog();
 $res = postJson(API, ['key' => VRATA_KEY, 'action' => 'stream']);
 check('stream with key is 200', $res['status'] === 200, "got {$res['status']} " . json_encode($res['body']));
-check('stream returns the HLS url', ($res['body']['url'] ?? '') === 'https://stub.example/cam.m3u8', json_encode($res['body']));
+check('stream returns the HLS url', str_ends_with($res['body']['url'] ?? '', '/hls/cam.m3u8'), json_encode($res['body']));
+
+// The capture pipeline end to end against the stub's HLS tree: curl walks
+// master playlist -> media playlist -> relative segment URI, and ffmpeg only
+// decodes the file that lands on disk. Skipped where there is no ffmpeg,
+// which is a local-environment fact, not a failure of the proxy.
+if (vrataTestFfmpeg() === null) {
+    echo "  ..  snapshot pipeline skipped (no ffmpeg on this machine)\n";
+} else {
+    clearStubLog();
+    $res = postJson(API, ['key' => VRATA_KEY, 'action' => 'snapshot']);
+    check('snapshot with key is 200', $res['status'] === 200, "got {$res['status']} " . json_encode($res['body']));
+
+    $file = $res['body']['file'] ?? '';
+    check('snapshot returns a random shot filename',
+        preg_match('#^shots/shot-[0-9a-f]{32}\.jpg$#', $file) === 1, json_encode($res['body']));
+    check('snapshot reports a non-blank frame', ($res['body']['blank'] ?? true) === false, json_encode($res['body']));
+
+    $onDisk = $shotsDir . '/' . basename($file);
+    check('snapshot wrote the file to disk', is_file($onDisk), $onDisk);
+    check('snapshot wrote a real JPEG',
+        is_file($onDisk) && str_starts_with((string) file_get_contents($onDisk), "\xFF\xD8\xFF"),
+        is_file($onDisk) ? bin2hex(substr((string) file_get_contents($onDisk), 0, 3)) : 'missing');
+
+    // The segment must have been pulled by curl, not by ffmpeg reaching out.
+    $paths = array_column(stubCalls(), 'path');
+    check('snapshot fetched master, media and segment',
+        count(array_filter($paths, fn($p) => str_contains((string) $p, '/hls/cam.m3u8'))) === 1
+        && count(array_filter($paths, fn($p) => str_contains((string) $p, '/hls/media.m3u8'))) === 1
+        && count(array_filter($paths, fn($p) => str_contains((string) $p, '/hls/seg1.ts'))) === 1,
+        json_encode($paths));
+}
+
+// The diagnostic action. It carries the same gate as everything else, and it
+// reports each layer between the server and the camera separately: a blocked
+// egress port, an expired URL and an unrunnable binary are otherwise all the
+// same "capture_failed" on a host with no shell to check.
+$res = postJson(API, ['action' => 'diag']);
+check('diag without key is 401', $res['status'] === 401, "got {$res['status']}");
+
+clearStubLog();
+$res = postJson(API, ['key' => VRATA_KEY, 'action' => 'diag']);
+check('diag with key is 200', $res['status'] === 200, "got {$res['status']} " . json_encode($res['body']));
+check('diag reports the stream host', ($res['body']['host'] ?? '') === HOST, json_encode($res['body']));
+check('diag runs the real capture pipeline',
+    array_key_exists('stopped_at', $res['body']['capture'] ?? []), json_encode($res['body']['capture'] ?? null));
+check('diag probes a tcp port', isset($res['body']['tcp']['443']['ok']), json_encode($res['body']['tcp'] ?? null));
+check('diag reports the fetch attempt', isset($res['body']['fetch']['as_allocated']['errno']), json_encode($res['body']['fetch'] ?? null));
+check('diag reports ffmpeg', array_key_exists('bin', $res['body']['ffmpeg'] ?? []), json_encode($res['body']['ffmpeg'] ?? null));
+// The allocated URL is signed: host and port may be reported, the URL never.
+check('diag does not leak the signed url', !str_contains(json_encode($res['body']), 'cam.m3u8'), json_encode($res['body']));
 
 $res = postJson(API, ['key' => VRATA_KEY, 'action' => 'reboot']);
 check('unknown action is 400', $res['status'] === 400, "got {$res['status']}");

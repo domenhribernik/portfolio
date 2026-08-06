@@ -122,13 +122,23 @@ function vrata_clear_failures(string $ip): void
 // guessable URL, and so the browser can never serve a stale cached copy. Only
 // the newest few are kept.
 
-const VRATA_SNAPSHOT_DIR = __DIR__ . '/../../views/vrata/frame/shots';
+/** Where published stills land. Overridable so tests never touch the real one. */
+function vrata_snapshot_dir(): string
+{
+    $override = getenv('VRATA_SNAPSHOT_DIR');
+    return is_string($override) && $override !== ''
+        ? $override
+        : __DIR__ . '/../../views/vrata/frame/shots';
+}
+
 const VRATA_SNAPSHOT_KEEP = 3;       // newest files to keep on disk
 const VRATA_SNAPSHOT_TRIES = 6;      // grabs before giving up on the warm-up
 const VRATA_SNAPSHOT_GAP = 3;        // seconds between grabs
 const VRATA_SNAPSHOT_TIMEOUT = 25;   // hard kill for one ffmpeg run
 const VRATA_SNAPSHOT_BUDGET = 45;    // total seconds of retrying
 const VRATA_BLANK_LUMA = 6;          // mean luma below this is the placeholder
+const VRATA_PROBE_TIMEOUT = 3;       // seconds for one TCP reachability probe
+const VRATA_FETCH_TIMEOUT = 10;      // seconds for one playlist/segment fetch
 
 /** True when PHP is actually allowed to run external commands. */
 function vrata_exec_available(): bool
@@ -189,25 +199,344 @@ function vrata_which(string $name): ?string
     return $code === 0 && isset($out[0]) && $out[0] !== '' ? $out[0] : null;
 }
 
-/** Pulls a single frame off the HLS URL into $dest. */
-function vrata_grab_frame(string $url, string $dest): bool
+/**
+ * Last ffmpeg exit code and output, kept so a failure can explain itself.
+ * There is no console on shared hosting and no log we can read.
+ */
+function vrata_last_error(?array $set = null): array
+{
+    static $last = ['code' => null, 'out' => []];
+    if ($set !== null) $last = $set;
+    return $last;
+}
+
+/**
+ * Wrapper commands to put in front of a binary, where the host has them.
+ * Both are optional: managed hosting sometimes ships neither, and a missing
+ * one would make every run fail with 127.
+ *
+ * env: XAMPP exports LD_LIBRARY_PATH=/opt/lampp/lib, whose old libstdc++
+ * breaks the system ffmpeg, so it is unset where possible.
+ * timeout: ffmpeg must not keep reading the live playlist, it blocks
+ * indefinitely waiting for the next segment and ignores TERM inside a TLS
+ * read. -frames:v 1 normally returns in a second regardless.
+ */
+function vrata_cmd_prefix(int $seconds): string
+{
+    $prefix = '';
+    if (vrata_which('env') !== null) {
+        $prefix .= 'env -u LD_LIBRARY_PATH ';
+    }
+    if (vrata_which('timeout') !== null) {
+        $prefix .= 'timeout -k 3 ' . $seconds . ' ';
+    }
+    return $prefix;
+}
+
+// ------------------------------------------------------------------
+//  Reaching the stream host at all
+// ------------------------------------------------------------------
+//
+// Tuya hands out stream URLs on port 8080, and plenty of managed hosts refuse
+// outbound connections to anything but 80/443. Observed on prod: the edge
+// also answers on 443 for some allocations, so the URL is worth retrying
+// there before giving up. vrata_probe is for the diag action only: a socket
+// that opens proves nothing on its own, since one has opened and then died
+// mid-HTTP here, so the capture path validates by content instead.
+
+/** @return array{ok:bool, errno:int, error:string, ms:int} */
+function vrata_probe(string $host, int $port): array
+{
+    $t0 = microtime(true);
+    $errno = 0;
+    $errstr = '';
+    $sock = @stream_socket_client(
+        'tcp://' . $host . ':' . $port,
+        $errno,
+        $errstr,
+        VRATA_PROBE_TIMEOUT
+    );
+    $ms = (int) round((microtime(true) - $t0) * 1000);
+    if ($sock !== false) {
+        fclose($sock);
+        return ['ok' => true, 'errno' => 0, 'error' => '', 'ms' => $ms];
+    }
+    return ['ok' => false, 'errno' => $errno, 'error' => $errstr, 'ms' => $ms];
+}
+
+/** The port a URL actually connects on. */
+function vrata_url_port(string $url): int
+{
+    $p = parse_url($url);
+    if (isset($p['port'])) return (int) $p['port'];
+    return ($p['scheme'] ?? 'https') === 'http' ? 80 : 443;
+}
+
+/**
+ * The same URL moved to port 443, or null when it is already there. Some
+ * Tuya stream edges answer HLS on both 8080 and 443; where they do, this is
+ * the entire fix for a host that only allows standard ports out.
+ */
+function vrata_url_on_443(string $url): ?string
+{
+    $p = parse_url($url);
+    if (!is_array($p) || !isset($p['host']) || !isset($p['port'])) return null;
+    if ((int) $p['port'] === 443) return null;
+
+    return 'https://' . $p['host']
+        . ($p['path'] ?? '')
+        . (isset($p['query']) ? '?' . $p['query'] : '');
+}
+
+// ------------------------------------------------------------------
+//  Fetching HLS with curl, not with ffmpeg
+// ------------------------------------------------------------------
+//
+// ffmpeg's own HTTP client is the least reliable thing in this path: on prod
+// it has failed both with a refused connection (port 8080 blocked outbound)
+// and, once moved to 443, with "Error reading HTTP response: End of file".
+// PHP's curl is the host's own, with its CA store and proxy settings, and its
+// errno says what actually went wrong instead of a log line to scrape.
+//
+// So the split is: curl does every network read, ffmpeg only decodes a file
+// already on disk. That also makes a blocked port impossible to mistake for a
+// broken binary, because the two now fail in different functions.
+
+/** @return array{body:?string, http:int, errno:int, error:string} */
+function vrata_fetch(string $url, int $timeout = VRATA_FETCH_TIMEOUT): array
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => VRATA_PROBE_TIMEOUT,
+        CURLOPT_TIMEOUT        => $timeout,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 3,
+    ]);
+    $body = curl_exec($ch);
+    $out = [
+        'body'  => is_string($body) && $body !== '' ? $body : null,
+        'http'  => (int) curl_getinfo($ch, CURLINFO_HTTP_CODE),
+        'errno' => curl_errno($ch),
+        'error' => curl_error($ch),
+    ];
+    curl_close($ch);
+    if ($out['http'] >= 400) $out['body'] = null;
+    return $out;
+}
+
+/** Resolves a playlist-relative URI against the playlist's own URL. */
+function vrata_resolve_url(string $base, string $ref): string
+{
+    if (preg_match('#^https?://#i', $ref)) return $ref;
+
+    $p = parse_url($base);
+    $root = ($p['scheme'] ?? 'https') . '://' . ($p['host'] ?? '')
+        . (isset($p['port']) ? ':' . $p['port'] : '');
+    if (str_starts_with($ref, '/')) return $root . $ref;
+
+    $dir = preg_replace('#/[^/]*$#', '/', $p['path'] ?? '/');
+    return $root . $dir . $ref;
+}
+
+/** Non-comment lines of a playlist, which are its URIs. */
+function vrata_playlist_uris(string $body): array
+{
+    $uris = [];
+    foreach (preg_split('/\R/', $body) ?: [] as $line) {
+        $line = trim($line);
+        if ($line !== '' && $line[0] !== '#') $uris[] = $line;
+    }
+    return $uris;
+}
+
+/**
+ * Fetches the playlist this host can actually read, following one level of
+ * master playlist, and falling back to port 443 when the allocated URL is
+ * unreachable. Validated by content: a socket that opens but returns no
+ * playlist is not a working stream, which a bare TCP probe cannot tell.
+ *
+ * @return array{url:?string, body:?string, tried:array<string, array>}
+ */
+function vrata_open_playlist(string $url): array
+{
+    $tried = [];
+    foreach ([$url, vrata_url_on_443($url)] as $candidate) {
+        if ($candidate === null) continue;
+
+        $port = (string) vrata_url_port($candidate);
+        $res = vrata_fetch($candidate, VRATA_FETCH_TIMEOUT);
+        $tried[$port] = [
+            'http'  => $res['http'],
+            'errno' => $res['errno'],
+            'error' => $res['error'],
+            'bytes' => $res['body'] === null ? 0 : strlen($res['body']),
+        ];
+        if ($res['body'] === null || !str_starts_with(ltrim($res['body']), '#EXTM3U')) {
+            continue;
+        }
+
+        // A master playlist only lists other playlists; take the first variant.
+        if (str_contains($res['body'], '#EXT-X-STREAM-INF')) {
+            $uris = vrata_playlist_uris($res['body']);
+            if ($uris === []) continue;
+            $variant = vrata_resolve_url($candidate, $uris[0]);
+            $res = vrata_fetch($variant, VRATA_FETCH_TIMEOUT);
+            $tried[$port . '/variant'] = [
+                'http'  => $res['http'],
+                'errno' => $res['errno'],
+                'error' => $res['error'],
+                'bytes' => $res['body'] === null ? 0 : strlen($res['body']),
+            ];
+            if ($res['body'] === null) continue;
+            $candidate = $variant;
+        }
+
+        return ['url' => $candidate, 'body' => $res['body'], 'tried' => $tried];
+    }
+
+    return ['url' => null, 'body' => null, 'tried' => $tried];
+}
+
+/**
+ * Fetches a URL, retrying on 443 when the allocated port is unreachable.
+ * Playlists resolve their segments relatively, so those inherit whichever
+ * port worked, but an absolute URI inside the playlist (the EXT-X-KEY is
+ * one) still points at 8080 and needs the same fallback.
+ */
+function vrata_fetch_maybe_443(string $url): array
+{
+    $res = vrata_fetch($url);
+    if ($res['body'] !== null) return $res;
+
+    $alt = vrata_url_on_443($url);
+    return $alt === null ? $res : vrata_fetch($alt);
+}
+
+/**
+ * The AES-128 key and IV a playlist declares for its last segment.
+ *
+ * **Tuya encrypts every segment**, so this is the normal path, not an edge
+ * case: without it the downloaded .ts is ciphertext and ffmpeg rejects it
+ * with "Invalid data found when processing input". ffmpeg was doing this
+ * itself back when it fetched the playlist.
+ *
+ * @return array{method:string, key:?string, iv:string}|null  null when in the clear
+ */
+function vrata_playlist_key(string $base, string $body, int $sequence): ?array
+{
+    // Keys can rotate; the last declaration is the one covering the last
+    // segment, which is the one this code always picks.
+    if (!preg_match_all('/#EXT-X-KEY:([^\r\n]+)/', $body, $all)) return null;
+    $attrs = (string) end($all[1]);
+
+    $method = preg_match('/METHOD=([A-Za-z0-9-]+)/', $attrs, $m) ? $m[1] : 'NONE';
+    if ($method === 'NONE') return null;
+    if ($method !== 'AES-128' || !preg_match('/URI="([^"]+)"/', $attrs, $u)) {
+        return ['method' => $method, 'key' => null, 'iv' => ''];
+    }
+
+    $res = vrata_fetch_maybe_443(vrata_resolve_url($base, $u[1]));
+    if ($res['body'] === null || strlen($res['body']) !== 16) {
+        return ['method' => $method, 'key' => null, 'iv' => ''];
+    }
+
+    // An explicit IV wins; otherwise HLS uses the segment's media sequence
+    // number as a 16-byte big-endian counter.
+    $iv = preg_match('/IV=0x([0-9A-Fa-f]+)/', $attrs, $i)
+        ? (string) hex2bin(str_pad($i[1], 32, '0', STR_PAD_LEFT))
+        : pack('N4', 0, 0, 0, $sequence);
+
+    return ['method' => $method, 'key' => $res['body'], 'iv' => $iv];
+}
+
+/**
+ * Writes the newest media segment of an open playlist to $dest, decrypted.
+ * An fMP4 playlist needs its EXT-X-MAP init segment in front or the decoder
+ * sees headerless fragments; a plain MPEG-TS one has no map and needs none.
+ */
+function vrata_fetch_segment(array $playlist, string $dest): bool
+{
+    $body = (string) $playlist['body'];
+    $base = (string) $playlist['url'];
+
+    $uris = vrata_playlist_uris($body);
+    if ($uris === []) {
+        vrata_last_error(['code' => null, 'out' => ['playlist listed no segments']]);
+        return false;
+    }
+
+    $init = '';
+    if (preg_match('/#EXT-X-MAP:[^\r\n]*URI="([^"]+)"/', $body, $m)) {
+        $res = vrata_fetch_maybe_443(vrata_resolve_url($base, $m[1]));
+        if ($res['body'] === null) {
+            vrata_last_error(['code' => $res['errno'], 'out' => ['init segment: ' . $res['error']]]);
+            return false;
+        }
+        $init = $res['body'];
+    }
+
+    // Last URI is the most recent segment: the live edge, not the backlog.
+    $index = count($uris) - 1;
+    $seg = vrata_fetch_maybe_443(vrata_resolve_url($base, $uris[$index]));
+    if ($seg['body'] === null) {
+        vrata_last_error(['code' => $seg['errno'], 'out' => ['segment: ' . $seg['error']]]);
+        return false;
+    }
+    $bytes = $seg['body'];
+
+    $mediaSeq = preg_match('/#EXT-X-MEDIA-SEQUENCE:(\d+)/', $body, $s) ? (int) $s[1] : 0;
+    $crypt = vrata_playlist_key($base, $body, $mediaSeq + $index);
+    if ($crypt !== null) {
+        if ($crypt['key'] === null) {
+            vrata_last_error(['code' => null, 'out' => ['unusable ' . $crypt['method'] . ' key']]);
+            return false;
+        }
+        $plain = openssl_decrypt($bytes, 'aes-128-cbc', $crypt['key'], OPENSSL_RAW_DATA, $crypt['iv']);
+        if ($plain === false) {
+            // HLS specifies PKCS7, but not every packager pads; retry raw
+            // rather than fail on a segment that is merely unpadded.
+            $plain = openssl_decrypt(
+                $bytes,
+                'aes-128-cbc',
+                $crypt['key'],
+                OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
+                $crypt['iv']
+            );
+        }
+        if ($plain === false || $plain === '') {
+            vrata_last_error(['code' => null, 'out' => ['AES-128 decrypt failed']]);
+            return false;
+        }
+        $bytes = $plain;
+    }
+
+    // Not filesize(): the retry loop writes this same path repeatedly and the
+    // stat cache would answer for the previous attempt.
+    $written = @file_put_contents($dest, $init . $bytes);
+    return $written !== false && $written > 0;
+}
+
+/** Decodes a single frame out of an already-downloaded segment file. */
+function vrata_grab_frame(string $source, string $dest): bool
 {
     $ffmpeg = vrata_ffmpeg_bin();
     if ($ffmpeg === null || !vrata_exec_available()) return false;
 
-    // XAMPP exports LD_LIBRARY_PATH=/opt/lampp/lib, whose old libstdc++ breaks
-    // the system ffmpeg; run it with that unset.
-    //
-    // ffmpeg must not keep reading the live playlist: it blocks indefinitely
-    // waiting for the next segment and ignores TERM inside a TLS read, hence
-    // -frames:v 1 plus timeout's -k kill.
-    $cmd = 'env -u LD_LIBRARY_PATH timeout -k 3 ' . VRATA_SNAPSHOT_TIMEOUT
-        . ' ' . escapeshellarg($ffmpeg) . ' -y -loglevel error -nostdin'
-        . ' -i ' . escapeshellarg($url)
+    $cmd = vrata_cmd_prefix(VRATA_SNAPSHOT_TIMEOUT)
+        . escapeshellarg($ffmpeg) . ' -y -loglevel error -nostdin'
+        . ' -i ' . escapeshellarg($source)
         . ' -frames:v 1 -update 1 -q:v 4 ' . escapeshellarg($dest)
         . ' </dev/null 2>&1';
+    $out = [];
     exec($cmd, $out, $code);
-    return $code === 0 && is_file($dest) && filesize($dest) > 0;
+    // The loop reuses $dest, so the cached size would be the previous frame's.
+    clearstatcache(true, $dest);
+    $ok = $code === 0 && is_file($dest) && filesize($dest) > 0;
+    if (!$ok) {
+        vrata_last_error(['code' => $code, 'out' => array_slice($out, -4)]);
+    }
+    return $ok;
 }
 
 /** Mean luma 0-255 of a JPEG, or null if it can't be read. */
@@ -267,11 +596,25 @@ function vrata_snapshot(string $url): never
         ]);
     }
 
+    // Fail fast and precisely when the playlist cannot be read. Without this
+    // the loop spends 45 seconds retrying something that will never work and
+    // then reports 'capture_failed', which points at the camera when the real
+    // answer is this host's egress. 'tried' carries the curl errno per port.
+    $playlist = vrata_open_playlist($url);
+    if ($playlist['body'] === null) {
+        vrata_respond(502, [
+            'error' => 'stream_unreachable',
+            'host'  => parse_url($url, PHP_URL_HOST),
+            'tried' => $playlist['tried'],
+        ]);
+    }
+
     $tmp = tempnam(sys_get_temp_dir(), 'vrata') ?: null;
     if ($tmp === null) {
         vrata_respond(500, ['error' => 'tmp_failed']);
     }
     $tmpJpg = $tmp . '.jpg';
+    $tmpSeg = $tmp . '.seg';
     @unlink($tmp);
 
     $got = false;
@@ -281,8 +624,20 @@ function vrata_snapshot(string $url): never
         if ($i > 0) {
             if (time() >= $deadline) break;
             sleep(VRATA_SNAPSHOT_GAP);
+            // Re-read the playlist: the point of waiting is a newer segment,
+            // and the old one still lists the black warm-up frames.
+            $playlist = vrata_open_playlist($playlist['url']);
+            if ($playlist['body'] === null) break;
         }
-        if (!vrata_grab_frame($url, $tmpJpg)) continue;
+
+        if (!vrata_fetch_segment($playlist, $tmpSeg)) continue;
+
+        if (!vrata_grab_frame($tmpSeg, $tmpJpg)) {
+            // 126 (wrong architecture) and 127 (missing loader or helper) mean
+            // the binary cannot run at all; six retries will not change that.
+            if (in_array(vrata_last_error()['code'], [126, 127], true)) break;
+            continue;
+        }
 
         $got = true;
         $luma = vrata_mean_luma($tmpJpg);
@@ -295,28 +650,40 @@ function vrata_snapshot(string $url): never
     }
 
     if (!$got) {
-        // ffmpeg exists and ran (the guards above proved it), so this is the
-        // camera or the stream, not the deploy.
+        // The playlist was readable (checked above), so this is the segment
+        // download or the decode. vrata_last_error() carries whichever spoke
+        // last: a curl errno from the fetch, or ffmpeg's exit and log lines.
+        // 126 = wrong architecture, 127 = a missing helper such as `timeout`.
+        $last = vrata_last_error();
+        $segBytes = is_file($tmpSeg) ? filesize($tmpSeg) : 0;
         @unlink($tmpJpg);
-        vrata_respond(502, ['error' => 'capture_failed']);
+        @unlink($tmpSeg);
+        vrata_respond(502, [
+            'error' => 'capture_failed',
+            'ffmpeg' => vrata_ffmpeg_bin(),
+            'exit' => $last['code'],
+            'output' => $last['out'],
+            'segment_bytes' => $segBytes,
+        ]);
     }
 
     $bytes = @file_get_contents($tmpJpg);
     @unlink($tmpJpg);
+    @unlink($tmpSeg);
     if ($bytes === false || $bytes === '') {
         vrata_respond(502, ['error' => 'capture_failed']);
     }
 
-    if (!is_dir(VRATA_SNAPSHOT_DIR) && !@mkdir(VRATA_SNAPSHOT_DIR, 0775, true) && !is_dir(VRATA_SNAPSHOT_DIR)) {
+    if (!is_dir(vrata_snapshot_dir()) && !@mkdir(vrata_snapshot_dir(), 0775, true) && !is_dir(vrata_snapshot_dir())) {
         // The web server user needs write access to views/vrata/frame/.
         vrata_respond(500, ['error' => 'write_failed']);
     }
 
     $name = 'shot-' . bin2hex(random_bytes(16)) . '.jpg';
-    if (@file_put_contents(VRATA_SNAPSHOT_DIR . '/' . $name, $bytes, LOCK_EX) === false) {
+    if (@file_put_contents(vrata_snapshot_dir() . '/' . $name, $bytes, LOCK_EX) === false) {
         vrata_respond(500, ['error' => 'write_failed']);
     }
-    @chmod(VRATA_SNAPSHOT_DIR . '/' . $name, 0664);
+    @chmod(vrata_snapshot_dir() . '/' . $name, 0664);
     vrata_prune_snapshots();
 
     vrata_respond(200, [
@@ -332,13 +699,144 @@ function vrata_snapshot(string $url): never
 /** Keeps only the newest few stills; the rest are dead weight. */
 function vrata_prune_snapshots(): void
 {
-    $files = glob(VRATA_SNAPSHOT_DIR . '/shot-*.jpg') ?: [];
+    $files = glob(vrata_snapshot_dir() . '/shot-*.jpg') ?: [];
     if (count($files) <= VRATA_SNAPSHOT_KEEP) return;
 
     usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
     foreach (array_slice($files, VRATA_SNAPSHOT_KEEP) as $old) {
         @unlink($old);
     }
+}
+
+// ------------------------------------------------------------------
+//  Diagnostics
+// ------------------------------------------------------------------
+//
+// There is no shell on the host and no log we can read, so a failed capture
+// is otherwise unattributable: a blocked port, an expired URL and a binary
+// that cannot run all reduce to the same "it didn't work". The 'diag' action
+// allocates a real stream and reports every layer separately.
+
+/** @return array{a:string[], aaaa:string[]} */
+function vrata_dns(string $host): array
+{
+    $a = @gethostbynamel($host) ?: [];
+    $aaaa = [];
+    if (function_exists('dns_get_record')) {
+        foreach (@dns_get_record($host, DNS_AAAA) ?: [] as $rec) {
+            if (isset($rec['ipv6'])) $aaaa[] = $rec['ipv6'];
+        }
+    }
+    return ['a' => array_values($a), 'aaaa' => $aaaa];
+}
+
+/**
+ * Fetches a URL and reports how it went, never what came back: the playlist
+ * body carries the signed stream token and must not travel to a client.
+ *
+ * @return array{http:int, errno:int, error:string, bytes:int, playlist:bool}
+ */
+function vrata_fetch_report(string $url): array
+{
+    $res = vrata_fetch($url);
+    return [
+        'http'     => $res['http'],
+        'errno'    => $res['errno'],
+        'error'    => $res['error'],
+        'bytes'    => $res['body'] === null ? 0 : strlen($res['body']),
+        'playlist' => $res['body'] !== null && str_starts_with(ltrim($res['body']), '#EXTM3U'),
+    ];
+}
+
+/** What ffmpeg this host resolves, and whether it can actually be run. */
+function vrata_ffmpeg_report(): array
+{
+    $bin = vrata_ffmpeg_bin();
+    if ($bin === null) {
+        return [
+            'bin'     => null,
+            'exec'    => vrata_exec_available(),
+            'bundled' => is_file(__DIR__ . '/../bin/ffmpeg'),
+        ];
+    }
+    $out = [];
+    $code = null;
+    exec(vrata_cmd_prefix(5) . escapeshellarg($bin) . ' -version 2>&1', $out, $code);
+    return [
+        'bin'     => $bin,
+        'exec'    => vrata_exec_available(),
+        'exit'    => $code,
+        'version' => $out[0] ?? '',
+    ];
+}
+
+/** Runs the real capture pipeline once and reports where it stopped. */
+function vrata_capture_report(string $url): array
+{
+    $playlist = vrata_open_playlist($url);
+    $report = [
+        'playlist_tried' => $playlist['tried'],
+        'playlist_port'  => $playlist['url'] === null ? null : vrata_url_port($playlist['url']),
+        'segments'       => $playlist['body'] === null
+            ? 0
+            : count(vrata_playlist_uris($playlist['body'])),
+    ];
+    if ($playlist['body'] === null) return $report + ['stopped_at' => 'playlist'];
+
+    $tmp = tempnam(sys_get_temp_dir(), 'vratadiag');
+    if ($tmp === false) return $report + ['stopped_at' => 'tmp'];
+
+    $seg = $tmp . '.seg';
+    $jpg = $tmp . '.jpg';
+    @unlink($tmp);
+
+    if (!vrata_fetch_segment($playlist, $seg)) {
+        @unlink($seg);
+        return $report + ['stopped_at' => 'segment', 'why' => vrata_last_error()];
+    }
+    $report['segment_bytes'] = filesize($seg);
+
+    $decoded = vrata_grab_frame($seg, $jpg);
+    $report['jpeg_bytes'] = $decoded && is_file($jpg) ? filesize($jpg) : 0;
+    $report['luma'] = $decoded ? vrata_mean_luma($jpg) : null;
+    if (!$decoded) $report['why'] = vrata_last_error();
+    @unlink($seg);
+    @unlink($jpg);
+
+    return $report + ['stopped_at' => $decoded ? null : 'decode'];
+}
+
+/** Reports every layer between this server and the camera. Never returns. */
+function vrata_diag(string $url): never
+{
+    @set_time_limit(60);
+
+    $host = (string) (parse_url($url, PHP_URL_HOST) ?: '');
+    $port = vrata_url_port($url);
+    $alt  = vrata_url_on_443($url);
+
+    // Host and port are safe to report; the signed URL itself is a credential.
+    $tcp = [(string) $port => vrata_probe($host, $port)];
+    if (!isset($tcp['443'])) {
+        $tcp['443'] = vrata_probe($host, 443);
+    }
+
+    vrata_respond(200, [
+        'ok'    => true,
+        'host'  => $host,
+        'port'  => $port,
+        'dns'   => vrata_dns($host),
+        'tcp'   => $tcp,
+        'fetch' => [
+            'as_allocated' => vrata_fetch_report($url),
+            'on_443'       => $alt === null ? null : vrata_fetch_report($alt),
+        ],
+        // The real pipeline, run once: which port served a playlist, whether a
+        // segment downloads, and whether ffmpeg decodes it. This is the answer
+        // when the individual layers all look fine but capture still fails.
+        'capture' => vrata_capture_report($url),
+        'ffmpeg' => vrata_ffmpeg_report(),
+    ]);
 }
 
 // ------------------------------------------------------------------
@@ -393,7 +891,7 @@ if ($user !== null && Auth::hasProjectRole('vrata')) {
 }
 
 $action = isset($body['action']) && is_string($body['action']) ? $body['action'] : 'unlock';
-if (!in_array($action, ['unlock', 'stream', 'snapshot'], true)) {
+if (!in_array($action, ['unlock', 'stream', 'snapshot', 'diag'], true)) {
     vrata_respond(400, ['error' => 'unknown_action']);
 }
 
@@ -458,7 +956,7 @@ function vrata_allocate_stream(string $client_id, string $secret, string $base_u
     return is_string($url) && $url !== '' ? $url : null;
 }
 
-if ($action === 'stream' || $action === 'snapshot') {
+if ($action === 'stream' || $action === 'snapshot' || $action === 'diag') {
     if ($camera_id === '') {
         vrata_respond(500, ['error' => 'camera_not_configured']);
     }
@@ -470,6 +968,9 @@ if ($action === 'stream' || $action === 'snapshot') {
 
     if ($action === 'stream') {
         vrata_respond(200, ['url' => $url]);
+    }
+    if ($action === 'diag') {
+        vrata_diag($url);   // never returns
     }
 
     vrata_snapshot($url);   // never returns

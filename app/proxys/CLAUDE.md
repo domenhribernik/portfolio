@@ -41,6 +41,16 @@ hidden `website` honeypot silently drops bots. Delivery is **intentionally
 Telegram-not-email**, the host has no MTA. Page logic:
 `views/homepage/contact-form.js`.
 
+**`vrata.php`**'s `snapshot` action captures a still server-side because the Tesla browser
+only paints video while parked. **Tuya allocates the HLS URL on port 8080, and prod's
+egress firewall refuses it**, so a capture that works locally can fail on the server with
+what looks like a broken ffmpeg. The `diag` action (same auth as the rest, POST
+`{"action":"diag"}`) reports DNS, both TCP probes, both curl fetches and the ffmpeg
+version separately, which is the only way to tell those apart on a host with no shell.
+Do **not** reach for Tuya's `/v1.0/cameras/{id}/actions/capture` as a way around it: it
+returns a command `sn` and delivers the image asynchronously over Pulsar, which needs a
+long-lived consumer on a nonstandard port (7285) that the same firewall blocks.
+
 **`store.php`** mirrors the `contact.php` shape (honeypot, Telegram alert), one row per
 email in `store_waitlist` upserted on duplicate, plus `GET ?action=count` for the
 storefront's founding-spots line.

@@ -168,6 +168,19 @@ header('Cache-Control: no-store');
     const REQUEST_TIMEOUT_MS = 10000;
     const SNAPSHOT_TIMEOUT_MS = 75000;  // server retries the camera warm-up
 
+    // There is no console in the car, so the overlay has to carry the reason.
+    // Anything unmapped still shows its raw code rather than a shrug.
+    const CAPTURE_ERRORS = {
+        stream_unreachable:    'Strežnik ne doseže kamere. Vrata 8080 so blokirana.',
+        stream_failed:         'Kamera ni vrnila povezave.',
+        capture_failed:        'Zajem slike ni uspel.',
+        exec_disabled:         'Strežnik ne sme zaganjati programov.',
+        ffmpeg_missing:        'Na strežniku ni ffmpeg.',
+        ffmpeg_not_executable: 'ffmpeg na strežniku ni izvršljiv.',
+        write_failed:          'Slike ni bilo mogoče shraniti.',
+        camera_not_configured: 'Kamera ni nastavljena.',
+    };
+
     const keyView      = document.getElementById('keyView');
     const actionView   = document.getElementById('actionView');
     const keyForm      = document.getElementById('keyForm');
@@ -282,9 +295,9 @@ header('Cache-Control: no-store');
                 return;
             }
             if (!res.ok) {
-                // Show the server's error code: there is no console in the car.
                 const why = await res.json().then((d) => d.error).catch(() => null);
-                setOverlay('Zajem ni uspel (' + (why || res.status) + ').');
+                setOverlay(CAPTURE_ERRORS[why]
+                    || ('Zajem ni uspel (' + (why || res.status) + ').'));
                 return;
             }
 
