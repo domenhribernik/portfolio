@@ -130,23 +130,60 @@ const VRATA_SNAPSHOT_TIMEOUT = 25;   // hard kill for one ffmpeg run
 const VRATA_SNAPSHOT_BUDGET = 45;    // total seconds of retrying
 const VRATA_BLANK_LUMA = 6;          // mean luma below this is the placeholder
 
-function vrata_ffmpeg_bin(): string
+/** True when PHP is actually allowed to run external commands. */
+function vrata_exec_available(): bool
 {
-    $bin = $_ENV['FFMPEG_BIN'] ?? getenv('FFMPEG_BIN');
-    return is_string($bin) && $bin !== '' ? $bin : 'ffmpeg';
+    if (!function_exists('exec')) return false;
+    $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+    return !in_array('exec', $disabled, true);
 }
 
-function vrata_has_ffmpeg(): bool
+/**
+ * Resolves an ffmpeg to run. Shared hosting rarely has one on PATH, so a
+ * static build dropped at app/bin/ffmpeg over SFTP is picked up with no
+ * configuration; FFMPEG_BIN in .env still wins if set.
+ */
+function vrata_ffmpeg_bin(): ?string
 {
-    // No `env` wrapper here: `command` is a shell builtin, so env would try to
-    // exec a binary by that name and always report 127.
-    exec('command -v ' . escapeshellarg(vrata_ffmpeg_bin()) . ' >/dev/null 2>&1', $out, $code);
-    return $code === 0;
+    static $resolved = false;
+    static $bin = null;
+    if ($resolved) return $bin;
+    $resolved = true;
+
+    $env = $_ENV['FFMPEG_BIN'] ?? getenv('FFMPEG_BIN');
+    if (is_string($env) && $env !== '') {
+        return $bin = $env;
+    }
+
+    $bundled = __DIR__ . '/../bin/ffmpeg';
+    if (is_file($bundled)) {
+        // SFTP uploads usually drop the executable bit; restore it once.
+        if (!is_executable($bundled)) @chmod($bundled, 0755);
+        if (is_executable($bundled)) return $bin = $bundled;
+    }
+
+    if (vrata_exec_available()) {
+        // No `env` wrapper: `command` is a shell builtin, so env would try to
+        // exec a binary by that name and always report 127.
+        exec('command -v ffmpeg 2>/dev/null', $out, $code);
+        if ($code === 0 && isset($out[0]) && $out[0] !== '') {
+            return $bin = $out[0];
+        }
+    }
+
+    foreach (['/usr/bin/ffmpeg', '/usr/local/bin/ffmpeg', '/opt/bin/ffmpeg'] as $path) {
+        if (is_executable($path)) return $bin = $path;
+    }
+
+    return $bin = null;
 }
 
 /** Pulls a single frame off the HLS URL into $dest. */
 function vrata_grab_frame(string $url, string $dest): bool
 {
+    $ffmpeg = vrata_ffmpeg_bin();
+    if ($ffmpeg === null || !vrata_exec_available()) return false;
+
     // XAMPP exports LD_LIBRARY_PATH=/opt/lampp/lib, whose old libstdc++ breaks
     // the system ffmpeg; run it with that unset.
     //
@@ -154,7 +191,7 @@ function vrata_grab_frame(string $url, string $dest): bool
     // waiting for the next segment and ignores TERM inside a TLS read, hence
     // -frames:v 1 plus timeout's -k kill.
     $cmd = 'env -u LD_LIBRARY_PATH timeout -k 3 ' . VRATA_SNAPSHOT_TIMEOUT
-        . ' ' . escapeshellcmd(vrata_ffmpeg_bin()) . ' -y -loglevel error -nostdin'
+        . ' ' . escapeshellarg($ffmpeg) . ' -y -loglevel error -nostdin'
         . ' -i ' . escapeshellarg($url)
         . ' -frames:v 1 -update 1 -q:v 4 ' . escapeshellarg($dest)
         . ' </dev/null 2>&1';
@@ -225,11 +262,12 @@ function vrata_snapshot(string $url): never
 
     if (!$got) {
         @unlink($tmpJpg);
-        // Distinguish "the host has no ffmpeg" from "the camera would not give
-        // us a frame": only the first is a deploy problem.
-        vrata_respond(502, [
-            'error' => vrata_has_ffmpeg() ? 'capture_failed' : 'ffmpeg_missing',
-        ]);
+        // Three very different problems, and no console in the car to tell
+        // them apart: the host forbids running commands at all, there is no
+        // ffmpeg to run, or ffmpeg ran and the camera gave nothing.
+        $why = !vrata_exec_available() ? 'exec_disabled'
+             : (vrata_ffmpeg_bin() === null ? 'ffmpeg_missing' : 'capture_failed');
+        vrata_respond(502, ['error' => $why]);
     }
 
     $bytes = @file_get_contents($tmpJpg);

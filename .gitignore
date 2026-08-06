@@ -16,3 +16,7 @@ __pycache__/
 /tools/beseda/cache/
 # Camera stills written by the vrata snapshot action, pruned to the newest few
 /views/vrata/frame/shots/
+
+# Server-side binaries uploaded by hand (a static ffmpeg for the vrata
+# snapshot); far too big to version, and host specific
+/app/bin/
