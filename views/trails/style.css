@@ -1,0 +1,788 @@
+/*
+ * DIRECTION CONTRACT - Trails
+ *
+ * THESIS: A flight recorder that is a chart, not a dashboard. It refuses the
+ *   seatback moving-map (navy globe, glowing jet, travel-brochure type) and
+ *   the tracker-app grid of rounded stat cards.
+ * OWN-WORLD: An aeronautical sectional read under night cockpit lighting.
+ *   Slate-blue ground, land a shade lighter, hairline coasts. Three chart
+ *   inks and no more: sectional magenta for the track and the one action,
+ *   chart cyan for the horizon of visibility, caution amber for gaps and
+ *   warnings. Real chart furniture carries the structure: a ticked neatline
+ *   frame, corner data blocks, a compass rose, a scale bar. Type is B612,
+ *   the face Airbus drew for cockpit displays: Mono on every measurement,
+ *   Sans on the few sentences.
+ * STORY: This records where you flew when there is no signal. The ring shows
+ *   how far you can see; the list names what is inside it; one magenta bar
+ *   starts the recording.
+ * FIRST VIEWPORT: Full-bleed night chart. Neatline strip on top with the
+ *   wordmark, two tabs and a live GPS lamp. Centre is the aircraft on its
+ *   magenta track inside a cyan horizon ring, compass rose top-right, scale
+ *   bar bottom-left. Bottom is the instrument block: four mono readouts over
+ *   a full-width START.
+ * FORM: The VFR sectional chart, first on the ranked list. Its own grammar,
+ *   not a theme laid over a generic app.
+ */
+
+/* ---------- the fonts, carried locally so they survive with no signal ---- */
+@font-face {
+    font-family: 'B612';
+    src: url('vendor/fonts/b612-400.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: 'B612';
+    src: url('vendor/fonts/b612-700.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: 'B612 Mono';
+    src: url('vendor/fonts/b612mono-400.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: 'B612 Mono';
+    src: url('vendor/fonts/b612mono-700.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+    --void:    #0a151d;  /* water, and the ground the whole chart sits on */
+    --land:    #14242f;
+    --panel:   #0d1c26;
+    --raised:  #12242f;
+    --coast:   #2d4a5a;
+    --hair:    rgba(141, 176, 196, 0.16);
+    --hair-lo: rgba(141, 176, 196, 0.08);
+
+    --ink:     #dce8ef;  /* 14.6:1 on --void */
+    --ink-2:   #8ba3b3;  /*  6.9:1 */
+    --ink-3:   #6d8798;  /*  4.7:1, the floor for anything readable */
+
+    --magenta: #ff2d78;  /*  5.1:1 - the track, and the one primary action */
+    --cyan:    #35d6f0;  /* 10.2:1 - the horizon of visibility */
+    --amber:   #ffb020;  /*  9.7:1 - gaps, cautions, unsynced */
+
+    --mono: 'B612 Mono', ui-monospace, monospace;
+    --sans: 'B612', system-ui, sans-serif;
+
+    --top: calc(46px + env(safe-area-inset-top));
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* base-style.css paints body with a navy GRADIENT via the background
+   shorthand; a gradient is a background-image, so it outranks any plain
+   background-color set later. Reassert the chart ground here. */
+html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--void);
+}
+
+body {
+    font-family: var(--sans);
+    color: var(--ink);
+    overflow: hidden;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+}
+
+button, input { font: inherit; color: inherit; }
+
+:where(a, button, input, [tabindex]):focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+    border-radius: 2px;   /* the house `sm` radius; 1px reads identically here */
+}
+
+.is-hidden { display: none !important; }
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ---------- the neatline: a chart's ticked frame, not a navbar ----------- */
+.neatline {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    height: var(--top);
+    padding: env(safe-area-inset-top) 0.75rem 0 0.75rem;
+    background: linear-gradient(to bottom, rgba(10, 21, 29, 0.96), rgba(10, 21, 29, 0.82));
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--hair);
+}
+
+/* the minute ticks that run along every chart border */
+.neatline::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 4px;
+    background-image: repeating-linear-gradient(to right,
+        var(--hair) 0 1px, transparent 1px 12px);
+    -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
+    mask-image: linear-gradient(to bottom, #000, transparent);
+    pointer-events: none;
+}
+
+.mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    text-decoration: none;
+    color: var(--ink);
+    flex: none;
+}
+.mark__glyph { width: 17px; height: 17px; fill: var(--magenta); }
+.mark__word {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+}
+.mark:hover .mark__glyph { fill: var(--cyan); }
+
+.tabs { display: flex; gap: 0.15rem; margin-left: auto; }
+.tab {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-decoration: none;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 2px solid transparent;
+}
+.tab:hover { color: var(--ink); }
+.tab.is-on { color: var(--magenta); border-bottom-color: var(--magenta); }
+
+/* the GPS lamp, the one thing on screen that must never lie */
+.fixstat { display: inline-flex; align-items: center; gap: 0.4rem; flex: none; }
+.fixstat__lamp {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ink-3);
+    box-shadow: 0 0 0 3px rgba(109, 135, 152, 0.16);
+}
+.fixstat__lamp[data-state='live']  { background: var(--magenta); box-shadow: 0 0 0 3px rgba(255, 45, 120, 0.2); animation: pulse 2.4s var(--ease) infinite; }
+.fixstat__lamp[data-state='wait']  { background: var(--amber);   box-shadow: 0 0 0 3px rgba(255, 176, 32, 0.18); }
+.fixstat__lamp[data-state='error'] { background: var(--amber);   box-shadow: 0 0 0 3px rgba(255, 176, 32, 0.18); }
+.fixstat__text {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    white-space: nowrap;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* ---------- banners ----------------------------------------------------- */
+.banners {
+    position: fixed;
+    top: var(--top);
+    left: 0; right: 0;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+}
+/* A chart annotation, not an alert card: hairline rules top and bottom, and
+   the caution triangle a sectional would actually print. */
+.banner {
+    --lamp: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    background: var(--raised);
+    border-top: 1px solid var(--lamp);
+    border-bottom: 1px solid var(--hair);
+    color: var(--ink);
+}
+.banner::before {
+    content: '';
+    flex: none;
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 9px solid var(--lamp);
+}
+.banner--info { --lamp: var(--cyan); }
+.banner--go   { --lamp: var(--magenta); }
+.banner__spacer { flex: 1; }
+.banner__btn {
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.banner__btn:hover { border-color: var(--cyan); }
+.banner__btn--go { color: var(--void); background: var(--magenta); border-color: var(--magenta); font-weight: 700; }
+.banner__btn--go:hover { background: #ff5490; border-color: #ff5490; }
+
+/* ---------- screens ----------------------------------------------------- */
+main { position: fixed; inset: 0; }
+.screen { position: absolute; inset: 0; display: none; }
+.screen.is-on { display: block; }
+
+/* z-index 0 rather than auto on purpose: it makes the chart its own stacking
+   context, so Leaflet's internal panes (400) and controls (1000) stay inside
+   it instead of painting straight over the instrument panel. */
+.chart { position: absolute; inset: 0; z-index: 0; background: var(--void); }
+.chart--detail { inset: var(--top) 0 auto 0; height: 42vh; }
+
+/* Leaflet's own stylesheet loads after this file, so these have to be
+   specific enough to survive it. */
+.leaflet-container { background: var(--void); font-family: var(--mono); outline: none; }
+.leaflet-control-attribution {
+    background: rgba(10, 21, 29, 0.78) !important;
+    color: var(--ink-3) !important;
+    font-family: var(--mono);
+    font-size: 9px !important;
+    border-top-left-radius: 2px;
+}
+.leaflet-control-attribution a { color: var(--ink-2) !important; }
+.leaflet-bar a {
+    background: var(--panel);
+    color: var(--ink);
+    border-bottom-color: var(--hair);
+}
+.leaflet-bar a:hover { background: var(--raised); color: var(--cyan); }
+.leaflet-control-zoom { border: 1px solid var(--hair) !important; }
+
+/* the aircraft symbol, turned to its heading */
+.plane svg { width: 26px; height: 26px; fill: var(--magenta); overflow: visible; }
+.plane svg path { stroke: var(--void); stroke-width: 0.9; paint-order: stroke; }
+
+/* place names printed on the chart the way a sectional prints them: a small
+   open circle for the settlement, the name set beside it, never on top */
+.town, .placemark { position: relative; width: 0 !important; height: 0 !important; }
+.town i, .placemark i {
+    position: absolute;
+    left: -2.5px; top: -2.5px;
+    width: 5px; height: 5px;
+    border: 1px solid var(--ink-3);
+    border-radius: 50%;
+}
+.town b, .placemark b {
+    position: absolute;
+    left: 7px; top: -7px;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--ink-2);
+    white-space: nowrap;
+    text-shadow: 0 0 3px var(--void), 0 0 3px var(--void), 0 0 3px var(--void);
+}
+/* the ones currently over the horizon are called out in the airspace ink */
+.placemark i { border-color: var(--cyan); background: rgba(53, 214, 240, 0.25); }
+.placemark b { color: var(--cyan); font-weight: 700; }
+
+/* ---------- chart furniture: rose and scale bar -------------------------- */
+.chart__furniture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+.rose {
+    position: absolute;
+    top: calc(var(--top) + 0.85rem);
+    right: 0.85rem;
+    width: 76px; height: 76px;
+    opacity: 0.62;
+}
+.rose__ring { fill: none; stroke: var(--cyan); stroke-width: 0.8; opacity: 0.5; }
+.rose__ring--inner { stroke-dasharray: 2 3; opacity: 0.32; }
+.rose__ticks line { stroke: var(--cyan); stroke-width: 0.8; opacity: 0.55; }
+.rose__needle { fill: var(--magenta); transform-origin: 50px 50px; transition: transform 0.6s var(--ease); }
+.rose__n {
+    fill: var(--cyan);
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+/* sits just above the instrument panel, which overlays the foot of the chart */
+.scalebar {
+    position: absolute;
+    right: 0.85rem;
+    bottom: calc(var(--panel-h, 168px) + 0.6rem);
+    min-width: 62px;
+    border: 1px solid var(--ink-3);
+    border-top: none;
+    height: 6px;
+}
+.scalebar__label {
+    position: absolute;
+    right: 0; bottom: 8px;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-2);
+    white-space: nowrap;
+    text-shadow: 0 0 3px var(--void), 0 0 3px var(--void);
+}
+
+/* ---------- what is out of the window ----------------------------------- */
+.sightings {
+    position: absolute;
+    left: 0.7rem;
+    bottom: calc(var(--panel-h, 168px) + 2.1rem);
+    z-index: 15;
+    width: min(19rem, calc(100% - 1.4rem));
+    max-height: 45vh;
+    overflow: hidden auto;
+    text-align: left;
+    background: rgba(13, 28, 38, 0.92);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 0.2s var(--ease);
+}
+.sightings:hover { border-color: var(--cyan); }
+.sightings.is-empty { display: none; }
+/* A legend block on a chart is titled by a ruled band, not a fat edge. */
+.sightings__head {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    border-bottom: 1px solid var(--hair-lo);
+}
+.sightings__head::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background-image: repeating-linear-gradient(to right,
+        var(--cyan) 0 1px, transparent 1px 5px);
+    opacity: 0.7;
+}
+.sightings__title {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+}
+.sightings__radius {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--ink-3);
+    margin-left: auto;
+}
+.sightings__chev { width: 13px; height: 13px; fill: none; stroke: var(--ink-3); stroke-width: 2.2; transition: transform 0.25s var(--ease); }
+.sightings[aria-expanded='false'] .sightings__chev { transform: rotate(180deg); }
+.sightings[aria-expanded='false'] .sightings__list { display: none; }
+.sightings__list { list-style: none; margin: 0; padding: 0 0 0.3rem; }
+.sight {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.3rem 0.7rem;
+    border-top: 1px solid var(--hair-lo);
+}
+.sight__name { font-size: 0.8rem; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sight__name b { font-weight: 700; }
+.sight__name i { font-style: normal; color: var(--ink-3); font-size: 0.72rem; }
+.sight__dist { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-2); }
+.sight__brg {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--cyan);
+    min-width: 2.4em;
+    text-align: right;
+}
+
+/* ---------- the instrument block ---------------------------------------- */
+.panel {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 20;
+    padding: 0.7rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--panel) 62%, rgba(13, 28, 38, 0.86));
+    border-top: 1px solid var(--hair);
+    backdrop-filter: blur(8px);
+}
+.panel::before {
+    content: '';
+    position: absolute;
+    inset: -1px 0 auto 0;
+    height: 4px;
+    background-image: repeating-linear-gradient(to right, var(--hair) 0 1px, transparent 1px 12px);
+    -webkit-mask-image: linear-gradient(to top, #000, transparent);
+    mask-image: linear-gradient(to top, #000, transparent);
+}
+
+/* Two by two on a phone. Four across fits, but only by shrinking "11 000 m"
+   until it truncates, and this panel exists to be read at a glance in a dark
+   cabin. Space is worth more to the numbers than to the chart here. */
+.gauges {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.55rem 0.5rem;
+    margin: 0 0 0.7rem;
+}
+/* wide enough for the longest readout the stats produce, "1606 km/h" */
+.gauges--wrap { grid-template-columns: repeat(auto-fit, minmax(7.6rem, 1fr)); gap: 0.9rem 0.7rem; margin-bottom: 1.1rem; }
+.gauges--wrap .gauge__value { font-size: clamp(1rem, 4.4vw, 1.3rem); }
+.gauge { min-width: 0; border-left: 1px solid var(--hair-lo); padding-left: 0.55rem; }
+.gauge:nth-child(odd) { border-left: none; padding-left: 0; }
+.gauges--wrap .gauge { border-left: none; padding-left: 0; }
+.gauge__label {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 0.15rem;
+}
+.gauge__value {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(1.05rem, 5.2vw, 1.4rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gauge__value small { font-size: 0.56em; font-weight: 400; color: var(--ink-3); letter-spacing: 0.04em; }
+.gauge--live .gauge__value { color: var(--magenta); }
+
+.panel__actions { display: flex; gap: 0.5rem; }
+
+.btn {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    background: var(--raised);
+    color: var(--ink);
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    transition: background 0.18s var(--ease), border-color 0.18s var(--ease), color 0.18s var(--ease);
+}
+.btn:hover { border-color: var(--ink-3); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn:disabled:hover { border-color: var(--hair); }
+
+.btn--go {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    background: var(--magenta);
+    border-color: var(--magenta);
+    color: #12040b;
+}
+.btn--go:hover { background: #ff5490; border-color: #ff5490; }
+.btn__dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+
+.btn--stop { flex: 1; background: transparent; border-color: var(--magenta); color: var(--magenta); }
+.btn--stop:hover { background: rgba(255, 45, 120, 0.12); }
+
+.btn--ghost { background: transparent; color: var(--ink-2); border-color: var(--hair); flex: none; }
+.btn--ghost:hover { color: var(--cyan); border-color: var(--cyan); }
+.btn--ghost[aria-pressed='true'] { color: var(--cyan); border-color: var(--cyan); }
+.btn--sm { padding: 0.5rem 0.7rem; font-size: 0.64rem; letter-spacing: 0.14em; }
+.btn--danger:hover { color: var(--amber); border-color: var(--amber); }
+
+/* ---------- sheets: history and detail ---------------------------------- */
+.sheet {
+    position: absolute;
+    inset: var(--top) 0 0 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1.1rem 0.9rem calc(2.5rem + env(safe-area-inset-bottom));
+    background: var(--void);
+}
+.sheet--detail { top: calc(var(--top) + 42vh); background: var(--panel); border-top: 1px solid var(--hair); }
+
+.sheet__head { display: flex; align-items: flex-end; gap: 0.8rem; margin-bottom: 1rem; }
+.sheet__title {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0;
+    color: var(--ink);
+}
+.sheet__sync { margin-left: auto; }
+
+/* one flight in the list: a ruled chart-legend row, never a card */
+.flights { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hair); }
+.flight {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'date name arrow' 'date figs arrow';
+    align-items: center;
+    gap: 0.1rem 0.8rem;
+    padding: 0.85rem 0.2rem;
+    border-bottom: 1px solid var(--hair);
+    position: relative;
+    cursor: pointer;
+    background: none;
+    border-left: none; border-right: none; border-top: none;
+    width: 100%;
+    text-align: left;
+}
+.flight:hover { background: var(--raised); }
+.flight__date {
+    grid-area: date;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    line-height: 1.35;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    text-align: right;
+    min-width: 4.6rem;
+}
+.flight__date b { display: block; font-size: 0.78rem; color: var(--cyan); letter-spacing: 0.04em; }
+.flight__name {
+    grid-area: name;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.flight__figs {
+    grid-area: figs;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--ink-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.7rem;
+}
+.flight__flag { color: var(--amber); }
+.flight__arrow { grid-area: arrow; font-family: var(--mono); color: var(--ink-3); font-size: 0.9rem; }
+.flight:hover .flight__arrow { color: var(--magenta); }
+
+.empty {
+    text-align: center;
+    color: var(--ink-2);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    max-width: 30rem;
+    margin: 3rem auto;
+}
+.empty__mark { display: block; font-family: var(--mono); font-size: 2rem; color: var(--ink-3); margin-bottom: 0.6rem; }
+.empty a, .shared__cta a { color: var(--cyan); }
+
+/* ---------- flight detail ----------------------------------------------- */
+.detail__head { display: flex; align-items: flex-start; gap: 0.8rem; margin-bottom: 1.1rem; }
+.detail__ident { min-width: 0; flex: 1; }
+.detail__name {
+    width: 100%;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    padding: 0.2rem 0.35rem;
+    margin: 0 0 0.15rem -0.35rem;
+}
+.detail__name:hover { border-color: var(--hair); }
+.detail__name:focus { border-color: var(--cyan); background: var(--void); outline: none; }
+.detail__name--static { border: none; padding-left: 0; margin-left: 0; }
+.detail__when, .detail__shared-by {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    /* mono already gives the dots and colons a full cell; extra tracking on
+       top of that makes a date read as though it had spaces in it */
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0;
+}
+.detail__shared-by { color: var(--cyan); margin-bottom: 0.25rem; }
+.detail__tools { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: flex-end; }
+
+.scrub { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.7rem; margin-bottom: 1.3rem; }
+.scrub__label, .scrub__out {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+.scrub__out { color: var(--cyan); min-width: 4.6rem; text-align: right; font-variant-numeric: tabular-nums; }
+.scrub__range { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; margin: 0; }
+.scrub__range::-webkit-slider-runnable-track { height: 2px; background: var(--coast); }
+.scrub__range::-moz-range-track { height: 2px; background: var(--coast); }
+.scrub__range::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 13px; height: 13px; margin-top: -5.5px;
+    border-radius: 50%; background: var(--magenta); border: none; cursor: pointer;
+}
+.scrub__range::-moz-range-thumb { width: 13px; height: 13px; border-radius: 50%; background: var(--magenta); border: none; cursor: pointer; }
+
+.profile { margin: 0; }
+.profile__cap { display: flex; gap: 1rem; margin-bottom: 0.4rem; }
+.profile__key {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+}
+.profile__key::before { content: ''; width: 13px; height: 2px; }
+.profile__key--alt { color: var(--cyan); }
+.profile__key--alt::before { background: var(--cyan); }
+.profile__key--spd { color: var(--magenta); }
+.profile__key--spd::before { background: var(--magenta); }
+.profile__svg {
+    display: block;
+    width: 100%;
+    height: 150px;
+    background: var(--void);
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+}
+.profile__grid { stroke: var(--hair-lo); stroke-width: 1; }
+.profile__line { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.profile__line--alt { stroke: var(--cyan); }
+.profile__line--spd { stroke: var(--magenta); opacity: 0.85; }
+.profile__axis {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 0.6rem; color: var(--ink-3);
+    margin-top: 0.3rem;
+}
+
+.shared__cta { font-size: 0.85rem; color: var(--ink-2); line-height: 1.6; margin: 1.6rem 0 0; }
+.shared__cta strong { color: var(--ink); }
+
+.chip {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    padding: 0.3rem 0.45rem;
+    white-space: nowrap;
+}
+.chip--synced { color: var(--cyan); border-color: rgba(53, 214, 240, 0.35); }
+.chip--local  { color: var(--amber); border-color: rgba(255, 176, 32, 0.35); }
+
+.share-url {
+    display: flex; gap: 0.4rem; margin-top: 0.8rem;
+    grid-column: 1 / -1;
+}
+.share-url input {
+    flex: 1; min-width: 0;
+    font-family: var(--mono); font-size: 0.7rem;
+    background: var(--void); color: var(--cyan);
+    border: 1px solid var(--hair); border-radius: 2px;
+    padding: 0.5rem 0.55rem;
+}
+
+/* ---------- the night panel: chart off, numbers only -------------------- */
+.dimmer {
+    position: fixed; inset: 0; z-index: 60;
+    background: #05090d;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1.6rem;
+    padding: calc(2rem + env(safe-area-inset-top)) 1.5rem calc(2rem + env(safe-area-inset-bottom));
+}
+.dimmer[hidden] { display: none; }
+.dimmer__stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+}
+
+.dimmer__gauges {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 1.5rem; width: 100%; max-width: 26rem; margin: 0;
+}
+.gauge--xl .gauge__value { font-size: clamp(1.9rem, 11vw, 3rem); color: var(--magenta); }
+.gauge--xl .gauge__label { font-size: 0.62rem; margin-bottom: 0.3rem; }
+
+/* ---------- larger screens ---------------------------------------------- */
+@media (min-width: 700px) {
+    :root { --top: calc(52px + env(safe-area-inset-top)); }
+    .neatline { padding-inline: 1.2rem; gap: 1.2rem; }
+    .mark__word { font-size: 0.92rem; }
+    .tab { font-size: 0.7rem; padding-inline: 0.8rem; }
+    .panel { padding: 1rem 1.2rem calc(1.1rem + env(safe-area-inset-bottom)); }
+    /* room for one row again once the panel is wider than the numbers */
+    .gauges { max-width: 40rem; grid-template-columns: repeat(4, 1fr); gap: 0 0.5rem; }
+    .gauge:nth-child(odd) { border-left: 1px solid var(--hair-lo); padding-left: 0.55rem; }
+    .gauge:first-child { border-left: none; padding-left: 0; }
+    .gauges--wrap .gauge, .gauges--wrap .gauge:nth-child(odd) { border-left: none; padding-left: 0; }
+    .panel__actions { max-width: 40rem; }
+    .rose { width: 96px; height: 96px; }
+    .sightings { left: 1.2rem; }
+    .sheet { padding-inline: 1.6rem; }
+    .sheet__title { font-size: 1.4rem; }
+    .chart--detail { height: 46vh; }
+    .sheet--detail { top: calc(var(--top) + 46vh); }
+    .profile__svg { height: 180px; }
+}
+
+@media (min-width: 1000px) {
+    .sheet > * { max-width: 62rem; margin-inline: auto; }
+    .sheet__head, .flights, .empty { max-width: 62rem; margin-inline: auto; }
+    .chart--detail { height: 50vh; }
+    .sheet--detail { top: calc(var(--top) + 50vh); }
+    .dimmer__gauges { grid-template-columns: repeat(4, 1fr); max-width: 58rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}

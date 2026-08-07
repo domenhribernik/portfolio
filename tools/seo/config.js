@@ -8,6 +8,7 @@ export const SITE_ORIGIN = 'https://domenhribernik.com';
 //? the homepage's static projects fallback. Edit this list to promote or
 //? demote a project; everything else public stays crawlable at priority 0.4.
 export const FLAGSHIP = [
+    'views/trails',
     'views/nebo',
     'views/beseda',
     'views/flowers',

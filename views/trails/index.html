@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Trails | Offline Flight Tracker That Works With No Signal</title>
+    <meta name="description" content="Record your flight path with no internet at all. Trails logs GPS on your phone, draws it on an offline chart and names the cities you can actually see from the window.">
+    <link rel="canonical" href="https://domenhribernik.com/views/trails/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Trails, an offline flight tracker">
+    <meta property="og:description" content="Record your flight path with no internet at all. Trails logs GPS on your phone, draws it on an offline chart and names the cities you can actually see from the window.">
+    <meta property="og:url" content="https://domenhribernik.com/views/trails/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Trails",
+      "url": "https://domenhribernik.com/views/trails/",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Any (web browser)",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@type": "Person", "name": "Domen Hribernik", "url": "https://domenhribernik.com/" },
+      "inLanguage": "en",
+      "description": "An offline flight tracker: records your GPS track with no signal, draws it on a chart that works without tiles, and names what is visible over the horizon."
+    }
+    </script>
+    <meta name="theme-color" content="#0a151d">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Trails">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ================= chrome ================= -->
+<header class="neatline" role="banner">
+    <a id="back-link" href="../../" class="mark" aria-label="Back to the portfolio">
+        <svg class="mark__glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M2 14.5 12 2l10 12.5-10-3.2z" />
+        </svg>
+        <span class="mark__word">Trails</span>
+    </a>
+
+    <nav class="tabs" aria-label="Sections">
+        <a href="#record" class="tab" data-tab="record">Record</a>
+        <a href="#history" class="tab" data-tab="history">Flights</a>
+    </nav>
+
+    <div class="fixstat" id="fixStat" role="status" aria-live="polite">
+        <span class="fixstat__lamp" data-state="idle" id="fixLamp" aria-hidden="true"></span>
+        <span class="fixstat__text" id="fixText">Standby</span>
+    </div>
+</header>
+
+<div class="banners" id="banners"></div>
+
+<main id="main">
+
+<!-- The visible identity is the wordmark; the cockpit has no room for a
+     heading, but the document still needs exactly one. -->
+<h1 class="sr-only">Trails, an offline flight tracker</h1>
+
+<!-- ================= record ================= -->
+<section class="screen" data-screen="record" aria-label="Record a flight">
+    <div class="chart" id="recordMap" role="img" aria-label="Chart showing your position and recorded track"></div>
+
+    <div class="chart__furniture" aria-hidden="true">
+        <svg class="rose" id="rose" viewBox="0 0 100 100">
+            <circle class="rose__ring" cx="50" cy="50" r="34" />
+            <circle class="rose__ring rose__ring--inner" cx="50" cy="50" r="27" />
+            <g class="rose__ticks" id="roseTicks"></g>
+            <path class="rose__needle" d="M50 14 L54 50 L50 44 L46 50 Z" />
+            <text class="rose__n" x="50" y="9" text-anchor="middle">N</text>
+        </svg>
+        <div class="scalebar" id="scaleBar"><span class="scalebar__label" id="scaleLabel">–</span></div>
+    </div>
+
+    <button class="sightings is-empty" id="sightings" type="button" aria-expanded="true" aria-controls="sightingsList">
+        <span class="sightings__head">
+            <span class="sightings__title">In sight</span>
+            <span class="sightings__radius" id="sightRadius">–</span>
+            <svg class="sightings__chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+        </span>
+        <ol class="sightings__list" id="sightingsList"></ol>
+    </button>
+
+    <div class="panel" id="recordPanel">
+        <dl class="gauges">
+            <div class="gauge">
+                <dt class="gauge__label">Gnd spd</dt>
+                <dd class="gauge__value" id="gSpeed">–</dd>
+            </div>
+            <div class="gauge">
+                <dt class="gauge__label">Alt</dt>
+                <dd class="gauge__value" id="gAlt">–</dd>
+            </div>
+            <div class="gauge">
+                <dt class="gauge__label">Dist</dt>
+                <dd class="gauge__value" id="gDist">–</dd>
+            </div>
+            <div class="gauge">
+                <dt class="gauge__label">Time</dt>
+                <dd class="gauge__value" id="gTime">0:00</dd>
+            </div>
+        </dl>
+
+        <div class="panel__actions">
+            <button class="btn btn--go" id="btnStart" type="button">
+                <span class="btn__dot" aria-hidden="true"></span>Start recording
+            </button>
+            <button class="btn btn--stop is-hidden" id="btnStop" type="button">End flight</button>
+            <button class="btn btn--ghost" id="btnDim" type="button" aria-pressed="false" title="Hide the chart and dim the screen to save battery">Night</button>
+        </div>
+    </div>
+</section>
+
+<!-- ================= history ================= -->
+<section class="screen" data-screen="history" aria-label="Your flights">
+    <div class="sheet">
+        <div class="sheet__head">
+            <h2 class="sheet__title">Flights</h2>
+            <div class="sheet__sync" id="syncBox"></div>
+        </div>
+        <ol class="flights" id="flightList"></ol>
+        <p class="empty is-hidden" id="historyEmpty">
+            <span class="empty__mark" aria-hidden="true">∅</span>
+            No flights recorded yet. Open <a href="#record">Record</a> before takeoff, press start, and leave the screen awake.
+        </p>
+    </div>
+</section>
+
+<!-- ================= one flight ================= -->
+<section class="screen" data-screen="flight" aria-label="Flight detail">
+    <div class="chart chart--detail" id="flightMap" role="img" aria-label="Chart of the recorded flight"></div>
+
+    <div class="sheet sheet--detail">
+        <div class="detail__head">
+            <div class="detail__ident">
+                <input class="detail__name" id="flightName" aria-label="Flight name" maxlength="120" autocomplete="off">
+                <p class="detail__when" id="flightWhen">–</p>
+            </div>
+            <div class="detail__tools" id="flightTools"></div>
+        </div>
+
+        <dl class="gauges gauges--wrap" id="flightStats"></dl>
+
+        <div class="scrub" id="scrubBox">
+            <label class="scrub__label" for="scrub">Playback</label>
+            <input class="scrub__range" id="scrub" type="range" min="0" max="1000" value="1000">
+            <output class="scrub__out" id="scrubOut">–</output>
+        </div>
+
+        <figure class="profile" id="profileBox">
+            <figcaption class="profile__cap">
+                <span class="profile__key profile__key--alt">Altitude</span>
+                <span class="profile__key profile__key--spd">Ground speed</span>
+            </figcaption>
+            <svg class="profile__svg" id="profileSvg" viewBox="0 0 640 180" preserveAspectRatio="none" role="img" aria-label="Altitude and ground speed over the flight"></svg>
+            <div class="profile__axis"><span id="profAxisA">–</span><span id="profAxisB">–</span></div>
+        </figure>
+    </div>
+</section>
+
+<!-- ================= shared ================= -->
+<section class="screen" data-screen="shared" aria-label="A shared flight">
+    <div class="chart chart--detail" id="sharedMap" role="img" aria-label="Chart of a shared flight"></div>
+    <div class="sheet sheet--detail">
+        <div class="detail__head">
+            <div class="detail__ident">
+                <p class="detail__shared-by" id="sharedBy">Shared flight</p>
+                <h2 class="detail__name detail__name--static" id="sharedName">–</h2>
+                <p class="detail__when" id="sharedWhen">–</p>
+            </div>
+        </div>
+        <dl class="gauges gauges--wrap" id="sharedStats"></dl>
+        <div class="scrub" id="sharedScrubBox">
+            <label class="scrub__label" for="sharedScrub">Playback</label>
+            <input class="scrub__range" id="sharedScrub" type="range" min="0" max="1000" value="1000">
+            <output class="scrub__out" id="sharedScrubOut">–</output>
+        </div>
+        <p class="shared__cta">
+            Recorded with <strong>Trails</strong>, an offline flight tracker.
+            <a href="./">Record your own</a>.
+        </p>
+    </div>
+</section>
+
+</main>
+
+<div class="dimmer" id="dimmer" hidden>
+    <p class="dimmer__stat" id="dimStat" role="status" aria-live="polite">
+        <span class="fixstat__lamp" data-state="idle" id="dimLamp" aria-hidden="true"></span>
+        <span id="dimStatText">Standby</span>
+    </p>
+    <dl class="dimmer__gauges">
+        <div class="gauge gauge--xl"><dt class="gauge__label">Gnd spd</dt><dd class="gauge__value" id="dSpeed">–</dd></div>
+        <div class="gauge gauge--xl"><dt class="gauge__label">Alt</dt><dd class="gauge__value" id="dAlt">–</dd></div>
+        <div class="gauge gauge--xl"><dt class="gauge__label">Dist</dt><dd class="gauge__value" id="dDist">–</dd></div>
+        <div class="gauge gauge--xl"><dt class="gauge__label">Time</dt><dd class="gauge__value" id="dTime">0:00</dd></div>
+    </dl>
+    <button class="btn btn--ghost" id="btnUndim" type="button">Show chart</button>
+</div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="../../components/back-link.js"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => { /* offline shell is a bonus, not a requirement */ });
+    }
+</script>
+<script type="module" src="script.js"></script>
+</body>
+</html>

@@ -218,5 +218,15 @@ export const projects = {
       visitSite: "views/nebo",
     },
     iconClass: "fas fa-moon",
+  },
+  trails: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #0a151d 0%, #ff2d78 100%)",
+    title: "Trails",
+    description: "Somewhere over the Alps with no wifi, you want to know where you are and what that city under the wing is called. Trails records the whole flight on your phone with no signal at all, draws it on a chart that needs no tiles, and works out what is over the horizon from your altitude.",
+    links: {
+      visitSite: "views/trails",
+    },
+    iconClass: "fas fa-plane-up",
   }
 };

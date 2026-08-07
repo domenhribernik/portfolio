@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-18",
+  "updated": "2026-08-07",
   "requirements": [
     {
       "id": "title",
@@ -99,6 +99,28 @@
       },
       "notes": {
         "crawlable": "sky chart is JS-computed by nature; head and scaffold are static"
+      }
+    },
+    {
+      "path": "views/trails",
+      "name": "Trails",
+      "tier": "flagship",
+      "status": {
+        "title": "done",
+        "description": "done",
+        "canonical": "done",
+        "og": "done",
+        "jsonld": "done",
+        "h1": "done",
+        "crawlable": "partial",
+        "robots": "done",
+        "sitemap": "done",
+        "indexed": "todo",
+        "cwv": "unknown"
+      },
+      "notes": {
+        "crawlable": "the chart and every flight are drawn on device from IndexedDB; head, h1 and the shell are static",
+        "indexed": "'offline flight tracker' is a real query with thin results: worth requesting indexing early"
       }
     },
     {
