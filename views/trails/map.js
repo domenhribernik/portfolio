@@ -1,6 +1,8 @@
-// The chart surface. Leaflet is vendored under vendor/leaflet rather than
+// The chart surface. Leaflet is carried locally under lib/leaflet rather than
 // pulled from a CDN, because the entire point of this view is working with no
-// connection at all.
+// connection at all. The folder is `lib`, not `vendor`: `vendor` is ignored by
+// .gitignore and skipped by the deploy, so a folder of that name here would
+// never reach the server.
 //
 // There are deliberately NO raster tiles. An earlier build layered CARTO on
 // top of the vector chart and it was the wrong call twice over: Leaflet's

@@ -6,7 +6,12 @@
 // the bundled Natural Earth data, so once this list is cached the entire app
 // is offline-complete and there is nothing left that a flight could need and
 // not have.
-const CACHE = 'trails-v1';
+// v2: v1 installed against a deploy where these assets were missing (they sat
+// under a folder named `vendor`, which .gitignore and the deploy both skip),
+// so every Leaflet and font entry failed its `cache.add` and the shell was
+// cached incomplete. Bumping forces a reinstall so those users get back to
+// offline-complete rather than silently depending on the network for the chart.
+const CACHE = 'trails-v2';
 
 const SHELL = [
     './',
@@ -19,17 +24,17 @@ const SHELL = [
     'manifest.json',
     'icon-192.png',
     'icon-512.png',
-    'vendor/leaflet/leaflet.js',
-    'vendor/leaflet/leaflet.css',
-    'vendor/leaflet/images/marker-icon.png',
-    'vendor/leaflet/images/marker-icon-2x.png',
-    'vendor/leaflet/images/marker-shadow.png',
-    'vendor/leaflet/images/layers.png',
-    'vendor/leaflet/images/layers-2x.png',
-    'vendor/fonts/b612-400.woff2',
-    'vendor/fonts/b612-700.woff2',
-    'vendor/fonts/b612mono-400.woff2',
-    'vendor/fonts/b612mono-700.woff2',
+    'lib/leaflet/leaflet.js',
+    'lib/leaflet/leaflet.css',
+    'lib/leaflet/images/marker-icon.png',
+    'lib/leaflet/images/marker-icon-2x.png',
+    'lib/leaflet/images/marker-shadow.png',
+    'lib/leaflet/images/layers.png',
+    'lib/leaflet/images/layers-2x.png',
+    'lib/fonts/b612-400.woff2',
+    'lib/fonts/b612-700.woff2',
+    'lib/fonts/b612mono-400.woff2',
+    'lib/fonts/b612mono-700.woff2',
     'data/countries.geojson',
     'data/lakes.geojson',
     'data/places.json',

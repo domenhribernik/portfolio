@@ -27,22 +27,22 @@
 /* ---------- the fonts, carried locally so they survive with no signal ---- */
 @font-face {
     font-family: 'B612';
-    src: url('vendor/fonts/b612-400.woff2') format('woff2');
+    src: url('lib/fonts/b612-400.woff2') format('woff2');
     font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
     font-family: 'B612';
-    src: url('vendor/fonts/b612-700.woff2') format('woff2');
+    src: url('lib/fonts/b612-700.woff2') format('woff2');
     font-weight: 700; font-style: normal; font-display: swap;
 }
 @font-face {
     font-family: 'B612 Mono';
-    src: url('vendor/fonts/b612mono-400.woff2') format('woff2');
+    src: url('lib/fonts/b612mono-400.woff2') format('woff2');
     font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
     font-family: 'B612 Mono';
-    src: url('vendor/fonts/b612mono-700.woff2') format('woff2');
+    src: url('lib/fonts/b612mono-700.woff2') format('woff2');
     font-weight: 700; font-style: normal; font-display: swap;
 }
 
