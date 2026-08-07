@@ -14,6 +14,6 @@ Disallow: /views/masaza/
 Disallow: /views/stocks/
 Disallow: /views/compass/
 Disallow: /views/flowers/share/
-Disallow: /views/blog/post.html
+Disallow: /views/blog/post/
 
 Sitemap: https://domenhribernik.com/sitemap.xml

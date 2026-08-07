@@ -57,6 +57,7 @@ jobs:
             tools/**,
             .agents/**,
             .claude/**,
+            .codex/**,
             .impeccable/**,
             DESIGN.md,
             bugs.md,
