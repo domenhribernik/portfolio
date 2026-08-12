@@ -326,3 +326,51 @@ export function validateSlug(slug) {
     if (RESERVED_SLUGS.has(slug)) throw new Error(`Slug collides with a blog file: ${slug}`);
     return slug;
 }
+
+//? ------------------------------------------------------ tells guide fallback
+
+//? The four cells of the Tells grid plus the seam, in reading order. Mirrors
+//? QUADRANTS in views/tells/logic.js; kept here rather than imported because
+//? the generator must not depend on a view's runtime module.
+const TELLS_QUADRANTS = [
+    ['fallacy', 'Fallacy', 'In the argument, by accident'],
+    ['rhetoric', 'Rhetoric', 'In the argument, on purpose'],
+    ['bias', 'Bias', 'In the head, by accident'],
+    ['exploit', 'Exploit', 'In the head, on purpose'],
+    ['seam', 'On the seam', 'Either, depending on who is doing it'],
+];
+
+function tellsQuadrant(entry) {
+    const { site, intent } = entry.axis || {};
+    if (intent === 'both') return 'seam';
+    if (site === 'argument') return intent === 'deliberate' ? 'rhetoric' : 'fallacy';
+    return intent === 'deliberate' ? 'exploit' : 'bias';
+}
+
+//? Every plate as static text inside views/tells/index.html, grouped by
+//? quadrant. The guide fetches data/catalog.json and renders on the client, so
+//? without this a crawler gets the masthead and nothing the page is about:
+//? 48 hand-written definitions that are the whole reason to index it.
+//? script.js clears the block on load, so it never double-renders.
+export function tellsFallbackHtml(catalog) {
+    const entries = catalog.entries || [];
+    const lines = ['            <div class="tells-fallback">'];
+
+    for (const [key, label, axis] of TELLS_QUADRANTS) {
+        const group = entries.filter((e) => tellsQuadrant(e) === key);
+        if (!group.length) continue;
+        lines.push(`                <h2>${escapeHtml(label)}</h2>`);
+        lines.push(`                <p>${escapeHtml(axis)}</p>`);
+        lines.push('                <ul>');
+        for (const e of group) {
+            lines.push(
+                `                    <li><a href="#/t/${escapeHtml(e.id)}">${escapeHtml(e.name)}</a>: `
+                + `${escapeHtml(e.gist)}</li>`,
+            );
+        }
+        lines.push('                </ul>');
+    }
+
+    lines.push('            </div>');
+    return lines.join('\n');
+}

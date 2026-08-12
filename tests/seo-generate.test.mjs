@@ -16,7 +16,13 @@ import {
     postsFallbackHtml,
     blogPostPage,
     validateSlug,
+    tellsFallbackHtml,
 } from '../tools/seo/logic.js';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 test('escapeHtml covers the five entities', () => {
     assert.equal(escapeHtml(`<a href="x">Q&A 'y'</a>`),
@@ -187,4 +193,50 @@ test('validateSlug accepts url-safe slugs and rejects collisions', () => {
     assert.throws(() => validateSlug('../escape'), /Invalid slug/);
     assert.throws(() => validateSlug('posts'), /collides/);
     assert.throws(() => validateSlug('post.html'), /Invalid slug|collides/);
+});
+
+/* The Tells guide draws its 48 plates from data/catalog.json on the client, so
+   without a prerendered fallback a crawler sees the shell and none of the
+   content the page is actually about. */
+
+test('the tells fallback prints every plate as crawlable text', () => {
+    const catalog = {
+        entries: [
+            { id: 'strawman', no: 1, name: 'Strawman', gist: 'Refuting a weaker version.',
+              axis: { site: 'argument', intent: 'accident' } },
+            { id: 'anchoring', no: 5, name: 'Anchoring', gist: 'The first number drags the rest.',
+              axis: { site: 'judgment', intent: 'accident' } },
+            { id: 'scarcity', no: 10, name: 'Scarcity', gist: 'Short supply, so wanting it stops being a decision.',
+              axis: { site: 'judgment', intent: 'deliberate' } },
+            { id: 'cherry', no: 13, name: 'Cherry-picking', gist: 'Showing only what supports the case.',
+              axis: { site: 'argument', intent: 'both' } },
+        ],
+    };
+    const html = tellsFallbackHtml(catalog);
+
+    for (const entry of catalog.entries) {
+        assert.ok(html.includes(entry.name), `missing ${entry.name}`);
+        assert.ok(html.includes(entry.gist), `missing the gist of ${entry.name}`);
+        assert.ok(html.includes(`#/t/${entry.id}`), `missing a deep link to ${entry.id}`);
+    }
+    // Grouped under the quadrant headings, so the structure survives too.
+    for (const heading of ['Fallacy', 'Bias', 'Exploit', 'On the seam']) {
+        assert.ok(html.includes(heading), `missing the ${heading} heading`);
+    }
+});
+
+test('the tells fallback escapes catalog prose rather than trusting it', () => {
+    const html = tellsFallbackHtml({
+        entries: [{ id: 'x', no: 1, name: 'A <script>', gist: 'Quote " and & here.',
+                    axis: { site: 'argument', intent: 'accident' } }],
+    });
+    assert.ok(!html.includes('<script>'), 'raw markup reached the page');
+    assert.ok(html.includes('&lt;script&gt;'));
+    assert.ok(html.includes('&amp;'));
+});
+
+test('the committed tells page carries the markers the generator writes between', () => {
+    const page = readFileSync(join(ROOT, 'views/tells/index.html'), 'utf8');
+    assert.ok(page.includes('<!-- seo:tells:start'), 'no start marker');
+    assert.ok(page.includes('<!-- seo:tells:end -->'), 'no end marker');
 });

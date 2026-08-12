@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://domenhribernik.com/</loc>
-        <lastmod>2026-08-06</lastmod>
+        <lastmod>2026-08-07</lastmod>
         <priority>1.0</priority>
     </url>
     <url>
@@ -28,6 +28,11 @@
     <url>
         <loc>https://domenhribernik.com/views/beseda/</loc>
         <lastmod>2026-08-06</lastmod>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://domenhribernik.com/views/tells/</loc>
+        <lastmod>2026-08-08</lastmod>
         <priority>0.8</priority>
     </url>
     <url>
@@ -92,7 +97,7 @@
     </url>
     <url>
         <loc>https://domenhribernik.com/views/projects/</loc>
-        <lastmod>2026-08-06</lastmod>
+        <lastmod>2026-08-07</lastmod>
         <priority>0.7</priority>
     </url>
     <url>

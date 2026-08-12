@@ -10,6 +10,7 @@
    components/project-data.js; the test suite runs this list against the
    live registry so a renamed or deleted entry fails the build. */
 export const FEATURED = [
+  'tells',
   'trails',
   'nebo',
   'beseda',

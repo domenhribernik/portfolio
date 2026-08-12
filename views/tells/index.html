@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tells | A field guide to fallacies, biases and manipulation</title>
+    <meta name="description" content="Logical fallacies live in the argument, cognitive biases live in your head, and tactics are someone triggering a bias on purpose. One field guide to all three, with the counter for each and a drill that tests whether you can spot them.">
+    <link rel="canonical" href="https://domenhribernik.com/views/tells/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Tells, a field guide to fallacies, biases and manipulation">
+    <meta property="og:description" content="Fallacies live in the argument, biases live in your head, tactics are someone triggering a bias on purpose. One guide to all three, with the counter for each.">
+    <meta property="og:url" content="https://domenhribernik.com/views/tells/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:ital,wght@0,300..600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        faint: '#a49a8a',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        cobalt: '#1f35e0',
+                        pine: '#2f5b53',
+                        marigold: '#f2b705',
+                        danger: '#b3261e',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.12)',
+                    },
+                }
+            }
+        }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Tells",
+      "url": "https://domenhribernik.com/views/tells/",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "teaches": "Recognising logical fallacies, cognitive biases, rhetorical tactics and dark patterns, and responding to them",
+      "author": { "@type": "Person", "name": "Domen Hribernik" }
+    }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans bg-paper text-ink min-h-screen antialiased">
+
+<div class="grain" aria-hidden="true"></div>
+
+<div class="mx-auto w-full max-w-[76rem] px-5 sm:px-8">
+
+    <header class="pt-6 pb-3">
+        <div class="flex items-baseline justify-between gap-4">
+            <a id="back-link" href="../../" class="shrink-0 whitespace-nowrap text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Back">&larr; back</a>
+            <p class="font-mono text-[0.72rem] tracking-[0.24em] uppercase text-faint text-right">
+                Field guide &middot; <span id="plateCount">&mdash;</span> plates
+            </p>
+        </div>
+
+        <div class="mt-5 sm:mt-7 rule-double"></div>
+
+        <h1 class="mt-4 font-display font-extrabold leading-[0.82] tracking-[-0.035em] text-[clamp(3.2rem,13vw,7.5rem)]">
+            Tells
+        </h1>
+        <p class="mt-3 max-w-[52ch] prose-line leading-relaxed text-stone">
+            A fallacy is a defect in the argument, sitting on the page where anyone can point at it.
+            A bias is a tilt in your judgment, invisible in the text. A tactic is someone triggering
+            that tilt on purpose. This is a guide to all three, and to what you say back.
+        </p>
+
+        <nav class="mt-6 flex flex-wrap items-center gap-x-1 gap-y-2" aria-label="Sections">
+            <a href="#/" data-nav="grid" class="tab">The grid</a>
+            <a href="#/index" data-nav="index" class="tab">Index</a>
+            <a href="#/drill" data-nav="drill" class="tab">Drill</a>
+            <a href="#/ledger" data-nav="ledger" class="tab">Ledger</a>
+            <a href="#/wild" data-nav="wild" class="tab">In the wild</a>
+        </nav>
+
+        <div class="mt-4 border-t border-hairline"></div>
+    </header>
+
+    <main id="main" class="pb-24">
+
+        <div id="error" hidden class="py-16">
+            <p class="font-display text-2xl font-extrabold">The guide would not open.</p>
+            <p id="errorDetail" class="mt-2 text-stone"></p>
+        </div>
+
+        <!-- The grid ------------------------------------------------------ -->
+        <section id="view-grid" aria-labelledby="gridHeading">
+            <h2 id="gridHeading" class="sr-only">The grid</h2>
+
+            <p class="mt-7 max-w-[62ch] prose-line text-stone">
+                Everything here is placed by two questions. <em class="not-italic font-semibold text-ink">Where does the
+                defect live</em>, in the argument or in the head? And <em class="not-italic font-semibold text-ink">how did
+                it get there</em>, by accident or on purpose? A bias is the vulnerability; the tactic beside it is the exploit.
+            </p>
+
+            <div id="grid" class="mt-8">
+                <!-- seo:tells:start (generated by tools/seo/generate.js, do not hand-edit) -->
+            <div class="tells-fallback">
+                <h2>Fallacy</h2>
+                <p>In the argument, by accident</p>
+                <ul>
+                    <li><a href="#/t/strawman">Strawman</a>: Refuting a version of the argument that nobody actually made.</li>
+                    <li><a href="#/t/false-dilemma">False dilemma</a>: Presenting two options as if they were the whole field when others exist.</li>
+                    <li><a href="#/t/slippery-slope">Slippery slope</a>: Treating a small first step as though it already contained a distant last one.</li>
+                    <li><a href="#/t/ad-hominem">Ad hominem</a>: Answering the person instead of the thing they said.</li>
+                    <li><a href="#/t/appeal-to-authority">Appeal to authority</a>: Treating who said it as though it settled whether it is true.</li>
+                    <li><a href="#/t/circular-reasoning">Circular reasoning</a>: Assuming the conclusion somewhere in the premises that are meant to support it.</li>
+                    <li><a href="#/t/post-hoc">Post hoc</a>: Taking one thing following another as evidence that it caused it.</li>
+                    <li><a href="#/t/no-true-scotsman">No true Scotsman</a>: Saving a general claim from a counterexample by redefining the group.</li>
+                    <li><a href="#/t/tu-quoque">Tu quoque</a>: Treating the speaker&#39;s inconsistency as an answer to what they said.</li>
+                    <li><a href="#/t/equivocation">Equivocation</a>: Using one word in two senses and carrying the conclusion between them.</li>
+                    <li><a href="#/t/appeal-to-ignorance">Appeal to ignorance</a>: Taking the absence of evidence against something as evidence for it.</li>
+                    <li><a href="#/t/hasty-generalization">Hasty generalization</a>: Drawing a rule about the many from a handful you happened to meet.</li>
+                    <li><a href="#/t/middle-ground">Middle ground</a>: Assuming the truth must sit between two stated positions.</li>
+                </ul>
+                <h2>Rhetoric</h2>
+                <p>In the argument, on purpose</p>
+                <ul>
+                    <li><a href="#/t/strawmanning">Strawmanning</a>: Choosing the weaker version to argue against because the real one is harder to beat.</li>
+                    <li><a href="#/t/whataboutism">Whataboutism</a>: Answering a charge by raising someone else&#39;s, so the subject changes and looks answered.</li>
+                    <li><a href="#/t/glittering-generalities">Glittering generalities</a>: Attaching a claim to words everyone approves of and nobody can pin down.</li>
+                    <li><a href="#/t/gish-gallop">Gish gallop</a>: Burying a rebuttal under more claims than anyone could answer in the time available.</li>
+                    <li><a href="#/t/motte-and-bailey">Motte and bailey</a>: Advancing a strong claim, then retreating to a modest one when challenged, then advancing again.</li>
+                    <li><a href="#/t/loaded-question">Loaded question</a>: Building the claim into the question, so any answer concedes it.</li>
+                </ul>
+                <h2>Bias</h2>
+                <p>In the head, by accident</p>
+                <ul>
+                    <li><a href="#/t/anchoring">Anchoring</a>: The first number you hear drags every later estimate toward it, even when you know it is meaningless.</li>
+                    <li><a href="#/t/confirmation-bias">Confirmation bias</a>: Searching, noticing and remembering the evidence that fits what you already think.</li>
+                    <li><a href="#/t/availability-heuristic">Availability heuristic</a>: Judging how likely something is by how easily an example comes to mind.</li>
+                    <li><a href="#/t/availability-bias">Availability bias</a>: Overrating what is vivid, recent or heavily covered, because ease of recall is standing in for frequency.</li>
+                    <li><a href="#/t/hindsight-bias">Hindsight bias</a>: Once you know the outcome, it feels like it was always the likely one.</li>
+                    <li><a href="#/t/dunning-kruger">Dunning-Kruger effect</a>: The skill you would need to see how bad you are at something is the skill you lack.</li>
+                    <li><a href="#/t/sunk-cost">Sunk cost</a>: Continuing because of what you have already spent, which no future choice can recover.</li>
+                    <li><a href="#/t/fundamental-attribution-error">Fundamental attribution error</a>: Explaining what other people do by who they are, and what you do by what happened.</li>
+                    <li><a href="#/t/bias-blind-spot">Bias blind spot</a>: Seeing distortions in other people&#39;s judgment and not in your own.</li>
+                    <li><a href="#/t/negativity-bias">Negativity bias</a>: Bad information weighs more than equally strong good information.</li>
+                    <li><a href="#/t/representativeness-heuristic">Representativeness heuristic</a>: Judging how likely something is by how much it resembles your picture of the type.</li>
+                    <li><a href="#/t/base-rate-neglect">Base rate neglect</a>: Reading specific evidence while ignoring how common the thing was to begin with.</li>
+                    <li><a href="#/t/affect-heuristic">Affect heuristic</a>: Letting how you feel about something answer questions about its risks and benefits.</li>
+                    <li><a href="#/t/halo-effect">Halo effect</a>: One good quality colouring every other judgment about the same person or thing.</li>
+                    <li><a href="#/t/planning-fallacy">Planning fallacy</a>: Estimating a job from how it should go, when you have a record of how these actually go.</li>
+                </ul>
+                <h2>Exploit</h2>
+                <p>In the head, on purpose</p>
+                <ul>
+                    <li><a href="#/t/anchor-opening">Opening high</a>: Naming an absurd first number on purpose, because the whole negotiation will orbit it.</li>
+                    <li><a href="#/t/scarcity">Scarcity</a>: Making something look short in supply so that wanting it stops being a decision.</li>
+                    <li><a href="#/t/confirmshaming">Confirmshaming</a>: Wording the decline button so that saying no is an admission about yourself.</li>
+                    <li><a href="#/t/reciprocity">Reciprocity</a>: Giving something first, because an unpaid obligation is uncomfortable to carry.</li>
+                    <li><a href="#/t/social-proof">Social proof</a>: Showing that others are doing it, because uncertainty is resolved by looking sideways.</li>
+                    <li><a href="#/t/unity">Unity</a>: Persuading from inside a shared identity, where the argument barely has to be made.</li>
+                    <li><a href="#/t/foot-in-the-door">Foot in the door</a>: Starting with a request too small to refuse, so the large one is consistent with what you already are.</li>
+                    <li><a href="#/t/door-in-the-face">Door in the face</a>: Opening with a request designed to be refused, so the real one arrives as a concession.</li>
+                    <li><a href="#/t/roach-motel">Roach motel</a>: Making it easy to get into something and deliberately hard to get out.</li>
+                    <li><a href="#/t/drip-pricing">Drip pricing</a>: Revealing the cost in stages, once the decision already feels made.</li>
+                    <li><a href="#/t/gaslighting">Gaslighting</a>: Undermining someone&#39;s confidence in their own memory so that your account stands by default.</li>
+                </ul>
+                <h2>On the seam</h2>
+                <p>Either, depending on who is doing it</p>
+                <ul>
+                    <li><a href="#/t/survivorship-bias">Survivorship bias</a>: Reasoning from the cases that made it through, because the ones that did not are not there to look at.</li>
+                    <li><a href="#/t/cherry-picking">Cherry-picking</a>: Showing the evidence that supports the case and leaving out the evidence that does not.</li>
+                    <li><a href="#/t/false-balance">False balance</a>: Giving two sides equal weight when the evidence behind them is nothing like equal.</li>
+                </ul>
+            </div>
+<!-- seo:tells:end -->
+            </div>
+
+            <p class="mt-6 max-w-[62ch] prose-line text-sm text-stone">
+                Some entries genuinely straddle. Survivorship bias is usually nobody's fault and sometimes
+                a chosen sample, and the page cannot tell you which. Those sit on the seam.
+            </p>
+        </section>
+
+        <!-- Alphabetical index -------------------------------------------- -->
+        <section id="view-index" hidden aria-labelledby="indexHeading">
+            <h2 id="indexHeading" class="mt-7 font-display text-3xl font-extrabold tracking-[-0.02em]">Index</h2>
+            <label class="mt-5 block max-w-md">
+                <span class="sr-only">Search the guide</span>
+                <input id="search" type="search" autocomplete="off" placeholder="strawman, anchoring, cherry picking&hellip;"
+                       class="field w-full">
+            </label>
+            <p id="searchCount" class="mt-2 font-mono text-xs text-faint"></p>
+            <ol id="indexList" class="mt-6"></ol>
+        </section>
+
+        <!-- One plate ------------------------------------------------------ -->
+        <section id="view-plate" hidden aria-labelledby="plateName" tabindex="-1"></section>
+
+        <!-- Drills --------------------------------------------------------- -->
+        <section id="view-drill" hidden aria-labelledby="drillHeading">
+            <h2 id="drillHeading" class="mt-7 font-display text-3xl font-extrabold tracking-[-0.02em]">Drill</h2>
+
+            <div id="drillMenu">
+                <p class="mt-3 max-w-[62ch] text-stone">
+                    Reading definitions is the weakest way to learn this. Training that makes you decide,
+                    then tells you why you were wrong, holds up months later; reading does not.
+                    Pick a shape. Every round draws examples you have not been shown before.
+                </p>
+                <div id="modes" class="mt-7 divide-y divide-hairline border-y border-hairline"></div>
+                <p id="deckLine" class="mt-5 font-mono text-xs text-faint"></p>
+            </div>
+
+            <div id="drillRun" class="hidden"></div>
+        </section>
+
+        <!-- The ledger ----------------------------------------------------- -->
+        <section id="view-ledger" hidden aria-labelledby="ledgerHeading"></section>
+
+        <!-- In the wild ---------------------------------------------------- -->
+        <section id="view-wild" hidden aria-labelledby="wildHeading"></section>
+
+    </main>
+
+    <footer class="border-t border-hairline py-8 font-mono text-[0.72rem] leading-relaxed text-faint">
+        <p>
+            Everything you answer stays in this browser. Nothing is sent anywhere, so clearing site data
+            clears your progress. There is an export button on the ledger.
+        </p>
+        <p class="mt-2">
+            Sources are named on each plate. The drill design follows Morewedge et al. (2015) on training
+            over reading, and the inoculation work of Roozenbeek and van der Linden on teaching the
+            technique rather than the topic.
+        </p>
+    </footer>
+
+</div>
+
+<script src="../../components/back-link.js"></script>
+<script type="module" src="script.js"></script>
+<script src="../../components/gtranslate.js"></script>
+</body>
+</html>

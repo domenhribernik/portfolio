@@ -119,6 +119,16 @@ export const projects = {
     },
     iconClass: "fas fa-language",
   },
+  tells: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #1c1a17 0%, #d4451f 100%)",
+    title: "Tells",
+    description: "A logical fallacy sits in the argument where anyone can point at it, a cognitive bias sits in your head where nobody can, and a tactic is someone triggering that bias on purpose. Here are 48 of them on one grid, each with what to actually say back. The drill shows you a different example every time, so what you learn is the pattern rather than the sentence.",
+    links: {
+      visitSite: "views/tells",
+    },
+    iconClass: "fas fa-crosshairs",
+  },
   botaniq: {
     category: "passion",
     gradient: "linear-gradient(45deg, #56ab2f 0%, #a8e063 100%)",

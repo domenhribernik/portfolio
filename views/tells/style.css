@@ -1,0 +1,352 @@
+/* views/tells: only what Tailwind cannot cleanly express. Keyframes, the paper
+   grain and plate ornaments (::before / ::after), the small set of component
+   classes that repeat across every drill, and the reduced-motion escape.
+   Everything else is utilities in index.html and script.js.
+
+   base-style.css is deliberately not loaded: it paints body with a navy
+   gradient, and a background-image beats any Tailwind bg-* utility. */
+
+body {
+    background: #f6f2ea;
+}
+
+/* ── Paper ───────────────────────────────────────────────────────────────── */
+
+/* Fractal-noise tooth over the whole page, multiplied so it reads as stock
+   rather than as a grey film. Same treatment as the homepage hero. */
+.grain {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.42;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+body > div {
+    position: relative;
+    z-index: 1;
+}
+
+/* The newspaper double rule: thick over thin. */
+.rule-double {
+    height: 0.5rem;
+    border-top: 4px solid #1c1a17;
+    border-bottom: 1.5px solid #1c1a17;
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+
+.tab {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #6b6256;
+    text-decoration: none;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.tab:hover { color: #1c1a17; background: #efe9dd; }
+.tab[aria-current='page'] {
+    color: #1c1a17;
+    border-color: rgba(28, 26, 23, 0.35);
+    background: #fffdf8;
+}
+
+.field {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1rem;
+    color: #1c1a17;
+    background: #fffdf8;
+    border: 2px solid rgba(28, 26, 23, 0.35);
+    border-radius: 3px;
+    padding: 0.7rem 0.9rem;
+}
+.field::placeholder { color: #a49a8a; }
+.field:focus {
+    outline: none;
+    border-color: #1c1a17;
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.18);
+}
+
+.btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    background: #1c1a17;
+    color: #f6f2ea;
+    border: 1px solid #1c1a17;
+    border-radius: 2px;
+    padding: 0.8rem 1.4rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover { background: #d4451f; border-color: #d4451f; }
+
+.btn-quiet {
+    background: transparent;
+    color: #6b6256;
+    border-color: rgba(28, 26, 23, 0.28);
+}
+.btn-quiet:hover { background: #efe9dd; color: #1c1a17; border-color: rgba(28, 26, 23, 0.5); }
+
+/* tabindex="-1" is excluded on purpose. The verdict and the plate are focused
+   programmatically so a screen reader lands on the result, and Chrome paints
+   focus-visible on those too, which drew a clay box round the whole panel. */
+:where(a, button, input, select, textarea, [tabindex]:not([tabindex='-1'])):focus-visible {
+    outline: 2px solid #d4451f;
+    outline-offset: 2px;
+}
+/* Excluding them above was not enough: :where() has no specificity, so the
+   browser default still drew a box round the whole panel. */
+[tabindex='-1']:focus { outline: none; }
+
+/* ── The grid plate ──────────────────────────────────────────────────────── */
+
+/* Three columns rather than two: the seam between accident and intent is a
+   real column, because the entries that straddle belong in it rather than
+   being forced into a cell that would teach a distinction they disprove. */
+.plate-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    border: 1.5px solid rgba(28, 26, 23, 0.5);
+    background: #fffdf8;
+}
+
+@media (min-width: 62rem) {
+    .plate-grid {
+        grid-template-columns: minmax(0, 1fr) 12rem minmax(0, 1fr);
+    }
+}
+
+.cell {
+    padding: 1.4rem 1.5rem 1.6rem;
+    border-top: 1px solid rgba(28, 26, 23, 0.12);
+}
+@media (min-width: 62rem) {
+    .cell { border-top: none; border-left: 1px solid rgba(28, 26, 23, 0.12); }
+    .cell.row-2 { border-top: 1px solid rgba(28, 26, 23, 0.35); }
+    .cell.col-1 { border-left: none; }
+    /* The seam is drawn, not implied: dashed on both sides so it reads as a
+       boundary the entries inside it are sitting astride. */
+    .cell.seam {
+        background: #efe9dd;
+        border-left: 1px dashed rgba(31, 53, 224, 0.45);
+        border-right: 1px dashed rgba(31, 53, 224, 0.45);
+    }
+}
+
+/* The two type steps this view leans on, taken straight off the DESIGN.md ramp
+   rather than improvised per call site: `title` for anything that reads a step
+   above body (a plate's opening line, the sentence you are being asked about),
+   and `headline` for the one subject a drill screen is about. */
+.lede {
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    line-height: 1.55;
+}
+.subject {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.7rem, 4.2vw, 3.3rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+}
+
+.cell-label {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+}
+
+/* ── Entry rows ──────────────────────────────────────────────────────────── */
+
+.entry-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.42rem 0;
+    text-align: left;
+    color: #1c1a17;
+    text-decoration: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+.entry-row:hover .entry-name { color: #d4451f; }
+.entry-row .leader {
+    flex: 1;
+    min-width: 1rem;
+    border-bottom: 1px dotted rgba(28, 26, 23, 0.28);
+    transform: translateY(-3px);
+}
+/* The seam column is narrow, and a leader competing for the same line pushed
+   long names like "Cherry-picking" onto a second row with dots dangling. */
+.cell.seam .entry-row .leader { display: none; }
+
+/* Paragraph prose gets pretty wrapping so a measure this narrow does not end
+   on a one-word line. */
+.prose-line { text-wrap: pretty; }
+.entry-name { transition: color 0.12s ease; }
+
+.plate-no {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: #a49a8a;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Options ─────────────────────────────────────────────────────────────── */
+
+.option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #fffdf8;
+    border: 1.5px solid rgba(28, 26, 23, 0.25);
+    border-radius: 3px;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1rem;
+    color: #1c1a17;
+    transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+/* The border carries hover on its own. Lifting the fill as well meant a second
+   colour above the card tone, and pure white reads blue against this paper. */
+.option:hover:not(:disabled) { border-color: #1c1a17; }
+.option:disabled { cursor: default; }
+.option .key {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: #a49a8a;
+    margin-right: 0.6rem;
+}
+
+.option.is-right { border-color: #2f5b53; background: rgba(47, 91, 83, 0.09); }
+.option.is-wrong { border-color: #b3261e; background: rgba(179, 38, 30, 0.08); }
+.option.is-muted { opacity: 0.5; }
+
+/* ── The verdict ─────────────────────────────────────────────────────────── */
+
+/* State is carried by a rule across the top, in the masthead's own thick
+   stroke, rather than by a bar down the left side. The page is set as a
+   newspaper and it already rules things off horizontally everywhere else. */
+.verdict { border-top: 4px solid #2f5b53; padding-top: 1rem; }
+.verdict.is-wrong { border-top-color: #b3261e; }
+
+/* Sure and wrong. The one moment in the guide worth interrupting for, so it
+   gets the only stamp on the page. */
+.verdict.is-overconfident { border-top-color: #d4451f; }
+.stamp {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #d4451f;
+    border: 2px solid #d4451f;
+    border-radius: 2px;
+    padding: 0.3rem 0.6rem;
+    transform: rotate(-3deg);
+    animation: stamp-in 0.42s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes stamp-in {
+    from { transform: rotate(-11deg) scale(1.8); opacity: 0; }
+    to   { transform: rotate(-3deg) scale(1); opacity: 1; }
+}
+
+/* ── The ledger bars ─────────────────────────────────────────────────────── */
+
+.bar-track {
+    position: relative;
+    height: 1.6rem;
+    background: #efe9dd;
+    border: 1px solid rgba(28, 26, 23, 0.14);
+    border-radius: 2px;
+}
+/* Scaled rather than widened: transform composites, width relayouts. It also
+   has to start at zero and be set after paint, or the bar arrives already at
+   its value and the growth nobody sees is the whole point of the chart. */
+.bar-fill {
+    height: 100%;
+    width: 100%;
+    background: #1c1a17;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.bar-fill.is-short { background: #d4451f; }
+
+/* The claim, drawn as a notch on the track. The gap between the notch and the
+   end of the fill is the whole point of the chart. */
+.bar-claim {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 2px;
+    background: #1f35e0;
+}
+
+/* ── Entrances ───────────────────────────────────────────────────────────── */
+
+.reveal { animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.reveal-1 { animation-delay: 0.04s; }
+.reveal-2 { animation-delay: 0.1s; }
+.reveal-3 { animation-delay: 0.16s; }
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal, .stamp { animation: none; }
+    .bar-fill { transition: none; }
+    * { scroll-behavior: auto !important; }
+}
+
+@media print {
+    .grain, nav, .btn, #view-drill, #view-ledger { display: none !important; }
+}
+
+/* ── The prerendered fallback ────────────────────────────────────────────── */
+
+/* tools/seo/generate.js writes the 48 plates into #grid as plain text, because
+   the catalog is fetched and a crawler would otherwise index an empty shell.
+   It is also what a visitor sees for the moment before script.js runs, and
+   what they keep if it never does, so it gets styled rather than hidden. */
+.tells-fallback h2 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    margin-top: 1.75rem;
+}
+.tells-fallback h2:first-child { margin-top: 0; }
+.tells-fallback > p {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #a49a8a;
+    margin-top: 0.25rem;
+}
+.tells-fallback ul { margin-top: 0.6rem; max-width: 68ch; }
+.tells-fallback li {
+    border-top: 1px solid rgba(28, 26, 23, 0.12);
+    padding: 0.5rem 0;
+    color: #6b6256;
+}
+.tells-fallback a { color: #1c1a17; font-weight: 500; text-decoration: none; }
+.tells-fallback a:hover { color: #d4451f; }

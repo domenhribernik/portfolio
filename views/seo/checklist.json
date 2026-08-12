@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-07",
+  "updated": "2026-08-08",
   "requirements": [
     {
       "id": "title",
@@ -58,6 +58,28 @@
     }
   ],
   "pages": [
+    {
+      "path": "views/tells",
+      "name": "Tells",
+      "tier": "flagship",
+      "status": {
+        "title": "done",
+        "description": "done",
+        "canonical": "done",
+        "og": "done",
+        "jsonld": "done",
+        "h1": "done",
+        "crawlable": "partial",
+        "robots": "done",
+        "sitemap": "done",
+        "indexed": "todo",
+        "cwv": "unknown"
+      },
+      "notes": {
+        "crawlable": "the 48 plates are fetched from data/catalog.json and drawn on device; head, h1 and the shell are static, so a crawler sees the framing but not the entries",
+        "indexed": "'logical fallacies list' and 'cognitive bias list' are high volume with a lot of thin competition: worth requesting indexing early"
+      }
+    },
     {
       "path": "/",
       "name": "Homepage",

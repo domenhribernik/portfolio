@@ -1,0 +1,1470 @@
+{
+  "version": 1,
+  "updated": "2026-08-08",
+  "_note": "Hand-authored. Validated by views/tells/logic.js validateCatalog(), which tests/tells-catalog.test.mjs runs against this file, so a bad edit fails the test run. Rules that bite: at least 3 examples across at least 2 scenes, every confusedWith and exploitOf pointer symmetric, no em dashes anywhere.",
+  "entries": [
+    {
+      "id": "strawman",
+      "no": 1,
+      "name": "Strawman",
+      "aka": ["straw man"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Refuting a version of the argument that nobody actually made.",
+      "how": "A claim gets restated in a simpler or more extreme form, and that form is what gets attacked. Most of the time there is no malice in it. Summarising is lossy, and the version of your argument that is easiest to answer is the version that is easiest to remember.",
+      "tell": "Their summary of your position is one you would never have signed your name to.",
+      "examples": [
+        {"text": "You say the migration should wait until after the release. They answer that shipping nothing until everything is perfect is not a strategy.", "scene": "standup", "also": []},
+        {"text": "A proposal to fund more bus routes is answered with a long speech about why banning cars entirely would never work.", "scene": "politics", "also": ["strawmanning"]},
+        {"text": "You mention wanting one quiet evening a week. It comes back as you not wanting to see anyone anymore.", "scene": "family", "also": []}
+      ],
+      "counter": [
+        "Ask them to restate your position until you agree with the restatement, then let them argue against that version.",
+        "Say the sentence they are actually attacking out loud, and ask whether either of you believes it."
+      ],
+      "confusedWith": [
+        {
+          "id": "strawmanning",
+          "because": "Both produce the same distorted summary, and the text alone cannot tell you which one you are looking at.",
+          "tell": "A strawman is what a tired reader does to a long argument. Strawmanning survives correction: fix the summary once and watch whether the same distortion comes back."
+        }
+      ],
+      "exploitOf": "strawmanning",
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "strawmanning",
+      "no": 2,
+      "name": "Strawmanning",
+      "aka": ["misrepresenting on purpose"],
+      "family": "rhetoric",
+      "axis": {"site": "argument", "intent": "deliberate"},
+      "gist": "Choosing the weaker version to argue against because the real one is harder to beat.",
+      "how": "Same shape as the accidental strawman, different origin. The distortion is selected because it is winnable in front of an audience. It is one of the oldest moves in rhetoric precisely because refuting something feels identical to the audience whether or not it is the thing that was said.",
+      "tell": "The distortion always leans the same way, and correcting it does not make it go away.",
+      "examples": [
+        {"text": "An ad for a budgeting app opens by mocking people who think spreadsheets are fun, which is nobody's actual reason for using spreadsheets.", "scene": "ad", "also": []},
+        {"text": "A candidate spends the debate answering a position their opponent explicitly disclaimed twice on stage.", "scene": "politics", "also": []},
+        {"text": "A column titled \"Why the experts want you to eat bugs\" responds to a report that mentioned insect protein once, in a footnote.", "scene": "news", "also": []}
+      ],
+      "play": "You want the audience to watch you win an argument, and the claim they actually made is harder to beat than one you can write for them.",
+      "counter": [
+        "Correct the summary once, plainly, and note the correction. If the same version returns, stop arguing the content and name the pattern instead.",
+        "Put your actual claim in one sentence and ask them to answer that sentence. Refusal is the answer."
+      ],
+      "confusedWith": [
+        {
+          "id": "strawman",
+          "because": "The resulting argument is word for word the same.",
+          "tell": "Intent shows up over time, not in a single reply. One correction that sticks means it was an accident."
+        }
+      ],
+      "exploitOf": "strawman",
+      "parent": null,
+      "source": "Classical rhetoric; Institute for Propaganda Analysis"
+    },
+    {
+      "id": "false-dilemma",
+      "no": 3,
+      "name": "False dilemma",
+      "aka": ["false dichotomy", "either/or"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Presenting two options as if they were the whole field when others exist.",
+      "how": "The argument is valid once you accept the menu, and the whole weight rests on the menu being complete. It is convincing because a narrowed choice feels like progress: two options is a decision, six is a meeting.",
+      "tell": "You can name a third option in under ten seconds, and it was never mentioned.",
+      "examples": [
+        {"text": "Either we rewrite this service or we live with the outages. Nobody raises the option of fixing the two endpoints that cause them.", "scene": "code-review", "also": []},
+        {"text": "\"So you either take the offer today or we go with someone else.\" Extending the deadline is not on the menu, but it is available.", "scene": "negotiation", "also": ["scarcity"]},
+        {"text": "You are told a policy means choosing between the economy and the environment, as though no policy has ever done both or neither.", "scene": "politics", "also": []}
+      ],
+      "counter": [
+        "Name the third option out loud, even a bad one. It breaks the frame and forces the menu open.",
+        "Ask what would have to be true for both to be possible at once."
+      ],
+      "confusedWith": [
+        {
+          "id": "slippery-slope",
+          "because": "Both narrow the future down to something the speaker already picked.",
+          "tell": "A false dilemma cuts sideways, deleting the options beside this one. A slippery slope runs forward, chaining this option to a distant one."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "slippery-slope",
+      "no": 4,
+      "name": "Slippery slope",
+      "aka": ["thin end of the wedge"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Treating a small first step as though it already contained a distant last one.",
+      "how": "A chain of steps is laid out from something reasonable to something alarming, and each link is given the certainty of the first. Sometimes slopes are real and the chain is the argument. It becomes a fallacy when the links are asserted rather than shown.",
+      "tell": "The conclusion is vivid, the middle steps are vague, and no probability is ever attached to any link.",
+      "examples": [
+        {"text": "If we let one team skip the design doc, within a year nobody will write documentation at all.", "scene": "standup", "also": []},
+        {"text": "If you let them stay out until midnight now, they will be moving out at seventeen.", "scene": "family", "also": []},
+        {"text": "A modest change to a licensing rule is described as the end of private ownership, with the intervening decades left blank.", "scene": "politics", "also": []}
+      ],
+      "counter": [
+        "Ask them to put a number on the weakest link. Slopes that are real survive the question.",
+        "Point at the step you would actually stop on, and ask what stops you stopping there."
+      ],
+      "confusedWith": [
+        {
+          "id": "false-dilemma",
+          "because": "Both make the future feel already decided.",
+          "tell": "Count the directions. A slope is one line forward through several steps; a dilemma is two doors, right now."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "anchoring",
+      "no": 5,
+      "name": "Anchoring",
+      "aka": ["anchor and adjust"],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "The first number you hear drags every later estimate toward it, even when you know it is meaningless.",
+      "how": "You estimate by starting from whatever value is already in mind and adjusting away from it, and the adjusting reliably stops too early. Tversky and Kahneman got the effect from a spun wheel of fortune: subjects who saw a high number gave higher answers to a question that had nothing to do with the wheel. Knowing about it does not switch it off.",
+      "tell": "You can point at the number your estimate started from, and it was not yours.",
+      "examples": [
+        {"text": "The asking price is 40,000. Every figure discussed for the next hour is a distance from 40,000, including yours.", "scene": "negotiation", "also": []},
+        {"text": "A crossed out 199 sits above the 89 you are being asked to pay. The 199 was never charged to anyone.", "scene": "ad", "also": ["anchor-opening"]},
+        {"text": "Someone opens estimation with \"this is probably a two week job\". The room lands on nine days, and nobody starts from scratch.", "scene": "standup", "also": []}
+      ],
+      "counter": [
+        "Write your own number down before you hear theirs. It is the only version of your estimate that is uncontaminated.",
+        "Estimate from the other end on purpose: ask what the lowest defensible figure is, then work up."
+      ],
+      "confusedWith": [
+        {
+          "id": "anchor-opening",
+          "because": "They are the same effect described from the two ends of it.",
+          "tell": "Ask who benefits from where the number landed. Anchoring is what happens in your head; opening high is someone putting the number there."
+        }
+      ],
+      "exploitOf": "anchor-opening",
+      "parent": null,
+      "source": "Tversky and Kahneman, 1974"
+    },
+    {
+      "id": "anchor-opening",
+      "no": 6,
+      "name": "Opening high",
+      "aka": ["dropping an anchor", "the first offer"],
+      "family": "tactic",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Naming an absurd first number on purpose, because the whole negotiation will orbit it.",
+      "how": "The bias is the vulnerability and this is the exploit. Because estimates adjust away from whatever is on the table and stop short, moving first with an extreme number moves the midpoint. It works on people who know it is happening, which is what makes it worth naming rather than just knowing.",
+      "tell": "The opening figure is indefensible and nobody defends it. It was not meant to be argued with, only remembered.",
+      "examples": [
+        {"text": "They open at 80,000 for a contract everyone knows is worth 30,000, then look generous conceding to 45,000.", "scene": "negotiation", "also": []},
+        {"text": "A landing page lists an enterprise tier at 2,000 a month that nobody buys. It exists to make the 200 tier read as modest.", "scene": "ad", "also": []},
+        {"text": "The cart preselects the 120 bundle. The 40 option is there, one click further down.", "scene": "checkout", "also": []}
+      ],
+      "play": "You want their sense of a fair number to move before they have formed one, so that conceding from an absurd figure reads as generosity.",
+      "counter": [
+        "Refuse the number rather than counter it. Say the figure is not a starting point and ask them to open again.",
+        "Come with your own written range and open first when you can."
+      ],
+      "confusedWith": [
+        {
+          "id": "anchoring",
+          "because": "Same mechanism, and from inside the conversation they feel identical.",
+          "tell": "Look for a reason the number was chosen. An anchor that serves whoever said it was placed, not stumbled into."
+        },
+        {
+          "id": "door-in-the-face",
+          "because": "Both use an extreme first position that nobody expects to be accepted.",
+          "tell": "Ask what the extreme thing was. A price is an anchor; an ask is a door in the face."
+        }
+      ],
+      "exploitOf": "anchoring",
+      "parent": null,
+      "source": "Negotiation practice; built on Tversky and Kahneman, 1974"
+    },
+    {
+      "id": "confirmation-bias",
+      "no": 7,
+      "name": "Confirmation bias",
+      "aka": ["myside bias"],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Searching, noticing and remembering the evidence that fits what you already think.",
+      "how": "It works at three separate stages, which is why it is so hard to catch: it shapes which evidence you go looking for, how hard you scrutinise what you find, and which parts you can recall later. Disconfirming evidence is not suppressed. It just gets a fraction more scepticism, every time, and the fractions compound.",
+      "tell": "You can list five things that support your view and nothing that would have changed it.",
+      "examples": [
+        {"text": "You suspect the cache. You read the cache logs for forty minutes and never open the ones for the queue.", "scene": "code-review", "also": []},
+        {"text": "A study that agrees with you is read once and cited. One that disagrees gets its methodology section read twice, looking for the flaw.", "scene": "science", "also": []},
+        {"text": "After picking a side, every headline that week seems to confirm it. The other headlines were there too.", "scene": "news", "also": []}
+      ],
+      "counter": [
+        "Ask what evidence would change your mind, before you go looking. If nothing would, you are not investigating.",
+        "Give the disconfirming case the time you gave the confirming one, by the clock rather than by feel."
+      ],
+      "confusedWith": [
+        {
+          "id": "cherry-picking",
+          "because": "Both end with a pile of evidence that all points one way.",
+          "tell": "Ask where the missing evidence went. Confirmation bias means you never saw it. Cherry-picking means it was seen and left out, and the defect is now on the page for anyone to find."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Wason, 1960; Nickerson, 1998"
+    },
+    {
+      "id": "availability-heuristic",
+      "no": 8,
+      "name": "Availability heuristic",
+      "aka": ["ease of recall"],
+      "family": "heuristic",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Judging how likely something is by how easily an example comes to mind.",
+      "how": "This is machinery, not a defect. Ease of recall genuinely does track frequency most of the time, and the shortcut is fast and usually right, which is why you have it. It is listed here because it is the parent of a family of failures: anything that makes an event memorable without making it common will throw the estimate off.",
+      "tell": "You reached for an instance before you reached for a rate.",
+      "examples": [
+        {"text": "Asked whether flying is dangerous, you picture a crash rather than the number of flights that landed.", "scene": "news", "also": []},
+        {"text": "You judge how often you do the dishes by recalling times you did them, which is exactly the set you remember best.", "scene": "family", "also": []},
+        {"text": "A reviewer estimates a method is common because the last three papers they happened to read used it.", "scene": "science", "also": []}
+      ],
+      "counter": [
+        "Notice when an example arrives instead of a number, and treat that as a prompt to go and find the number.",
+        "Ask what would make this memorable other than being frequent."
+      ],
+      "confusedWith": [
+        {
+          "id": "availability-bias",
+          "because": "The heuristic and its failure mode share a name in most writing.",
+          "tell": "The heuristic is the shortcut and it is usually right. The bias is the specific case where memorability and frequency come apart."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Tversky and Kahneman, 1973"
+    },
+    {
+      "id": "availability-bias",
+      "no": 9,
+      "name": "Availability bias",
+      "aka": ["availability cascade"],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Overrating what is vivid, recent or heavily covered, because ease of recall is standing in for frequency.",
+      "how": "The failure mode of the availability heuristic, and a clean illustration of why heuristics sit one level above biases. Coverage, drama and recency all raise recall without touching the underlying rate, so anything selected for being reportable ends up overweighted. Rare and dramatic events are systematically overestimated; common and dull ones are underestimated.",
+      "tell": "Your sense of how common something is moves when the coverage moves, and the world did not.",
+      "examples": [
+        {"text": "A month of coverage of one rare crime leaves everyone certain it is rising, in a year when it fell.", "scene": "news", "also": []},
+        {"text": "Two visible outages make the team rebuild a service that was up 99.98 percent of the year.", "scene": "code-review", "also": []},
+        {"text": "The three reviews you read were all one star, because people who are furious write reviews and satisfied people leave.", "scene": "checkout", "also": ["survivorship-bias"]}
+      ],
+      "counter": [
+        "Ask for the denominator. Vivid events come with a numerator and almost never with the total.",
+        "Check whether your estimate would survive not having seen this week's coverage."
+      ],
+      "confusedWith": [
+        {
+          "id": "availability-heuristic",
+          "because": "Everyday usage calls both of them availability.",
+          "tell": "Ask whether the shortcut got the right answer. Same mechanism, and only one of them is an error."
+        },
+        {
+          "id": "survivorship-bias",
+          "because": "Both leave you reasoning from a sample that is not the population.",
+          "tell": "Availability is about which cases come to mind. Survivorship is about which cases still exist to be seen at all."
+        },
+        {
+          "id": "negativity-bias",
+          "because": "Both make the alarming look more common than it is.",
+          "tell": "Availability is about ease of recall whatever the tone. Negativity is about weight: bad items count for more even when both are equally easy to recall."
+        }
+      ],
+      "exploitOf": null,
+      "parent": "availability-heuristic",
+      "source": "Tversky and Kahneman, 1973; Kuran and Sunstein, 1999"
+    },
+    {
+      "id": "scarcity",
+      "no": 10,
+      "name": "Scarcity",
+      "aka": ["limited time only", "manufactured urgency"],
+      "family": "tactic",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Making something look short in supply so that wanting it stops being a decision.",
+      "how": "One of Cialdini's seven principles. Restricted availability raises perceived value directly, and a deadline replaces the question of whether you want the thing with the question of whether you will lose it. The pressure lands hardest where you had not decided yet, which is why the timer appears at checkout and not on the product page.",
+      "tell": "The urgency belongs to the seller's clock, not to anything you needed today.",
+      "examples": [
+        {"text": "\"Only 2 left in stock\" sits under an item that has said 2 left for three weeks.", "scene": "ad", "also": []},
+        {"text": "A countdown timer starts when you open the basket and resets if you reload the page.", "scene": "checkout", "also": ["confirmshaming"]},
+        {"text": "\"I can only hold this price until Friday.\" Friday is not a date anything happens on.", "scene": "negotiation", "also": []}
+      ],
+      "play": "You want the decision made now, while wanting it is still stronger than thinking about it, because tomorrow they will have compared prices.",
+      "counter": [
+        "Reload the page, or come back tomorrow. Real scarcity survives both; most of it does not.",
+        "Decide what the thing is worth before you look at the timer, and hold that number."
+      ],
+      "confusedWith": [
+        {
+          "id": "confirmshaming",
+          "because": "Both push you to act now with feeling rather than judgment, and both usually appear at the same moment in a checkout.",
+          "tell": "Scarcity works on the offer, telling you the thing is about to be gone. Confirmshaming works on you, making declining feel like an admission about your character."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Cialdini, Influence, 1984"
+    },
+    {
+      "id": "confirmshaming",
+      "no": 11,
+      "name": "Confirmshaming",
+      "aka": ["shame the decline"],
+      "family": "dark-pattern",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Wording the decline button so that saying no is an admission about yourself.",
+      "how": "An interface pattern in Gray's Social Engineering family. The accept button is neutral and the decline button is written in your voice, in the first person, conceding something unflattering. It works because the cost of clicking is briefly emotional rather than practical, and the whole exchange lasts under a second, which is not long enough to notice being handled.",
+      "tell": "The two buttons are not written by the same person about the same subject. One is a label and one is a confession.",
+      "examples": [
+        {"text": "A newsletter popup offers \"Yes, I want to save money\" against \"No thanks, I prefer paying full price\".", "scene": "checkout", "also": []},
+        {"text": "A fitness app's decline option reads \"Not today, I am fine being unfit\".", "scene": "ad", "also": []},
+        {"text": "A cookie banner's reject link is worded \"Continue with a worse experience\".", "scene": "news", "also": []}
+      ],
+      "play": "You want declining to cost something. Not money, just a second of feeling like the kind of person who declines this.",
+      "counter": [
+        "Read only the verb. Strip the sentence back to accept or decline and answer that.",
+        "Notice the flinch. It is the tell, and it means the copy was written to produce it."
+      ],
+      "confusedWith": [
+        {
+          "id": "scarcity",
+          "because": "They are deployed together often enough to read as one move.",
+          "tell": "Cover the button text. If the pressure is gone, it was confirmshaming; if a timer is still running, it was scarcity."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Brignull, Deceptive Patterns; Gray et al., 2023"
+    },
+    {
+      "id": "survivorship-bias",
+      "no": 12,
+      "name": "Survivorship bias",
+      "aka": ["the missing planes"],
+      "family": "statistical",
+      "axis": {"site": "judgment", "intent": "both"},
+      "gist": "Reasoning from the cases that made it through, because the ones that did not are not there to look at.",
+      "how": "Abraham Wald's bombers are the canonical case: the returning planes were full of holes in the wings, and the recommendation was to armour the engines, because planes hit in the engines were not coming back to be measured. It straddles the intent axis. Usually the missing data is simply invisible, which is an accident. Sometimes the sample was chosen by someone who knew what dropping out of it would hide.",
+      "tell": "You can describe the sample precisely and cannot say what would have had to happen to be excluded from it.",
+      "examples": [
+        {"text": "A profile of ten founders who dropped out of university, drawn from the set who succeeded after dropping out.", "scene": "news", "also": []},
+        {"text": "A replication rate computed over published studies, in a field where the null results were never submitted.", "scene": "science", "also": ["cherry-picking"]},
+        {"text": "\"Our customers love us\", measured with a survey sent only to accounts that had not cancelled.", "scene": "ad", "also": []}
+      ],
+      "counter": [
+        "Ask what happened to the ones that are not in the picture, and where they would have shown up if they were.",
+        "Describe the filter that produced the sample. If nobody can, treat the conclusion as unmeasured."
+      ],
+      "confusedWith": [
+        {
+          "id": "availability-bias",
+          "because": "Both mean the evidence in front of you is a skewed draw.",
+          "tell": "Survivorship is a property of the sample and stays wrong however carefully you think. Availability is a property of your recall and can be fixed by looking things up."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Wald, 1943"
+    },
+    {
+      "id": "cherry-picking",
+      "no": 13,
+      "name": "Cherry-picking",
+      "aka": ["card stacking", "suppressed evidence"],
+      "family": "statistical",
+      "axis": {"site": "argument", "intent": "both"},
+      "gist": "Showing the evidence that supports the case and leaving out the evidence that does not.",
+      "how": "The defect is in what got left on the floor, which makes it the hardest thing in this guide to catch, because the evidence you are shown may be entirely accurate. It straddles the intent axis: an honest author whose search was shaped by confirmation bias produces the same page as a dishonest one who ran the search properly and reported a slice of it.",
+      "tell": "Every data point points the same way, and the selection rule that produced them is never stated.",
+      "examples": [
+        {"text": "A results section reports the three runs that reached significance and does not mention that there were eleven.", "scene": "science", "also": ["confirmation-bias"]},
+        {"text": "A chart starts in the one year that makes the trend go the right way, and the axis label is small.", "scene": "politics", "also": []},
+        {"text": "A benchmark shows the new library winning on the four cases it was tuned against.", "scene": "code-review", "also": []}
+      ],
+      "counter": [
+        "Ask for the selection rule before you argue with the data. What was the full set, and what got dropped?",
+        "Ask what the strongest evidence against the case is. Anyone arguing in good faith can name it."
+      ],
+      "confusedWith": [
+        {
+          "id": "confirmation-bias",
+          "because": "The finished argument looks identical whichever one produced it.",
+          "tell": "Cherry-picking is a property of the presentation and you can audit it against the full data. Confirmation bias happened in someone's head during the search and leaves no trace on the page."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic; Institute for Propaganda Analysis"
+    },
+    {
+      "id": "ad-hominem",
+      "no": 14,
+      "name": "Ad hominem",
+      "aka": ["attacking the person"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Answering the person instead of the thing they said.",
+      "how": "The argument is left standing and the arguer is attacked in its place. It persuades because character really is evidence about trustworthiness, and the swap from \"why should I trust them\" to \"why should I believe this\" happens without anyone noticing it was made. The claim survives its author being awful.",
+      "tell": "Everything said about the speaker would be equally true if their claim were correct.",
+      "examples": [
+        {"text": "A junior points out the query is unindexed and is told they have been here six weeks.", "scene": "code-review", "also": []},
+        {"text": "A report on air quality is answered with a list of the author's previous employers.", "scene": "news", "also": []},
+        {"text": "\"You would say that, you never wanted the extension in the first place.\"", "scene": "family", "also": []}
+      ],
+      "counter": [
+        "Grant the point about you and repeat the claim. \"Maybe I am. Is the query indexed?\"",
+        "Ask what would change if the worst thing they said about you were true."
+      ],
+      "confusedWith": [
+        {
+          "id": "appeal-to-authority",
+          "because": "Both replace the argument with a fact about whoever made it.",
+          "tell": "Ad hominem uses the person to reject a claim; appeal to authority uses the person to accept one. Same substitution, opposite sign, and the second is much harder to notice because deference feels like humility."
+        },
+        {
+          "id": "tu-quoque",
+          "because": "Both answer the speaker rather than the statement.",
+          "tell": "Tu quoque is the special case where the attack is inconsistency with this very claim. A plain ad hominem does not need the charge to be related to anything."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "appeal-to-authority",
+      "no": 15,
+      "name": "Appeal to authority",
+      "aka": [],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Treating who said it as though it settled whether it is true.",
+      "how": "Expertise is real evidence, which is what makes the bad version hard to see. It goes wrong in three ways: the authority is outside their field, the authorities disagree and only one is quoted, or the claim is one no amount of authority could settle. Deference is doing the work that reasons should be doing.",
+      "tell": "The citation is a name rather than a finding, and no one can tell you what the finding was.",
+      "examples": [
+        {"text": "A framework choice is settled by the fact that a large company uses it, with no reference to what we need.", "scene": "standup", "also": []},
+        {"text": "A supplement is endorsed by a cardiologist. It is a claim about sleep.", "scene": "ad", "also": []},
+        {"text": "\"Three Nobel laureates signed the letter\" is offered where the letter's argument would do.", "scene": "science", "also": []}
+      ],
+      "counter": [
+        "Ask what their reasons were. An authority worth citing has some, and they can be assessed on their own.",
+        "Check the field. Expertise does not travel as far as the person quoting it needs it to."
+      ],
+      "confusedWith": [
+        {
+          "id": "ad-hominem",
+          "because": "Both settle a claim by pointing at its source.",
+          "tell": "Ask whether the person is being used to add credit or to remove it. Then notice that neither is evidence about the claim."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "circular-reasoning",
+      "no": 16,
+      "name": "Circular reasoning",
+      "aka": ["begging the question", "petitio principii"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Assuming the conclusion somewhere in the premises that are meant to support it.",
+      "how": "The argument is valid, which is exactly the trouble: everything follows, and nothing has been shown. In practice the circle is rarely one step. It is wide enough that the restatement is out of sight by the time it arrives, and it is often hidden in a definition rather than a claim.",
+      "tell": "Every reason offered turns out to be the conclusion in different words.",
+      "examples": [
+        {"text": "\"We need the rewrite because the current code is unmaintainable.\" Asked what makes it unmaintainable: \"it needs a rewrite.\"", "scene": "code-review", "also": []},
+        {"text": "\"This is the leading brand because more people choose it than any other.\"", "scene": "ad", "also": []},
+        {"text": "A policy is justified as necessary because doing without it would be irresponsible.", "scene": "politics", "also": []}
+      ],
+      "counter": [
+        "Write the premises and the conclusion side by side. A circle is obvious on paper and invisible in speech.",
+        "Ask for one reason that would still be a reason to somebody who disagreed with the conclusion."
+      ],
+      "confusedWith": [
+        {
+          "id": "loaded-question",
+          "because": "Both help themselves to the conclusion instead of arguing for it.",
+          "tell": "Circular reasoning asserts it in a premise, where it can be found by writing the argument out. A loaded question presupposes it inside a question, where it is never asserted at all and so never looks like a claim."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Aristotle, Prior Analytics"
+    },
+    {
+      "id": "post-hoc",
+      "no": 17,
+      "name": "Post hoc",
+      "aka": ["post hoc ergo propter hoc", "correlation as causation"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Taking one thing following another as evidence that it caused it.",
+      "how": "Sequence is the raw material of causation, so the inference is not crazy, it is just badly underdetermined. Two rivals are always available and rarely checked: both things share a cause, or the second was going to happen anyway. The story arrives complete and satisfying, which is what makes it hard to keep looking.",
+      "tell": "There is a before and an after, and no mechanism connecting them.",
+      "examples": [
+        {"text": "Deploys got faster the week after the new tool landed. It was also the week the release freeze lifted.", "scene": "code-review", "also": []},
+        {"text": "Sales rose after the rebrand, in the same quarter a competitor left the market.", "scene": "ad", "also": []},
+        {"text": "A treatment is credited with the recovery, in a condition that mostly resolves on its own.", "scene": "science", "also": []}
+      ],
+      "counter": [
+        "Ask what else changed at the same time. Something always did.",
+        "Ask what would have happened with no intervention. If nobody knows, nothing has been shown."
+      ],
+      "confusedWith": [
+        {
+          "id": "hasty-generalization",
+          "because": "Both draw a confident conclusion from far too little.",
+          "tell": "Post hoc gets the relation wrong: it reads sequence as cause. Hasty generalization gets the quantity wrong: it reads a few cases as a rule. You can commit either without the other."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "no-true-scotsman",
+      "no": 18,
+      "name": "No true Scotsman",
+      "aka": [],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Saving a general claim from a counterexample by redefining the group.",
+      "how": "A claim is made about everyone in a category, a counterexample turns up, and instead of the claim yielding, the category quietly shrinks to exclude it. The claim can now never be wrong, which people hear as strength and is the opposite. It survives every test by ceasing to be a test.",
+      "tell": "The definition moved the moment the evidence arrived, and only in the direction that saved the claim.",
+      "examples": [
+        {"text": "\"Every senior engineer writes tests.\" Shown one who does not: \"then they are not really senior.\"", "scene": "standup", "also": []},
+        {"text": "A movement disowns anyone whose behaviour would be inconvenient to explain, on the grounds that a real member would not do that.", "scene": "politics", "also": []},
+        {"text": "\"Nobody in this family lies.\" The exception turns out not to count as family.", "scene": "family", "also": []}
+      ],
+      "counter": [
+        "Ask for the definition first, before the counterexample. A definition written in advance cannot move.",
+        "Ask what would count as a counterexample. If nothing would, the claim is not about the world."
+      ],
+      "confusedWith": [
+        {
+          "id": "motte-and-bailey",
+          "because": "Both keep a claim alive by quietly changing what it says.",
+          "tell": "No true Scotsman edits the category so the counterexample falls outside it. Motte and bailey leaves the words alone and swaps which of two claims they refer to, moving back once the challenge passes."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Antony Flew, Thinking About Thinking, 1975"
+    },
+    {
+      "id": "tu-quoque",
+      "no": 19,
+      "name": "Tu quoque",
+      "aka": ["appeal to hypocrisy", "you too"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Treating the speaker's inconsistency as an answer to what they said.",
+      "how": "A specific ad hominem, and the most natural one in the world, because hypocrisy genuinely is evidence about a person. It is just not evidence about their claim. The doctor who smokes is still right about smoking. The reason it lands is that it feels like an accounting of fairness, and fairness feels like the subject.",
+      "tell": "The reply is entirely about the speaker's record and contains no claim about the world.",
+      "examples": [
+        {"text": "\"You skipped the tests on your last three PRs\" answers a request for tests, without answering it.", "scene": "code-review", "also": []},
+        {"text": "An argument for cutting emissions is met with the number of flights the arguer took.", "scene": "politics", "also": []},
+        {"text": "\"You were late twice last month\" arrives instead of a reason for being late tonight.", "scene": "family", "also": []}
+      ],
+      "counter": [
+        "Concede the hypocrisy in full and repeat the claim. It costs nothing, because the claim never depended on you.",
+        "Separate the two questions out loud: whether I live up to this, and whether it is true."
+      ],
+      "confusedWith": [
+        {
+          "id": "ad-hominem",
+          "because": "Both are attacks on the person standing in for an answer.",
+          "tell": "Tu quoque always has the shape \"but you do it too\". If the attack would work regardless of the topic, it is the general form."
+        },
+        {
+          "id": "whataboutism",
+          "because": "Both answer a charge by pointing at the accuser, and the words can be identical.",
+          "tell": "Tu quoque is the reflex of someone who feels got at. Whataboutism keeps going after the point is conceded, because leaving is not the aim."
+        }
+      ],
+      "exploitOf": "whataboutism",
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "equivocation",
+      "no": 20,
+      "name": "Equivocation",
+      "aka": [],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Using one word in two senses and carrying the conclusion between them.",
+      "how": "Each step is fine on its own reading. The argument only works because the word changes meaning partway through and nobody stops to notice which sense is in play. It thrives on words that carry both a technical and an everyday meaning, where the technical sense grants the premise and the everyday sense collects the conclusion.",
+      "tell": "One word is doing the load-bearing work, and it means something different at the top and the bottom.",
+      "examples": [
+        {"text": "\"The tests pass, so the feature works.\" Passing means the assertions held, not that it does what was asked.", "scene": "code-review", "also": []},
+        {"text": "A study finds a result is \"significant\". The press release means important; the paper meant p < 0.05.", "scene": "science", "also": []},
+        {"text": "A product is \"clinically proven\", where proven means a trial happened, not that it worked.", "scene": "ad", "also": []}
+      ],
+      "counter": [
+        "Ask them to restate the argument with the word replaced by its definition, in both places.",
+        "Name the two senses aloud. Once separated, the argument usually stops moving."
+      ],
+      "confusedWith": [
+        {
+          "id": "motte-and-bailey",
+          "because": "Both run on one phrase carrying two meanings.",
+          "tell": "Equivocation slides between senses inside a single argument and is usually an accident. Motte and bailey keeps both meanings in play across a conversation, defending one and asserting the other, which takes intent."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "appeal-to-ignorance",
+      "no": 21,
+      "name": "Appeal to ignorance",
+      "aka": ["argument from silence"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Taking the absence of evidence against something as evidence for it.",
+      "how": "Not knowing is a state of the investigation, not a fact about the world, and this converts one into the other. It is the engine of \"nobody has proved it is unsafe\". Absence of evidence is genuinely weak evidence of absence, but only when someone actually looked, and the move works by skipping that condition.",
+      "tell": "The support for the claim is a search that either failed or never happened.",
+      "examples": [
+        {"text": "\"No test covers that path, so nothing is wrong with it.\"", "scene": "code-review", "also": []},
+        {"text": "\"No study has shown this ingredient causes harm.\" No study has looked.", "scene": "ad", "also": []},
+        {"text": "\"Nothing has been disproved\" stands in for a reason to believe.", "scene": "news", "also": []}
+      ],
+      "counter": [
+        "Ask who looked, how hard, and what they would have found if it were there.",
+        "Point out that the same argument supports the opposite conclusion equally well."
+      ],
+      "confusedWith": [],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "hasty-generalization",
+      "no": 22,
+      "name": "Hasty generalization",
+      "aka": [],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Drawing a rule about the many from a handful you happened to meet.",
+      "how": "Small samples swing wildly, and the swing is invisible from inside one. The trap is not the arithmetic but the vividness: a couple of concrete cases feel like more evidence than a table, because you can picture them. It gets worse when the handful was not random, which it almost never is.",
+      "tell": "The rule covers thousands of cases and rests on the two or three you have personally met.",
+      "examples": [
+        {"text": "Two flaky runs in one afternoon, and the whole suite is declared unreliable.", "scene": "code-review", "also": []},
+        {"text": "A country is characterised from one holiday and one taxi driver.", "scene": "news", "also": []},
+        {"text": "Three replies to a poll on your own timeline become what people think.", "scene": "politics", "also": []}
+      ],
+      "counter": [
+        "Ask how many, and how they were picked. Both answers are usually worse than the claim implies.",
+        "Guess what the result would be with ten times the sample. If you cannot, you do not have a rule yet."
+      ],
+      "confusedWith": [
+        {
+          "id": "post-hoc",
+          "because": "Both are conclusions outrunning their evidence.",
+          "tell": "Ask what is missing. For post hoc it is a mechanism; for hasty generalization it is a sample."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "middle-ground",
+      "no": 23,
+      "name": "Middle ground",
+      "aka": ["argument to moderation", "false compromise"],
+      "family": "fallacy",
+      "axis": {"site": "argument", "intent": "accident"},
+      "gist": "Assuming the truth must sit between two stated positions.",
+      "how": "Splitting the difference is a good rule for dividing a bill and a bad one for finding a fact. The midpoint is only privileged when both ends are equally supported, and one side can move the answer simply by making a more extreme claim. Compromise is a virtue in negotiation and a method with no evidential standing.",
+      "tell": "The conclusion is arithmetic on the positions in the room rather than anything about the subject.",
+      "examples": [
+        {"text": "One estimate says three days, one says three months, and the plan is written for six weeks.", "scene": "standup", "also": []},
+        {"text": "Two parties disagree on a number, and the settlement lands halfway with nobody checking either figure.", "scene": "negotiation", "also": []},
+        {"text": "A factual dispute is resolved by saying the answer is probably somewhere in between.", "scene": "politics", "also": []}
+      ],
+      "counter": [
+        "Ask what supports each end. The midpoint of one good argument and one bad one is a bad argument.",
+        "Notice who benefits from an extreme opening. The midpoint moves when they do."
+      ],
+      "confusedWith": [
+        {
+          "id": "false-balance",
+          "because": "Both treat the midpoint between two positions as the responsible place to stand.",
+          "tell": "Middle ground is a move inside an argument, splitting the difference between two claims. False balance is a framing choice about presentation, giving two sides equal weight before any argument starts."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "whataboutism",
+      "no": 24,
+      "name": "Whataboutism",
+      "aka": [],
+      "family": "rhetoric",
+      "axis": {"site": "argument", "intent": "deliberate"},
+      "gist": "Answering a charge by raising someone else's, so the subject changes and looks answered.",
+      "how": "Tu quoque run on purpose and at scale. The point is not to win the exchange but to leave an audience with the impression that everyone is equally compromised, which makes the original charge feel like ordinary noise. Its great advantage is that the counter-charge is often perfectly true.",
+      "tell": "Every answer arrives in the form of a question about somebody else, and the original one is never returned to.",
+      "examples": [
+        {"text": "A safety record is raised and the reply is a competitor's safety record, at length.", "scene": "news", "also": []},
+        {"text": "Criticism of one government's conduct is met with a list of another's.", "scene": "politics", "also": []},
+        {"text": "A pricing complaint is answered with what the market leader charges for less.", "scene": "ad", "also": []}
+      ],
+      "play": "You want the charge against you to feel like the ordinary background level of wrongdoing rather than something anyone has to answer for.",
+      "counter": [
+        "Say you will happily discuss theirs afterwards, and ask your question again unchanged.",
+        "Name the move rather than the content, once. Following it into the second subject is the whole aim."
+      ],
+      "confusedWith": [
+        {
+          "id": "tu-quoque",
+          "because": "The reply looks the same from outside, and usually is the same sentence.",
+          "tell": "Concede the hypocrisy fully and see what happens. Tu quoque stops there; whataboutism produces a second subject."
+        }
+      ],
+      "exploitOf": "tu-quoque",
+      "parent": null,
+      "source": "Cold War propaganda analysis"
+    },
+    {
+      "id": "glittering-generalities",
+      "no": 25,
+      "name": "Glittering generalities",
+      "aka": [],
+      "family": "rhetoric",
+      "axis": {"site": "argument", "intent": "deliberate"},
+      "gist": "Attaching a claim to words everyone approves of and nobody can pin down.",
+      "how": "One of the Institute for Propaganda Analysis's original seven devices. Freedom, innovation, family, natural: words with strong feeling and weak content. Because they mean something slightly different to everyone, agreement is easy to get and commits the speaker to nothing at all. Disagreeing sounds like disagreeing with the word.",
+      "tell": "Substituting the opposite word produces a slogan nobody would ever run. Nobody is against innovation.",
+      "examples": [
+        {"text": "A launch promises to empower teams to do their best work, and no feature is described.", "scene": "ad", "also": []},
+        {"text": "A manifesto is built from strong families, real communities and common sense, and specifies nothing.", "scene": "politics", "also": []},
+        {"text": "A supplement is natural, clean and pure, none of which is a property anything has.", "scene": "news", "also": []}
+      ],
+      "play": "You want agreement without commitment, and words nobody can disagree with are the cheapest way to buy it.",
+      "counter": [
+        "Ask what it would mean for the claim to be false. Glitter has no false version.",
+        "Replace the word with its definition and see whether a claim is left."
+      ],
+      "confusedWith": [
+        {
+          "id": "halo-effect",
+          "because": "Both end with warm feeling standing in for an assessment.",
+          "tell": "Glittering generalities is the words on the page, chosen for feeling and empty of content. The halo effect is what then happens in your head. One is the tool, the other is the surface it works on."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Institute for Propaganda Analysis, 1938"
+    },
+    {
+      "id": "gish-gallop",
+      "no": 26,
+      "name": "Gish gallop",
+      "aka": [],
+      "family": "rhetoric",
+      "axis": {"site": "argument", "intent": "deliberate"},
+      "gist": "Burying a rebuttal under more claims than anyone could answer in the time available.",
+      "how": "It exploits an asymmetry rather than a confusion: a claim takes seconds to make and minutes to refute. Thirty weak claims therefore beat three strong ones in any format with a clock. The audience sees a long list against a few answers and scores it by volume, which is the only way it was ever going to be scored.",
+      "tell": "Answering any one point costs more time than making all of them did.",
+      "examples": [
+        {"text": "A review returns forty comments of which four matter, and the author has an afternoon.", "scene": "code-review", "also": []},
+        {"text": "A debate answer contains eleven separate factual claims in ninety seconds.", "scene": "politics", "also": []},
+        {"text": "An article stacks twenty studies, none summarised, as a wall rather than an argument.", "scene": "science", "also": []}
+      ],
+      "play": "You want to win on volume, because you have many weak claims and the clock is on your side.",
+      "counter": [
+        "Refuse the format. Pick the strongest one, answer it properly, and say that is the sample.",
+        "Ask which single point they would rest the case on. There is usually a long pause."
+      ],
+      "confusedWith": [],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Named for Duane Gish; standard in debate analysis"
+    },
+    {
+      "id": "motte-and-bailey",
+      "no": 27,
+      "name": "Motte and bailey",
+      "aka": [],
+      "family": "rhetoric",
+      "axis": {"site": "argument", "intent": "deliberate"},
+      "gist": "Advancing a strong claim, then retreating to a modest one when challenged, then advancing again.",
+      "how": "Two claims travel under one name. The bailey is the useful, contested one; the motte is the defensible, boring one. Challenged, the speaker withdraws to the motte, wins that exchange, and returns to the bailey as if it had been defended. Nothing was, and the name did all the work.",
+      "tell": "What you are challenging and what they defend are not the same claim, and neither is ever stated twice the same way.",
+      "examples": [
+        {"text": "A framework is sold as removing whole categories of bug; questioned, it merely encourages good structure; in the next meeting the bugs are gone again.", "scene": "standup", "also": []},
+        {"text": "A slogan means something sweeping in a rally and something nobody could object to in an interview.", "scene": "politics", "also": []},
+        {"text": "An ad claims a product transforms your skin, and in the footnote it moisturises.", "scene": "ad", "also": []}
+      ],
+      "play": "You want the credit of the sweeping claim and the safety of the modest one, and the same name will carry both.",
+      "counter": [
+        "Write down the strong version when you first hear it, and quote it back when the modest one appears.",
+        "Ask which claim they are defending, and hold them to that one for the rest of the conversation."
+      ],
+      "confusedWith": [
+        {
+          "id": "no-true-scotsman",
+          "because": "Both survive challenge by redefinition rather than by evidence.",
+          "tell": "Watch what moves. If the group shrank, it is no true Scotsman; if the claim shrank and then grew back, it is motte and bailey."
+        },
+        {
+          "id": "equivocation",
+          "because": "Both depend on a word meaning two things.",
+          "tell": "Equivocation happens within one chain of reasoning; motte and bailey needs a challenge and a retreat to be visible at all."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Nicholas Shackel, 2005"
+    },
+    {
+      "id": "loaded-question",
+      "no": 28,
+      "name": "Loaded question",
+      "aka": ["complex question", "presupposition"],
+      "family": "rhetoric",
+      "axis": {"site": "argument", "intent": "deliberate"},
+      "gist": "Building the claim into the question, so any answer concedes it.",
+      "how": "A presupposition rides in under the interrogative, where it is not up for discussion because grammatically it is not being asserted. Both answers grant it. Refusing to answer looks like evasion, which is why the move is so common where an audience is watching and silence is scored.",
+      "tell": "Yes and no commit you to the same thing, and it is not the thing being asked.",
+      "examples": [
+        {"text": "\"Why does your team keep shipping regressions?\" asked before anyone has agreed that it does.", "scene": "standup", "also": []},
+        {"text": "\"When did you decide the deadline did not apply to you?\"", "scene": "negotiation", "also": []},
+        {"text": "\"How long will the public be expected to tolerate this?\" printed as a headline.", "scene": "news", "also": []}
+      ],
+      "play": "You want the assumption on the record without ever having to argue for it, and a question is the one form nobody demands evidence for.",
+      "counter": [
+        "Answer the presupposition, not the question. \"I am not granting that it keeps happening. Which regression?\"",
+        "Reword the question without the assumption and answer that one out loud."
+      ],
+      "confusedWith": [
+        {
+          "id": "circular-reasoning",
+          "because": "Both put the conclusion somewhere it will not be examined.",
+          "tell": "A question you cannot answer either way without conceding something is loaded. An argument whose premises restate the conclusion is circular."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Informal logic, standard catalogue"
+    },
+    {
+      "id": "hindsight-bias",
+      "no": 29,
+      "name": "Hindsight bias",
+      "aka": ["knew-it-all-along effect"],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Once you know the outcome, it feels like it was always the likely one.",
+      "how": "Learning what happened silently rewrites what you remember expecting, and the rewrite is not available to introspection: the revised memory feels like the original. Its cost is not to the past but to learning. If it always looks obvious afterwards, no post mortem can distinguish a bad decision from bad luck.",
+      "tell": "You cannot reconstruct a version of yourself who did not know how it turned out.",
+      "examples": [
+        {"text": "After the outage, the cause everyone missed for a week reads as glaring in the timeline.", "scene": "code-review", "also": []},
+        {"text": "A result is called predictable by people who did not predict it, and who now cannot recall not predicting it.", "scene": "news", "also": []},
+        {"text": "Everyone knew the deadline was unrealistic, and the estimate on file says otherwise.", "scene": "standup", "also": []}
+      ],
+      "counter": [
+        "Write the prediction down before the outcome. It is the only defence, because memory will not hold the line.",
+        "In a post mortem, ask what was knowable at the time rather than what turned out to be true."
+      ],
+      "confusedWith": [],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Fischhoff, 1975"
+    },
+    {
+      "id": "dunning-kruger",
+      "no": 30,
+      "name": "Dunning-Kruger effect",
+      "aka": [],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "The skill you would need to see how bad you are at something is the skill you lack.",
+      "how": "Judging your own competence uses the same knowledge as the task, so people at the bottom of a skill cannot see the bottom of it. It is more specific than \"fools are confident\": the confidence is not general, it is domain-bound, and the same person is well calibrated where they are competent. The effect size is also routinely overstated.",
+      "tell": "Your confidence is highest exactly where you have least contact with anyone better than you.",
+      "examples": [
+        {"text": "A first pass at a language reads as clean to its author and as unidiomatic to everyone else.", "scene": "code-review", "also": []},
+        {"text": "A week of reading produces a firmer view than the researchers hold.", "scene": "science", "also": []},
+        {"text": "The most certain voice in the room is the one with the least exposure to being corrected.", "scene": "standup", "also": []}
+      ],
+      "counter": [
+        "Find out what good looks like before rating yourself. The comparison is the missing input.",
+        "Treat unusually high confidence in an unfamiliar area as information about the area, not the answer."
+      ],
+      "confusedWith": [
+        {
+          "id": "bias-blind-spot",
+          "because": "Both are failures to see something about yourself that others can see plainly.",
+          "tell": "Dunning-Kruger is about skill: you lack what you would need to rate your own work. The bias blind spot is about reasoning: you can see distortion in others and not in yourself."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Kruger and Dunning, 1999"
+    },
+    {
+      "id": "sunk-cost",
+      "no": 31,
+      "name": "Sunk cost",
+      "aka": ["sunk cost fallacy", "escalation of commitment"],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Continuing because of what you have already spent, which no future choice can recover.",
+      "how": "Rationally only future costs and benefits bear on a decision. What is spent is gone under either option, so it cannot favour one. It persists because abandoning feels like converting the spend into a loss, and because stopping requires admitting the earlier call was wrong, which is a separate and much more expensive thing to do.",
+      "tell": "The reason to continue is a sentence about the past.",
+      "examples": [
+        {"text": "Eight months into the migration, the case for finishing is the eight months.", "scene": "code-review", "also": []},
+        {"text": "Neither side will walk away from a deal that has cost them both a year of meetings.", "scene": "negotiation", "also": []},
+        {"text": "The tickets were expensive, so the evening happens whether or not anyone wants it.", "scene": "family", "also": []}
+      ],
+      "counter": [
+        "Ask what you would choose if you arrived today with the same options and none of the history.",
+        "Name the spend as gone, out loud, before deciding. It is gone under both options, which is what makes it irrelevant."
+      ],
+      "confusedWith": [
+        {
+          "id": "planning-fallacy",
+          "because": "Both keep projects running long past the point anyone would have started them.",
+          "tell": "The planning fallacy is a bad forecast at the beginning. Sunk cost is a bad decision in the middle, where the reason to continue is what has already been spent."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Arkes and Blumer, 1985"
+    },
+    {
+      "id": "fundamental-attribution-error",
+      "no": 32,
+      "name": "Fundamental attribution error",
+      "aka": ["correspondence bias"],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Explaining what other people do by who they are, and what you do by what happened.",
+      "how": "You see your own situation from inside, full of pressures and constraints, and see other people from outside, where only the behaviour is visible. So their lateness is carelessness and yours was traffic. The asymmetry is not hypocrisy, it is a difference in available information that nobody corrects for.",
+      "tell": "Your explanation of them is a character trait; your explanation of yourself in the same spot is a circumstance.",
+      "examples": [
+        {"text": "The reviewer who missed it was sloppy. When you miss one, the diff was enormous.", "scene": "code-review", "also": []},
+        {"text": "Someone who cuts across two lanes is a maniac; when you do it, you were about to miss the exit.", "scene": "news", "also": []},
+        {"text": "They forgot because they do not care. You forgot because it was a difficult week.", "scene": "family", "also": []}
+      ],
+      "counter": [
+        "Ask what situation would make a reasonable person do exactly that, and check whether they were in it.",
+        "Notice when your own explanation would not be accepted from them, and either lower it or extend it."
+      ],
+      "confusedWith": [],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Ross, 1977"
+    },
+    {
+      "id": "bias-blind-spot",
+      "no": 33,
+      "name": "Bias blind spot",
+      "aka": [],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Seeing distortions in other people's judgment and not in your own.",
+      "how": "The meta-bias, and the one that makes a guide like this dangerous. You judge others by their behaviour, where bias is visible, and yourself by introspection, where it is not, because biased reasoning does not feel biased from inside. Learning the names reliably makes it worse: the vocabulary gets aimed outward almost immediately.",
+      "tell": "The list of biases you can name in this argument is entirely a list of the other person's.",
+      "examples": [
+        {"text": "A design review where every objection is diagnosed as territorial and none is engaged with.", "scene": "code-review", "also": []},
+        {"text": "A reader who can see the framing in the other outlet and not in the one they trust.", "scene": "news", "also": []},
+        {"text": "Someone who has just read about anchoring and now sees only other people being anchored.", "scene": "standup", "also": []}
+      ],
+      "counter": [
+        "Apply the name to yourself first, before you offer it to anyone. If it does not fit, you have not tried hard enough.",
+        "Track your own calibration with numbers. It is the one route to your judgment that does not run through introspection."
+      ],
+      "confusedWith": [
+        {
+          "id": "dunning-kruger",
+          "because": "Both are invisible from the inside, by construction.",
+          "tell": "Ask what is being misjudged. Your competence, or your objectivity."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Pronin, Lin and Ross, 2002"
+    },
+    {
+      "id": "negativity-bias",
+      "no": 34,
+      "name": "Negativity bias",
+      "aka": [],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Bad information weighs more than equally strong good information.",
+      "how": "Losses, criticisms and threats get more attention, more processing and better recall than positives of the same size. It is a sensible default for an animal that can only be eaten once, and a poor one for reading a performance review or a set of numbers. Anything competing for attention is selected by it, so what reaches you is already skewed.",
+      "tell": "One negative item is setting the tone for a body of evidence that is mostly not negative.",
+      "examples": [
+        {"text": "Nine approving comments and one objection, and the objection is what the afternoon is about.", "scene": "code-review", "also": []},
+        {"text": "A feed that is overwhelmingly alarming, describing a world that mostly is not.", "scene": "news", "also": []},
+        {"text": "One curt message reframes a week that contained nothing else wrong.", "scene": "family", "also": []}
+      ],
+      "counter": [
+        "Count both columns before reacting. The counting is what the bias skips.",
+        "Ask whether a positive of the same size would have moved you as far."
+      ],
+      "confusedWith": [
+        {
+          "id": "availability-bias",
+          "because": "Both leave you with a darker picture than the evidence supports.",
+          "tell": "Ask whether the item is loud because it is memorable or because it is bad. Only the second is negativity bias."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Baumeister et al., 2001; Rozin and Royzman, 2001"
+    },
+    {
+      "id": "representativeness-heuristic",
+      "no": 35,
+      "name": "Representativeness heuristic",
+      "aka": [],
+      "family": "heuristic",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Judging how likely something is by how much it resembles your picture of the type.",
+      "how": "Machinery, not a defect. Resemblance is a fast and usually decent guide to category membership, which is why you have it. It is here because it is the parent of a family of failures: resemblance carries no information about how common the type is, so wherever the base rates are lopsided, the shortcut goes confidently wrong.",
+      "tell": "You reached for a stereotype of the category and never for how many of them there are.",
+      "examples": [
+        {"text": "A quiet colleague who likes detail is guessed to be a librarian rather than a salesperson, in a company with four hundred salespeople.", "scene": "standup", "also": []},
+        {"text": "A run of five reds makes black feel overdue, because an even mix looks more like randomness.", "scene": "news", "also": []},
+        {"text": "A symptom that matches a rare disease exactly is taken as evidence for it, over a common one that fits loosely.", "scene": "science", "also": []}
+      ],
+      "counter": [
+        "Notice when you have reached for a resemblance, and treat that as the prompt to go and find the rate.",
+        "Ask how many of each type exist before asking which this one looks like."
+      ],
+      "confusedWith": [
+        {
+          "id": "base-rate-neglect",
+          "because": "The shortcut and its failure mode again, and both get called representativeness.",
+          "tell": "The heuristic is judging by resemblance, which is usually a reasonable guide. Base rate neglect is the specific error that follows when the resemblance is strong and the underlying rate is low."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Tversky and Kahneman, 1974"
+    },
+    {
+      "id": "base-rate-neglect",
+      "no": 36,
+      "name": "Base rate neglect",
+      "aka": [],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Reading specific evidence while ignoring how common the thing was to begin with.",
+      "how": "The failure mode of judging by resemblance. Given a vivid description and a background rate, people use the description and drop the rate, even when it is stated in the same sentence. It is why a 95% accurate test for a condition that one person in a thousand has still returns mostly false positives, which almost nobody predicts.",
+      "tell": "You have been given a rate and a story, and only the story is in your answer.",
+      "examples": [
+        {"text": "A 99% accurate alert fires. The condition it detects happens in one build a month, so most firings are noise.", "scene": "code-review", "also": []},
+        {"text": "A screening result is treated as a diagnosis, in a population where the condition is rare.", "scene": "science", "also": []},
+        {"text": "A profile matching the fraud pattern is assumed fraudulent, out of ten million honest accounts.", "scene": "checkout", "also": []}
+      ],
+      "counter": [
+        "Ask for the two numbers before the story: how common is it, and how often is the test wrong.",
+        "Work it in whole people. Out of 10,000, how many have it, and how many test positive anyway?"
+      ],
+      "confusedWith": [
+        {
+          "id": "representativeness-heuristic",
+          "because": "Both describe reasoning from the description rather than from the numbers.",
+          "tell": "The heuristic is the move; base rate neglect is what it costs you when the rates are lopsided."
+        }
+      ],
+      "exploitOf": null,
+      "parent": "representativeness-heuristic",
+      "source": "Kahneman and Tversky, 1973"
+    },
+    {
+      "id": "affect-heuristic",
+      "no": 37,
+      "name": "Affect heuristic",
+      "aka": [],
+      "family": "heuristic",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Letting how you feel about something answer questions about its risks and benefits.",
+      "how": "Machinery again. A quick good or bad feeling arrives before any analysis and stands in for it, which is fast and often fine. Its signature is a correlation that should not exist: in the world, risk and benefit are roughly independent, but in people's judgments things that feel good are rated both more beneficial and less risky.",
+      "tell": "Your estimate of the risk moved when your feeling about the thing moved, and no fact did.",
+      "examples": [
+        {"text": "A tool everyone enjoys using is also judged to be the safer migration, on no separate evidence.", "scene": "standup", "also": []},
+        {"text": "A technology described warmly is rated low risk and high benefit at once, which is rarely how anything works.", "scene": "science", "also": []},
+        {"text": "A brand you like is assumed to handle your data well.", "scene": "checkout", "also": []}
+      ],
+      "counter": [
+        "Rate the risk and the benefit separately, on different days if you can. They are different questions.",
+        "Ask what you would think if the same thing came from a source you disliked."
+      ],
+      "confusedWith": [
+        {
+          "id": "halo-effect",
+          "because": "Both start from a feeling and end in an estimate.",
+          "tell": "The affect heuristic is the general shortcut: feeling answers a question about risk or benefit. The halo effect is the particular case where one assessed quality spreads to unrelated ones about the same thing."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Slovic et al., 2002"
+    },
+    {
+      "id": "halo-effect",
+      "no": 38,
+      "name": "Halo effect",
+      "aka": [],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "One good quality colouring every other judgment about the same person or thing.",
+      "how": "A specific failure of judging by feeling: an impression formed on one dimension leaks into all the others. Someone articulate is rated more competent, a well designed product more secure, an attractive candidate more honest. The leak is invisible from inside, which is why structured scoring beats impressions for anything that matters.",
+      "tell": "Your rating of things you have not examined moved with your rating of the one thing you did.",
+      "examples": [
+        {"text": "A clean, well named pull request is reviewed less carefully than a messy one of the same risk.", "scene": "code-review", "also": []},
+        {"text": "A confident presenter's numbers go unchallenged, and a nervous one's do not.", "scene": "standup", "also": []},
+        {"text": "A beautifully built site is assumed to be a legitimate seller.", "scene": "checkout", "also": []}
+      ],
+      "counter": [
+        "Score the dimensions separately and in a fixed order, before forming an overall view.",
+        "Ask which of your judgments here you have actually checked, and which came along with the first one."
+      ],
+      "confusedWith": [
+        {
+          "id": "glittering-generalities",
+          "because": "Both are approval leaking into judgments that were never checked.",
+          "tell": "One is written by someone else and can be quoted; the other happens to you and can only be caught by scoring things separately."
+        },
+        {
+          "id": "affect-heuristic",
+          "because": "Both are impressions doing the work of evidence.",
+          "tell": "Affect is about a feeling before any judgment; a halo needs one real judgment first, which then leaks."
+        }
+      ],
+      "exploitOf": null,
+      "parent": "affect-heuristic",
+      "source": "Thorndike, 1920"
+    },
+    {
+      "id": "planning-fallacy",
+      "no": 39,
+      "name": "Planning fallacy",
+      "aka": [],
+      "family": "bias",
+      "axis": {"site": "judgment", "intent": "accident"},
+      "gist": "Estimating a job from how it should go, when you have a record of how these actually go.",
+      "how": "People predict from the inside view, imagining the specific path through the specific task, which naturally omits the interruptions and the unknowns because those have no place in a plan. The striking part is that it survives experience: the same person who has overrun ten times estimates the eleventh as though the ten did not happen.",
+      "tell": "Your estimate is built from the steps you can list, and none of your past overruns are in it.",
+      "examples": [
+        {"text": "A two week task, planned in detail, in a team whose two week tasks have averaged five.", "scene": "standup", "also": []},
+        {"text": "A migration scoped from the happy path, with no line for the thing nobody has looked at yet.", "scene": "code-review", "also": []},
+        {"text": "A delivery date quoted from the plan rather than from the last six deliveries.", "scene": "negotiation", "also": []}
+      ],
+      "counter": [
+        "Use the outside view. Find comparable past jobs and start from what they actually took.",
+        "Estimate, then ask how long the last three like it took. Trust the second number."
+      ],
+      "confusedWith": [
+        {
+          "id": "sunk-cost",
+          "because": "Both show up in the same overrunning project, usually in that order.",
+          "tell": "Look at where the reasoning points. Forward and optimistic is the planning fallacy; backward and defensive is sunk cost."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Kahneman and Tversky, 1979; Buehler et al., 1994"
+    },
+    {
+      "id": "reciprocity",
+      "no": 40,
+      "name": "Reciprocity",
+      "aka": [],
+      "family": "tactic",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Giving something first, because an unpaid obligation is uncomfortable to carry.",
+      "how": "The first of Cialdini's principles, and the strongest of them. An unreturned favour creates a debt that people will overpay to discharge, and the debt is created whether or not the gift was wanted. The gift is often small and the return is often large, which is the whole economics of it.",
+      "tell": "You were given something you did not ask for, immediately before being asked for something.",
+      "examples": [
+        {"text": "A free sample handed over at the door, followed by the pitch while it is still in your hand.", "scene": "ad", "also": []},
+        {"text": "A concession you never requested arrives early, and the reciprocal one is named a minute later.", "scene": "negotiation", "also": []},
+        {"text": "An unexpectedly generous upgrade lands the week before the renewal conversation.", "scene": "checkout", "also": []}
+      ],
+      "play": "You want them carrying a debt when the ask arrives, because a debt is answered faster than an argument.",
+      "counter": [
+        "Decline the unrequested gift, or accept it and say plainly that it does not obligate you.",
+        "Price the return. A small gift buying a large concession is a trade, and it can be refused as one."
+      ],
+      "confusedWith": [
+        {
+          "id": "foot-in-the-door",
+          "because": "Both start with something small and end with something much larger.",
+          "tell": "Reciprocity gives you something first and collects on the debt. Foot in the door asks you for something first and collects on your consistency."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Cialdini, Influence, 1984"
+    },
+    {
+      "id": "social-proof",
+      "no": 41,
+      "name": "Social proof",
+      "aka": ["bandwagon", "consensus"],
+      "family": "tactic",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Showing that others are doing it, because uncertainty is resolved by looking sideways.",
+      "how": "When you do not know what to do, what other people are doing is genuinely good evidence, and this is that evidence manufactured. It is strongest exactly where you are least sure and where the others look like you. The Princeton crawl of eleven thousand shopping sites found activity notifications and low-stock messages among the most deployed patterns anywhere.",
+      "tell": "The evidence offered is a count of other people, and the count cannot be checked.",
+      "examples": [
+        {"text": "\"37 people are viewing this right now\", generated on page load.", "scene": "checkout", "also": []},
+        {"text": "A testimonial wall with no names, dates or way to reach anyone on it.", "scene": "ad", "also": []},
+        {"text": "\"Everyone has already agreed\" delivered to the last person asked.", "scene": "standup", "also": []}
+      ],
+      "play": "You want the decision made by the crowd rather than by them, because a crowd needs no evidence and cannot be argued with.",
+      "counter": [
+        "Ask for the number's source. Real counts have one and manufactured ones change on refresh.",
+        "Ask what you would do if you were the only one deciding. That is the decision anyway."
+      ],
+      "confusedWith": [
+        {
+          "id": "unity",
+          "because": "Both hand the decision to other people rather than to the evidence.",
+          "tell": "Social proof uses how many, and works hardest when you are uncertain. Unity uses who, and works because scepticism toward your own side feels like disloyalty."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Cialdini, Influence, 1984; Mathur et al., 2019"
+    },
+    {
+      "id": "unity",
+      "no": 42,
+      "name": "Unity",
+      "aka": [],
+      "family": "tactic",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Persuading from inside a shared identity, where the argument barely has to be made.",
+      "how": "Cialdini added this as a seventh principle in 2016, and most lists are still on six. It is not liking, which is about affection; it is about being the same kind, sharing a family, a place, a profession, a struggle. Inside a we, claims are checked far less, because scepticism toward your own side reads as disloyalty rather than as care.",
+      "tell": "The case rests on who you both are rather than on anything about the subject.",
+      "examples": [
+        {"text": "\"People like us have always been the ones who actually build things.\"", "scene": "politics", "also": []},
+        {"text": "A pitch that spends four minutes on being a small independent team and none on the product.", "scene": "ad", "also": []},
+        {"text": "\"We engineers know what the business never understands\", offered instead of a reason.", "scene": "standup", "also": []}
+      ],
+      "play": "You want to be heard as one of them, because things said inside a we are checked far less than things said from outside it.",
+      "counter": [
+        "Ask whether you would accept the claim from an outsider. If not, you are checking the badge, not the claim.",
+        "Separate the belonging from the proposal. You can keep the first and decline the second."
+      ],
+      "confusedWith": [
+        {
+          "id": "social-proof",
+          "because": "Both replace a reason with a group.",
+          "tell": "Count or identity. Social proof needs a crowd; unity needs it to be your crowd, and one person is enough."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Cialdini, Pre-Suasion, 2016"
+    },
+    {
+      "id": "foot-in-the-door",
+      "no": 43,
+      "name": "Foot in the door",
+      "aka": [],
+      "family": "tactic",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Starting with a request too small to refuse, so the large one is consistent with what you already are.",
+      "how": "Agreeing to something small quietly makes you a person who agrees to this kind of thing, and the pressure to stay consistent with that self-image does the rest. The first ask is chosen to be trivial and is not the point. Classic studies got homeowners to accept enormous signs in their gardens after a tiny sticker weeks earlier.",
+      "tell": "The first request was so small it was odd to make at all, and the second arrived shortly after.",
+      "examples": [
+        {"text": "A one question survey, then an account, then a subscription, each a small step from the last.", "scene": "checkout", "also": []},
+        {"text": "\"Can you take a quick look?\" becomes ownership of the whole component by Thursday.", "scene": "standup", "also": []},
+        {"text": "A trial that needs only an email, then a card, then a plan.", "scene": "ad", "also": []}
+      ],
+      "play": "You want them to have already said yes once, because the second yes is answering their own consistency rather than your request.",
+      "counter": [
+        "Decide the large question at the small step. It is the only point at which you are not yet committed.",
+        "Say that agreeing to this does not commit you to the next thing, at the time you agree."
+      ],
+      "confusedWith": [
+        {
+          "id": "reciprocity",
+          "because": "Both make the large request arrive after a small transaction.",
+          "tell": "Follow the direction of the first move. If something came to you, it is reciprocity; if something was asked of you, it is foot in the door."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Freedman and Fraser, 1966; Cialdini, Influence, 1984"
+    },
+    {
+      "id": "door-in-the-face",
+      "no": 44,
+      "name": "Door in the face",
+      "aka": ["rejection then retreat"],
+      "family": "tactic",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Opening with a request designed to be refused, so the real one arrives as a concession.",
+      "how": "The mirror image of foot in the door, running on reciprocity rather than consistency: they moved, so you should. Refusing feels like it costs you something, and the retreat is the gift you are now expected to return. The second request is the only one that was ever wanted, and it is sized for what a refusal is worth.",
+      "tell": "The first ask was unreasonable in a way they made no attempt to justify, and the second came instantly.",
+      "examples": [
+        {"text": "A two year commitment is proposed, refused, and a six month one immediately offered as a compromise.", "scene": "negotiation", "also": []},
+        {"text": "\"Could you own the whole platform migration? No? Just the auth service then.\"", "scene": "standup", "also": []},
+        {"text": "A cancellation flow offers to pause for a year, then for a month, and the month is the aim.", "scene": "checkout", "also": []}
+      ],
+      "play": "You want the real request to feel like a meeting in the middle, so the opening has to be somewhere nobody could meet you.",
+      "counter": [
+        "Treat each request on its own. A concession from an unreasonable position is not a concession.",
+        "Say what you would have agreed to before the first ask, and hold that number."
+      ],
+      "confusedWith": [
+        {
+          "id": "anchor-opening",
+          "because": "Both open somewhere indefensible and expect that to move the middle.",
+          "tell": "Opening high is about a number, and works by dragging your estimate. Door in the face is about a request, and works by making the retreat feel like a concession you owe one for."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Cialdini et al., 1975"
+    },
+    {
+      "id": "roach-motel",
+      "no": 45,
+      "name": "Roach motel",
+      "aka": [],
+      "family": "dark-pattern",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Making it easy to get into something and deliberately hard to get out.",
+      "how": "Obstruction in Gray's taxonomy: the friction is asymmetric on purpose. Signing up is one click and cancelling is a phone call in office hours, or four screens, or an email to an address that is not linked. None of it is technically impossible, which is what keeps it lawful in most places while it works on almost everyone.",
+      "tell": "You can measure it. Count the clicks in and the clicks out.",
+      "examples": [
+        {"text": "Signup takes an email. Cancelling takes a call, between nine and five, on weekdays.", "scene": "checkout", "also": []},
+        {"text": "The delete account link exists, four levels into settings, under a heading about something else.", "scene": "checkout", "also": []},
+        {"text": "An offer joined online can only be left by post.", "scene": "ad", "also": []}
+      ],
+      "play": "You want leaving to cost more than another month does, because most people will price the friction and stay.",
+      "counter": [
+        "Find the exit before you enter. If you cannot, that is the answer about the product.",
+        "Use a payment method you can revoke, and diarise the cancellation date on the day you sign up."
+      ],
+      "confusedWith": [
+        {
+          "id": "drip-pricing",
+          "because": "Both put the cost after the commitment, where it is least likely to change the decision.",
+          "tell": "Roach motel hides the cost of leaving. Drip pricing hides the cost of staying. One is measured in clicks, the other in money."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Brignull, Deceptive Patterns; Gray et al., 2023"
+    },
+    {
+      "id": "drip-pricing",
+      "no": 46,
+      "name": "Drip pricing",
+      "aka": ["hidden costs", "partitioned pricing"],
+      "family": "dark-pattern",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Revealing the cost in stages, once the decision already feels made.",
+      "how": "Sneaking, in Gray's taxonomy. The headline price wins the comparison, and the fees appear one screen at a time afterwards, each too small to restart the search for. It works on the sunk effort of having got this far, and on the fact that the number you compared with is no longer on screen when the real one appears.",
+      "tell": "The number you decided on and the number you are paying are on different pages.",
+      "examples": [
+        {"text": "A 49 flight becomes 91 across four screens of seat, bag and service fees.", "scene": "checkout", "also": []},
+        {"text": "A quoted rate that turns out to exclude setup, support and the minimum term.", "scene": "negotiation", "also": []},
+        {"text": "A monthly price in large type, and the required annual commitment in a footnote.", "scene": "ad", "also": []}
+      ],
+      "play": "You want the comparison won on a number they will never pay, and each fee small enough that starting over costs more.",
+      "counter": [
+        "Compare only final totals, at the last screen, with the alternative still open in another tab.",
+        "Set the number you will pay before you start, and treat the drip as a reason to leave rather than a cost."
+      ],
+      "confusedWith": [
+        {
+          "id": "roach-motel",
+          "because": "Both rely on you having already got this far.",
+          "tell": "Ask which number was concealed. The exit, or the total."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Mathur et al., 2019; Brignull"
+    },
+    {
+      "id": "gaslighting",
+      "no": 47,
+      "name": "Gaslighting",
+      "aka": [],
+      "family": "manipulation",
+      "axis": {"site": "judgment", "intent": "deliberate"},
+      "gist": "Undermining someone's confidence in their own memory so that your account stands by default.",
+      "how": "Not an argument at all, and it belongs here rather than with rhetoric because the target is the faculty, not the claim. Sustained, it makes independent judgment feel unsafe and the other person's account the only stable ground. Ordinary disagreement about what happened is not this. The difference is a pattern, over time, always favouring one person.",
+      "tell": "You have started keeping notes to check yourself, and that started after you met them.",
+      "examples": [
+        {"text": "Something agreed in a meeting is denied afterwards, repeatedly, until you stop trusting your notes.", "scene": "standup", "also": []},
+        {"text": "\"That never happened, you have always had a terrible memory\", about something that did.", "scene": "family", "also": []},
+        {"text": "A record is quietly revised and the revision is described as what it always said.", "scene": "news", "also": []}
+      ],
+      "play": "You want their account of events to stop counting, including to them, so that yours is the only one left standing.",
+      "counter": [
+        "Keep contemporaneous records and check them against other people, not against the person disputing them.",
+        "Treat the pattern as the evidence. Any single instance is deniable, which is the point of running it that way."
+      ],
+      "confusedWith": [],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Clinical and relational literature; after the 1944 film"
+    },
+    {
+      "id": "false-balance",
+      "no": 48,
+      "name": "False balance",
+      "aka": ["bothsidesism", "false equivalence"],
+      "family": "rhetoric",
+      "axis": {"site": "argument", "intent": "both"},
+      "gist": "Giving two sides equal weight when the evidence behind them is nothing like equal.",
+      "how": "The form of fairness applied where it does not belong. Presenting one researcher against another implies a field split down the middle, and the implication is carried entirely by the layout. It straddles the intent axis honestly: it is the default failure mode of a norm of impartiality, and it is also a well understood thing to lobby for.",
+      "tell": "The two sides get equal time and the question of how much support each has is never asked.",
+      "examples": [
+        {"text": "An item on a settled finding is staged as a debate between one proponent and one dissenter.", "scene": "news", "also": []},
+        {"text": "A review pairs the team's consensus with a single objection and calls the matter open.", "scene": "code-review", "also": []},
+        {"text": "A panel of four is assembled two against two on a question where the field is ninety-seven to three.", "scene": "science", "also": ["cherry-picking"]}
+      ],
+      "play": "You want a settled question to look open, and equal airtime does that without anyone having to argue for it.",
+      "counter": [
+        "Ask for the split. Not who disagrees, but how many, and how strong the work on each side is.",
+        "Distinguish balance between people from balance between bodies of evidence. Only the second is fairness."
+      ],
+      "confusedWith": [
+        {
+          "id": "middle-ground",
+          "because": "Both mistake even-handedness between people for even-handedness between evidence.",
+          "tell": "Ask whether the fault is in a conclusion or in a layout. Middle ground concludes; false balance stages."
+        }
+      ],
+      "exploitOf": null,
+      "parent": null,
+      "source": "Boykoff and Boykoff, 2004"
+    }
+  ]
+}
