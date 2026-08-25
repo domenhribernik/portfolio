@@ -42,12 +42,12 @@
     </script>
     <link rel="stylesheet" href="style.css">
     <title>Spy Game | Find the Impostor Party Game</title>
-    <meta name="description" content="A party game for one phone: everyone sees the location except the spy. Pass the phone round, ask sharp questions, and expose them before time runs out.">
+    <meta name="description" content="Everyone sees the location except the spy. Play on one phone passed round the table, or open a room and give everyone their own screen. Ask sharp questions and expose the spy before time runs out.">
     <link rel="canonical" href="https://domenhribernik.com/views/spy/">
     <meta property="og:site_name" content="Domen Hribernik">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Spy Game">
-    <meta property="og:description" content="Everyone sees the location except the spy. Pass the phone round, ask sharp questions, and expose them before time runs out.">
+    <meta property="og:description" content="Everyone sees the location except the spy. Pass one phone round the table, or open a room so everyone plays on their own screen.">
     <meta property="og:url" content="https://domenhribernik.com/views/spy/">
     <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
     <meta property="og:image:width" content="1200">
@@ -65,6 +65,8 @@
     <a class="exit-link" href="/"><i class="fas fa-chevron-left"></i> EXIT</a>
     <div class="rec" aria-hidden="true"><span class="rec-dot"></span> REC</div>
 
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
     <main class="stage">
 
         <!-- 1. BOOT / TITLE -->
@@ -78,10 +80,42 @@
             <h1 class="wordmark glitch" data-text="SPY">SPY</h1>
             <p class="subtitle">// THE GAME OF DECEPTION</p>
             <button class="btn btn-primary" id="initiateBtn" type="button">&gt; NEW GAME</button>
-            <p class="fine-print">ONE DEVICE · PASS &amp; PLAY · 3+ PLAYERS</p>
+            <p class="fine-print">ONE PHONE OR ONE EACH · 3+ PLAYERS</p>
         </section>
 
-        <!-- 2. SETUP -->
+        <!-- 2. MODE SELECT -->
+        <section class="screen" id="modeScreen">
+            <div class="stamp stamp-tr">CLASSIFIED</div>
+            <h2 class="screen-title">CHOOSE FORMAT</h2>
+
+            <div class="mode-list">
+                <button class="mode-card" id="modeSoloBtn" type="button">
+                    <span class="mode-icon" aria-hidden="true"><i class="fas fa-mobile-screen-button"></i></span>
+                    <span class="mode-body">
+                        <span class="mode-name">ONE PHONE</span>
+                        <span class="mode-desc">Pass this device round the table. Nothing to set up.</span>
+                    </span>
+                </button>
+                <button class="mode-card" id="modeCreateBtn" type="button">
+                    <span class="mode-icon" aria-hidden="true"><i class="fas fa-satellite-dish"></i></span>
+                    <span class="mode-body">
+                        <span class="mode-name">OPEN A ROOM</span>
+                        <span class="mode-desc">Everyone plays on their own phone. You get a code to hand out.</span>
+                    </span>
+                </button>
+                <button class="mode-card" id="modeJoinBtn" type="button">
+                    <span class="mode-icon" aria-hidden="true"><i class="fas fa-key"></i></span>
+                    <span class="mode-body">
+                        <span class="mode-name">JOIN A ROOM</span>
+                        <span class="mode-desc">Got a four letter code from the host? Take your seat.</span>
+                    </span>
+                </button>
+            </div>
+
+            <button class="btn btn-ghost" id="modeBackBtn" type="button">&lt; BACK</button>
+        </section>
+
+        <!-- 3. SETUP (one phone only) -->
         <section class="screen" id="setupScreen">
             <div class="stamp stamp-tr">CLASSIFIED</div>
             <h2 class="screen-title">GAME SETUP</h2>
@@ -110,7 +144,86 @@
             <button class="btn btn-ghost" id="setupBackBtn" type="button">&lt; BACK</button>
         </section>
 
-        <!-- 3. BRIEFING / PASS-AROUND -->
+        <!-- 4. GATE (open / join a room) -->
+        <section class="screen" id="gateScreen">
+            <div class="stamp stamp-tr">CLASSIFIED</div>
+            <h2 class="screen-title" id="gateTitle">OPEN A ROOM</h2>
+            <p class="muted-line" id="gateLead">// PICK A CODENAME</p>
+
+            <div class="field">
+                <label class="field-label" for="gateName">CODENAME</label>
+                <input class="text-input" id="gateName" type="text" maxlength="20" autocomplete="nickname"
+                    placeholder="e.g. FALCON" spellcheck="false">
+            </div>
+
+            <div class="field hidden" id="gateCodeField">
+                <label class="field-label" for="gateCode">ROOM CODE</label>
+                <input class="text-input code-input" id="gateCode" type="text" maxlength="4" autocomplete="off"
+                    autocapitalize="characters" spellcheck="false" placeholder="XXXX">
+            </div>
+
+            <p class="gate-error hidden" id="gateError" role="alert"></p>
+
+            <button class="btn btn-primary" id="gateSubmitBtn" type="button">&gt; OPEN ROOM</button>
+            <button class="btn btn-ghost" id="gateBackBtn" type="button">&lt; BACK</button>
+
+            <div class="reclaim hidden" id="reclaimBox">
+                <p class="muted-line">// OPERATION ALREADY RUNNING</p>
+                <p class="reclaim-lead">No new agents can be inserted mid-operation. If one of these
+                    seats is yours, take it back and your role comes with it.</p>
+                <div class="seat-list" id="seatList"></div>
+                <p class="field-hint">A seat can only be taken back once its device has gone quiet.</p>
+            </div>
+        </section>
+
+        <!-- 5. LOBBY (room only) -->
+        <section class="screen" id="lobbyScreen">
+            <p class="signal" id="lobbySignal" aria-live="polite">SIGNAL SECURE</p>
+            <div class="stamp stamp-tr">STANDBY</div>
+            <h2 class="screen-title">SAFE HOUSE</h2>
+
+            <button class="code-plate" id="codePlate" type="button" aria-label="Copy the room code">
+                <span class="code-plate-label">ROOM CODE</span>
+                <span class="code-plate-value" id="codePlateValue">----</span>
+                <span class="code-plate-hint" id="codePlateHint">[ TAP TO COPY ]</span>
+            </button>
+
+            <p class="hud-label">AGENTS ON SITE <span id="lobbyCount">1</span></p>
+            <div class="roster" id="lobbyRoster"></div>
+
+            <div id="hostControls" class="hidden">
+                <div class="field">
+                    <label class="field-label">SPIES IN PLAY</label>
+                    <div class="stepper">
+                        <button class="step-btn" id="roomSpiesMinus" type="button" aria-label="Fewer spies">&minus;</button>
+                        <span class="step-value" id="roomSpiesValue">1</span>
+                        <button class="step-btn" id="roomSpiesPlus" type="button" aria-label="More spies">+</button>
+                    </div>
+                    <p class="field-hint" id="roomSpiesHint">suggested: 1 · max: 1</p>
+                </div>
+
+                <div class="field">
+                    <label class="field-label">ROUND LENGTH</label>
+                    <div class="stepper">
+                        <button class="step-btn" id="roomTimeMinus" type="button" aria-label="Shorter round">&minus;</button>
+                        <span class="step-value" id="roomTimeValue">05:00</span>
+                        <button class="step-btn" id="roomTimePlus" type="button" aria-label="Longer round">+</button>
+                    </div>
+                    <p class="field-hint">a minute per agent is about right</p>
+                </div>
+
+                <button class="btn btn-primary" id="roomDealBtn" type="button">&gt; DEAL ROLES</button>
+            </div>
+
+            <div id="guestWait" class="hidden">
+                <p class="wait-line">// STANDING BY FOR <span id="hostNameWait">THE HOST</span></p>
+                <p class="field-hint" id="guestSettings"></p>
+            </div>
+
+            <button class="btn btn-ghost" id="lobbyLeaveBtn" type="button">&lt; LEAVE ROOM</button>
+        </section>
+
+        <!-- 6. BRIEFING -->
         <section class="screen" id="briefScreen">
             <p class="hud-label" id="briefProgress">PLAYER 1 / 5</p>
 
@@ -118,7 +231,7 @@
                 aria-label="Tap to reveal or hide your secret role">
                 <!-- lock state -->
                 <div class="brief-lock">
-                    <p class="muted-line">PASS DEVICE TO</p>
+                    <p class="muted-line" id="briefLockLabel">PASS DEVICE TO</p>
                     <h2 class="brief-agent" id="briefAgent">PLAYER 1</h2>
                     <p class="tap-hint">[ TAP TO REVEAL ]</p>
                 </div>
@@ -131,15 +244,23 @@
                 <div class="brief-done">
                     <p class="muted-line">ROLE MEMORIZED</p>
                     <h2 class="brief-agent" id="briefAgentDone">PLAYER 1</h2>
-                    <p class="tap-hint">↓ pass it on</p>
+                    <p class="tap-hint" id="briefDoneHint">↓ pass it on</p>
                 </div>
             </div>
 
             <button class="btn btn-primary hidden" id="briefNextBtn" type="button">▶ NEXT PLAYER</button>
+
+            <div class="brief-room hidden" id="briefRoom">
+                <p class="tally" id="briefTally">0 / 0 BRIEFED</p>
+                <div class="roster roster-sm" id="briefRoster"></div>
+                <button class="btn btn-primary hidden" id="briefStartBtn" type="button">▶ START ROUND</button>
+                <p class="field-hint hidden" id="briefWait">// WAITING FOR THE HOST TO START THE CLOCK</p>
+            </div>
         </section>
 
-        <!-- 4. ROUND -->
+        <!-- 7. ROUND -->
         <section class="screen" id="roundScreen">
+            <p class="signal hidden" id="roundSignal" aria-live="polite">SIGNAL SECURE</p>
             <div class="stamp stamp-tr">LIVE</div>
             <p class="hud-label">PLAYERS <span id="roundAgentCount"></span> · SPIES <span id="roundSpyCount"></span></p>
             <h2 class="screen-title">FIND THE SPY</h2>
@@ -150,13 +271,14 @@
             </div>
             <p class="muted-line" id="pauseNote" hidden>// SURVEILLANCE PAUSED</p>
 
-            <div class="btn-row">
+            <div class="btn-row" id="roundControls">
                 <button class="btn" id="pauseBtn" type="button">❚❚ PAUSE</button>
                 <button class="btn btn-danger" id="endRoundBtn" type="button">■ END ROUND</button>
             </div>
+            <p class="field-hint hidden" id="roundGuestNote">// THE HOST RUNS THE CLOCK</p>
         </section>
 
-        <!-- 5. DEBRIEF / END -->
+        <!-- 8. DEBRIEF / END -->
         <section class="screen" id="debriefScreen">
             <div class="stamp stamp-tr">CASE CLOSED</div>
             <h1 class="wordmark-sm glitch" data-text="TIME'S UP">TIME'S UP</h1>
@@ -175,17 +297,25 @@
                 </div>
             </div>
 
-            <div class="btn-row col">
+            <div class="btn-row col" id="debriefSoloActions">
                 <button class="btn btn-primary" id="playAgainBtn" type="button">▶ PLAY AGAIN <span class="btn-sub"
                         id="playAgainSub"></span></button>
                 <button class="btn btn-ghost" id="changeSettingsBtn" type="button">⚙ CHANGE SETTINGS</button>
                 <button class="btn btn-ghost" id="mainMenuBtn" type="button">⌂ MAIN MENU</button>
             </div>
+
+            <div class="btn-row col hidden" id="debriefRoomActions">
+                <button class="btn btn-primary hidden" id="roomAgainBtn" type="button">▶ NEW ROUND <span class="btn-sub"
+                        id="roomAgainSub"></span></button>
+                <button class="btn btn-ghost hidden" id="roomLobbyBtn" type="button">⚙ BACK TO THE SAFE HOUSE</button>
+                <p class="field-hint hidden" id="debriefWait">// WAITING FOR THE HOST</p>
+                <button class="btn btn-ghost" id="roomLeaveBtn" type="button">⌂ LEAVE ROOM</button>
+            </div>
         </section>
 
     </main>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 
 </html>
