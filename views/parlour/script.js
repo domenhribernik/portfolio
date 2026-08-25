@@ -126,6 +126,7 @@ function enterRoom(granted, name) {
     model = createModel();
     model.status = granted.room.status;
     guests = [];
+    clearGuestDom();
     lastInkAt.clear();
     outbox.length = 0;
     strokeCounter = 1;
@@ -151,6 +152,7 @@ function leaveLocal(message) {
     history.replaceState(null, '', location.pathname);
     model = createModel();
     guests = [];
+    clearGuestDom();
     outbox.length = 0;
     showScreen('gate');
     if (message) toast(message);
@@ -277,49 +279,107 @@ async function pumpOutbox() {
 //  Guests: calling cards in the lobby, cameos at the table
 // ------------------------------------------------------------------
 
-function cameoEl(g) {
+// Guest DOM is reconciled by guest id, never rebuilt. The calling cards carry
+// a one-shot `card-dealt` deal-in and the cameos an infinite pulse, and
+// re-creating every node on each poll (~1s in the lobby) restarted both, so
+// the waiting room flickered on the wire rather than sitting still. Nodes are
+// updated in place; only a guest who just walked in gets dealt.
+const cardEls = new Map();   // guestId -> .guest-card
+const cameoEls = new Map();  // guestId -> .cameo in the strip
+
+// Update a container's children against `items` by id: keep and update the
+// nodes already there, build only the missing ones, drop the departed. Moving
+// an attached node re-inserts it (which would restart its animation), so the
+// order fix-up only touches nodes actually out of place.
+function syncById(container, cache, items, create, update) {
+    for (const [id, el] of cache) {
+        if (!items.some((it) => it.id === id)) {
+            el.remove();
+            cache.delete(id);
+        }
+    }
+    let prev = null;
+    for (const item of items) {
+        let el = cache.get(item.id);
+        if (!el) {
+            el = create(item);
+            cache.set(item.id, el);
+        }
+        update(el, item);
+        const slot = prev ? prev.nextSibling : container.firstChild;
+        if (el !== slot) container.insertBefore(el, slot);
+        prev = el;
+    }
+}
+
+/** Drop every cached node: a new room deals its own cards from scratch. */
+function clearGuestDom() {
+    cardEls.clear();
+    cameoEls.clear();
+    $('guestCards').replaceChildren();
+    $('cameoStrip').replaceChildren();
+}
+
+/** Set a property only when it changed, so identical polls touch nothing. */
+function setIf(el, prop, value) {
+    if (el[prop] !== value) el[prop] = value;
+}
+
+// The palette index is remembered on the node because reading `style.background`
+// back gives a normalized colour that never compares equal to the hex we set.
+function paintCameo(el, ink) {
+    if (el.dataset.ink === String(ink)) return;
+    el.dataset.ink = String(ink);
+    el.style.background = inkColor(ink);
+}
+
+function newCameo() {
     const el = document.createElement('span');
     el.className = 'cameo';
-    el.style.background = inkColor(g.ink);
-    el.textContent = initials(g.name);
-    el.title = g.name + (g.id === session.you.id ? ' (you)' : '') + (g.online ? '' : ' · away');
-    if (!g.online) el.classList.add('cameo-away');
-    else if (Date.now() - (lastInkAt.get(g.id) ?? 0) < 2500) el.classList.add('cameo-drawing');
     return el;
+}
+
+function syncCameo(el, g) {
+    paintCameo(el, g.ink);
+    setIf(el, 'textContent', initials(g.name));
+    setIf(el, 'title', g.name + (g.id === session.you.id ? ' (you)' : '') + (g.online ? '' : ' · away'));
+    el.classList.toggle('cameo-away', !g.online);
+    el.classList.toggle('cameo-drawing', g.online && Date.now() - (lastInkAt.get(g.id) ?? 0) < 2500);
+}
+
+function newGuestCard() {
+    const card = document.createElement('div');
+    card.className = 'guest-card';
+    const cameo = document.createElement('span');
+    cameo.className = 'cameo';
+    const name = document.createElement('p');
+    name.className = 'font-body text-[0.98rem] leading-tight break-words';
+    const note = document.createElement('p');
+    note.className = 'font-tele text-[0.6rem] tracking-[0.14em] uppercase text-inkdim mt-1';
+    const ribbon = document.createElement('span');
+    ribbon.className = 'guest-host-ribbon hidden';
+    ribbon.textContent = 'HOST';
+    card.append(cameo, name, note, ribbon);
+    return card;
+}
+
+function syncGuestCard(card, g) {
+    const [cameo, name, note, ribbon] = card.children;
+    paintCameo(cameo, g.ink);
+    setIf(cameo, 'textContent', initials(g.name));
+    setIf(name, 'textContent', g.name);
+    setIf(note, 'textContent', g.id === session.you.id ? 'that is you' : (g.online ? 'present' : 'away'));
+    card.classList.toggle('guest-away', !g.online);
+    ribbon.classList.toggle('hidden', !g.host);
 }
 
 function renderGuests() {
     if (!session) return;
 
-    // Lobby: calling cards
-    const cards = $('guestCards');
-    cards.replaceChildren(...guests.map((g) => {
-        const card = document.createElement('div');
-        card.className = 'guest-card' + (g.online ? '' : ' guest-away');
-        const cameo = document.createElement('span');
-        cameo.className = 'cameo';
-        cameo.style.background = inkColor(g.ink);
-        cameo.textContent = initials(g.name);
-        const name = document.createElement('p');
-        name.className = 'font-body text-[0.98rem] leading-tight break-words';
-        name.textContent = g.name;
-        const note = document.createElement('p');
-        note.className = 'font-tele text-[0.6rem] tracking-[0.14em] uppercase text-inkdim mt-1';
-        note.textContent = g.id === session.you.id ? 'that is you' : (g.online ? 'present' : 'away');
-        card.append(cameo, name, note);
-        if (g.host) {
-            const ribbon = document.createElement('span');
-            ribbon.className = 'guest-host-ribbon';
-            ribbon.textContent = 'HOST';
-            card.append(ribbon);
-        }
-        return card;
-    }));
-    $('guestCount').textContent = `${guests.length} of 12 seats`;
+    syncById($('guestCards'), cardEls, guests, newGuestCard, syncGuestCard);   // lobby: calling cards
+    syncById($('cameoStrip'), cameoEls, guests, newCameo, syncCameo);          // table: the cameo strip
 
-    // Table: the cameo strip
-    $('cameoStrip').replaceChildren(...guests.map(cameoEl));
-
+    setIf($('guestCount'), 'textContent', `${guests.length} of 12 seats`);
     renderRoles();
 }
 
