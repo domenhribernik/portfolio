@@ -70,12 +70,30 @@ controller in exactly two places, `you.votedFor` (your own) and the debrief
 tally. That is what makes the phase worth having, since nobody has to accuse
 anyone first.
 
-The vote closes when the last seated player has voted, or when the host taps
-CLOSE THE VOTE. `closeVote()` settles `accused_id` and `outcome` **once, at
-that moment**, rather than recomputing them whenever the debrief is read, so
-the verdict cannot drift as players come and go afterwards. The most-voted
-player is the accused; if they are a spy the agents win. A tie, or nobody
-voting, means the table failed to agree, and that is a win for the spies.
+**A ballot is an answer, not a commitment.** It stays changeable until the
+vote actually closes, and the room counts the last one: `castvote` is a plain
+overwrite of `voted_for`. That is only worth anything because the last ballot
+does not close the room. It arms a **grace countdown** (`VOTE_GRACE_SECONDS`,
+mirrored in [logic.js](logic.js)) held in `round_ends_at`, and any ballot
+arriving while it runs disarms it so `advancePhase()` re-arms it with the full
+period a moment later. Otherwise whoever happened to vote last would be the
+one player at the table who could never change their mind, and every other
+player's switch would race a room already in the debrief.
+
+`round_ends_at` is therefore the deadline of **whichever phase is running**,
+which is why one `expired` flag in `advancePhase()` both ends a round and
+closes a vote. It reaches the client as `graceLeft`, deliberately a separate
+field from `secondsLeft`: the round clock drives a progress bar scaled to
+`roundSeconds`, and the ballot screen keys off `secondsLeft` staying null.
+
+The vote closes when that countdown runs out, or when the host taps CLOSE THE
+VOTE, which is also the escape hatch for a table that keeps changing its mind
+and would otherwise never auto-close. `closeVote()` settles `accused_id` and
+`outcome` **once, at that moment**, rather than recomputing them whenever the
+debrief is read, so the verdict cannot drift as players come and go
+afterwards. The most-voted player is the accused; if they are a spy the agents
+win. A tie, or nobody voting, means the table failed to agree, and that is a
+win for the spies.
 
 ## Translation
 
@@ -121,15 +139,15 @@ stops twenty phones polling the same second from writing twenty events:
    forever. The longest-seated player still present inherits it. The parlour
    accepts this gap; here it would end the party.
 
-`advanceVotePhase()` is the third, and it runs **on the poll path too**, not
+`advancePhase()` is the third, and it runs **on the poll path too**, not
 only after a `callvote` or `castvote`. Both its thresholds count the players
-still seated, so leaving can carry a call or complete a ballot exactly as
-tapping can; without the poll-path check a room whose last voter walked out
-would sit in `vote` with no clock and no actor to free it. It funnels into
-`openVote()` and `closeVote()`, the only two functions that may move a room
-into `vote` or `debrief`, and `closeVote()` settles the phase and the verdict
-in a single guarded write so no poll can ever read a debrief that has not
-decided who won yet.
+still seated, so leaving can carry a call or arm the vote's countdown exactly
+as tapping can; without the poll-path check a room whose last voter walked out
+would sit in `vote` with nothing to free it, and the countdown itself expires
+under a poll rather than a tap. It funnels into `openVote()` and `closeVote()`,
+the only two functions that may move a room into `vote` or `debrief`, and
+`closeVote()` settles the phase and the verdict in a single guarded write so no
+poll can ever read a debrief that has not decided who won yet.
 
 ## The clock
 
@@ -150,8 +168,9 @@ is why the round polls lazily (3s) without the countdown stuttering.
   sentence into `script.js`, it belongs in the table with a `data-i18n` hook
   or a `t()` call.
 - **Constants are duplicated on purpose**: `MIN_ROUND_SECONDS`,
-  `MAX_ROUND_SECONDS`, `ROUND_STEP_SECONDS` and the `spyMax` rule live in
-  both [logic.js](logic.js) and `spy-controller.php`. Change them in both.
+  `MAX_ROUND_SECONDS`, `ROUND_STEP_SECONDS`, `VOTE_GRACE_SECONDS` and the
+  `spyMax` rule live in both [logic.js](logic.js) and `spy-controller.php`.
+  Change them in both.
 - **The session lives in `localStorage`, not `sessionStorage`** (the parlour
   uses the latter). Phones lock and browsers discard tabs mid-party, and
   "two tabs on one device are one player" is the right answer for spy.
@@ -160,11 +179,22 @@ is why the round polls lazily (3s) without the countdown stuttering.
   re-creating the nodes leaves the list twitching.
 - **The brief card only repaints when its signature changes**, for the same
   reason: rewriting `.brief-role` every poll restarts its entry animation
-  under the player's nose while they are reading it.
+  under the player's nose while they are reading it. The debrief's
+  `.tally-chart` is signature-guarded too, and is deliberately **not**
+  animated: the debrief keeps polling, so an entry animation on a figure
+  people are reading replays every couple of seconds forever.
 
 - **The secrecy rule now covers ballots too.** `spy_players.voted_for` is as
   secret as `role` until the vote closes, and for the same reason: the whole
   point of the phase is that nobody has to commit out loud first.
+
+- **A tap is held over the next snapshot, not just painted.** `handlePoll()`
+  replaces `you` wholesale, so a poll already in flight when a player taps
+  answers with the state from *before* the tap and lands after it. Without
+  `pendingBallot` / `pendingCall` (the same shield `pendingSettings` gives the
+  host's steppers) a changed ballot or a retracted call visibly snaps back to
+  the old answer, which reads as the game ignoring the player. Each clears the
+  moment the server agrees.
 
 Accepted limits: anyone holding a room code can take over a seat whose phone
 has been quiet for 20 seconds (there is no per-seat secret to prove ownership

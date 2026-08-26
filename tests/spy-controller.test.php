@@ -143,6 +143,19 @@ function backdate(PDO $pdo, string $sql, array $args): void
     $pdo->prepare($sql)->execute($args);
 }
 
+/**
+ * The last ballot arms a grace countdown rather than closing the vote, so a
+ * player who votes last can still change their mind. Nothing in a test wants
+ * to sit through it: drag the deadline into the past and poll, which is the
+ * path a real phone takes when it expires.
+ */
+function runOutGrace(PDO $pdo, array $player): array
+{
+    backdate($pdo, "UPDATE spy_rooms SET round_ends_at = NOW() - INTERVAL 1 SECOND WHERE code = ?",
+        [$player['code']]);
+    return poll($player)['body'];
+}
+
 // ------------------------------------------------------------------
 //  Server lifecycle
 // ------------------------------------------------------------------
@@ -407,6 +420,26 @@ check('NO BALLOT IS EVER WRITTEN INTO THE PUBLIC EVENT LOG',
     "log carried: $logged");
 check('the room is still in the vote while a ballot is missing',
     $mid['room']['status'] === 'vote');
+check('no countdown runs while a ballot is still outstanding',
+    $mid['room']['graceLeft'] === null);
+
+// Changing your mind. A ballot is an answer, not a commitment: it stays
+// changeable right up to the moment the vote closes, and the room counts the
+// LAST one. This is the whole reason the vote closes on a countdown rather
+// than on whoever happens to tap last.
+// Somebody voterA is allowed to accuse, and who is not their first pick.
+$switchTo = (int) array_values(array_filter(
+    [$host['id'], $marko['id'], $jaka['id']],
+    fn ($id) => $id !== $spyId && $id !== $voterA['id']
+))[0];
+check('a voter may change their ballot',
+    event($voterA, 'castvote', ['target' => $switchTo])['status'] === 200);
+check('the change replaces the first ballot rather than adding a second',
+    poll($voterA)['body']['you']['votedFor'] === $switchTo);
+check('changing a ballot does not add a second voter to the room',
+    poll($voterB)['body']['room']['ballots'] === 1);
+// Put it back, so the verdict section below still has its clear plurality.
+event($voterA, 'castvote', ['target' => $spyId]);
 
 // ------------------------------------------------------------------
 //  7. The verdict
@@ -419,8 +452,19 @@ foreach ([$host, $marko, $jaka] as $who) {
     event($who, 'castvote', ['target' => $target]);
 }
 
-$done = poll($marko)['body'];
-check('the last ballot closes the vote by itself', $done['room']['status'] === 'debrief');
+// The last ballot no longer slams the vote shut. It arms a countdown, which
+// is the only reason the player who happens to vote last can change their
+// mind at all.
+$armed = poll($marko)['body'];
+check('the last ballot arms the grace countdown instead of closing the vote',
+    $armed['room']['status'] === 'vote'
+    && $armed['room']['graceLeft'] !== null
+    && $armed['room']['graceLeft'] <= 10,
+    'graceLeft: ' . json_encode($armed['room']['graceLeft']));
+
+$done = runOutGrace($pdo, $marko);
+check('the countdown running out closes the vote', $done['room']['status'] === 'debrief');
+check('a closed vote carries no countdown', $done['room']['graceLeft'] === null);
 check('the dossier now names the spies and the location',
     isset($done['reveal']['location'])
     && $done['reveal']['location'] === $location
@@ -453,6 +497,7 @@ foreach ([$host, $marko, $jaka] as $who) {
         fn ($id) => $id !== $who['id']));
     event($who, 'castvote', ['target' => $others[0]]);
 }
+runOutGrace($pdo, $marko);
 check('back to the lobby is host only', event($marko, 'again')['status'] === 403);
 check('the host reopens the lobby', event($host, 'again')['status'] === 200);
 
@@ -673,6 +718,22 @@ event($vr, 'castvote', ['target' => $v2['id']]);
 event($v2, 'castvote', ['target' => $v3['id']]);
 event($v3, 'castvote', ['target' => $vr['id']]);
 
+// The countdown is armed, but it is not a deadline anyone is locked out by:
+// a ballot arriving while it runs puts the full grace period back, so the
+// table cannot be rushed by whoever tapped last.
+$armedAt = poll($vr)['body']['room']['graceLeft'];
+check('the full table arms the countdown', $armedAt !== null);
+backdate($pdo, "UPDATE spy_rooms SET round_ends_at = NOW() + INTERVAL 2 SECOND WHERE code = ?",
+    [$vr['code']]);
+check('the countdown is running down', poll($vr)['body']['room']['graceLeft'] <= 2);
+event($v3, 'castvote', ['target' => $v2['id']]);
+check('changing a ballot restarts the countdown',
+    poll($vr)['body']['room']['graceLeft'] > 2,
+    'a late switch has to buy the table its time back');
+// Put the tie back before letting it expire.
+event($v3, 'castvote', ['target' => $vr['id']]);
+runOutGrace($pdo, $vr);
+
 $tied = poll($v2)['body'];
 check('a table that cannot agree still reaches a verdict',
     $tied['room']['status'] === 'debrief');
@@ -696,6 +757,28 @@ check('an early close still counts what was cast',
     && (int) ($early['reveal']['accused']['id'] ?? 0) === $vr['id']);
 check('closing a vote that is not open is refused', event($vr, 'closevote')['status'] === 409);
 
+// The host's button is also the escape hatch for a table that keeps switching
+// its pick and so keeps pushing the countdown back. It must beat the clock,
+// not wait for it.
+$cr = openRoom('IMPATIENT');
+$c2 = seat($cr['code'], 'DITHERER');
+$c3 = seat($cr['code'], 'ALSO DITHERING');
+event($cr, 'deal');
+event($cr, 'start');
+event($cr, 'end');
+event($cr, 'castvote', ['target' => $c2['id']]);
+event($c2, 'castvote', ['target' => $c3['id']]);
+event($c3, 'castvote', ['target' => $c2['id']]);
+check('the countdown is running before the host steps in',
+    poll($cr)['body']['room']['graceLeft'] !== null);
+check('the host closes the vote without waiting for the countdown',
+    event($cr, 'closevote')['status'] === 200);
+$cut = poll($c2)['body'];
+check('an early close still settles the verdict it had',
+    $cut['room']['status'] === 'debrief'
+    && (int) ($cut['reveal']['accused']['id'] ?? 0) === $c2['id']
+    && array_sum(array_column($cut['reveal']['tally'], 'votes')) === 3);
+
 // ------------------------------------------------------------------
 //  15. The vote has no clock, so leaving has to be able to end it
 // ------------------------------------------------------------------
@@ -714,8 +797,11 @@ check('the room waits while a ballot is outstanding',
 
 // The missing voter walks out. Nobody taps anything afterwards.
 api('leave', ['code' => $l3['code'], 'token' => $l3['token']]);
-check('the last voter leaving closes the vote by itself',
-    poll($lr)['body']['room']['status'] === 'debrief',
+check('the last voter leaving arms the countdown on the poll path',
+    poll($lr)['body']['room']['graceLeft'] !== null,
+    'nobody taps anything here, so only the poll can notice');
+check('and the countdown then closes the vote by itself',
+    runOutGrace($pdo, $lr)['room']['status'] === 'debrief',
     'a room with no clock and no actor would hang here');
 check('the verdict is settled, not left blank',
     poll($lr)['body']['reveal']['outcome'] !== null);
@@ -730,8 +816,9 @@ event($sr, 'end');
 event($sr, 'castvote', ['target' => $s2['id']]);
 event($s2, 'castvote', ['target' => $sr['id']]);
 backdate($pdo, 'UPDATE spy_players SET last_seen = NOW() - INTERVAL 16 MINUTE WHERE id = ?', [$s3['id']]);
-check('a swept voter also releases the vote on the next poll',
-    poll($sr)['body']['room']['status'] === 'debrief');
+poll($sr); // the sweep and the arming both happen on the poll path
+check('a swept voter also releases the vote',
+    runOutGrace($pdo, $sr)['room']['status'] === 'debrief');
 
 // A verdict must never be readable before it has been decided.
 $rows = $pdo->query(

@@ -170,8 +170,13 @@ export function applyEvents(model, events, selfId) {
  * pause or an early end has to arrive quickly, while the lobby and the
  * briefing need live joiner and ready counts.
  */
-export function pollDelay({ status, hidden, failures }) {
+export function pollDelay({ status, hidden, failures, grace }) {
     if (failures > 0) return Math.min(10000, 800 * 2 ** failures);
+    // The vote's grace countdown is the one moment a phone has to keep up
+    // with a deadline it cannot see coming: a ballot changed on somebody
+    // else's phone restarts it. It only runs for VOTE_GRACE_SECONDS, so the
+    // extra polls are bounded, and a hidden tab still wants the verdict.
+    if (grace) return 700;
     if (hidden) return 4000;
     if (status === 'round') return 3000;
     if (status === 'debrief') return 2500;
@@ -192,6 +197,15 @@ export function pollDelay({ status, hidden, failures }) {
 export function endVoteThreshold(seated) {
     return Math.max(1, Math.floor(seated / 2) + 1);
 }
+
+/**
+ * How long the ballot stays open after the last seated player has voted. The
+ * vote does not shut the instant somebody's tap lands, because the person who
+ * happens to vote last would be the one player who could never change their
+ * mind. Any ballot cast while it runs restarts it. Mirrors
+ * VOTE_GRACE_SECONDS in spy-controller.php: change them in both.
+ */
+export const VOTE_GRACE_SECONDS = 10;
 
 // ------------------------------------------------------------------
 //  Translation

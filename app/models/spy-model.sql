@@ -28,8 +28,11 @@ CREATE TABLE IF NOT EXISTS spy_rooms (
     -- not a display string, so a room survives a wording change and the same
     -- room reads correctly in any language.
     location_key VARCHAR(64) DEFAULT NULL,
-    -- The shared clock. NULL while paused or outside a round. Every client
-    -- renders seconds derived from this, so all phones agree.
+    -- The shared clock, and the deadline of WHICHEVER phase is running: the
+    -- questioning round, and then the short grace countdown the vote arms once
+    -- every seated ballot is in. NULL while paused, before the last ballot, or
+    -- outside both phases. Every client renders seconds derived from this, so
+    -- all phones agree.
     round_ends_at DATETIME DEFAULT NULL,
     -- Non-NULL means paused with this many seconds still on the clock.
     paused_seconds SMALLINT DEFAULT NULL,

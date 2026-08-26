@@ -56,7 +56,11 @@
 </head>
 
 <body>
-    <!-- Atmosphere overlays -->
+    <!-- Atmosphere overlays. The spotlight is a layer of its own rather than a
+         background-attachment: fixed on the body, so it rasterizes once on its
+         own GPU layer instead of repainting two full-viewport gradients on
+         every scroll frame. -->
+    <div class="spotlight" aria-hidden="true"></div>
     <div class="crt" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
     <div class="vignette" aria-hidden="true"></div>
@@ -310,6 +314,9 @@
             <div class="ballot" id="ballotList"></div>
 
             <p class="tally" id="voteTally" aria-live="polite">0 / 0 BALLOTS CAST</p>
+            <!-- Only once every seated ballot is in. The pick stays changeable
+                 while it counts down, and changing one restarts it. -->
+            <p class="vote-grace hidden" id="voteGrace" aria-live="polite"></p>
             <button class="btn btn-primary hidden" id="closeVoteBtn" type="button" data-i18n="vote.close">▶ CLOSE THE VOTE</button>
             <p class="field-hint" id="voteWait" data-i18n="vote.waiting">// WAITING FOR THE OTHERS</p>
         </section>

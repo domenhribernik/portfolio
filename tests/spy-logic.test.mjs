@@ -8,7 +8,7 @@ import {
     clampRoundSeconds, defaultRoundSeconds, formatClock,
     dealRoles, pickLocation,
     normalizeCode, isValidCode, cleanName, isValidName,
-    createRoomModel, applyEvents, pollDelay, endVoteThreshold,
+    createRoomModel, applyEvents, pollDelay, endVoteThreshold, VOTE_GRACE_SECONDS,
     DEFAULT_LANG, fillTemplate, resolveString, createTranslator,
     tableLanguages, normalizeLang, spyWord,
 } from '../views/spy/logic.js';
@@ -235,6 +235,18 @@ test('pollDelay backs off on failure before anything else', () => {
     assert.equal(pollDelay({ status: 'lobby', hidden: false, failures: 9 }), 10000, 'capped');
 });
 
+test('pollDelay keeps up with the vote countdown, but never over a back-off', () => {
+    // The grace countdown is the one deadline a phone cannot see coming: a
+    // ballot changed on somebody else's phone restarts it.
+    assert.equal(pollDelay({ status: 'vote', hidden: false, failures: 0, grace: true }), 700);
+    // Even a hidden tab wants the verdict; the countdown is only seconds long.
+    assert.equal(pollDelay({ status: 'vote', hidden: true, failures: 0, grace: true }), 700);
+    // A server we cannot reach is not helped by asking it faster.
+    assert.equal(pollDelay({ status: 'vote', hidden: false, failures: 2, grace: true }), 3200);
+    // No countdown armed yet: the ballot polls at the ordinary live rate.
+    assert.equal(pollDelay({ status: 'vote', hidden: false, failures: 0 }), 1200);
+});
+
 test('pollDelay eases off for hidden tabs and running rounds', () => {
     assert.equal(pollDelay({ status: 'round', hidden: true, failures: 0 }), 4000);
     // The clock ticks locally during a round, so only a pause or an early
@@ -249,6 +261,14 @@ test('pollDelay eases off for hidden tabs and running rounds', () => {
 // ------------------------------------------------------------------
 //  The call to vote
 // ------------------------------------------------------------------
+
+test('the vote leaves a grace period long enough to change your mind in', () => {
+    // Whoever votes last would otherwise be the one player who could never
+    // switch, since their own ballot closed the room. Mirrored in
+    // spy-controller.php.
+    assert.ok(VOTE_GRACE_SECONDS >= 5, 'too short to actually reach for the phone');
+    assert.ok(VOTE_GRACE_SECONDS <= 30, 'long enough to stall the table');
+});
 
 test('endVoteThreshold is a simple majority of the seated players', () => {
     assert.equal(endVoteThreshold(3), 2);

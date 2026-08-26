@@ -72,8 +72,17 @@ let gateKind = 'create';
 let routedStatus = null;
 let roundTouched = false;
 let pendingSettings = null;
+// The same shield pendingSettings gives the host's steppers, for the two
+// controls a player can flip: their ballot and their call to vote. A poll
+// already in flight when you tap answers with the state from BEFORE the tap,
+// and without these it lands after and snaps the control back to your old
+// answer, which reads exactly like the game ignoring you.
+let pendingBallot = null;
+let pendingCall = null;
 let clockBase = null;
 let clockTimer = null;
+let graceBase = null;        // interpolates the vote countdown between polls
+let graceTimer = null;
 
 // ------------------------------------------------------------------
 //  Screens and chrome
@@ -593,7 +602,11 @@ function enterRoom(granted, name) {
     routedStatus = null;
     roundTouched = false;
     pendingSettings = null;
+    pendingBallot = null;
+    pendingCall = null;
     cardSignature = null;
+    tallySignature = null;
+    stopGraceClock();
     outbox.length = 0;
     failures = 0;
     clearRosterDom();
@@ -645,6 +658,10 @@ function leaveLocal(message) {
     reveal = null;
     routedStatus = null;
     pendingSettings = null;
+    pendingBallot = null;
+    pendingCall = null;
+    tallySignature = null;
+    stopGraceClock();
     outbox.length = 0;
     clearRosterDom();
     showScreen('bootScreen');
@@ -693,6 +710,7 @@ async function pollOnce() {
         status: model.status,
         hidden: document.hidden,
         failures,
+        grace: graceBase !== null,
     }));
 }
 
@@ -726,6 +744,12 @@ function handlePoll(body) {
         }
     }
 
+    // Same shield for this player's own two flippable answers. Each clears the
+    // moment the server agrees, so the snapshot takes over again as soon as it
+    // is telling the truth.
+    pendingBallot = holdPending(pendingBallot, 'votedFor');
+    pendingCall = holdPending(pendingCall, 'wantsEnd');
+
     // The room owns the language, so a phone that resumed adopts it.
     // Normalize before comparing: measuring a raw server value against an
     // already-normalized local one means a language this client cannot
@@ -746,9 +770,23 @@ function handlePoll(body) {
     }
 
     syncClock();
+    syncGraceClock();
     routeRoom();
     renderRoom();
     return body.more === true;
+}
+
+/**
+ * One optimistic answer held over an incoming snapshot. Returns the record to
+ * keep: dropped once the server confirms the value or the wait runs out, so a
+ * refusal we never heard about cannot pin the wrong answer on screen forever.
+ */
+function holdPending(pending, field) {
+    if (!pending) return null;
+    if (session.you[field] === pending.value) return null; // the server agrees
+    if (Date.now() >= pending.until) return null;          // gave it long enough
+    session.you[field] = pending.value;
+    return pending;
 }
 
 function updateSignal() {
@@ -905,6 +943,7 @@ function stopClock() {
 
 let settingsDirtyUntil = 0; // shields the steppers from a poll mid-tap
 let cardSignature = null;   // which card face is currently painted
+let tallySignature = null;  // which ballot graph is currently drawn
 
 function routeRoom() {
     if (model.status === routedStatus) return;
@@ -922,6 +961,7 @@ function routeRoom() {
         showScreen('voteScreen');
     } else if (model.status === 'debrief') {
         showScreen('debriefScreen');
+        tallySignature = null; // a fresh debrief always draws its own graph
         show('declassifyResult', false);
         show('declassifyBtn', true);
         show('debriefSolo', false);
@@ -1070,12 +1110,59 @@ function renderVote() {
     const cast = players.filter((p) => p.voted).length;
     $('voteTally').textContent = t('vote.cast', { n: cast, total: players.length });
     show('closeVoteBtn', session.you.host);
-    show('voteWait', !session.you.host);
+
+    // Every seated ballot is in, so the room is closing on a countdown rather
+    // than the instant the last tap landed. Rows stay tappable throughout:
+    // switching now is the whole reason the countdown exists, and it restarts
+    // the clock for everybody.
+    const closing = graceBase !== null;
+    show('voteGrace', closing);
+    if (closing) paintGraceClock();
+    // The hint under the ballot changes meaning once the room is closing, so
+    // it is repainted here rather than left to its data-i18n default: the
+    // countdown can be disarmed again by a late switch, and the stale line
+    // would otherwise still invite a change nobody is waiting for.
+    $('voteWait').textContent = closing ? t('vote.graceHint') : t('vote.waiting');
+    show('voteWait', closing || !session.you.host);
+}
+
+// ---------------- the vote's own countdown ----------------
+
+/**
+ * Interpolated locally between polls, exactly like the round clock, so the
+ * number ticks smoothly on a screen that only hears from the server every
+ * fraction of a second. graceLeft is a separate field from secondsLeft
+ * because the round clock drives a progress bar scaled to roundSeconds.
+ */
+function syncGraceClock() {
+    const left = roomInfo && roomInfo.status === 'vote' ? roomInfo.graceLeft ?? null : null;
+    if (left === null) {
+        stopGraceClock();
+        return;
+    }
+    graceBase = { left, at: Date.now() };
+    if (!graceTimer) graceTimer = setInterval(paintGraceClock, 250);
+}
+
+function stopGraceClock() {
+    graceBase = null;
+    clearInterval(graceTimer);
+    graceTimer = null;
+}
+
+function paintGraceClock() {
+    if (!graceBase) return;
+    const left = Math.max(0, graceBase.left - Math.floor((Date.now() - graceBase.at) / 1000));
+    $('voteGrace').textContent = t('vote.grace', { n: left });
 }
 
 function castVote(targetId) {
     if (session.you.votedFor === targetId) return;
-    session.you.votedFor = targetId; // paint at once, the poll confirms
+    // Paint at once and hold it over the next snapshot: a poll already in
+    // flight still believes the old pick, and letting it win here is what made
+    // a changed vote look like it had been ignored.
+    session.you.votedFor = targetId;
+    pendingBallot = { value: targetId, until: Date.now() + 2500 };
     queueEvent('castvote', { target: targetId });
     renderVote();
 }
@@ -1102,6 +1189,16 @@ function renderDebriefRoom() {
 
     // The ballots, readable at last. Bars are drawn against the largest
     // count so a runaway winner still reads as one.
+    //
+    // Only redrawn when the figures actually change, for the same reason the
+    // brief card is: the debrief keeps polling, and rebuilding these nodes
+    // every couple of seconds threw away whatever the reader was looking at.
+    const signature = JSON.stringify([
+        reveal.tally, reveal.accused?.id ?? null, reveal.spies.map((sp) => sp.id),
+    ]);
+    if (signature === tallySignature) return;
+    tallySignature = signature;
+
     const top = Math.max(1, ...reveal.tally.map((row) => row.votes));
     const chart = $('tallyChart');
     chart.replaceChildren();
@@ -1314,6 +1411,7 @@ async function init() {
     $('callVoteBtn').addEventListener('click', () => {
         // Paint the flip at once; the poll confirms and carries the tally.
         session.you.wantsEnd = !session.you.wantsEnd;
+        pendingCall = { value: session.you.wantsEnd, until: Date.now() + 2500 };
         queueEvent('callvote');
         renderRoundRoom();
     });

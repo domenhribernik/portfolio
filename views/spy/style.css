@@ -38,16 +38,18 @@ body {
     line-height: 1.5;
     min-height: 100svh;
     overflow-x: hidden;
-    /* faint radial spotlight + base color */
-    background-image:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(193, 18, 31, 0.10), transparent 70%),
-        radial-gradient(ellipse 120% 80% at 50% 120%, rgba(193, 18, 31, 0.06), transparent 70%);
-    background-attachment: fixed;
     -webkit-tap-highlight-color: transparent;
 }
 
 /* ---------------- Atmosphere overlays ---------------- */
 
+/* Every full-bleed layer here is promoted onto its own GPU layer so it
+   rasterizes on the device pixel grid. Without that, their anti-aliased edges
+   land on fractional device pixels on large or high-DPI displays and the
+   corners show hairline seams, and the two animated layers re-dirty the
+   vignette's expensive blur underneath them on every frame. None of them
+   rotates, so backface-visibility is safe on all of them. */
+.spotlight,
 .crt,
 .grain,
 .vignette {
@@ -55,15 +57,30 @@ body {
     inset: 0;
     pointer-events: none;
     z-index: 50;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
-/* scanlines + slow vertical flicker */
+/* The faint radial spotlight. Its own fixed layer rather than a
+   background-attachment: fixed on the body, which repaints both gradients
+   across the whole viewport on every scroll frame. The far stop is an
+   explicitly transparent RED, not the `transparent` keyword: that keyword is
+   rgba(0, 0, 0, 0), so the ramp would interpolate towards transparent BLACK
+   and pick up a grey cast across its whole width. */
+.spotlight {
+    z-index: 0;
+    background-image:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(193, 18, 31, 0.10), rgba(193, 18, 31, 0) 70%),
+        radial-gradient(ellipse 120% 80% at 50% 120%, rgba(193, 18, 31, 0.06), rgba(193, 18, 31, 0) 70%);
+}
+
+/* scanlines + slow vertical flicker. Hard stops on whole pixels: a stop pair
+   at the same offset leaves a 1px anti-aliased ramp instead of a crisp line,
+   which moires on fractional device-pixel ratios. */
 .crt {
     background: repeating-linear-gradient(to bottom,
-            rgba(0, 0, 0, 0) 0px,
-            rgba(0, 0, 0, 0) 2px,
-            rgba(0, 0, 0, 0.18) 3px,
-            rgba(0, 0, 0, 0.18) 3px);
+            rgba(0, 0, 0, 0) 0 2px,
+            rgba(0, 0, 0, 0.18) 2px 3px);
     mix-blend-mode: multiply;
     animation: flicker 6s steps(60) infinite;
 }
@@ -84,20 +101,27 @@ body {
     }
 }
 
-/* subtle moving grain */
+/* Subtle moving grain. It is deliberately BIGGER than the viewport: the
+   animation slides it by 4% / 3%, and at inset: 0 that slid a bare strip into
+   view along the top and right edges twice a second. On a phone that is ~15px
+   and invisible under the vignette; on a 2560px display it is a ~100px
+   rectangle blinking in the corners. */
 .grain {
+    inset: -6%;
     opacity: 0.05;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     animation: grainshift 0.6s steps(2) infinite;
 }
 
+/* translateZ(0) is APPENDED to the shift, never replacing it: the layer has to
+   stay promoted for the whole animation, not only at rest. */
 @keyframes grainshift {
     0% {
-        transform: translate(0, 0);
+        transform: translate(0, 0) translateZ(0);
     }
 
     100% {
-        transform: translate(-4%, 3%);
+        transform: translate(-4%, 3%) translateZ(0);
     }
 }
 
@@ -1483,6 +1507,15 @@ body {
     color: rgba(232, 230, 227, 0.75);
 }
 
+/* Every seated ballot is in and the room is about to close. Loud enough to
+   read across a table, because it is the last chance to switch. */
+.vote-grace {
+    color: var(--amber);
+    font-family: "Black Ops One", sans-serif;
+    font-size: 0.86rem;
+    letter-spacing: 0.1em;
+}
+
 /* ---------------- The verdict ---------------- */
 
 /* The one authored moment in the room flow: the result lands like a stamp
@@ -1579,13 +1612,14 @@ body {
     overflow: hidden;
 }
 
+/* Deliberately NOT animated. The debrief keeps polling, so an entry animation
+   here restarted every couple of seconds under the reader's eyes. The verdict
+   banner above is the one authored moment on this screen; the graph is a
+   figure to read, and it stays still. */
 .tally-fill {
     display: block;
     height: 100%;
-    width: 0;
     background: rgba(232, 230, 227, 0.22);
-    transform-origin: left center;
-    animation: tallyGrow 0.6s 0.25s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 
 .tally-row.is-accused .tally-fill {
@@ -1598,20 +1632,9 @@ body {
     font-size: 0.86rem;
 }
 
-@keyframes tallyGrow {
-    from {
-        transform: scaleX(0);
-    }
-
-    to {
-        transform: scaleX(1);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
 
     .verdict,
-    .tally-fill,
     .callvote-fill {
         animation: none !important;
         transition: none !important;

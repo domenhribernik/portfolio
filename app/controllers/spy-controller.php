@@ -52,6 +52,10 @@ const MIN_PLAYERS = 3;
 const MIN_ROUND_SECONDS = 60;
 const MAX_ROUND_SECONDS = 1800;
 const ROUND_STEP_SECONDS = 60;
+// Once the last seated ballot lands, the vote does not slam shut: it arms
+// this countdown, and any ballot changed while it runs disarms and re-arms it.
+// Mirrored in views/spy/logic.js: change them in both.
+const VOTE_GRACE_SECONDS = 10;
 // Rooms idle this long are purged whenever someone opens a new room.
 const IDLE_ROOM_HOURS = 6;
 // Events per poll page; a client that gets a full page polls again at once.
@@ -335,6 +339,14 @@ function pollRoom(array $body): void
             'secondsLeft'  => $room['status'] === 'round'
                 ? ($paused ? (int) $room['paused_seconds'] : (int) $room['seconds_left'])
                 : null,
+            // The vote's own clock, and deliberately a separate field: the
+            // round countdown drives a progress bar scaled to roundSeconds,
+            // and secondsLeft staying null outside a round is what the ballot
+            // screen keys off. Non-null means every seated ballot is in and
+            // the room closes when it reaches zero.
+            'graceLeft'    => $room['status'] === 'vote' && $room['seconds_left'] !== null
+                ? (int) $room['seconds_left']
+                : null,
             'paused'       => $paused,
             'seated'       => $seated,
             // Both tallies are public on purpose. Seeing agreement form is
@@ -524,6 +536,13 @@ function postEvent(array $body): void
             $target = validateBallot($db, $roomId, (int) $player['id'], $body['data'] ?? null);
             $db->prepare('UPDATE spy_players SET voted_for = ? WHERE id = ?')
                ->execute([$target, (int) $player['id']]);
+            // Disarm the grace countdown. A ballot is changeable right up to
+            // the moment the vote closes, so every arriving one restarts the
+            // clock: advancePhase() below re-arms it once the table is full
+            // again. Only this one line is needed for that, because arming
+            // lives in exactly one place.
+            $db->prepare("UPDATE spy_rooms SET round_ends_at = NULL WHERE id = ? AND status = 'vote'")
+               ->execute([$roomId]);
             // The log is public, so the ballot never travels in it. Only the
             // fact that this player has now voted is visible to the room.
             $data = null;
@@ -730,7 +749,10 @@ function openVote(PDO $db, int $roomId): ?int
  * the vote is the one phase with neither a clock nor a guaranteed actor to
  * fall back on. That is why this runs on the poll path as well as after the
  * events that usually trigger it. One query answers both questions, and
- * both exits are themselves guarded, so racing callers settle nothing twice.
+ * every exit is itself guarded, so racing callers settle nothing twice.
+ *
+ * `round_ends_at` is the deadline of whichever phase is running, so the same
+ * `expired` flag ends a round and closes a vote.
  */
 function advancePhase(PDO $db, int $roomId): void
 {
@@ -762,8 +784,21 @@ function advancePhase(PDO $db, int $roomId): void
         if ((bool) $row['expired'] || (int) $row['wanting'] >= endVoteThreshold($seated)) {
             openVote($db, $roomId);
         }
-    } elseif ($row['status'] === 'vote' && (int) $row['cast'] >= $seated) {
-        closeVote($db, $roomId);
+    } elseif ($row['status'] === 'vote') {
+        // The last ballot no longer slams the vote shut: it arms a grace
+        // countdown, so anybody can still change their mind. Casting a ballot
+        // clears the deadline, and this re-arms it a moment later, which is
+        // the whole of "changing your pick restarts the countdown".
+        if ((bool) $row['expired']) {
+            closeVote($db, $roomId);
+        } elseif ((int) $row['cast'] >= $seated) {
+            // Guarded on round_ends_at IS NULL so twenty phones polling the
+            // same second cannot each shove the deadline further out.
+            $db->prepare(
+                "UPDATE spy_rooms SET round_ends_at = NOW() + INTERVAL " . VOTE_GRACE_SECONDS . " SECOND
+                 WHERE id = ? AND status = 'vote' AND round_ends_at IS NULL"
+            )->execute([$roomId]);
+        }
     }
 }
 
@@ -807,7 +842,8 @@ function closeVote(PDO $db, int $roomId): ?int
     // rowCount is still the single-writer guard: of however many callers
     // race here, exactly one announces the result.
     $stmt = $db->prepare(
-        "UPDATE spy_rooms SET status = 'debrief', accused_id = ?, outcome = ?
+        "UPDATE spy_rooms SET status = 'debrief', accused_id = ?, outcome = ?,
+                round_ends_at = NULL
          WHERE id = ? AND status = 'vote'"
     );
     $stmt->execute([$accusedId, $outcome, $roomId]);

@@ -109,6 +109,8 @@
     "vote.lead":            { "en": "Everyone picks at once, so nobody has to speak first. Nothing is shown until the last ballot is in.", "sl": "Vsi izberejo hkrati, da nikomur ni treba spregovoriti prvemu. Nič se ne pokaže, dokler ni oddan zadnji glas." },
     "vote.cast":            { "en": "{n} / {total} BALLOTS CAST",    "sl": "{n} / {total} ODDANIH GLASOV" },
     "vote.waiting":         { "en": "// WAITING FOR THE OTHERS",     "sl": "// ČAKAMO NA OSTALE" },
+    "vote.grace":           { "en": "ALL BALLOTS IN · CLOSING IN {n}", "sl": "VSI GLASOVI ODDANI · ZAPIRAMO ČEZ {n}" },
+    "vote.graceHint":       { "en": "// YOU CAN STILL CHANGE YOUR PICK", "sl": "// SVOJ GLAS LAHKO ŠE SPREMENIŠ" },
     "vote.close":           { "en": "▶ CLOSE THE VOTE",              "sl": "▶ ZAKLJUČI GLASOVANJE" },
     "debrief.timesUp":      { "en": "TIME'S UP",                     "sl": "ČAS JE POTEKEL" },
     "debrief.declassify":   { "en": "⊘ DECLASSIFY FILE",             "sl": "⊘ RAZKRIJ DOSJE" },
