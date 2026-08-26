@@ -1,7 +1,7 @@
 /* ============================================================
-   SPY // CLASSIFIED  —  page controller
+   SPY // CLASSIFIED  ::  page controller
    Two gamemodes share one set of screens:
-     solo  ONE PHONE, passed round the table. No network at all.
+     solo  ONE PHONE, passed round the table.
      room  a phone each, over an anonymous four-letter room code.
    The room mode is built on the parlour's polling machinery
    (views/parlour), with one inversion: a role is a secret, so the
@@ -14,26 +14,39 @@ import {
     clamp, spyMax, suggestedSpies, clampRoundSeconds, defaultRoundSeconds,
     formatClock, dealRoles, pickLocation,
     normalizeCode, isValidCode, cleanName, isValidName,
-    createRoomModel, applyEvents, pollDelay,
+    createRoomModel, applyEvents, pollDelay, endVoteThreshold,
+    DEFAULT_LANG, createTranslator, tableLanguages, normalizeLang, spyWord,
 } from './logic.js';
 
 const API = '../../app/controllers/spy-controller.php';
 const LS_KEY = 'spy:lastSettings';
 const SESSION_KEY = 'spy:session';
 const NAME_KEY = 'spy:name';
+const LANG_KEY = 'spy:lang';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const show = (id, on) => $(id).classList.toggle('hidden', !on);
 
 /** 'solo' once the one-phone game starts, 'room' once a room is entered. */
 let mode = null;
+
+// ---------------- translation ----------------
+
+// Both tables are fetched once and shared with the controller, which reads
+// the identical files. Until they land the page shows the English baked into
+// the markup, so nothing is ever blank.
+let uiTable = null;
+let locTable = null;
+let lang = DEFAULT_LANG;
+let t = (key) => key;
 
 // ---------------- one-phone state ----------------
 
 const state = {
     players: 5,
     spies: 1,
-    location: '',
+    locationKey: '',
     spyIndices: [],
     revealIndex: 0,
     revealShown: false,
@@ -43,28 +56,23 @@ const state = {
     isPaused: false,
 };
 
-// The location list is shared with the controller, so it lives in a JSON file
-// rather than in this bundle. Room mode never needs it: the server posts each
-// citizen their location directly.
-let LOCATIONS = null;
-
 // ---------------- room state ----------------
 
-let session = null;          // {code, token, you:{id,host,ready,role,location}, name}
+let session = null;          // {code, token, you:{...}, name}
 let model = createRoomModel();
 let players = [];            // last server snapshot of the seats
 let roomInfo = null;         // last server snapshot of the room
 let reveal = null;           // the dossier, only ever present during a debrief
-let failures = 0;            // consecutive transport failures -> backoff + pip
+let failures = 0;
 let pollTimer = null;
 let pollBusy = false;
 const outbox = [];
 let sending = false;
 let gateKind = 'create';
-let routedStatus = null;     // the status the screen currently reflects
-let roundTouched = false;    // has the host set the round length by hand yet
-let pendingSettings = null;  // a stepper change not yet confirmed by the server
-let clockBase = null;        // {left, at, paused} anchor for the local tick
+let routedStatus = null;
+let roundTouched = false;
+let pendingSettings = null;
+let clockBase = null;
 let clockTimer = null;
 
 // ------------------------------------------------------------------
@@ -85,8 +93,6 @@ function toast(msg, ms = 2800) {
     toast.t = setTimeout(() => el.classList.remove('show'), ms);
 }
 
-const show = (id, on) => $(id).classList.toggle('hidden', !on);
-
 // ------------------------------------------------------------------
 //  Transport. Never throws: status 0 means the network died, which is
 //  what lets the poll loop and the outbox tell it apart from a refusal.
@@ -94,7 +100,7 @@ const show = (id, on) => $(id).classList.toggle('hidden', !on);
 
 async function post(action, payload) {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
+    const timer = setTimeout(() => ctrl.abort(), 8000);
     try {
         const res = await fetch(`${API}?action=${action}`, {
             method: 'POST',
@@ -107,8 +113,82 @@ async function post(action, payload) {
     } catch {
         return { ok: false, status: 0, body: null };
     } finally {
-        clearTimeout(t);
+        clearTimeout(timer);
     }
+}
+
+// ------------------------------------------------------------------
+//  Translation
+// ------------------------------------------------------------------
+
+async function loadTables() {
+    const [ui, loc] = await Promise.all([
+        fetch('i18n/ui.json', { cache: 'force-cache' }).then((r) => r.json()),
+        fetch('i18n/locations.json', { cache: 'force-cache' }).then((r) => r.json()),
+    ]);
+    uiTable = ui;
+    locTable = loc;
+    if (!Array.isArray(locTable?.locations) || locTable.locations.length === 0) {
+        throw new Error('empty location table');
+    }
+}
+
+/**
+ * Repaints every translated string on the page. Static text is marked up with
+ * data-i18n so the markup itself lists what needs translating; anything
+ * assembled from numbers or names is rebuilt by the render functions below.
+ */
+function applyLang(next) {
+    lang = normalizeLang(next, uiTable);
+    t = uiTable ? createTranslator(uiTable, lang) : ((key) => key);
+    document.documentElement.lang = lang;
+
+    for (const el of document.querySelectorAll('[data-i18n]')) {
+        el.textContent = t(el.dataset.i18n);
+    }
+    for (const el of document.querySelectorAll('[data-i18n-placeholder]')) {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+    }
+
+    try {
+        localStorage.setItem(LANG_KEY, lang);
+    } catch { /* blocked storage */ }
+
+    // The dynamic half: anything holding a count, a name or a role.
+    renderSetup();
+    if (mode === 'room' && session && roomInfo) {
+        cardSignature = null;
+        renderRoom();
+    } else if (mode === 'solo') {
+        if ($('briefScreen').classList.contains('active')) renderBriefCard();
+        if ($('roundScreen').classList.contains('active')) renderSoloRoundChrome();
+        if ($('debriefScreen').classList.contains('active')) renderSoloDebriefChrome();
+    }
+}
+
+/** Fills the picker from whatever languages the table declares. */
+function buildLangPicker() {
+    const names = { en: 'ENGLISH', sl: 'SLOVENŠČINA' };
+    const select = $('gateLang');
+    select.replaceChildren();
+    for (const code of tableLanguages(uiTable)) {
+        const option = document.createElement('option');
+        option.value = code;
+        option.textContent = names[code] ?? code.toUpperCase();
+        select.appendChild(option);
+    }
+    select.value = lang;
+}
+
+/** One location, in the language this client is playing in. */
+function locationText(key) {
+    const row = locTable?.locations?.find((l) => l.key === key);
+    if (!row) return key ?? '';
+    // An empty column counts as "not translated yet" and falls through to
+    // English, matching resolveString() and the PHP resolver. Plain ?? would
+    // keep the empty string and leave the citizens with a blank card.
+    const pick = (code) => (typeof row[code] === 'string' && row[code] !== '' ? row[code] : null);
+    return pick(lang) ?? pick(DEFAULT_LANG) ?? key;
 }
 
 // ------------------------------------------------------------------
@@ -122,13 +202,13 @@ function loadSettings() {
             state.players = clamp(parseInt(saved.players, 10) || 5, MIN_PLAYERS, MAX_PLAYERS);
             state.spies = clamp(parseInt(saved.spies, 10) || 1, 1, spyMax(state.players));
         }
-    } catch (e) { /* no-op: first run / blocked storage */ }
+    } catch { /* first run / blocked storage */ }
 }
 
 function saveSettings() {
     try {
         localStorage.setItem(LS_KEY, JSON.stringify({ players: state.players, spies: state.spies }));
-    } catch (e) { /* no-op */ }
+    } catch { /* blocked storage */ }
 }
 
 function renderSetup() {
@@ -141,7 +221,7 @@ function renderSetup() {
     const max = spyMax(state.players);
     $('spiesMinus').disabled = state.spies <= 1;
     $('spiesPlus').disabled = state.spies >= max;
-    $('spiesHint').textContent = `suggested: ${suggestedSpies(state.players)} · max: ${max}`;
+    $('spiesHint').textContent = t('setup.spiesHint', { n: suggestedSpies(state.players), max });
 }
 
 function changePlayers(delta) {
@@ -155,34 +235,20 @@ function changeSpies(delta) {
     renderSetup();
 }
 
-/** Fetched once, then cached; the file is same-origin and tiny. */
-async function ensureLocations() {
-    if (LOCATIONS) return LOCATIONS;
-    const res = await fetch('locations.json', { cache: 'force-cache' });
-    const json = await res.json();
-    if (!Array.isArray(json?.locations) || json.locations.length === 0) {
-        throw new Error('empty location list');
-    }
-    LOCATIONS = json.locations;
-    return LOCATIONS;
-}
-
 // ------------------------------------------------------------------
-//  One-phone mode: the pass-around briefing
+//  The briefing card, shared by both modes
 // ------------------------------------------------------------------
 
 function assignRoles() {
-    state.location = pickLocation(LOCATIONS);
+    state.locationKey = pickLocation(locTable.locations)?.key ?? '';
     state.spyIndices = dealRoles(state.players, state.spies);
     state.revealIndex = 0;
     state.revealShown = false;
 }
 
-async function startBriefing() {
-    try {
-        await ensureLocations();
-    } catch {
-        toast('Could not load the location file. Check your connection.');
+function startBriefing() {
+    if (!locTable) {
+        toast(t('toast.noLocations'));
         return;
     }
     mode = 'solo';
@@ -191,38 +257,39 @@ async function startBriefing() {
     renderBriefCard();
 }
 
-/** The role face of the card, shared by both modes. */
+/** The role face of the card, in the current language. */
 function roleMarkup(isSpy, location, spyCount) {
-    const spyWord = spyCount > 1 ? 'spies' : 'spy';
     if (isSpy) {
-        return `<div class="role-title">YOU ARE A SPY</div>
-            <p class="role-flavor">You don't know the location. Work it out from what others say,
-                blend in, and don't get caught.</p>`;
+        return `<div class="role-title">${t('brief.spyTitle')}</div>
+            <p class="role-flavor">${t('brief.spyFlavor')}</p>`;
     }
-    return `<p class="role-kicker">YOUR LOCATION</p>
-            <div class="role-location">${location}</div>
-            <p class="role-flavor">Prove you belong here. Smoke out the ${spyWord} who can't.</p>`;
+    const el = document.createElement('div');
+    el.textContent = location;
+    return `<p class="role-kicker">${t('brief.locationKicker')}</p>
+            <div class="role-location">${el.innerHTML}</div>
+            <p class="role-flavor">${t('brief.citizenFlavor', { spyWord: spyWord(t, spyCount) })}</p>`;
 }
 
 function renderBriefCard() {
     const i = state.revealIndex;
     const isSpy = state.spyIndices.includes(i);
+    const who = t('brief.playerN', { n: i + 1 });
 
     show('briefRoom', false);
-    $('briefProgress').textContent = `PLAYER ${i + 1} / ${state.players}`;
-    $('briefLockLabel').textContent = 'PASS DEVICE TO';
-    $('briefAgent').textContent = `PLAYER ${i + 1}`;
-    $('briefAgentDone').textContent = `PLAYER ${i + 1}`;
-    $('briefDoneHint').textContent = '↓ pass it on';
+    $('briefProgress').textContent = t('brief.progress', { n: i + 1, total: state.players });
+    $('briefLockLabel').textContent = t('brief.passTo');
+    $('briefAgent').textContent = who;
+    $('briefAgentDone').textContent = who;
+    $('briefDoneHint').textContent = t('brief.passOn');
 
     const role = $('briefRole');
     role.className = isSpy ? 'role-spy' : 'role-citizen';
-    role.innerHTML = roleMarkup(isSpy, state.location, state.spies);
+    role.innerHTML = roleMarkup(isSpy, locationText(state.locationKey), state.spies);
 
     resetBriefCard();
     const nextBtn = $('briefNextBtn');
     nextBtn.classList.add('hidden');
-    nextBtn.textContent = (i === state.players - 1) ? '▶ START ROUND' : '▶ NEXT PLAYER';
+    nextBtn.textContent = (i === state.players - 1) ? t('brief.startRound') : t('brief.next');
 }
 
 function resetBriefCard() {
@@ -281,22 +348,26 @@ function paintTimer(remaining, total, paused) {
     $('pauseNote').hidden = !paused;
 }
 
-// ---------------- one-phone round ----------------
+// ---------------- one-phone round and debrief ----------------
+
+function renderSoloRoundChrome() {
+    $('roundHud').textContent = t('round.hud', { players: state.players, spies: state.spies });
+    $('pauseBtn').textContent = state.isPaused ? t('round.resume') : t('round.pause');
+    $('endRoundBtn').textContent = t('round.end');
+}
 
 function startSoloRound() {
     showScreen('roundScreen');
     show('roundSignal', false);
     show('roundGuestNote', false);
+    show('callVoteBox', false);
     show('roundControls', true);
-    $('roundAgentCount').textContent = state.players;
-    $('roundSpyCount').textContent = state.spies;
 
     state.totalTime = state.players * 60;
     state.timeRemaining = state.totalTime;
     state.isPaused = false;
 
-    $('pauseBtn').textContent = '❚❚ PAUSE';
-    $('endRoundBtn').textContent = '■ END ROUND';
+    renderSoloRoundChrome();
     paintTimer(state.timeRemaining, state.totalTime, false);
     startTimerInterval();
 }
@@ -316,11 +387,10 @@ function toggleSoloPause() {
     state.isPaused = !state.isPaused;
     if (state.isPaused) {
         clearInterval(state.timer);
-        $('pauseBtn').textContent = '▶ RESUME';
     } else {
-        $('pauseBtn').textContent = '❚❚ PAUSE';
         startTimerInterval();
     }
+    $('pauseBtn').textContent = state.isPaused ? t('round.resume') : t('round.pause');
     paintTimer(state.timeRemaining, state.totalTime, state.isPaused);
 }
 
@@ -331,26 +401,34 @@ function endSoloRound() {
     showSoloDebrief();
 }
 
-// ---------------- one-phone debrief ----------------
+function renderSoloDebriefChrome() {
+    $('playAgainSub').textContent = t('debrief.subSolo', {
+        players: state.players,
+        spies: state.spies,
+        spyWord: spyWord(t, state.spies),
+    });
+}
 
 function showSoloDebrief() {
     showScreen('debriefScreen');
     show('declassifyResult', false);
     show('declassifyBtn', true);
+    show('debriefSolo', true);
+    show('verdictBlock', false);
     show('debriefSoloActions', true);
     show('debriefRoomActions', false);
-    const spyWord = state.spies > 1 ? 'spies' : 'spy';
-    $('playAgainSub').textContent = `(${state.players} players · ${state.spies} ${spyWord})`;
+    renderSoloDebriefChrome();
 }
 
 function declassify() {
     if (mode === 'room') {
         if (!reveal) return;
-        $('resultSpies').textContent = reveal.spies.map((s) => s.name).join('  ·  ') || 'NOBODY';
+        $('resultSpies').textContent = reveal.spies.map((s) => s.name).join('  ·  ');
         $('resultLocation').textContent = reveal.location ?? '';
     } else {
-        $('resultSpies').textContent = state.spyIndices.map((i) => `PLAYER ${i + 1}`).join('  ·  ');
-        $('resultLocation').textContent = state.location;
+        $('resultSpies').textContent = state.spyIndices
+            .map((i) => t('brief.playerN', { n: i + 1 })).join('  ·  ');
+        $('resultLocation').textContent = locationText(state.locationKey);
     }
     show('declassifyResult', true);
     show('declassifyBtn', false);
@@ -381,10 +459,12 @@ function mainMenu() {
 function openGate(kind) {
     gateKind = kind;
     const joining = kind === 'join';
-    $('gateTitle').textContent = joining ? 'JOIN A ROOM' : 'OPEN A ROOM';
-    $('gateLead').textContent = joining ? '// CODENAME AND ROOM CODE' : '// PICK A CODENAME';
-    $('gateSubmitBtn').textContent = joining ? '> TAKE A SEAT' : '> OPEN ROOM';
+    $('gateTitle').textContent = joining ? t('gate.joinTitle') : t('gate.createTitle');
+    $('gateLead').textContent = joining ? t('gate.joinLead') : t('gate.createLead');
+    $('gateSubmitBtn').textContent = joining ? t('gate.joinBtn') : t('gate.createBtn');
     show('gateCodeField', joining);
+    // Only the host chooses; joiners inherit whatever the room plays in.
+    show('gateLangField', !joining);
     show('reclaimBox', false);
     gateError(null);
 
@@ -393,6 +473,7 @@ function openGate(kind) {
     } catch { /* blocked storage */ }
     const fromUrl = normalizeCode(new URLSearchParams(location.search).get('room') ?? '');
     if (joining && fromUrl) $('gateCode').value = fromUrl;
+    if (!joining) $('gateLang').value = lang;
 
     showScreen('gateScreen');
 }
@@ -405,7 +486,7 @@ function gateError(msg) {
 async function submitGate() {
     const name = cleanName($('gateName').value);
     if (!isValidName(name)) {
-        gateError('A codename, please: one to twenty characters.');
+        gateError(t('gate.errName'));
         return;
     }
     const payload = { name };
@@ -413,10 +494,12 @@ async function submitGate() {
     if (gateKind === 'join') {
         code = normalizeCode($('gateCode').value);
         if (!isValidCode(code)) {
-            gateError('Room codes are four letters.');
+            gateError(t('gate.errCode'));
             return;
         }
         payload.code = code;
+    } else {
+        payload.lang = lang;
     }
 
     gateError(null);
@@ -437,7 +520,7 @@ async function submitGate() {
         await showReclaim(code);
         return;
     }
-    gateError(res.body?.error ?? 'No signal. Try again in a moment.');
+    gateError(res.body?.error ?? t('gate.errNet'));
 }
 
 function rememberName(name) {
@@ -453,7 +536,7 @@ function rememberName(name) {
 async function showReclaim(code) {
     const res = await post('seats', { code });
     if (!res.ok) {
-        gateError(res.body?.error ?? 'That room is not answering.');
+        gateError(res.body?.error ?? t('gate.errRoom'));
         return;
     }
     const list = $('seatList');
@@ -463,9 +546,13 @@ async function showReclaim(code) {
         btn.type = 'button';
         btn.className = 'seat' + (seat.reclaimable ? '' : ' seat-live');
         btn.disabled = !seat.reclaimable;
-        btn.innerHTML = `<span class="seat-name"></span>
-            <span class="seat-state">${seat.reclaimable ? 'TAKE BACK' : 'IN PLAY'}</span>`;
-        btn.querySelector('.seat-name').textContent = seat.name;
+        const name = document.createElement('span');
+        name.className = 'seat-name';
+        name.textContent = seat.name;
+        const stateEl = document.createElement('span');
+        stateEl.className = 'seat-state';
+        stateEl.textContent = seat.reclaimable ? t('gate.takeBack') : t('gate.inPlay');
+        btn.append(name, stateEl);
         btn.addEventListener('click', () => reclaimSeat(code, seat));
         list.appendChild(btn);
     }
@@ -475,7 +562,7 @@ async function showReclaim(code) {
 async function reclaimSeat(code, seat) {
     const res = await post('reclaim', { code, playerId: seat.id });
     if (!res.ok) {
-        gateError(res.body?.error ?? 'That seat could not be taken back.');
+        gateError(res.body?.error ?? t('gate.errSeat'));
         await showReclaim(code);
         return;
     }
@@ -506,26 +593,35 @@ function enterRoom(granted, name) {
     routedStatus = null;
     roundTouched = false;
     pendingSettings = null;
+    cardSignature = null;
     outbox.length = 0;
     failures = 0;
     clearRosterDom();
 
+    // The room decides the language, so a joiner switches into it here.
+    if (granted.room.lang) applyLang(granted.room.lang);
+
     $('codePlateValue').textContent = granted.code;
-    $('codePlateHint').textContent = '[ TAP TO COPY ]';
+    $('codePlateHint').textContent = t('lobby.tapCopy');
 
     // Paint from what the grant already told us, so the lobby is not blank
     // for the length of a round-trip. The first poll replaces all of it.
     roomInfo = {
         code: granted.room.code,
         status: granted.room.status,
+        lang: granted.room.lang ?? lang,
         spies: granted.room.spies ?? 1,
         roundSeconds: granted.room.roundSeconds ?? 300,
         secondsLeft: null,
         paused: false,
         seated: 1,
+        endVotes: 0,
+        endVotesNeeded: 1,
+        ballots: 0,
     };
     players = [{
-        id: granted.you.id, name, host: granted.you.host, ready: granted.you.ready, online: true,
+        id: granted.you.id, name, host: granted.you.host, ready: granted.you.ready,
+        wantsEnd: false, voted: false, online: true,
     }];
 
     routeRoom();
@@ -584,10 +680,10 @@ async function pollOnce() {
         failures = 0;
         more = handlePoll(res.body);
     } else if (res.status === 404) {
-        leaveLocal('That room has been closed.');
+        leaveLocal(t('toast.roomClosed'));
         return;
     } else if (res.status === 401) {
-        leaveLocal('Your seat was taken. Join again with the room code.');
+        leaveLocal(t('toast.seatTaken'));
         return;
     } else {
         failures++;
@@ -613,6 +709,7 @@ function handlePoll(body) {
     model.status = body.room.status;
 
     const wasHost = session.you.host;
+    const firstPoll = routedStatus === null;
     session.you = body.you;
     players = body.players;
     roomInfo = body.room;
@@ -629,14 +726,23 @@ function handlePoll(body) {
         }
     }
 
+    // The room owns the language, so a phone that resumed adopts it.
+    // Normalize before comparing: measuring a raw server value against an
+    // already-normalized local one means a language this client cannot
+    // resolve never matches, and applyLang re-runs on every poll forever.
+    const wanted = normalizeLang(roomInfo.lang, uiTable);
+    if (wanted !== lang) applyLang(wanted);
+
     for (const op of ops) {
         if (op.op === 'deal') onDealt();
-        else if (op.op === 'pause') toast('The host paused the clock.');
-        else if (op.op === 'resume') toast('The clock is running again.');
-        else if (op.op === 'host' && op.mine) toast('The host left. You are running the operation now.');
+        else if (op.op === 'pause') toast(t('toast.paused'));
+        else if (op.op === 'resume') toast(t('toast.resumed'));
+        else if (op.op === 'host' && op.mine) toast(t('toast.hostLeft'));
     }
-    if (!wasHost && session.you.host && !ops.some((o) => o.op === 'host')) {
-        toast('You are running the operation now.');
+    // A resume seeds `you` with id 0, so the first poll always looks like a
+    // promotion. Only a genuine change mid-session is worth announcing.
+    if (!firstPoll && !wasHost && session.you.host && !ops.some((o) => o.op === 'host')) {
+        toast(t('toast.nowHost'));
     }
 
     syncClock();
@@ -647,9 +753,9 @@ function handlePoll(body) {
 
 function updateSignal() {
     const down = failures > 0;
-    for (const id of ['lobbySignal', 'roundSignal']) {
+    for (const id of ['lobbySignal', 'roundSignal', 'voteSignal']) {
         const el = $(id);
-        el.textContent = down ? 'SIGNAL LOST' : 'SIGNAL SECURE';
+        el.textContent = down ? t('signal.down') : t('signal.ok');
         el.classList.toggle('signal-down', down);
     }
 }
@@ -727,25 +833,33 @@ function clearRosterDom() {
     rosterEls.clear();
     $('lobbyRoster').replaceChildren();
     $('briefRoster').replaceChildren();
+    $('ballotList').replaceChildren();
 }
 
-function renderRoster(container, showReady) {
+/** `marks` picks which state tag a row carries, per screen. */
+function renderRoster(container, marks) {
     syncById(container, players, () => {
         const row = document.createElement('div');
         row.className = 'roster-row';
-        row.innerHTML = `<span class="roster-dot"></span>
-            <span class="roster-name"></span>
-            <span class="roster-tags"></span>`;
+        row.innerHTML = '<span class="roster-dot"></span>'
+            + '<span class="roster-name"></span><span class="roster-tags"></span>';
         return row;
     }, (row, p) => {
         row.classList.toggle('is-offline', !p.online);
         row.classList.toggle('is-you', p.id === session.you.id);
         row.querySelector('.roster-name').textContent = p.name;
-        const tags = [];
-        if (p.host) tags.push('<span class="roster-tag">HOST</span>');
-        if (showReady && p.ready) tags.push('<span class="roster-tag ok">BRIEFED</span>');
-        if (!p.online) tags.push('<span class="roster-tag dim">AWAY</span>');
-        row.querySelector('.roster-tags').innerHTML = tags.join('');
+
+        const tags = row.querySelector('.roster-tags');
+        tags.replaceChildren();
+        const tag = (text, cls) => {
+            const el = document.createElement('span');
+            el.className = `roster-tag${cls ? ' ' + cls : ''}`;
+            el.textContent = text;
+            tags.appendChild(el);
+        };
+        if (p.host) tag(t('tag.host'));
+        if (marks === 'ready' && p.ready) tag(t('tag.briefed'), 'ok');
+        if (!p.online) tag(t('tag.away'), 'dim');
     });
 }
 
@@ -803,10 +917,15 @@ function routeRoom() {
     } else if (model.status === 'round') {
         showScreen('roundScreen');
         show('roundSignal', true);
+        show('callVoteBox', true);
+    } else if (model.status === 'vote') {
+        showScreen('voteScreen');
     } else if (model.status === 'debrief') {
         showScreen('debriefScreen');
         show('declassifyResult', false);
         show('declassifyBtn', true);
+        show('debriefSolo', false);
+        show('verdictBlock', true);
         show('debriefSoloActions', false);
         show('debriefRoomActions', true);
     }
@@ -823,13 +942,14 @@ function renderRoom() {
     if (model.status === 'lobby') renderLobby();
     else if (model.status === 'brief') renderBriefRoom();
     else if (model.status === 'round') renderRoundRoom();
+    else if (model.status === 'vote') renderVote();
     else if (model.status === 'debrief') renderDebriefRoom();
 }
 
 function renderLobby() {
     $('codePlateValue').textContent = roomInfo.code;
     $('lobbyCount').textContent = players.length;
-    renderRoster($('lobbyRoster'), false);
+    renderRoster($('lobbyRoster'), null);
 
     const host = session.you.host;
     show('hostControls', host);
@@ -840,7 +960,7 @@ function renderLobby() {
 
     // Until the host sets it by hand, the round tracks the table the way the
     // one-phone game always has: a minute per player.
-    if (session.you.host && !roundTouched) {
+    if (host && !roundTouched) {
         const want = defaultRoundSeconds(seated);
         if (want !== roomInfo.roundSeconds) {
             roomInfo.roundSeconds = want;
@@ -853,7 +973,7 @@ function renderLobby() {
     // and the enabled state of the steppers can never disagree.
     $('roomSpiesValue').textContent = roomInfo.spies;
     $('roomTimeValue').textContent = formatClock(roomInfo.roundSeconds);
-    $('roomSpiesHint').textContent = `suggested: ${suggestedSpies(seated)} · max: ${max}`;
+    $('roomSpiesHint').textContent = t('setup.spiesHint', { n: suggestedSpies(seated), max });
     $('roomSpiesMinus').disabled = roomInfo.spies <= 1;
     $('roomSpiesPlus').disabled = roomInfo.spies >= max;
     $('roomTimeMinus').disabled = roomInfo.roundSeconds <= MIN_ROUND_SECONDS;
@@ -862,26 +982,29 @@ function renderLobby() {
     const deal = $('roomDealBtn');
     deal.disabled = seated < MIN_PLAYERS;
     deal.textContent = seated < MIN_PLAYERS
-        ? `> NEED ${MIN_PLAYERS - seated} MORE`
-        : '> DEAL ROLES';
+        ? t('lobby.needMore', { n: MIN_PLAYERS - seated })
+        : t('lobby.deal');
 
-    const hostName = players.find((p) => p.host)?.name ?? 'THE HOST';
-    $('hostNameWait').textContent = hostName.toUpperCase();
-    const spyWord = roomInfo.spies > 1 ? 'spies' : 'spy';
-    $('guestSettings').textContent =
-        `${seated} agents · ${roomInfo.spies} ${spyWord} · ${formatClock(roomInfo.roundSeconds)} on the clock`;
+    const hostName = players.find((p) => p.host)?.name ?? t('lobby.theHost');
+    $('hostNameWait').textContent = t('lobby.waitingFor', { name: hostName.toUpperCase() });
+    $('guestSettings').textContent = t('lobby.summary', {
+        seated,
+        spies: roomInfo.spies,
+        spyWord: spyWord(t, roomInfo.spies),
+        clock: formatClock(roomInfo.roundSeconds),
+    });
 }
 
 function renderBriefRoom() {
     const isSpy = session.you.role === 'spy';
-    const signature = `${session.you.role}|${session.you.location ?? ''}|${roomInfo.spies}`;
+    const signature = `${lang}|${session.you.role}|${session.you.location ?? ''}|${roomInfo.spies}`;
     if (signature !== cardSignature) {
         cardSignature = signature;
-        $('briefProgress').textContent = 'YOUR BRIEFING';
-        $('briefLockLabel').textContent = 'EYES ONLY';
+        $('briefProgress').textContent = t('brief.yours');
+        $('briefLockLabel').textContent = t('brief.eyesOnly');
         $('briefAgent').textContent = session.name.toUpperCase();
         $('briefAgentDone').textContent = session.name.toUpperCase();
-        $('briefDoneHint').textContent = 'sit tight';
+        $('briefDoneHint').textContent = t('brief.sitTight');
         const role = $('briefRole');
         role.className = isSpy ? 'role-spy' : 'role-citizen';
         role.innerHTML = roleMarkup(isSpy, session.you.location ?? '', roomInfo.spies);
@@ -893,21 +1016,68 @@ function renderBriefRoom() {
     }
 
     const ready = players.filter((p) => p.ready).length;
-    $('briefTally').textContent = `${ready} / ${players.length} BRIEFED`;
-    renderRoster($('briefRoster'), true);
+    $('briefTally').textContent = t('brief.tally', { n: ready, total: players.length });
+    renderRoster($('briefRoster'), 'ready');
 
     const allReady = players.length > 0 && ready === players.length;
     show('briefStartBtn', session.you.host);
     show('briefWait', !session.you.host);
-    $('briefStartBtn').textContent = allReady ? '▶ START ROUND' : `▶ START ANYWAY (${ready}/${players.length})`;
+    $('briefStartBtn').textContent = allReady
+        ? t('brief.startRound')
+        : t('brief.startAnyway', { n: ready, total: players.length });
 }
 
 function renderRoundRoom() {
-    $('roundAgentCount').textContent = players.length;
-    $('roundSpyCount').textContent = roomInfo.spies;
+    $('roundHud').textContent = t('round.hud', { players: players.length, spies: roomInfo.spies });
     show('roundControls', session.you.host);
     show('roundGuestNote', !session.you.host);
-    $('pauseBtn').textContent = roomInfo.paused ? '▶ RESUME' : '❚❚ PAUSE';
+    $('pauseBtn').textContent = roomInfo.paused ? t('round.resume') : t('round.pause');
+    $('endRoundBtn').textContent = t('round.end');
+
+    // The call to vote: a public tally so the table can watch agreement form.
+    const wanted = roomInfo.endVotes ?? 0;
+    const needed = roomInfo.endVotesNeeded ?? endVoteThreshold(players.length);
+    $('callVoteBtn').textContent = session.you.wantsEnd ? t('round.retractVote') : t('round.callVote');
+    $('callVoteBtn').classList.toggle('is-on', Boolean(session.you.wantsEnd));
+    $('callVoteTally').textContent = t('round.voteTally', { n: wanted, total: needed });
+    $('callVoteFill').style.width = `${clamp((wanted / Math.max(1, needed)) * 100, 0, 100)}%`;
+}
+
+/**
+ * The ballot. Everyone picks at the same time and the page shows only how
+ * many have voted, never for whom, which is the entire reason the phase
+ * exists: nobody has to accuse anyone out loud first.
+ */
+function renderVote() {
+    const candidates = players.filter((p) => p.id !== session.you.id);
+    syncById($('ballotList'), candidates, () => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ballot-row';
+        btn.innerHTML = '<span class="ballot-mark" aria-hidden="true"></span>'
+            + '<span class="ballot-name"></span><span class="ballot-state"></span>';
+        return btn;
+    }, (btn, p) => {
+        const picked = session.you.votedFor === p.id;
+        btn.classList.toggle('is-picked', picked);
+        btn.classList.toggle('is-offline', !p.online);
+        btn.setAttribute('aria-pressed', picked ? 'true' : 'false');
+        btn.querySelector('.ballot-name').textContent = p.name;
+        btn.querySelector('.ballot-state').textContent = p.voted ? t('tag.voted') : '';
+        btn.onclick = () => castVote(p.id);
+    });
+
+    const cast = players.filter((p) => p.voted).length;
+    $('voteTally').textContent = t('vote.cast', { n: cast, total: players.length });
+    show('closeVoteBtn', session.you.host);
+    show('voteWait', !session.you.host);
+}
+
+function castVote(targetId) {
+    if (session.you.votedFor === targetId) return;
+    session.you.votedFor = targetId; // paint at once, the poll confirms
+    queueEvent('castvote', { target: targetId });
+    renderVote();
 }
 
 function renderDebriefRoom() {
@@ -915,8 +1085,48 @@ function renderDebriefRoom() {
     show('roomAgainBtn', host);
     show('roomLobbyBtn', host);
     show('debriefWait', !host);
-    const spyWord = roomInfo.spies > 1 ? 'spies' : 'spy';
-    $('roomAgainSub').textContent = `(${players.length} agents · ${roomInfo.spies} ${spyWord})`;
+    $('roomAgainSub').textContent = t('debrief.subSolo', {
+        players: players.length,
+        spies: roomInfo.spies,
+        spyWord: spyWord(t, roomInfo.spies),
+    });
+
+    if (!reveal) return;
+    const agentsWon = reveal.outcome === 'agents';
+    const verdict = $('verdict');
+    verdict.classList.toggle('is-agents', agentsWon);
+    verdict.classList.toggle('is-spies', !agentsWon);
+    $('verdictTitle').textContent = agentsWon ? t('outcome.agentsWin') : t('outcome.spiesWin');
+    $('verdictSub').textContent = agentsWon ? t('outcome.agentsWinSub') : t('outcome.spiesWinSub');
+    $('verdictAccused').textContent = reveal.accused?.name ?? t('debrief.noAccused');
+
+    // The ballots, readable at last. Bars are drawn against the largest
+    // count so a runaway winner still reads as one.
+    const top = Math.max(1, ...reveal.tally.map((row) => row.votes));
+    const chart = $('tallyChart');
+    chart.replaceChildren();
+    for (const row of reveal.tally) {
+        const line = document.createElement('div');
+        line.className = 'tally-row';
+        if (reveal.accused && row.id === reveal.accused.id) line.classList.add('is-accused');
+        if (reveal.spies.some((s) => s.id === row.id)) line.classList.add('is-spy');
+
+        const name = document.createElement('span');
+        name.className = 'tally-name';
+        name.textContent = row.name;
+        const bar = document.createElement('span');
+        bar.className = 'tally-bar';
+        const fill = document.createElement('span');
+        fill.className = 'tally-fill';
+        fill.style.width = `${(row.votes / top) * 100}%`;
+        bar.appendChild(fill);
+        const count = document.createElement('span');
+        count.className = 'tally-count';
+        count.textContent = row.votes;
+
+        line.append(name, bar, count);
+        chart.appendChild(line);
+    }
 }
 
 // ------------------------------------------------------------------
@@ -964,12 +1174,12 @@ async function copyCode() {
     const hint = $('codePlateHint');
     try {
         await navigator.clipboard.writeText(url);
-        hint.textContent = '[ LINK COPIED ]';
+        hint.textContent = t('lobby.linkCopied');
     } catch {
         hint.textContent = `[ ${session.code} ]`;
     }
     clearTimeout(copyCode.t);
-    copyCode.t = setTimeout(() => { hint.textContent = '[ TAP TO COPY ]'; }, 1800);
+    copyCode.t = setTimeout(() => { hint.textContent = t('lobby.tapCopy'); }, 1800);
 }
 
 // ------------------------------------------------------------------
@@ -989,7 +1199,7 @@ async function arrive() {
             code: saved.code,
             token: saved.token,
             name: saved.name ?? '',
-            you: { id: 0, host: false, ready: false, role: null, location: null },
+            you: { id: 0, host: false, ready: false, wantsEnd: false, votedFor: null, role: null, location: null },
         };
         // since: 0 replays the room from the start, so a phone that was away
         // rebuilds its whole picture in one request.
@@ -1022,11 +1232,23 @@ async function arrive() {
 //  Wiring
 // ------------------------------------------------------------------
 
-function init() {
+async function init() {
     loadSettings();
+
+    // The tables decide what the page can say, so nothing else runs until
+    // they land. The markup ships English, so a failure here is survivable.
+    try {
+        await loadTables();
+        let saved = DEFAULT_LANG;
+        try {
+            saved = localStorage.getItem(LANG_KEY) ?? DEFAULT_LANG;
+        } catch { /* blocked storage */ }
+        applyLang(saved);
+        buildLangPicker();
+    } catch {
+        applyLang(DEFAULT_LANG);
+    }
     renderSetup();
-    // Warm the location file so the one-phone deal never waits on it.
-    ensureLocations().catch(() => { /* retried on deal */ });
 
     // Menus
     $('initiateBtn').addEventListener('click', goToMode);
@@ -1047,6 +1269,12 @@ function init() {
     $('gateSubmitBtn').addEventListener('click', submitGate);
     $('gateBackBtn').addEventListener('click', goToMode);
     $('gateCode').addEventListener('input', (e) => { e.target.value = normalizeCode(e.target.value); });
+    // Picking the language repaints the page at once, so the host sees what
+    // the room will look like before committing to it.
+    $('gateLang').addEventListener('change', (e) => {
+        applyLang(e.target.value);
+        openGate(gateKind);
+    });
     for (const id of ['gateName', 'gateCode']) {
         $(id).addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); submitGate(); }
@@ -1083,6 +1311,15 @@ function init() {
         if (mode === 'room') queueEvent('end');
         else endSoloRound();
     });
+    $('callVoteBtn').addEventListener('click', () => {
+        // Paint the flip at once; the poll confirms and carries the tally.
+        session.you.wantsEnd = !session.you.wantsEnd;
+        queueEvent('callvote');
+        renderRoundRoom();
+    });
+
+    // The ballot
+    $('closeVoteBtn').addEventListener('click', () => queueEvent('closevote'));
 
     // The debrief
     $('declassifyBtn').addEventListener('click', declassify);

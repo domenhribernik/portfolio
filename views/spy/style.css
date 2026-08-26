@@ -1,5 +1,5 @@
 /* ============================================================
-   SPY // CLASSIFIED  —  dark surveillance-terminal theme
+   SPY // CLASSIFIED  ::  dark surveillance-terminal theme
    Tailwind CDN handles tokens; this file owns the atmosphere,
    animations, state toggles and bespoke components.
    ============================================================ */
@@ -597,7 +597,8 @@ body {
 #debriefScreen,
 #modeScreen,
 #gateScreen,
-#lobbyScreen {
+#lobbyScreen,
+#voteScreen {
     position: relative;
 }
 
@@ -607,6 +608,21 @@ body {
    in one-phone mode, where the pip is hidden. */
 .signal:not(.hidden) ~ .stamp-tr {
     top: 6.3rem;
+}
+
+/* The ballot puts a paragraph of instructions right under its heading, and
+   the stamp would sit across the one piece of prose on the screen anybody
+   actually has to read. Lift it into the empty right of the signal line. */
+#voteScreen .stamp-tr {
+    top: 2.9rem;
+}
+
+/* The room debrief opens on the verdict banner, which fills the band the
+   stamp normally sits in. Drop it past the banner and the accused, into the
+   clear right of the tally. One phone mode still shows the wordmark there,
+   keeps its hidden verdict block, and so keeps the original placement. */
+#verdictBlock:not(.hidden) ~ .stamp-tr {
+    top: 19rem;
 }
 
 /* ---------------- Briefing / pass-around card ---------------- */
@@ -851,7 +867,7 @@ body {
 }
 
 /* ============================================================
-   ROOM MODE  —  mode select, gate, safe house, rosters
+   ROOM MODE  ::  mode select, gate, safe house, rosters
    ============================================================ */
 
 /* ---------------- Toast ---------------- */
@@ -1280,5 +1296,324 @@ body {
 
     .toast {
         transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ============================================================
+   LANGUAGE, THE CALL TO VOTE, THE BALLOT, THE VERDICT
+   ============================================================ */
+
+/* ---------------- Language picker ---------------- */
+
+.lang-picker {
+    position: relative;
+    max-width: 20rem;
+    margin: 0 auto;
+}
+
+.lang-select {
+    width: 100%;
+    padding: 0.8rem 2.4rem 0.8rem 0.9rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: "Share Tech Mono", monospace;
+    font-size: 16px;
+    letter-spacing: 0.14em;
+    text-align: center;
+    text-transform: uppercase;
+    /* the caret below replaces the platform one, which cannot be themed */
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.lang-select:focus-visible {
+    outline: none;
+    border-color: var(--blood);
+    box-shadow: var(--glow);
+}
+
+.lang-select option {
+    background: var(--panel);
+    color: var(--ink);
+}
+
+.lang-caret {
+    position: absolute;
+    top: 50%;
+    right: 0.9rem;
+    transform: translateY(-50%);
+    color: var(--blood-glow);
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+/* ---------------- The call to vote ---------------- */
+
+.callvote {
+    margin-top: 1.6rem;
+    padding-top: 1.4rem;
+    border-top: 1px dashed var(--line);
+}
+
+.btn-call.is-on {
+    border-color: var(--amber);
+    color: var(--amber);
+    box-shadow: 0 0 8px rgba(224, 168, 46, 0.35);
+}
+
+.callvote-meter {
+    height: 3px;
+    margin: 0.9rem 0 0.6rem;
+    background: rgba(232, 230, 227, 0.08);
+    overflow: hidden;
+}
+
+.callvote-fill {
+    height: 100%;
+    width: 0;
+    background: var(--amber);
+    box-shadow: 0 0 8px rgba(224, 168, 46, 0.5);
+    transition: width 0.45s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.callvote-tally {
+    color: var(--amber);
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+}
+
+/* ---------------- The ballot ---------------- */
+
+.vote-lead {
+    max-width: 36ch;
+    margin: 0 auto 1.6rem;
+    color: var(--muted);
+    font-family: "Special Elite", monospace;
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+
+.ballot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.4rem;
+}
+
+.ballot-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--panel);
+    border: 1px solid var(--line-soft);
+    color: var(--ink);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+}
+
+.ballot-row:hover {
+    background: var(--panel-2);
+    border-color: var(--line);
+}
+
+.ballot-row:active {
+    transform: translateY(1px);
+}
+
+.ballot-row.is-offline .ballot-name {
+    opacity: 0.5;
+}
+
+/* The chosen row inverts rather than growing a rule: one unmistakable
+   answer to "which one did I pick", readable at arm's length across a
+   table. */
+.ballot-row.is-picked {
+    background: var(--blood-dark);
+    border-color: var(--blood-glow);
+    box-shadow: var(--glow);
+}
+
+.ballot-mark {
+    flex: 0 0 1.1rem;
+    height: 1.1rem;
+    border: 1px solid var(--line);
+    position: relative;
+}
+
+.ballot-row.is-picked .ballot-mark {
+    background: var(--blood-glow);
+    border-color: var(--blood-glow);
+}
+
+.ballot-row.is-picked .ballot-mark::after {
+    content: "";
+    position: absolute;
+    inset: 0.18rem 0.3rem 0.28rem;
+    border-right: 2px solid var(--bg);
+    border-bottom: 2px solid var(--bg);
+    transform: rotate(42deg);
+}
+
+.ballot-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.ballot-state {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+}
+
+.ballot-row.is-picked .ballot-state {
+    color: rgba(232, 230, 227, 0.75);
+}
+
+/* ---------------- The verdict ---------------- */
+
+/* The one authored moment in the room flow: the result lands like a stamp
+   hitting the file, then everything under it settles in behind it. */
+.verdict {
+    margin: 0.5rem 0 1.6rem;
+    padding: 1.4rem 1rem;
+    border: 2px solid currentColor;
+    animation: verdictSlam 0.5s cubic-bezier(0.2, 0.85, 0.3, 1.05) both;
+}
+
+.verdict.is-agents {
+    color: var(--amber);
+    background: rgba(224, 168, 46, 0.07);
+}
+
+.verdict.is-spies {
+    color: var(--blood-glow);
+    background: rgba(193, 18, 31, 0.09);
+}
+
+.verdict-title {
+    font-family: "Black Ops One", sans-serif;
+    font-size: clamp(1.8rem, 8vw, 2.7rem);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 14px currentColor;
+}
+
+.verdict-sub {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-family: "Special Elite", monospace;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+}
+
+@keyframes verdictSlam {
+    from {
+        opacity: 0;
+        transform: scale(1.35) rotate(-2.5deg);
+        filter: blur(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+        filter: blur(0);
+    }
+}
+
+.verdict-accused {
+    margin-bottom: 1.6rem;
+    color: var(--ink);
+    font-family: "Black Ops One", sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.1em;
+}
+
+/* ---------------- The ballot tally ---------------- */
+
+.tally-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.tally-row {
+    display: grid;
+    grid-template-columns: minmax(4.5rem, 7rem) 1fr auto;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.tally-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tally-row.is-spy .tally-name {
+    color: var(--blood-glow);
+}
+
+.tally-bar {
+    height: 0.85rem;
+    background: rgba(232, 230, 227, 0.06);
+    overflow: hidden;
+}
+
+.tally-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: rgba(232, 230, 227, 0.22);
+    transform-origin: left center;
+    animation: tallyGrow 0.6s 0.25s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.tally-row.is-accused .tally-fill {
+    background: var(--blood);
+}
+
+.tally-count {
+    color: var(--ink);
+    font-family: "Black Ops One", sans-serif;
+    font-size: 0.86rem;
+}
+
+@keyframes tallyGrow {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .verdict,
+    .tally-fill,
+    .callvote-fill {
+        animation: none !important;
+        transition: none !important;
     }
 }

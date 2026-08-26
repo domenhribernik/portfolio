@@ -129,8 +129,15 @@ export function applyEvents(model, events, selfId) {
                 ops.push({ op: 'start' });
                 break;
             case 'end':
-                model.status = 'debrief';
+                // Questioning is over; the ballot opens. The verdict is a
+                // separate event, because the room sits in 'vote' until the
+                // last ballot is in.
+                model.status = 'vote';
                 ops.push({ op: 'end' });
+                break;
+            case 'verdict':
+                model.status = 'debrief';
+                ops.push({ op: 'verdict' });
                 break;
             case 'again':
                 model.status = 'lobby';
@@ -145,8 +152,8 @@ export function applyEvents(model, events, selfId) {
             case 'host':
                 ops.push({ op: 'host', id: ev.data?.id ?? null, mine: ev.data?.id === selfId });
                 break;
-            // 'ready' and 'settings' need no edge: the poll snapshot already
-            // carries the tally and the settings.
+            // 'ready', 'settings', 'callvote' and 'castvote' need no edge:
+            // the poll snapshot already carries every tally they move.
         }
     }
     return ops;
@@ -168,5 +175,79 @@ export function pollDelay({ status, hidden, failures }) {
     if (hidden) return 4000;
     if (status === 'round') return 3000;
     if (status === 'debrief') return 2500;
+    // The lobby, the briefing and the ballot all show a live count of who
+    // has acted, so they are the phases worth watching closely.
     return 1200;
+}
+
+// ------------------------------------------------------------------
+//  The call to vote
+// ------------------------------------------------------------------
+
+/**
+ * How many players must ask to stop questioning before the ballot opens.
+ * A simple majority. Mirrors endVoteThreshold() in spy-controller.php:
+ * change them in both.
+ */
+export function endVoteThreshold(seated) {
+    return Math.max(1, Math.floor(seated / 2) + 1);
+}
+
+// ------------------------------------------------------------------
+//  Translation
+// ------------------------------------------------------------------
+//
+// Both i18n tables are shaped the same way: one row per concept, one column
+// per language. That is the whole system. Adding Croatian means adding a
+// "hr" column to every row and listing it in `languages`; adding a word
+// means adding a row. Nothing here knows which languages exist.
+
+export const DEFAULT_LANG = 'en';
+
+/** Fills {name} placeholders from a plain object. Unknown ones are left be. */
+export function fillTemplate(text, vars) {
+    if (!vars) return text;
+    return String(text).replace(/\{(\w+)\}/g, (whole, key) =>
+        Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : whole);
+}
+
+/**
+ * One string from a table, in the requested language. Falls back to English
+ * and then to the key itself, so a language that is only half filled in
+ * still renders something a person can act on rather than a blank control.
+ */
+export function resolveString(table, lang, key, vars) {
+    const row = table?.strings?.[key];
+    if (!row) return key;
+    // An empty column counts as "not translated yet", so it falls through to
+    // English rather than showing a blank control.
+    const pick = (code) => (typeof row[code] === 'string' && row[code] !== '' ? row[code] : null);
+    const text = pick(lang) ?? pick(DEFAULT_LANG);
+    return text === null ? key : fillTemplate(text, vars);
+}
+
+/** Binds a table and a language into the `t(key, vars)` the page calls. */
+export function createTranslator(table, lang) {
+    return (key, vars) => resolveString(table, lang, key, vars);
+}
+
+/** The languages a table declares, always with English first and present. */
+export function tableLanguages(table) {
+    const list = Array.isArray(table?.languages) ? table.languages.filter((l) => typeof l === 'string') : [];
+    return list.length > 0 ? list : [DEFAULT_LANG];
+}
+
+/** Anything unrecognised becomes English, matching validateLang() in PHP. */
+export function normalizeLang(raw, table) {
+    const lang = String(raw ?? '').trim().toLowerCase();
+    return tableLanguages(table).includes(lang) ? lang : DEFAULT_LANG;
+}
+
+/**
+ * The right word for "spy" in a sentence that counts them. Slovene needs the
+ * accusative here ("razkrinkaj vohuna"), so the choice lives in the table as
+ * two rows rather than as an -s the page appends.
+ */
+export function spyWord(t, count) {
+    return count > 1 ? t('word.spies') : t('word.spy');
 }

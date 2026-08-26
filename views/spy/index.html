@@ -42,12 +42,12 @@
     </script>
     <link rel="stylesheet" href="style.css">
     <title>Spy Game | Find the Impostor Party Game</title>
-    <meta name="description" content="Everyone sees the location except the spy. Play on one phone passed round the table, or open a room and give everyone their own screen. Ask sharp questions and expose the spy before time runs out.">
+    <meta name="description" content="Everyone sees the location except the spy. Play on one phone passed round the table, or open a room and give everyone their own screen. Ask sharp questions and vote the spy out before time runs out.">
     <link rel="canonical" href="https://domenhribernik.com/views/spy/">
     <meta property="og:site_name" content="Domen Hribernik">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Spy Game">
-    <meta property="og:description" content="Everyone sees the location except the spy. Pass one phone round the table, or open a room so everyone plays on their own screen.">
+    <meta property="og:description" content="Everyone sees the location except the spy. Pass one phone round the table, or open a room so everyone plays on their own screen. Plays in English or Slovenian.">
     <meta property="og:url" content="https://domenhribernik.com/views/spy/">
     <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
     <meta property="og:image:width" content="1200">
@@ -62,7 +62,7 @@
     <div class="vignette" aria-hidden="true"></div>
 
     <!-- Persistent chrome -->
-    <a class="exit-link" href="/"><i class="fas fa-chevron-left"></i> EXIT</a>
+    <a class="exit-link" href="/"><i class="fas fa-chevron-left"></i> <span data-i18n="chrome.exit">EXIT</span></a>
     <div class="rec" aria-hidden="true"><span class="rec-dot"></span> REC</div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -72,66 +72,66 @@
         <!-- 1. BOOT / TITLE -->
         <section class="screen active" id="bootScreen">
             <div class="boot-log" aria-hidden="true">
-                <p>&gt; establishing secure channel...</p>
-                <p>&gt; encrypting payload... <span class="ok">OK</span></p>
-                <p>&gt; clearance level: <span class="redact">REDACTED</span></p>
-                <p>&gt; loading players... <span class="ok">READY</span></p>
+                <p data-i18n="boot.log1">&gt; establishing secure channel...</p>
+                <p><span data-i18n="boot.log2">&gt; encrypting payload...</span> <span class="ok" data-i18n="boot.ok">OK</span></p>
+                <p><span data-i18n="boot.log3">&gt; clearance level:</span> <span class="redact" data-i18n="boot.redacted">REDACTED</span></p>
+                <p><span data-i18n="boot.log4">&gt; loading players...</span> <span class="ok" data-i18n="boot.ready">READY</span></p>
             </div>
             <h1 class="wordmark glitch" data-text="SPY">SPY</h1>
-            <p class="subtitle">// THE GAME OF DECEPTION</p>
-            <button class="btn btn-primary" id="initiateBtn" type="button">&gt; NEW GAME</button>
-            <p class="fine-print">ONE PHONE OR ONE EACH · 3+ PLAYERS</p>
+            <p class="subtitle" data-i18n="boot.tagline">// THE GAME OF DECEPTION</p>
+            <button class="btn btn-primary" id="initiateBtn" type="button" data-i18n="boot.newGame">&gt; NEW GAME</button>
+            <p class="fine-print" data-i18n="boot.fineprint">ONE PHONE OR ONE EACH · 3+ PLAYERS</p>
         </section>
 
         <!-- 2. MODE SELECT -->
         <section class="screen" id="modeScreen">
-            <div class="stamp stamp-tr">CLASSIFIED</div>
-            <h2 class="screen-title">CHOOSE FORMAT</h2>
+            <div class="stamp stamp-tr" data-i18n="stamp.classified">CLASSIFIED</div>
+            <h2 class="screen-title" data-i18n="mode.title">CHOOSE FORMAT</h2>
 
             <div class="mode-list">
                 <button class="mode-card" id="modeSoloBtn" type="button">
                     <span class="mode-icon" aria-hidden="true"><i class="fas fa-mobile-screen-button"></i></span>
                     <span class="mode-body">
-                        <span class="mode-name">ONE PHONE</span>
-                        <span class="mode-desc">Pass this device round the table. Nothing to set up.</span>
+                        <span class="mode-name" data-i18n="mode.solo.name">ONE PHONE</span>
+                        <span class="mode-desc" data-i18n="mode.solo.desc">Pass this device round the table. Nothing to set up.</span>
                     </span>
                 </button>
                 <button class="mode-card" id="modeCreateBtn" type="button">
                     <span class="mode-icon" aria-hidden="true"><i class="fas fa-satellite-dish"></i></span>
                     <span class="mode-body">
-                        <span class="mode-name">OPEN A ROOM</span>
-                        <span class="mode-desc">Everyone plays on their own phone. You get a code to hand out.</span>
+                        <span class="mode-name" data-i18n="mode.create.name">OPEN A ROOM</span>
+                        <span class="mode-desc" data-i18n="mode.create.desc">Everyone plays on their own phone. You get a code to hand out.</span>
                     </span>
                 </button>
                 <button class="mode-card" id="modeJoinBtn" type="button">
                     <span class="mode-icon" aria-hidden="true"><i class="fas fa-key"></i></span>
                     <span class="mode-body">
-                        <span class="mode-name">JOIN A ROOM</span>
-                        <span class="mode-desc">Got a four letter code from the host? Take your seat.</span>
+                        <span class="mode-name" data-i18n="mode.join.name">JOIN A ROOM</span>
+                        <span class="mode-desc" data-i18n="mode.join.desc">Got a four letter code from the host? Take your seat.</span>
                     </span>
                 </button>
             </div>
 
-            <button class="btn btn-ghost" id="modeBackBtn" type="button">&lt; BACK</button>
+            <button class="btn btn-ghost" id="modeBackBtn" type="button" data-i18n="common.back">&lt; BACK</button>
         </section>
 
         <!-- 3. SETUP (one phone only) -->
         <section class="screen" id="setupScreen">
-            <div class="stamp stamp-tr">CLASSIFIED</div>
-            <h2 class="screen-title">GAME SETUP</h2>
+            <div class="stamp stamp-tr" data-i18n="stamp.classified">CLASSIFIED</div>
+            <h2 class="screen-title" data-i18n="setup.title">GAME SETUP</h2>
 
             <div class="field">
-                <label class="field-label">PLAYERS</label>
+                <label class="field-label" data-i18n="setup.players">PLAYERS</label>
                 <div class="stepper">
                     <button class="step-btn" id="playersMinus" type="button" aria-label="Fewer players">&minus;</button>
                     <span class="step-value" id="playersValue">5</span>
                     <button class="step-btn" id="playersPlus" type="button" aria-label="More players">+</button>
                 </div>
-                <p class="field-hint">3 to 20 players</p>
+                <p class="field-hint" data-i18n="setup.playersHint">3 to 20 players</p>
             </div>
 
             <div class="field">
-                <label class="field-label">SPIES IN PLAY</label>
+                <label class="field-label" data-i18n="setup.spies">SPIES IN PLAY</label>
                 <div class="stepper">
                     <button class="step-btn" id="spiesMinus" type="button" aria-label="Fewer spies">&minus;</button>
                     <span class="step-value" id="spiesValue">1</span>
@@ -140,60 +140,71 @@
                 <p class="field-hint" id="spiesHint">suggested: 1 · max: 3</p>
             </div>
 
-            <button class="btn btn-primary" id="deployBtn" type="button">&gt; DEAL ROLES</button>
-            <button class="btn btn-ghost" id="setupBackBtn" type="button">&lt; BACK</button>
+            <button class="btn btn-primary" id="deployBtn" type="button" data-i18n="setup.deal">&gt; DEAL ROLES</button>
+            <button class="btn btn-ghost" id="setupBackBtn" type="button" data-i18n="common.back">&lt; BACK</button>
         </section>
 
         <!-- 4. GATE (open / join a room) -->
         <section class="screen" id="gateScreen">
-            <div class="stamp stamp-tr">CLASSIFIED</div>
-            <h2 class="screen-title" id="gateTitle">OPEN A ROOM</h2>
-            <p class="muted-line" id="gateLead">// PICK A CODENAME</p>
+            <div class="stamp stamp-tr" data-i18n="stamp.classified">CLASSIFIED</div>
+            <h2 class="screen-title" id="gateTitle" data-i18n="gate.createTitle">OPEN A ROOM</h2>
+            <p class="muted-line" id="gateLead" data-i18n="gate.createLead">// PICK A CODENAME</p>
 
             <div class="field">
-                <label class="field-label" for="gateName">CODENAME</label>
+                <label class="field-label" for="gateName" data-i18n="gate.name">CODENAME</label>
                 <input class="text-input" id="gateName" type="text" maxlength="20" autocomplete="nickname"
-                    placeholder="e.g. FALCON" spellcheck="false">
+                    placeholder="e.g. FALCON" data-i18n-placeholder="gate.namePlaceholder" spellcheck="false">
             </div>
 
             <div class="field hidden" id="gateCodeField">
-                <label class="field-label" for="gateCode">ROOM CODE</label>
+                <label class="field-label" for="gateCode" data-i18n="gate.code">ROOM CODE</label>
                 <input class="text-input code-input" id="gateCode" type="text" maxlength="4" autocomplete="off"
                     autocapitalize="characters" spellcheck="false" placeholder="XXXX">
             </div>
 
+            <!-- The language is decided once, by whoever opens the room, and
+                 everyone who joins plays and reads in it. -->
+            <div class="field hidden" id="gateLangField">
+                <label class="field-label" for="gateLang" data-i18n="gate.language">LANGUAGE OF PLAY</label>
+                <div class="lang-picker">
+                    <select class="lang-select" id="gateLang"></select>
+                    <span class="lang-caret" aria-hidden="true">▾</span>
+                </div>
+                <p class="field-hint" data-i18n="gate.languageHint">everyone in the room plays in this language</p>
+            </div>
+
             <p class="gate-error hidden" id="gateError" role="alert"></p>
 
-            <button class="btn btn-primary" id="gateSubmitBtn" type="button">&gt; OPEN ROOM</button>
-            <button class="btn btn-ghost" id="gateBackBtn" type="button">&lt; BACK</button>
+            <button class="btn btn-primary" id="gateSubmitBtn" type="button" data-i18n="gate.createBtn">&gt; OPEN ROOM</button>
+            <button class="btn btn-ghost" id="gateBackBtn" type="button" data-i18n="common.back">&lt; BACK</button>
 
             <div class="reclaim hidden" id="reclaimBox">
-                <p class="muted-line">// OPERATION ALREADY RUNNING</p>
-                <p class="reclaim-lead">No new agents can be inserted mid-operation. If one of these
+                <p class="muted-line" data-i18n="gate.reclaimTitle">// OPERATION ALREADY RUNNING</p>
+                <p class="reclaim-lead" data-i18n="gate.reclaimLead">No new agents can be inserted mid-operation. If one of these
                     seats is yours, take it back and your role comes with it.</p>
                 <div class="seat-list" id="seatList"></div>
-                <p class="field-hint">A seat can only be taken back once its device has gone quiet.</p>
+                <p class="field-hint" data-i18n="gate.reclaimHint">A seat can only be taken back once its device has gone quiet.</p>
             </div>
         </section>
 
         <!-- 5. LOBBY (room only) -->
         <section class="screen" id="lobbyScreen">
-            <p class="signal" id="lobbySignal" aria-live="polite">SIGNAL SECURE</p>
-            <div class="stamp stamp-tr">STANDBY</div>
-            <h2 class="screen-title">SAFE HOUSE</h2>
+            <p class="signal" id="lobbySignal" aria-live="polite" data-i18n="signal.ok">SIGNAL SECURE</p>
+            <div class="stamp stamp-tr" data-i18n="stamp.standby">STANDBY</div>
+            <h2 class="screen-title" data-i18n="lobby.title">SAFE HOUSE</h2>
 
             <button class="code-plate" id="codePlate" type="button" aria-label="Copy the room code">
-                <span class="code-plate-label">ROOM CODE</span>
+                <span class="code-plate-label" data-i18n="lobby.roomCode">ROOM CODE</span>
                 <span class="code-plate-value" id="codePlateValue">----</span>
-                <span class="code-plate-hint" id="codePlateHint">[ TAP TO COPY ]</span>
+                <span class="code-plate-hint" id="codePlateHint" data-i18n="lobby.tapCopy">[ TAP TO COPY ]</span>
             </button>
 
-            <p class="hud-label">AGENTS ON SITE <span id="lobbyCount">1</span></p>
+            <p class="hud-label"><span data-i18n="lobby.agents">AGENTS ON SITE</span> <span id="lobbyCount">1</span></p>
             <div class="roster" id="lobbyRoster"></div>
 
             <div id="hostControls" class="hidden">
                 <div class="field">
-                    <label class="field-label">SPIES IN PLAY</label>
+                    <label class="field-label" data-i18n="lobby.spies">SPIES IN PLAY</label>
                     <div class="stepper">
                         <button class="step-btn" id="roomSpiesMinus" type="button" aria-label="Fewer spies">&minus;</button>
                         <span class="step-value" id="roomSpiesValue">1</span>
@@ -203,24 +214,24 @@
                 </div>
 
                 <div class="field">
-                    <label class="field-label">ROUND LENGTH</label>
+                    <label class="field-label" data-i18n="lobby.roundLength">ROUND LENGTH</label>
                     <div class="stepper">
                         <button class="step-btn" id="roomTimeMinus" type="button" aria-label="Shorter round">&minus;</button>
                         <span class="step-value" id="roomTimeValue">05:00</span>
                         <button class="step-btn" id="roomTimePlus" type="button" aria-label="Longer round">+</button>
                     </div>
-                    <p class="field-hint">a minute per agent is about right</p>
+                    <p class="field-hint" data-i18n="lobby.roundHint">a minute per agent is about right</p>
                 </div>
 
-                <button class="btn btn-primary" id="roomDealBtn" type="button">&gt; DEAL ROLES</button>
+                <button class="btn btn-primary" id="roomDealBtn" type="button" data-i18n="lobby.deal">&gt; DEAL ROLES</button>
             </div>
 
             <div id="guestWait" class="hidden">
-                <p class="wait-line">// STANDING BY FOR <span id="hostNameWait">THE HOST</span></p>
+                <p class="wait-line" id="hostNameWait">// STANDING BY FOR THE HOST</p>
                 <p class="field-hint" id="guestSettings"></p>
             </div>
 
-            <button class="btn btn-ghost" id="lobbyLeaveBtn" type="button">&lt; LEAVE ROOM</button>
+            <button class="btn btn-ghost" id="lobbyLeaveBtn" type="button" data-i18n="lobby.leave">&lt; LEAVE ROOM</button>
         </section>
 
         <!-- 6. BRIEFING -->
@@ -231,85 +242,125 @@
                 aria-label="Tap to reveal or hide your secret role">
                 <!-- lock state -->
                 <div class="brief-lock">
-                    <p class="muted-line" id="briefLockLabel">PASS DEVICE TO</p>
+                    <p class="muted-line" id="briefLockLabel" data-i18n="brief.passTo">PASS DEVICE TO</p>
                     <h2 class="brief-agent" id="briefAgent">PLAYER 1</h2>
-                    <p class="tap-hint">[ TAP TO REVEAL ]</p>
+                    <p class="tap-hint" data-i18n="brief.tapReveal">[ TAP TO REVEAL ]</p>
                 </div>
                 <!-- revealed state (filled by JS) -->
                 <div class="brief-role">
                     <div id="briefRole"></div>
-                    <p class="tap-hint">[ TAP TO HIDE ]</p>
+                    <p class="tap-hint" data-i18n="brief.tapHide">[ TAP TO HIDE ]</p>
                 </div>
                 <!-- done state -->
                 <div class="brief-done">
-                    <p class="muted-line">ROLE MEMORIZED</p>
+                    <p class="muted-line" data-i18n="brief.memorized">ROLE MEMORIZED</p>
                     <h2 class="brief-agent" id="briefAgentDone">PLAYER 1</h2>
-                    <p class="tap-hint" id="briefDoneHint">↓ pass it on</p>
+                    <p class="tap-hint" id="briefDoneHint" data-i18n="brief.passOn">↓ pass it on</p>
                 </div>
             </div>
 
-            <button class="btn btn-primary hidden" id="briefNextBtn" type="button">▶ NEXT PLAYER</button>
+            <button class="btn btn-primary hidden" id="briefNextBtn" type="button" data-i18n="brief.next">▶ NEXT PLAYER</button>
 
             <div class="brief-room hidden" id="briefRoom">
                 <p class="tally" id="briefTally">0 / 0 BRIEFED</p>
                 <div class="roster roster-sm" id="briefRoster"></div>
-                <button class="btn btn-primary hidden" id="briefStartBtn" type="button">▶ START ROUND</button>
-                <p class="field-hint hidden" id="briefWait">// WAITING FOR THE HOST TO START THE CLOCK</p>
+                <button class="btn btn-primary hidden" id="briefStartBtn" type="button" data-i18n="brief.startRound">▶ START ROUND</button>
+                <p class="field-hint hidden" id="briefWait" data-i18n="brief.waitStart">// WAITING FOR THE HOST TO START THE CLOCK</p>
             </div>
         </section>
 
         <!-- 7. ROUND -->
         <section class="screen" id="roundScreen">
-            <p class="signal hidden" id="roundSignal" aria-live="polite">SIGNAL SECURE</p>
-            <div class="stamp stamp-tr">LIVE</div>
-            <p class="hud-label">PLAYERS <span id="roundAgentCount"></span> · SPIES <span id="roundSpyCount"></span></p>
-            <h2 class="screen-title">FIND THE SPY</h2>
+            <p class="signal hidden" id="roundSignal" aria-live="polite" data-i18n="signal.ok">SIGNAL SECURE</p>
+            <div class="stamp stamp-tr" data-i18n="stamp.live">LIVE</div>
+            <p class="hud-label" id="roundHud">PLAYERS 5 · SPIES 1</p>
+            <h2 class="screen-title" data-i18n="round.title">FIND THE SPY</h2>
 
             <div class="timer" id="timerDisplay">05:00</div>
             <div class="timer-bar">
                 <div class="timer-bar-fill" id="timerProgress"></div>
             </div>
-            <p class="muted-line" id="pauseNote" hidden>// SURVEILLANCE PAUSED</p>
+            <p class="muted-line" id="pauseNote" hidden data-i18n="round.paused">// SURVEILLANCE PAUSED</p>
 
             <div class="btn-row" id="roundControls">
-                <button class="btn" id="pauseBtn" type="button">❚❚ PAUSE</button>
-                <button class="btn btn-danger" id="endRoundBtn" type="button">■ END ROUND</button>
+                <button class="btn" id="pauseBtn" type="button" data-i18n="round.pause">❚❚ PAUSE</button>
+                <button class="btn btn-danger" id="endRoundBtn" type="button" data-i18n="round.end">■ END ROUND</button>
             </div>
-            <p class="field-hint hidden" id="roundGuestNote">// THE HOST RUNS THE CLOCK</p>
+
+            <!-- Anyone can say "let's vote". The tally is the point: it is how
+                 the table watches agreement form without anyone insisting. -->
+            <div class="callvote hidden" id="callVoteBox">
+                <button class="btn btn-call" id="callVoteBtn" type="button" data-i18n="round.callVote">▶ CALL THE VOTE</button>
+                <div class="callvote-meter" aria-hidden="true"><div class="callvote-fill" id="callVoteFill"></div></div>
+                <p class="callvote-tally" id="callVoteTally" aria-live="polite">0 / 0 WANT TO VOTE</p>
+                <p class="field-hint" data-i18n="round.voteNudge">a majority ends the round early</p>
+            </div>
+
+            <p class="field-hint hidden" id="roundGuestNote" data-i18n="round.hostClock">// THE HOST RUNS THE CLOCK</p>
         </section>
 
-        <!-- 8. DEBRIEF / END -->
+        <!-- 8. THE BALLOT (room only) -->
+        <section class="screen" id="voteScreen">
+            <p class="signal" id="voteSignal" aria-live="polite" data-i18n="signal.ok">SIGNAL SECURE</p>
+            <div class="stamp stamp-tr" data-i18n="stamp.ballot">BALLOT</div>
+            <h2 class="screen-title" data-i18n="vote.title">WHO IS THE SPY?</h2>
+            <p class="vote-lead" data-i18n="vote.lead">Everyone picks at once, so nobody has to speak first. Nothing is
+                shown until the last ballot is in.</p>
+
+            <div class="ballot" id="ballotList"></div>
+
+            <p class="tally" id="voteTally" aria-live="polite">0 / 0 BALLOTS CAST</p>
+            <button class="btn btn-primary hidden" id="closeVoteBtn" type="button" data-i18n="vote.close">▶ CLOSE THE VOTE</button>
+            <p class="field-hint" id="voteWait" data-i18n="vote.waiting">// WAITING FOR THE OTHERS</p>
+        </section>
+
+        <!-- 9. DEBRIEF / END -->
         <section class="screen" id="debriefScreen">
-            <div class="stamp stamp-tr">CASE CLOSED</div>
-            <h1 class="wordmark-sm glitch" data-text="TIME'S UP">TIME'S UP</h1>
-            <p class="debrief-text">
-                Discuss and vote out your suspect. If the accused is a spy, they get one guess at the
-                location to steal the win.
-            </p>
+            <!-- One phone mode ends here: the table argues it out loud. -->
+            <div id="debriefSolo">
+                <h1 class="wordmark-sm glitch" data-text="TIME'S UP" data-i18n="debrief.timesUp">TIME'S UP</h1>
+                <p class="debrief-text" data-i18n="debrief.text">
+                    Discuss and vote out your suspect. If the accused is a spy, they get one guess at the
+                    location to steal the win.
+                </p>
+            </div>
+
+            <!-- Room mode ends on a verdict the ballot already settled. -->
+            <div id="verdictBlock" class="hidden">
+                <div class="verdict" id="verdict">
+                    <h1 class="verdict-title" id="verdictTitle">AGENTS WIN</h1>
+                    <p class="verdict-sub" id="verdictSub">the mole is burned</p>
+                </div>
+                <p class="muted-line" data-i18n="debrief.accused">ACCUSED</p>
+                <p class="verdict-accused" id="verdictAccused">----</p>
+                <div class="tally-chart" id="tallyChart"></div>
+            </div>
+
+            <div class="stamp stamp-tr" data-i18n="stamp.closed">CASE CLOSED</div>
 
             <div class="declassify">
-                <button class="btn" id="declassifyBtn" type="button">⊘ DECLASSIFY FILE</button>
+                <button class="btn" id="declassifyBtn" type="button" data-i18n="debrief.declassify">⊘ DECLASSIFY FILE</button>
                 <div class="declassify-result hidden" id="declassifyResult">
-                    <p class="muted-line">SPY DOSSIER</p>
+                    <p class="muted-line" data-i18n="debrief.dossier">SPY DOSSIER</p>
                     <p class="result-spies" id="resultSpies"></p>
-                    <p class="muted-line">LOCATION</p>
+                    <p class="muted-line" data-i18n="debrief.location">LOCATION</p>
                     <p class="result-location" id="resultLocation"></p>
                 </div>
             </div>
 
             <div class="btn-row col" id="debriefSoloActions">
-                <button class="btn btn-primary" id="playAgainBtn" type="button">▶ PLAY AGAIN <span class="btn-sub"
-                        id="playAgainSub"></span></button>
-                <button class="btn btn-ghost" id="changeSettingsBtn" type="button">⚙ CHANGE SETTINGS</button>
-                <button class="btn btn-ghost" id="mainMenuBtn" type="button">⌂ MAIN MENU</button>
+                <button class="btn btn-primary" id="playAgainBtn" type="button"><span
+                        data-i18n="debrief.playAgain">▶ PLAY AGAIN</span> <span class="btn-sub" id="playAgainSub"></span></button>
+                <button class="btn btn-ghost" id="changeSettingsBtn" type="button" data-i18n="debrief.changeSettings">⚙ CHANGE SETTINGS</button>
+                <button class="btn btn-ghost" id="mainMenuBtn" type="button" data-i18n="debrief.mainMenu">⌂ MAIN MENU</button>
             </div>
 
             <div class="btn-row col hidden" id="debriefRoomActions">
-                <button class="btn btn-primary hidden" id="roomAgainBtn" type="button">▶ NEW ROUND <span class="btn-sub"
-                        id="roomAgainSub"></span></button>
-                <button class="btn btn-ghost hidden" id="roomLobbyBtn" type="button">⚙ BACK TO THE SAFE HOUSE</button>
-                <p class="field-hint hidden" id="debriefWait">// WAITING FOR THE HOST</p>
-                <button class="btn btn-ghost" id="roomLeaveBtn" type="button">⌂ LEAVE ROOM</button>
+                <button class="btn btn-primary hidden" id="roomAgainBtn" type="button"><span
+                        data-i18n="debrief.newRound">▶ NEW ROUND</span> <span class="btn-sub" id="roomAgainSub"></span></button>
+                <button class="btn btn-ghost hidden" id="roomLobbyBtn" type="button" data-i18n="debrief.backToLobby">⚙ BACK TO THE SAFE HOUSE</button>
+                <p class="field-hint hidden" id="debriefWait" data-i18n="debrief.waitHost">// WAITING FOR THE HOST</p>
+                <button class="btn btn-ghost" id="roomLeaveBtn" type="button" data-i18n="debrief.leaveRoom">⌂ LEAVE ROOM</button>
             </div>
         </section>
 

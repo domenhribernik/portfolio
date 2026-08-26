@@ -93,7 +93,7 @@ export const projects = {
     category: "passion",
     gradient: "linear-gradient(45deg, #b24592 0%, #f15f79 100%)",
     title: "Spy Game",
-    description: "Everyone knows the location except one person. That person is the spy. Pass one phone round the table, or open a room so everyone gets their own screen and nobody has to look away.",
+    description: "Everyone knows the location except one person. That person is the spy. Pass one phone round the table, or open a room so everyone gets their own screen, votes in secret and finds out together who was lying. Plays in English or Slovenian.",
     links: {
       visitSite: "views/spy",
     },
