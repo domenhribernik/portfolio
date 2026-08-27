@@ -70,6 +70,7 @@ jobs:
             **/CLAUDE.md,
             views/store/PLAN.md,
             views/beseda/PLAN.md,
+            views/seam/NOTES.md,
             views/slovenia/**,
             views/quizz/**,
             views/download/**,

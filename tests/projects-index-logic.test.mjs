@@ -15,6 +15,7 @@ import { projects } from '../components/project-data.js';
 test('every FEATURED key exists in the live registry, in the agreed order', () => {
   assert.deepEqual(FEATURED, [
     'tells',
+    'seam',
     'trails',
     'nebo',
     'beseda',

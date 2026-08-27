@@ -89,6 +89,16 @@ export const projects = {
     },
     iconClass: "fas fa-music",
   },
+  seam: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #1f8a86 0%, #e0a11c 100%)",
+    title: "Seam",
+    description: "Connect four, except the ground keeps disappearing. Play into a column that is already full and the deepest row of the whole board is cut away, so every piece drops a row and the line you were building may be gone. You get three of those, and never two turns running.",
+    links: {
+      visitSite: "views/seam",
+    },
+    iconClass: "fas fa-layer-group",
+  },
   spyGame: {
     category: "passion",
     gradient: "linear-gradient(45deg, #b24592 0%, #f15f79 100%)",

@@ -81,6 +81,28 @@
       }
     },
     {
+      "path": "views/seam",
+      "name": "Seam",
+      "tier": "flagship",
+      "status": {
+        "title": "done",
+        "description": "done",
+        "canonical": "done",
+        "og": "done",
+        "jsonld": "done",
+        "h1": "done",
+        "crawlable": "partial",
+        "robots": "done",
+        "sitemap": "done",
+        "indexed": "todo",
+        "cwv": "unknown"
+      },
+      "notes": {
+        "crawlable": "the board is built in script.js, so a crawler sees the masthead, the h1 and the three ways in but never a section; the rules are static markup, which is the part worth indexing",
+        "indexed": "'connect four variant' and 'connect 4 online with friends' are the realistic queries; the twist is the only thing that differentiates it"
+      }
+    },
+    {
       "path": "/",
       "name": "Homepage",
       "tier": "flagship",

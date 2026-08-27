@@ -1,0 +1,1139 @@
+/* ==================================================================
+   SEAM // DIRECTION CONTRACT
+   ------------------------------------------------------------------
+   THESIS         Connect four drawn as a working geological section
+                  that consumes its own basement. Refuses the two
+                  arrangements this category always ships: the neon
+                  arcade cabinet, and the rounded pastel mobile board.
+
+   OWN-WORLD      A daylight survey plate on drafting linen. Drenched
+                  stratigraphic colour bands under standard lithology
+                  hatch, warm graphite hairlines, a metre-ruled depth
+                  scale, a legend, a heavy fault stroke with ticks.
+                  Nothing is elevated: a printed plate has no shadows,
+                  so structure is drawn in rules and hatch instead.
+                  Archivo at expanded width, Martian Mono for every
+                  measurement.
+
+   STORY          Two people share a link, the section opens, and they
+                  cut into seven shafts until one strikes a seam of
+                  four, or has the floor drawn out from under it.
+
+   FIRST VIEWPORT The plate fills the screen. A metre-ruled depth
+                  scale runs the full left side, seven shaft heads sit
+                  under the surface neatline, the opponent's permits
+                  sit above the section and yours below it.
+
+   FORM           Geological / block-cave mine section, chosen by hand:
+                  concept-seed.mjs will not roll without a root
+                  PRODUCT.md, which this repo does not have.
+   ------------------------------------------------------------------
+   Contrast ratios against the linen ground are noted on every ink.
+   This view deliberately does NOT load base-style.css: it commits to
+   its own world, and skipping it sidesteps the body-gradient gotcha
+   entirely.
+   ================================================================== */
+
+:root {
+    --linen: #e6e1d3;        /* the plate stock, warm, never white */
+    --linen-2: #dcd5c3;      /* recessed paper: fields, dead shafts */
+    --graphite: #221f1c;     /* 12.6:1 - every rule, hatch and heading */
+    --slate: #655e51;        /* 4.9:1 - secondary type */
+    --trench: #1a1712;       /* the void the drawn bed falls into */
+
+    /* Stratigraphic bands. Fills only: none of these is ever type. */
+    --triassic: #7b4ea8;
+    --jurassic: #1f8a86;
+    --olivine: #8bbf3f;
+    --devonian: #b5452a;
+    --carbon: #4a6b8a;
+
+    --ochre: #e0a11c;        /* seat 1 fill */
+    --ochre-ink: #7d5406;    /* 5.1:1 - seat 1 as type */
+    --azurite: #1a5fb4;      /* 4.8:1 - seat 2, fill and type */
+    --fault: #9e391f;        /* 5.3:1 - the fault stroke, and refusals */
+
+    --hair: rgba(34, 31, 28, 0.22);
+    --hair-firm: rgba(34, 31, 28, 0.42);
+
+    --cell: 44px;            /* measured from the rendered grid by script.js */
+    --ease-fall: cubic-bezier(0.45, 0, 0.75, 0.35);   /* gravity: slow, then fast */
+    --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    min-height: 100svh;
+    background: var(--linen);
+    color: var(--graphite);
+    font-family: Archivo, sans-serif;
+    font-variation-settings: 'wdth' 100;
+    line-height: 1.5;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* The drafting grid the plate is printed on. Pixel-snapped with round()
+   so the hairlines stay crisp on high-DPI screens. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        linear-gradient(to right, rgba(34, 31, 28, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(34, 31, 28, 0.05) 1px, transparent 1px);
+    background-size: round(6vmin, 1px) round(6vmin, 1px);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* ------------------------------------------------------------------
+   Chrome
+   ------------------------------------------------------------------ */
+
+.exit,
+.signal {
+    position: fixed;
+    top: max(0.85rem, env(safe-area-inset-top));
+    z-index: 30;
+    margin: 0;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+.exit {
+    left: max(0.9rem, env(safe-area-inset-left));
+    text-decoration: none;
+    border-bottom: 2px solid var(--hair-firm);
+    padding-bottom: 2px;
+}
+
+.exit::before { content: '\2039\00a0'; }
+.exit:hover,
+.exit:focus-visible { color: var(--graphite); border-bottom-color: var(--fault); }
+
+.signal {
+    right: max(0.9rem, env(safe-area-inset-right));
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.signal__pip {
+    width: 7px;
+    height: 7px;
+    background: var(--jurassic);
+    border: 1px solid var(--graphite);
+}
+
+.signal.is-down { color: var(--fault); }
+.signal.is-down .signal__pip { background: var(--fault); animation: blink 0.9s steps(2, start) infinite; }
+
+/* ------------------------------------------------------------------
+   The plate
+   ------------------------------------------------------------------ */
+
+.plate {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 4.2rem 1.1rem 2.5rem;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* The drafting title block: a name, a deck, and the plate's own metadata,
+   ruled off from the work below by the thick-over-thin double rule. */
+.titleblock {
+    padding-bottom: 0.7rem;
+    border-bottom: 3px solid var(--graphite);
+    margin-bottom: 0.22rem;
+}
+
+.titleblock::after {
+    content: '';
+    display: block;
+    margin: 0.7rem -1.1rem -0.92rem;
+    border-bottom: 1px solid var(--hair-firm);
+}
+
+.wordmark {
+    margin: 0;
+    font-size: clamp(3.1rem, 17vw, 5.4rem);
+    font-weight: 900;
+    font-variation-settings: 'wdth' 125, 'wght' 900;
+    line-height: 0.82;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+}
+
+.deck {
+    margin: 0.55rem 0 0;
+    max-width: 34ch;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.58rem;
+    font-weight: 500;
+    line-height: 1.6;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+.titleblock__meta {
+    margin: 0.45rem 0 0;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+/* Once a section is being worked, the title block folds down to a single
+   ruled strip. A plate you are reading wants its masthead; a plate you are
+   cutting into wants the room. */
+body.is-playing .titleblock {
+    display: flex;
+    align-items: baseline;
+    /* The double rule is a full-width row of its own: left inline it becomes
+       a flex item and shoves the metadata off the edge of the paper. */
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom-width: 2px;
+}
+
+body.is-playing .titleblock::after { flex: 1 0 100%; margin: 0.5rem -1.1rem -0.72rem; }
+
+body.is-playing .wordmark { font-size: 1.45rem; line-height: 1; }
+body.is-playing .deck { display: none; }
+body.is-playing .titleblock__meta { margin: 0 0 0 auto; }
+body.is-playing .plate { padding-top: 3.4rem; }
+body.is-playing .screen.is-open { padding-top: 0.9rem; }
+
+/* A plate taller than its section centres the workings in what is left,
+   rather than stranding them under the masthead with dead paper below. */
+body.is-playing #boardScreen.is-open,
+body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center; }
+
+/* ------------------------------------------------------------------
+   Screens
+   ------------------------------------------------------------------ */
+
+.screen { display: none; }
+
+.screen.is-open {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding-top: 1.7rem;
+    animation: plateIn 0.4s var(--ease-settle) both;
+}
+
+.screen__title {
+    margin: 0;
+    font-size: clamp(1.35rem, 6vw, 1.95rem);
+    font-weight: 800;
+    font-variation-settings: 'wdth' 112, 'wght' 800;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    text-wrap: balance;
+}
+
+.note {
+    margin: 0;
+    max-width: 46ch;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.6rem;
+    line-height: 1.75;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+.status {
+    margin: 0.2rem 0 0;
+    min-height: 1.2rem;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+/* ------------------------------------------------------------------
+   The doors: ruled index rows, not a grid of cards
+   ------------------------------------------------------------------ */
+
+.doors {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--hair-firm);
+}
+
+.door { border-bottom: 1px solid var(--hair-firm); }
+
+.door__hit {
+    display: flex;
+    align-items: center;
+    gap: 0.95rem;
+    width: 100%;
+    padding: 1.05rem 0.1rem;
+    background: none;
+    border: 0;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: background 0.15s ease, padding-left 0.15s var(--ease-settle);
+}
+
+.door__hit:hover,
+.door__hit:focus-visible { background: var(--linen-2); padding-left: 0.7rem; outline: none; }
+.door__hit:focus-visible { box-shadow: inset 3px 0 0 var(--fault); }
+
+.door__swatch {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1.5px solid var(--graphite);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.door__swatch--jurassic { background-color: var(--jurassic); background-image: var(--hatch-schist); }
+.door__swatch--devonian { background-color: var(--devonian); background-image: var(--hatch-sand); }
+.door__swatch--triassic { background-color: var(--triassic); background-image: var(--hatch-lime); }
+.door__swatch--olivine  { background-color: var(--olivine);  background-image: var(--hatch-congl); }
+.door__swatch--carbon   { background-color: var(--carbon);   background-image: var(--hatch-mud); }
+
+.door__text { display: flex; flex-direction: column; gap: 0.22rem; flex: 1 1 auto; min-width: 0; }
+
+.door__name {
+    font-size: 1.02rem;
+    font-weight: 800;
+    font-variation-settings: 'wdth' 108, 'wght' 800;
+    letter-spacing: 0.005em;
+    text-transform: uppercase;
+}
+
+.door__hint {
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+.door__arrow {
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--slate);
+    transition: transform 0.15s var(--ease-settle), color 0.15s ease;
+}
+
+.door__hit:hover .door__arrow,
+.door__hit:focus-visible .door__arrow { transform: translateX(4px); color: var(--fault); }
+
+.boot__foot { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+/* ------------------------------------------------------------------
+   The legend (how it works)
+   ------------------------------------------------------------------ */
+
+.legend { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hair-firm); }
+
+.legend__row {
+    display: flex;
+    gap: 0.95rem;
+    align-items: flex-start;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--hair-firm);
+}
+
+.legend__row p {
+    margin: 0;
+    max-width: 52ch;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--graphite);
+}
+
+.legend__key {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1.5px solid var(--graphite);
+    position: relative;
+    background: var(--linen-2);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Four cores in a line, with the fault stroke run through them. */
+.legend__key--seam {
+    background-image:
+        linear-gradient(to bottom, transparent calc(50% - 1.5px), var(--graphite) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
+        radial-gradient(circle at 16% 50%, var(--ochre) 0 12%, transparent 13%),
+        radial-gradient(circle at 39% 50%, var(--ochre) 0 12%, transparent 13%),
+        radial-gradient(circle at 61% 50%, var(--ochre) 0 12%, transparent 13%),
+        radial-gradient(circle at 84% 50%, var(--ochre) 0 12%, transparent 13%);
+}
+
+/* A stack of beds with the deepest one about to go. */
+.legend__key--cave {
+    background-image:
+        linear-gradient(to bottom, transparent 0 75%, var(--fault) 75% 100%),
+        repeating-linear-gradient(to bottom, transparent 0 calc(25% - 1px), var(--hair-firm) calc(25% - 1px) 25%);
+}
+
+/* Three permits, the last one already spent. */
+.legend__key--permit {
+    background-image:
+        radial-gradient(circle at 24% 50%, var(--graphite) 0 15%, transparent 16%),
+        radial-gradient(circle at 50% 50%, var(--graphite) 0 15%, transparent 16%),
+        radial-gradient(circle at 76% 50%, transparent 0 10%, var(--graphite) 11% 15%, transparent 16%);
+}
+
+/* ------------------------------------------------------------------
+   Fields
+   ------------------------------------------------------------------ */
+
+.fields { display: flex; flex-direction: column; gap: 1.05rem; margin: 0; border: 0; padding: 0; }
+
+.field { display: flex; flex-direction: column; gap: 0.4rem; margin: 0; border: 0; padding: 0; min-width: 0; }
+
+.field__label {
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--slate);
+    padding: 0;
+}
+
+.field__input {
+    width: 100%;
+    padding: 0.75rem 0.8rem;
+    background: var(--linen-2);
+    border: 1.5px solid var(--hair-firm);
+    border-radius: 0;
+    color: var(--graphite);
+    font-family: Archivo, sans-serif;
+    font-variation-settings: 'wdth' 100, 'wght' 600;
+    /* 16px stops iOS zooming the page on focus. */
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.field__input::placeholder { color: rgba(34, 31, 28, 0.38); }
+
+.field__input:focus {
+    outline: none;
+    background: var(--linen);
+    border-color: var(--graphite);
+    box-shadow: 0 3px 0 var(--fault);
+}
+
+.field__input--code {
+    font-family: 'Martian Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    padding-left: calc(0.8rem + 0.3em);
+    text-align: center;
+}
+
+.field__error {
+    margin: 0;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fault);
+}
+
+.langs { display: flex; gap: 0.5rem; }
+
+.lang {
+    padding: 0.5rem 0.85rem;
+    background: var(--linen-2);
+    border: 1.5px solid var(--hair-firm);
+    color: var(--slate);
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.lang.is-on { background: var(--graphite); border-color: var(--graphite); color: var(--linen); }
+.lang:focus-visible { outline: 2px solid var(--fault); outline-offset: 2px; }
+
+/* ------------------------------------------------------------------
+   Buttons
+   ------------------------------------------------------------------ */
+
+.btn {
+    display: block;
+    width: 100%;
+    padding: 0.95rem 1.1rem;
+    border: 1.5px solid var(--graphite);
+    border-radius: 0;
+    background: var(--linen);
+    color: var(--graphite);
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease, transform 0.06s ease;
+}
+
+.btn--primary { background: var(--graphite); color: var(--linen); }
+.btn--primary:hover { background: var(--fault); border-color: var(--fault); }
+.btn:hover { background: var(--linen-2); }
+.btn:active { transform: translateY(1.5px); }
+.btn:focus-visible { outline: 2px solid var(--fault); outline-offset: 3px; }
+
+.btn--ghost {
+    border-color: var(--hair-firm);
+    color: var(--slate);
+    font-size: 0.6rem;
+    padding: 0.72rem 1rem;
+}
+
+.btn--ghost:hover { color: var(--graphite); border-color: var(--graphite); }
+.btn--quiet { border-color: transparent; }
+.btn--quiet:hover { border-color: var(--hair-firm); }
+
+.btn[disabled] { opacity: 0.45; cursor: default; transform: none; }
+.btn[disabled]:hover { background: var(--linen); color: var(--graphite); }
+
+/* ------------------------------------------------------------------
+   The code plate
+   ------------------------------------------------------------------ */
+
+.codeplate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 1.5rem 1rem 1.3rem;
+    background-color: var(--linen-2);
+    background-image: var(--hatch-sand);
+    border: 2px solid var(--graphite);
+    border-radius: 0;
+    color: inherit;
+    cursor: pointer;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.codeplate:hover { background-color: var(--linen); }
+.codeplate:focus-visible { outline: 2px solid var(--fault); outline-offset: 3px; }
+
+.codeplate__label,
+.codeplate__hint {
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+.codeplate__code {
+    font-family: 'Martian Mono', monospace;
+    font-size: clamp(2.1rem, 12vw, 3rem);
+    font-weight: 700;
+    letter-spacing: 0.26em;
+    padding-left: 0.26em;
+    line-height: 1;
+}
+
+/* ------------------------------------------------------------------
+   Rosters
+   ------------------------------------------------------------------ */
+
+.roster { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hair-firm); }
+
+.roster__row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 0.1rem;
+    border-bottom: 1px solid var(--hair-firm);
+    animation: rowIn 0.35s var(--ease-settle) both;
+}
+
+.roster__core { flex: 0 0 auto; width: 1.4rem; height: 1.4rem; border-radius: 50%; border: 1.5px solid var(--graphite); }
+.roster__core--1 { background-color: var(--ochre); background-image: var(--hatch-core-1); }
+.roster__core--2 { background-color: var(--azurite); background-image: var(--hatch-core-2); }
+.roster__core--empty { background: var(--linen-2); border-style: dashed; }
+
+.roster__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    font-variation-settings: 'wdth' 105, 'wght' 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.roster__tag {
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+.roster__row.is-offline { opacity: 0.45; }
+
+.roster__take {
+    padding: 0.4rem 0.7rem;
+    background: var(--graphite);
+    color: var(--linen);
+    border: 0;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.roster__take[disabled] { background: none; color: var(--slate); cursor: default; }
+
+/* ------------------------------------------------------------------
+   The section
+   ------------------------------------------------------------------ */
+
+.hud {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.hud--away { border-bottom: 1px solid var(--hair-firm); }
+.hud--home { border-top: 1px solid var(--hair-firm); }
+
+.hud__core { flex: 0 0 auto; width: 1.15rem; height: 1.15rem; border-radius: 50%; border: 1.5px solid var(--graphite); }
+.hud__core--1 { background-color: var(--ochre); background-image: var(--hatch-core-1); }
+.hud__core--2 { background-color: var(--azurite); background-image: var(--hatch-core-2); }
+
+.hud__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    color: var(--graphite);
+}
+
+/* Whose cut it is, said twice: the seat's name inks to the fault colour and
+   the rule that separates it from the section thickens into the same red. */
+.hud.is-turn .hud__name { color: var(--fault); }
+.hud--away.is-turn { border-bottom: 2px solid var(--fault); padding-bottom: calc(0.55rem - 1px); }
+.hud--home.is-turn { border-top: 2px solid var(--fault); padding-top: calc(0.55rem - 1px); }
+
+/* Three permits, burning down. A spent one is an empty ring. */
+.hud__permits { display: flex; gap: 0.28rem; flex: 0 0 auto; }
+
+.permit {
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--graphite);
+    background: var(--graphite);
+}
+
+.permit.is-spent { background: none; }
+
+.hud__wins { font-weight: 700; color: var(--slate); flex: 0 0 auto; }
+
+.frame {
+    position: relative;
+    border: 2px solid var(--graphite);
+    background: var(--linen-2);
+}
+
+/* The shaft heads, above the surface neatline. */
+.shafts {
+    display: grid;
+    grid-template-columns: 2.6rem repeat(7, 1fr);
+    border-bottom: 2px solid var(--graphite);
+}
+
+.shafts__unit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--linen-2);
+    border-right: 2px solid var(--graphite);
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--slate);
+    text-decoration: none;
+    cursor: help;
+}
+
+.shaft {
+    position: relative;
+    padding: 0.55rem 0 0.5rem;
+    background: var(--linen);
+    border: 0;
+    border-left: 1px solid var(--hair);
+    color: var(--slate);
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.shaft:first-of-type { border-left: 0; }
+.shaft:hover:not([disabled]) { background: var(--linen-2); color: var(--graphite); }
+.shaft:focus-visible { outline: 2px solid var(--fault); outline-offset: -2px; }
+
+/* A shaft that is full but still playable: cutting here draws the bottom. */
+.shaft.is-draw {
+    color: var(--fault);
+    background-image: repeating-linear-gradient(135deg,
+        rgba(158, 57, 31, 0.16) 0 5px, transparent 5px 10px);
+}
+
+.shaft.is-draw::after {
+    content: '\25BC';
+    display: block;
+    font-size: 0.5rem;
+    line-height: 1;
+    margin-top: 0.2rem;
+}
+
+/* A shaft this seat can no longer cut into: hatched out, the way a
+   worked-out area is crossed off a mine plan. */
+.shaft[disabled] {
+    cursor: default;
+    color: rgba(34, 31, 28, 0.3);
+    background-image: repeating-linear-gradient(135deg,
+        var(--hair) 0 1px, transparent 1px 6px);
+}
+
+/* A core played above the rim of a full shaft, waiting outside the section
+   while the bottom is drawn to make room for it. */
+.held {
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-left: -0.75rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--graphite);
+    /* A knockout, not a glow: the rule behind the plate must not run through
+       an object sitting in front of it. */
+    box-shadow: 0 0 0 3px var(--linen);
+    animation: heldIn 0.26s var(--ease-settle) both, heldWait 0.9s ease-in-out 0.26s infinite;
+}
+
+.held--1 { background-color: var(--ochre); background-image: var(--hatch-core-1); background-size: 5px 5px; }
+.held--2 { background-color: var(--azurite); background-image: var(--hatch-core-2); background-size: 5px 5px; }
+
+.workings {
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+/* The depth scale: metres below datum, and deliberately FIXED. The
+   drawpoint does not move, the rock moves through it, so a scale that
+   renumbered on every cave would tell the opposite story to the one the
+   cores tell as they settle. What grows is the DRAWN tally in the title
+   block instead. */
+.scale {
+    flex: 0 0 2.6rem;
+    position: relative;
+    background: var(--linen);
+    border-right: 2px solid var(--graphite);
+    z-index: 2;
+}
+
+.scale__mark {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--cell);
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 0 0.32rem 0.12rem 0;
+    border-bottom: 1px solid var(--hair);
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--slate);
+}
+
+.stack { position: relative; flex: 1 1 auto; }
+
+.beds { position: absolute; inset: 0; overflow: hidden; }
+
+.beds__bands { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+
+.band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--cell);
+    border-bottom: 1px solid rgba(34, 31, 28, 0.3);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.band--0 { background-color: var(--carbon);   background-image: var(--hatch-mud); }
+.band--1 { background-color: var(--devonian); background-image: var(--hatch-sand); }
+.band--2 { background-color: var(--jurassic); background-image: var(--hatch-schist); }
+.band--3 { background-color: var(--triassic); background-image: var(--hatch-lime); }
+.band--4 { background-color: var(--olivine);  background-image: var(--hatch-congl); }
+
+.grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    aspect-ratio: 7 / 6;
+}
+
+.cell {
+    position: relative;
+    border-right: 1px solid rgba(34, 31, 28, 0.16);
+    border-bottom: 1px solid rgba(34, 31, 28, 0.16);
+}
+
+.cell:nth-child(7n) { border-right: 0; }
+.cell:nth-child(n + 36) { border-bottom: 0; }
+
+.core {
+    position: absolute;
+    inset: 11%;
+    border-radius: 50%;
+    border: 1.5px solid var(--graphite);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* The two seats differ by hatch as well as by hue, which is how a real
+   section separates one lithology from another, and it means the plate
+   still reads with no colour vision at all. */
+.core--1 { background-color: var(--ochre); background-image: var(--hatch-core-1); }
+.core--2 { background-color: var(--azurite); background-image: var(--hatch-core-2); }
+
+/* A core that just fell, from wherever it entered the shaft. */
+.core--fresh { animation: coreFall var(--fall-time, 0.34s) var(--ease-fall) both; }
+
+/* The whole section settling one bed as the bottom is drawn. The bands are
+   driven from script.js by their inline transform (they rest one bed high so
+   the overburden has somewhere to cave in from); the cores are driven here. */
+.stack.is-caving .core,
+.beds.is-caving .beds__bands { transition: transform 0.5s var(--ease-settle); }
+.stack.is-caving .core { transform: translateY(var(--cell)) translateZ(0); }
+
+/* ...and the bed being cut away, shearing into the trench. */
+.stack.is-caving .core--drawn {
+    transform: translateY(calc(var(--cell) * 1.9)) translateZ(0);
+    opacity: 0;
+    transition: transform 0.5s var(--ease-fall), opacity 0.42s ease-in 0.08s;
+}
+
+/* The fault: a heavy stroke with ticks, ripping across the foot of the
+   plate at the exact moment the bottom goes. */
+.trench {
+    position: relative;
+    height: 0.9rem;
+    background-color: var(--trench);
+    background-image: repeating-linear-gradient(135deg,
+        rgba(230, 225, 211, 0.09) 0 4px, transparent 4px 8px);
+    border-top: 2px solid var(--graphite);
+    overflow: hidden;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.trench__rule {
+    position: absolute;
+    left: 0;
+    top: -2px;
+    width: 100%;
+    height: 4px;
+    background: var(--fault);
+    transform: scaleX(0);
+    transform-origin: left center;
+}
+
+.frame.is-caving .trench__rule { animation: faultRip 0.62s var(--ease-settle) both; }
+
+/* The stroke drawn along a struck seam. */
+/* Sits inside .stack so it lines up with the grid exactly. Width and height
+   are both stated: an SVG given only a width takes its height from the
+   viewBox ratio, which drew the seam below the clipped grid. */
+.strike {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+    overflow: visible;
+}
+
+.strike line {
+    stroke: var(--graphite);
+    stroke-width: 3;
+    stroke-linecap: square;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: strikeIn 0.5s var(--ease-settle) 0.12s both;
+}
+
+/* ------------------------------------------------------------------
+   The verdict, stamped on the plate under the section it was struck in
+   ------------------------------------------------------------------ */
+
+.verdict {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 0.9rem;
+    border-top: 3px solid var(--graphite);
+}
+
+.verdict__who {
+    margin: 0;
+    font-size: clamp(1.3rem, 6.5vw, 1.9rem);
+    font-weight: 800;
+    font-variation-settings: 'wdth' 112, 'wght' 800;
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    text-wrap: balance;
+}
+
+.verdict__stamp {
+    align-self: flex-start;
+    margin: 0;
+    padding: 0.3rem 0.7rem;
+    border: 2px solid var(--fault);
+    color: var(--fault);
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transform: rotate(-2.2deg);
+    animation: stampIn 0.42s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.verdict__series {
+    margin: 0;
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+
+
+/* ------------------------------------------------------------------
+   The toast
+   ------------------------------------------------------------------ */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: max(1.1rem, env(safe-area-inset-bottom));
+    z-index: 40;
+    margin: 0;
+    max-width: min(30rem, calc(100vw - 2rem));
+    padding: 0.7rem 0.95rem;
+    background: var(--graphite);
+    color: var(--linen);
+    border-left: 4px solid var(--fault);
+    font-family: 'Martian Mono', monospace;
+    font-size: 0.58rem;
+    line-height: 1.6;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transform: translateX(-50%);
+    animation: toastIn 0.3s var(--ease-settle) both;
+}
+
+/* ------------------------------------------------------------------
+   Lithology hatch. Standard section patterns, drawn in gradients so
+   there is nothing to load.
+   ------------------------------------------------------------------ */
+
+:root {
+    /* Standard section patterns. Sandstone stipple, schist hatch, limestone
+       brick, conglomerate pebbles, mudstone bedding. */
+    --hatch-sand: radial-gradient(circle at 2px 2px, rgba(34, 31, 28, 0.36) 0 1.1px, transparent 1.3px);
+    --hatch-schist: repeating-linear-gradient(135deg,
+        rgba(34, 31, 28, 0.3) 0 1.5px, transparent 1.5px 7px);
+    --hatch-lime: repeating-linear-gradient(to bottom, rgba(34, 31, 28, 0.3) 0 1px, transparent 1px 9px),
+        repeating-linear-gradient(to right, rgba(34, 31, 28, 0.3) 0 1px, transparent 1px 16px);
+    --hatch-congl: radial-gradient(circle at 5px 6px, rgba(34, 31, 28, 0.32) 0 2.6px, transparent 2.8px),
+        radial-gradient(circle at 13px 14px, rgba(34, 31, 28, 0.26) 0 3.4px, transparent 3.6px);
+    --hatch-mud: repeating-linear-gradient(to bottom, rgba(34, 31, 28, 0.26) 0 1px, transparent 1px 5px);
+    --hatch-core-1: radial-gradient(circle at 2px 2px, rgba(34, 31, 28, 0.42) 0 1.1px, transparent 1.3px);
+    --hatch-core-2: repeating-linear-gradient(45deg,
+        rgba(230, 225, 211, 0.38) 0 1.5px, transparent 1.5px 5px);
+}
+
+/* Each pattern has its own natural scale; one shared tile size would make
+   half of them read as noise and the other half as empty. */
+.band--0, .door__swatch--carbon   { background-size: 5px 5px; }
+.band--1, .door__swatch--devonian,
+.codeplate                        { background-size: 6px 6px; }
+.band--2, .door__swatch--jurassic { background-size: auto; }
+.band--3, .door__swatch--triassic { background-size: 16px 9px, 16px 9px; }
+.band--4, .door__swatch--olivine  { background-size: 20px 20px, 20px 20px; }
+.core { background-size: 5px 5px; }
+
+/* ------------------------------------------------------------------
+   Motion
+   ------------------------------------------------------------------ */
+
+@keyframes plateIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes rowIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes stampIn {
+    from { opacity: 0; transform: rotate(-2.2deg) scale(1.5); }
+    to { opacity: 1; transform: rotate(-2.2deg) scale(1); }
+}
+
+@keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.2; }
+}
+
+/* Gravity, then a short settle: a core that has just landed compresses
+   a fraction into its bed rather than stopping dead. */
+@keyframes coreFall {
+    from { transform: translateY(var(--fall-from, -300%)) translateZ(0); }
+    72% { transform: translateY(0) scaleY(0.9) scaleX(1.06) translateZ(0); }
+    100% { transform: translateY(0) scale(1) translateZ(0); }
+}
+
+@keyframes heldIn {
+    from { opacity: 0; transform: translateY(-14px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* It cannot settle, because there is nowhere for it to go yet. */
+@keyframes heldWait {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+@keyframes faultRip {
+    from { transform: scaleX(0); }
+    55% { transform: scaleX(1); }
+    100% { transform: scaleX(1); opacity: 0; }
+}
+
+@keyframes strikeIn {
+    to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .screen.is-open,
+    .roster__row,
+    .toast,
+    .verdict__stamp,
+    .core--fresh { animation: none; }
+    .held { animation: none; }
+
+    /* The cave still has to be legible without moving anything, so the
+       section simply cuts to its settled state. */
+    .stack.is-caving .core,
+    .beds.is-caving .beds__bands { transition: none; }
+    .frame.is-caving .trench__rule { animation: none; }
+    .strike line { animation: none; stroke-dashoffset: 0; }
+    .door__hit,
+    .door__arrow,
+    .btn { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   Wider than a phone: the plate gets air, never a second column. A
+   section is read as one tall drawing.
+   ------------------------------------------------------------------ */
+
+@media (min-width: 620px) {
+    .plate { padding: 5rem 1.6rem 3rem; }
+    body.is-playing .titleblock::after { margin-left: -1.6rem; margin-right: -1.6rem; }
+    .titleblock::after { margin-left: -1.6rem; margin-right: -1.6rem; }
+    .deck { font-size: 0.62rem; }
+    .shafts { grid-template-columns: 3rem repeat(7, 1fr); }
+    .scale { flex-basis: 3rem; }
+    .scale__mark { font-size: 0.55rem; }
+}
+
+/* On a real drafting sheet the plate gets a little more room. Still one
+   column: a section is read as one tall drawing, never split. */
+@media (min-width: 900px) {
+    .plate { max-width: 720px; }
+}
