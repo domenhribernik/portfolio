@@ -11,7 +11,7 @@ import {
     normalizeCode, isValidCode, cleanName, isValidName,
     createRoomModel, applyEvents, pollDelay, endVoteThreshold, VOTE_GRACE_SECONDS,
     DEFAULT_LANG, fillTemplate, resolveString, createTranslator,
-    tableLanguages, normalizeLang, spyWord,
+    tableLanguages, normalizeLang, spyWord, hasString,
 } from '../views/spy/logic.js';
 
 // ------------------------------------------------------------------
@@ -268,6 +268,23 @@ test('the vote leaves a grace period long enough to change your mind in', () => 
     // switch, since their own ballot closed the room.
     assert.ok(VOTE_GRACE_SECONDS >= 5, 'too short to actually reach for the phone');
     assert.ok(VOTE_GRACE_SECONDS <= 30, 'long enough to stall the table');
+});
+
+test('hasString tells a caller with no markup fallback that the table is short', () => {
+    // resolveString answers a missing row with the key itself, which is right
+    // for the page's [data-i18n] elements (they keep the English in the
+    // markup) and wrong for text JS writes from nothing. A phone that loaded
+    // the page before a row was added holds that older table in memory for as
+    // long as the tab is open, so this is not hypothetical.
+    const stale = { languages: ['en'], strings: { 'vote.waiting': { en: '// WAITING' } } };
+    assert.equal(hasString(stale, 'vote.waiting'), true);
+    assert.equal(hasString(stale, 'vote.grace'), false, 'the row this tab has never heard of');
+    assert.equal(resolveString(stale, 'en', 'vote.grace', { n: 4 }), 'vote.grace',
+        'and resolving it anyway is what printed a key at players');
+    // A table that failed to load at all is the same answer, not a crash.
+    assert.equal(hasString(null, 'vote.grace'), false);
+    assert.equal(hasString(undefined, 'vote.grace'), false);
+    assert.equal(hasString({}, 'vote.grace'), false);
 });
 
 test('the constants duplicated into spy-controller.php still agree with it', () => {

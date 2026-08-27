@@ -15,7 +15,7 @@ import {
     formatClock, dealRoles, pickLocation,
     normalizeCode, isValidCode, cleanName, isValidName,
     createRoomModel, applyEvents, pollDelay, endVoteThreshold, VOTE_GRACE_SECONDS,
-    DEFAULT_LANG, createTranslator, tableLanguages, normalizeLang, spyWord,
+    DEFAULT_LANG, createTranslator, tableLanguages, normalizeLang, spyWord, hasString,
 } from './logic.js';
 
 const API = '../../app/controllers/spy-controller.php';
@@ -131,9 +131,14 @@ async function post(action, payload) {
 // ------------------------------------------------------------------
 
 async function loadTables() {
+    // 'no-cache' REVALIDATES, it does not skip the cache: an unchanged table
+    // still comes back as a bodyless 304. force-cache was the wrong trade
+    // here, because it serves a stale copy without ever asking, so a returning
+    // phone kept a table from before the last deploy and rendered every string
+    // added since as its raw key.
     const [ui, loc] = await Promise.all([
-        fetch('i18n/ui.json', { cache: 'force-cache' }).then((r) => r.json()),
-        fetch('i18n/locations.json', { cache: 'force-cache' }).then((r) => r.json()),
+        fetch('i18n/ui.json', { cache: 'no-cache' }).then((r) => r.json()),
+        fetch('i18n/locations.json', { cache: 'no-cache' }).then((r) => r.json()),
     ]);
     uiTable = ui;
     locTable = loc;
@@ -1122,7 +1127,9 @@ function renderVote() {
     // it is repainted here rather than left to its data-i18n default: the
     // countdown can be disarmed again by a late switch, and the stale line
     // would otherwise still invite a change nobody is waiting for.
-    $('voteWait').textContent = closing ? t('vote.graceHint') : t('vote.waiting');
+    $('voteWait').textContent = closing && hasString(uiTable, 'vote.graceHint')
+        ? t('vote.graceHint')
+        : t('vote.waiting');
     show('voteWait', closing || !session.you.host);
 }
 
@@ -1153,7 +1160,15 @@ function stopGraceClock() {
 function paintGraceClock() {
     if (!graceBase) return;
     const left = Math.max(0, graceBase.left - Math.floor((Date.now() - graceBase.at) / 1000));
-    $('voteGrace').textContent = t('vote.grace', { n: left });
+    // Every other string on the page ships its English in the markup, so a
+    // table that cannot say it is invisible. These two are written from
+    // scratch by JS and have nothing to fall back on, and t() returns the raw
+    // key for a row it does not have: a tab opened before the row existed
+    // would print "vote.grace" at people. A bare number says the same thing in
+    // every language, so degrade to that rather than to a key.
+    $('voteGrace').textContent = hasString(uiTable, 'vote.grace')
+        ? t('vote.grace', { n: left })
+        : String(left);
 }
 
 function castVote(targetId) {

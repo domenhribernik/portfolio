@@ -167,6 +167,24 @@ is why the round polls lazily (3s) without the countdown stuttering.
   page has no English in its JavaScript at all; if you find yourself typing a
   sentence into `script.js`, it belongs in the table with a `data-i18n` hook
   or a `t()` call.
+
+- **A string only `t()` writes has no fallback, so guard it with
+  `hasString()`.** `resolveString` answers a row it does not have with the key
+  itself. That is the right answer for a `data-i18n` element, because the
+  markup ships English and the reader never sees the miss. Text written into an
+  element that starts empty has nothing to fall back on, so the same miss
+  prints `vote.grace` at a player. This is not hypothetical: a tab holds the
+  table it fetched at load for as long as it stays open, so the phones in one
+  room can be running different vintages of `ui.json` and only the ones opened
+  before the row existed break. Substitute something language-neutral (the bare
+  number, for the countdown) rather than a key.
+
+- **The i18n tables are fetched `no-cache`, and must stay that way.** That
+  revalidates rather than skipping the cache, so an unchanged table still costs
+  only a bodyless 304. They were once `force-cache`, which serves a stale copy
+  without ever asking: every string added after a phone's first visit rendered
+  as its raw key, forever. A translation table you cannot update is worth more
+  than the request it saves.
 - **Constants are duplicated on purpose**: `MIN_ROUND_SECONDS`,
   `MAX_ROUND_SECONDS`, `ROUND_STEP_SECONDS`, `VOTE_GRACE_SECONDS` and the
   `spyMax` rule live in both [logic.js](logic.js) and `spy-controller.php`.

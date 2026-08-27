@@ -55,7 +55,7 @@ const ROUND_STEP_SECONDS = 60;
 // Once the last seated ballot lands, the vote does not slam shut: it arms
 // this countdown, and any ballot changed while it runs disarms and re-arms it.
 // Mirrored in views/spy/logic.js: change them in both.
-const VOTE_GRACE_SECONDS = 10;
+const VOTE_GRACE_SECONDS = 5;
 // Rooms idle this long are purged whenever someone opens a new room.
 const IDLE_ROOM_HOURS = 6;
 // Events per poll page; a client that gets a full page polls again at once.

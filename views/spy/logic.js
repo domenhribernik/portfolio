@@ -208,7 +208,7 @@ export function endVoteThreshold(seated) {
  * mind. Any ballot cast while it runs restarts it. Mirrors
  * VOTE_GRACE_SECONDS in spy-controller.php: change them in both.
  */
-export const VOTE_GRACE_SECONDS = 10;
+export const VOTE_GRACE_SECONDS = 5;
 
 // ------------------------------------------------------------------
 //  Translation
@@ -241,6 +241,17 @@ export function resolveString(table, lang, key, vars) {
     const pick = (code) => (typeof row[code] === 'string' && row[code] !== '' ? row[code] : null);
     const text = pick(lang) ?? pick(DEFAULT_LANG);
     return text === null ? key : fillTemplate(text, vars);
+}
+
+/**
+ * Whether a table can actually say this key at all. `resolveString` answers a
+ * row it does not have with the key itself, which is the right answer for a
+ * caller that has English in its markup to fall back on and the wrong one for
+ * a caller writing text from nothing: that one prints "vote.grace" at a
+ * player. Ask this first and substitute something language-neutral instead.
+ */
+export function hasString(table, key) {
+    return Boolean(table?.strings?.[key]);
 }
 
 /** Binds a table and a language into the `t(key, vars)` the page calls. */

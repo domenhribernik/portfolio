@@ -156,6 +156,21 @@ function runOutGrace(PDO $pdo, array $player): array
     return poll($player)['body'];
 }
 
+/**
+ * The grace period the controller actually compiles in. Read rather than
+ * hard-coded so tuning the constant cannot quietly loosen the assertions that
+ * are supposed to bound it.
+ */
+function graceSeconds(): int
+{
+    $php = file_get_contents(DOC_ROOT . '/app/controllers/spy-controller.php');
+    if (!preg_match('/^const\s+VOTE_GRACE_SECONDS\s*=\s*(\d+)\s*;/m', (string) $php, $m)) {
+        fwrite(STDERR, "spy-controller.php no longer declares VOTE_GRACE_SECONDS\n");
+        exit(1);
+    }
+    return (int) $m[1];
+}
+
 // ------------------------------------------------------------------
 //  Server lifecycle
 // ------------------------------------------------------------------
@@ -459,8 +474,9 @@ $armed = poll($marko)['body'];
 check('the last ballot arms the grace countdown instead of closing the vote',
     $armed['room']['status'] === 'vote'
     && $armed['room']['graceLeft'] !== null
-    && $armed['room']['graceLeft'] <= 10,
-    'graceLeft: ' . json_encode($armed['room']['graceLeft']));
+    && $armed['room']['graceLeft'] > 0
+    && $armed['room']['graceLeft'] <= graceSeconds(),
+    'graceLeft: ' . json_encode($armed['room']['graceLeft']) . ', grace is ' . graceSeconds() . 's');
 
 $done = runOutGrace($pdo, $marko);
 check('the countdown running out closes the vote', $done['room']['status'] === 'debrief');
