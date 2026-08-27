@@ -14,6 +14,60 @@ Everything else is already wired.
 
 Pass-the-plate and the bot work without it. Only room mode needs the tables.
 
+## The four bugs you reported, and what was actually wrong
+
+All four were real, and three of them had a cause worth knowing about.
+
+**You could only click the numbers.** Now the whole column is a hit area, and
+hovering or focusing it shows a dashed ghost core in the exact bed the piece
+will land in. The numbered heads are still the keyboard and screen-reader
+control, so a shaft still has one tab stop rather than two.
+
+**The drop wasn't nice.** Two separate faults. The distance was written as a
+percentage, which CSS reads as a fraction of *the core's own height* rather
+than of a bed, so every row fell short by a different amount and the top row
+travelled almost nothing in 0.18s. And the piece it animated was the **lowest**
+core in the column, not the one you just played: from the second piece in any
+column onward, you were watching somebody else's core fall from the sky. Cores
+now launch from a drawn collar above the datum, fall under one constant
+acceleration, and land with a compression and a survey tick.
+
+**The row removal didn't look nice.** Everything moved at once, so a hole never
+appeared: the basement and the overburden travelled together and it read as
+"the colours scrolled" while the bottom row dissolved in place. It is now three
+beats, cut then void then collapse, so you see the floor leave, see the gap it
+leaves, and then watch the rock fall into it.
+
+**The line wasn't connected.** This was the sharpest bug of the four. The seam
+used `stroke-dasharray: 200` against a non-scaling stroke, which makes the dash
+**200 screen pixels** rather than 200 units of board. A horizontal seam on a
+phone is 191px, so it just squeaked under and looked fine; a diagonal is 271px
+and a horizontal on a desktop plate is 338px. Both painted 200 pixels of line
+and stopped in mid-air. **You were almost certainly seeing this on a laptop or
+on a diagonal, and it would have looked fine to me on a phone.** Nothing
+computes a dash from a literal any more.
+
+While fixing it I also changed what a struck seam looks like, because a heavy
+stroke through four centres reads as a row being *crossed out*, which is the
+opposite of finding something. It is now a hatched corridor of ore running
+behind the four cores, ticked like a fault, with the winning four ringed and
+the rest of the plate drained.
+
+## Three more I found while in there
+
+Not reported, but they would have bitten a real player.
+
+1. **The i18n table was fetched `force-cache`.** That serves a stale copy
+   without ever asking, so any string added after someone's first visit would
+   render as a raw key on their device forever. `views/spy/CLAUDE.md` documents
+   this exact trade as a mistake; SEAM shipped with it anyway. Now `no-cache`,
+   which still costs only a bodyless 304 when nothing changed.
+2. **A tap during the drop was silently swallowed.** The plate refuses input
+   while it animates, and the lock was held through the landing squash as well
+   as the fall. It now lifts the moment the core is in its bed.
+3. **"DRAWING THE BOTTOM" outlived the cave** on the opponent's plate by about
+   a second, because only the next poll rewrote that line.
+
 ## The finding that changes the game
 
 **A cave can never hand the win to your opponent, and two seams at once cannot

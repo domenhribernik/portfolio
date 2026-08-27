@@ -57,8 +57,20 @@
     --hair-firm: rgba(34, 31, 28, 0.42);
 
     --cell: 44px;            /* measured from the rendered grid by script.js */
-    --ease-fall: cubic-bezier(0.45, 0, 0.75, 0.35);   /* gravity: slow, then fast */
+    /* The depth-scale gutter. Three rows have to line up with it exactly, so
+       it is one token rather than the same literal written three times. */
+    --gutter: 2.6rem;
+    /* The drop lane above the datum, in beds. The stack's clip opens by
+       exactly this much, so the two cannot drift apart. */
+    --collar: 1.2;
+    /* The drawpoint. The stack's clip closes exactly here, so a bed shearing
+       out of the section is swallowed rather than escaping onto the HUD. */
+    --trench-h: 1.5rem;
+
+    --ease-gravity: cubic-bezier(0.36, 0, 0.66, 0.28);  /* s = t^2, near enough */
     --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+    /* Rock dropping into a void it can see: a little past, then home. */
+    --ease-collapse: cubic-bezier(0.3, 1.3, 0.6, 1);
 }
 
 *,
@@ -691,11 +703,12 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
     background: var(--linen-2);
 }
 
-/* The shaft heads, above the surface neatline. */
+/* The shaft heads. These are still the labelled, focusable control for each
+   shaft; the column below is a second hit area onto the same one. */
 .shafts {
     display: grid;
-    grid-template-columns: 2.6rem repeat(7, 1fr);
-    border-bottom: 2px solid var(--graphite);
+    grid-template-columns: var(--gutter) repeat(7, 1fr);
+    border-bottom: 1px solid var(--hair-firm);
 }
 
 .shafts__unit {
@@ -729,7 +742,9 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
 }
 
 .shaft:first-of-type { border-left: 0; }
-.shaft:hover:not([disabled]) { background: var(--linen-2); color: var(--graphite); }
+/* .is-hot is set from either hit area, so lighting the column lights its head
+   and lighting the head lights the column. */
+.shaft.is-hot:not([disabled]) { background: var(--linen-2); color: var(--graphite); }
 .shaft:focus-visible { outline: 2px solid var(--fault); outline-offset: -2px; }
 
 /* A shaft that is full but still playable: cutting here draws the bottom. */
@@ -756,21 +771,66 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
         var(--hair) 0 1px, transparent 1px 6px);
 }
 
-/* A core played above the rim of a full shaft, waiting outside the section
-   while the bottom is drawn to make room for it. */
+/* ------------------------------------------------------------------
+   The collars: the drop lane between the shaft heads and the datum
+   ------------------------------------------------------------------
+   Every core is released at the top of this lane and crosses the datum
+   in full view, which is what gives a drop a cause you can see and lets
+   the basement honestly take twice as long to reach as the top bed.
+   It is also where a core waits while the bottom is drawn out for it:
+   over its own shaft, on the plate. It used to hang above the shaft
+   heads entirely, where it collided with the opponent's HUD rule.
+   ------------------------------------------------------------------ */
+
+.collar {
+    display: flex;
+    height: calc(var(--cell) * var(--collar));
+    background: var(--linen);
+    /* The datum. The heaviest rule on the plate, because every depth the
+       game quotes is measured down from it. */
+    border-bottom: 2px solid var(--graphite);
+}
+
+.collar__gutter {
+    flex: 0 0 var(--gutter);
+    background: var(--linen);
+    border-right: 2px solid var(--graphite);
+}
+
+/* Seven open shafts sunk through the topsoil to the datum. Drawn rather than
+   left blank: this band is a sixth of the plate's height, and empty paper
+   there reads as a rendering fault rather than as ground. */
+.collar__shafts {
+    position: relative;
+    flex: 1 1 auto;
+    background-image:
+        /* the shaft walls, and the open bore between them */
+        linear-gradient(to right,
+            transparent 0 30%,
+            var(--hair-firm) 30% calc(30% + 1px),
+            var(--linen) calc(30% + 1px) calc(70% - 1px),
+            var(--hair-firm) calc(70% - 1px) 70%,
+            transparent 70% 100%),
+        /* topsoil */
+        radial-gradient(circle at 2px 2px, rgba(34, 31, 28, 0.17) 0 1px, transparent 1.3px);
+    background-size: calc(100% / 7) 100%, 7px 7px;
+}
+
+/* A core played above the rim of a full shaft, waiting in its collar while
+   the bottom is drawn to make room for it. */
 .held {
     position: absolute;
-    bottom: calc(100% + 0.5rem);
-    left: 50%;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-left: -0.75rem;
+    top: 12%;
+    left: calc((var(--col) + 0.5) * 100% / 7);
+    width: calc(var(--cell) * 0.78);
+    height: calc(var(--cell) * 0.78);
+    margin-left: calc(var(--cell) * -0.39);
     border-radius: 50%;
     border: 1.5px solid var(--graphite);
-    /* A knockout, not a glow: the rule behind the plate must not run through
-       an object sitting in front of it. */
+    /* A knockout, not a glow: the shaft hairline behind the plate must not
+       run through an object sitting in front of it. */
     box-shadow: 0 0 0 3px var(--linen);
-    animation: heldIn 0.26s var(--ease-settle) both, heldWait 0.9s ease-in-out 0.26s infinite;
+    animation: heldIn 0.24s var(--ease-settle) both, heldWait 0.9s ease-in-out 0.24s infinite;
 }
 
 .held--1 { background-color: var(--ochre); background-image: var(--hatch-core-1); background-size: 5px 5px; }
@@ -779,7 +839,6 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
 .workings {
     display: flex;
     position: relative;
-    overflow: hidden;
 }
 
 /* The depth scale: metres below datum, and deliberately FIXED. The
@@ -788,7 +847,7 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
    cores tell as they settle. What grows is the DRAWN tally in the title
    block instead. */
 .scale {
-    flex: 0 0 2.6rem;
+    flex: 0 0 var(--gutter);
     position: relative;
     background: var(--linen);
     border-right: 2px solid var(--graphite);
@@ -812,9 +871,30 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
     color: var(--slate);
 }
 
-.stack { position: relative; flex: 1 1 auto; }
+.stack {
+    position: relative;
+    flex: 1 1 auto;
+    /* Open above the datum, so a falling core is visible in its collar.
+       Open below the floor, so a drawn bed shears out of the section instead
+       of dissolving where it stands. Closed left and right, and the trench
+       paints over the strip below the floor, so nothing ever escapes onto
+       the HUD. `overflow` cannot express this: it clips four sides or none.
+       clip-path also makes this a stacking context, which is what keeps the
+       cores under the trench lip rather than over it. */
+    clip-path: inset(
+        calc(var(--cell) * var(--collar) * -1) 0 calc(var(--trench-h) * -1) 0);
+}
 
-.beds { position: absolute; inset: 0; overflow: hidden; }
+.beds {
+    position: absolute;
+    inset: 0;
+    /* The drawpoint, seen for one beat through the hole the drawn bed leaves
+       before the overburden collapses into it. */
+    background: var(--trench);
+    /* Closed at the top so the band waiting above the datum stays hidden,
+       open at the floor so the bed being drawn can shear out of view. */
+    clip-path: inset(0 0 calc(var(--trench-h) * -1) 0);
+}
 
 .beds__bands { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
 
@@ -867,28 +947,74 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
 .core--1 { background-color: var(--ochre); background-image: var(--hatch-core-1); }
 .core--2 { background-color: var(--azurite); background-image: var(--hatch-core-2); }
 
-/* A core that just fell, from wherever it entered the shaft. */
-.core--fresh { animation: coreFall var(--fall-time, 0.34s) var(--ease-fall) both; }
-
-/* The whole section settling one bed as the bottom is drawn. The bands are
-   driven from script.js by their inline transform (they rest one bed high so
-   the overburden has somewhere to cave in from); the cores are driven here. */
-.stack.is-caving .core,
-.beds.is-caving .beds__bands { transition: transform 0.5s var(--ease-settle); }
-.stack.is-caving .core { transform: translateY(var(--cell)) translateZ(0); }
-
-/* ...and the bed being cut away, shearing into the trench. */
-.stack.is-caving .core--drawn {
-    transform: translateY(calc(var(--cell) * 1.9)) translateZ(0);
-    opacity: 0;
-    transition: transform 0.5s var(--ease-fall), opacity 0.42s ease-in 0.08s;
+/* A core released at its collar and falling to its bed. The distance is set
+   in BEDS by script.js, not in percentages of the core itself: a percentage
+   here is a fraction of the core's own 78%-of-a-bed height, which made the
+   fall short by a different amount on every row and invisible on the top
+   one. One acceleration for every row, so the basement takes twice as long
+   to reach as the surface, because it is twice as far. */
+.core--fresh {
+    animation: coreFall var(--fall-total, 0.44s) linear both;
 }
+
+/* The mark the plate registers where a core lands. A plate does not raise
+   dust; it takes a reading. */
+.core--fresh::after {
+    content: '';
+    position: absolute;
+    left: -38%;
+    right: -38%;
+    bottom: -16%;
+    height: 2px;
+    background: var(--graphite);
+    transform: scaleX(0);
+    animation: landTick 0.34s var(--ease-settle) var(--fall-time, 0.34s) both;
+}
+
+/* ------------------------------------------------------------------
+   The cave, in three beats
+   ------------------------------------------------------------------
+   The whole point of the mechanic is that the floor is taken away, so
+   the floor has to be seen leaving. In one simultaneous move a void
+   never appears: the basement and the overburden travel together and
+   the read is "the strata scrolled", which is what it used to do.
+
+     1  THE CUT       the fault rips, the basement bed shears out of
+                      the section, nothing above it moves
+     2  THE VOID      one beat of empty drawpoint, held
+     3  THE COLLAPSE  the overburden drops into it, a little past and
+                      back, and the plate takes the hit
+
+   `is-cutting` stays on for the whole sequence so the drawn bed keeps
+   travelling; `is-collapsing` joins it for beat three.
+   ------------------------------------------------------------------ */
+
+/* Beat one: the bed being drawn shears out through the floor. No fade. It
+   is not dissolving, it is being taken, and the trench lip swallows it. */
+.stack.is-cutting .core--drawn,
+.beds.is-cutting .band--drawn {
+    transform: translateY(calc(var(--cell) * 2.4)) translateZ(0);
+    transition: transform 0.34s var(--ease-gravity);
+}
+
+/* Beat three: the overburden collapses one bed into the void. The bands are
+   driven from script.js by their inline transform (they rest one bed high so
+   there is fresh rock to cave in from); the cores are driven here. */
+.stack.is-collapsing .core:not(.core--drawn) {
+    transform: translateY(var(--cell)) translateZ(0);
+    transition: transform 0.4s var(--ease-collapse);
+}
+
+.beds.is-collapsing .beds__bands { transition: transform 0.4s var(--ease-collapse); }
+
+/* The plate takes the hit as the rock lands. */
+.frame.is-collapsing { animation: jolt 0.24s ease-out 0.3s both; }
 
 /* The fault: a heavy stroke with ticks, ripping across the foot of the
    plate at the exact moment the bottom goes. */
 .trench {
     position: relative;
-    height: 0.9rem;
+    height: var(--trench-h);
     background-color: var(--trench);
     background-image: repeating-linear-gradient(135deg,
         rgba(230, 225, 211, 0.09) 0 4px, transparent 4px 8px);
@@ -909,31 +1035,177 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
     transform-origin: left center;
 }
 
-.frame.is-caving .trench__rule { animation: faultRip 0.62s var(--ease-settle) both; }
+.frame.is-cutting .trench__rule { animation: faultRip 0.5s var(--ease-settle) both; }
 
-/* The stroke drawn along a struck seam. */
-/* Sits inside .stack so it lines up with the grid exactly. Width and height
-   are both stated: an SVG given only a width takes its height from the
-   viewBox ratio, which drew the seam below the clipped grid. */
+/* ------------------------------------------------------------------
+   A struck seam
+   ------------------------------------------------------------------
+   Drawn as a seam, not as a strikethrough: a hatched corridor of ore
+   running BEHIND the four cores, squared at both ends and ticked like
+   a fault. A stroke across their centres, however heavy, reads as a
+   row being cancelled, which is the exact opposite of finding
+   something. So the svg sits before .grid in the markup and the cores
+   ride on top of the band.
+
+   The viewBox is 100 units per bed and .grid is locked to 7/6, so the
+   mapping is uniform in both axes: stroke widths and dash lengths are
+   quoted in bed units and scale with the plate. They used to be screen
+   pixels (`vector-effect: non-scaling-stroke`) against a hard-coded
+   `stroke-dasharray: 200`, which is why every diagonal, and every
+   horizontal on a plate wider than a phone, painted 200 pixels of line
+   and then simply stopped. Nothing computes a dash length from a
+   literal any more: script.js reads getTotalLength() off the element.
+   ------------------------------------------------------------------ */
+
 .strike {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 4;
+    z-index: 1;
     overflow: visible;
 }
 
-.strike line {
+.strike__rule  { fill: none; stroke: var(--graphite); stroke-width: 76; }
+.strike__band  { fill: none; stroke-width: 64; }
+.strike__hatch { fill: none; stroke-width: 64; }
+.strike__band--1 { stroke: var(--ochre); }
+.strike__band--2 { stroke: var(--azurite); }
+.strike__hatch--1 { stroke: url(#seamDots); }
+.strike__hatch--2 { stroke: url(#seamDash); }
+
+/* The fault ticks, struck after the corridor is drawn. */
+.strike__tick {
     stroke: var(--graphite);
-    stroke-width: 3;
-    stroke-linecap: square;
-    vector-effect: non-scaling-stroke;
-    stroke-dasharray: 200;
-    stroke-dashoffset: 200;
-    animation: strikeIn 0.5s var(--ease-settle) 0.12s both;
+    stroke-width: 8;
+    opacity: 0;
+    animation: tickIn 0.26s var(--ease-settle) 0.42s both;
+}
+
+/* The four that struck it ring up and the rest of the plate steps back, so
+   the eye lands on the seam and not on the forty-two cells around it. */
+.core--struck {
+    border-width: 3px;
+    box-shadow: 0 0 0 2.5px var(--linen);
+    z-index: 2;
+    animation: struckIn 0.36s var(--ease-settle) 0.3s both;
+}
+
+/* Drained, not faded. Fading a core lets the band behind it show through and
+   the two mix into a colour that is neither seat: an azurite core over the
+   olivine bed came out teal. A filter leaves it opaque. */
+.grid.is-struck .core:not(.core--struck) {
+    filter: saturate(0.32) brightness(1.05);
+    transition: filter 0.4s ease 0.3s;
+}
+
+/* ------------------------------------------------------------------
+   The shafts as hit areas
+   ------------------------------------------------------------------
+   The numbered heads are the labelled, focusable control; these are a
+   second hit area onto the same one, because a person reaches for the
+   column they want a core in, not for a 33px strip of numbers above
+   it. Deliberately not focusable: fourteen tab stops for seven shafts
+   would be worse than the problem. They mirror the head's hover state
+   both ways, so either surface lights the whole shaft.
+   ------------------------------------------------------------------ */
+
+.lanes {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.lane {
+    position: relative;
+    border: 0;
+    padding: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.lane[disabled] { cursor: default; }
+
+/* A survey selection, not a glow: the shaft lights and its two walls ink in.
+   Linen at low alpha is the one wash that reads over every band colour. */
+.lane.is-hot {
+    background: rgba(230, 225, 211, 0.2);
+    box-shadow: inset 1.5px 0 0 var(--graphite), inset -1.5px 0 0 var(--graphite);
+}
+
+/* Where the core would land, drawn as a core that has not been inked yet. */
+.ghost {
+    position: absolute;
+    left: 11%;
+    width: 78%;
+    height: calc(var(--cell) * 0.78);
+    top: calc(var(--cell) * (var(--row) + 0.11));
+    border-radius: 50%;
+    border: 2.5px dashed var(--graphite);
+    background-color: var(--linen);
+    opacity: 0.88;
+    pointer-events: none;
+}
+
+/* Opaque linen under a veil of the seat's ink, rather than the seat's ink at
+   low alpha: a translucent core over a drenched band mixes with it and comes
+   out some third colour that belongs to neither seat. */
+.ghost--1 { background-image: linear-gradient(rgba(224, 161, 28, 0.7), rgba(224, 161, 28, 0.7)); }
+.ghost--2 { background-image: linear-gradient(rgba(26, 95, 180, 0.7), rgba(26, 95, 180, 0.7)); }
+
+/* A full shaft has no bed to point at, so the ghost goes above the rim, in
+   the collar, which is where the core really ends up while the bottom is
+   drawn out for it. Same geometry as .held, which is what replaces it. */
+.ghost--rim {
+    left: calc((var(--col) + 0.5) * 100% / 7);
+    top: 12%;
+    width: calc(var(--cell) * 0.78);
+    margin-left: calc(var(--cell) * -0.39);
+}
+
+/* ------------------------------------------------------------------
+   What a draw costs, said before it is spent
+   ------------------------------------------------------------------
+   On a full shaft the ghost cannot mean "this is where it lands", so
+   the plate states both ends of the trade instead: the whole basement
+   marks up as going, and the ghost sits at the surface where the core
+   ends up once the section has settled onto it.
+   ------------------------------------------------------------------ */
+
+.doomed {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--cell);
+    z-index: 2;
+    pointer-events: none;
+    /* Darkened toward the trench, not washed in fault red. The five bands
+       roll, so one cave in five put this red marking over the red bed and it
+       simply disappeared. Going dark reads against all five, and it is what
+       the bed is about to become anyway: drawpoint. */
+    background-color: rgba(26, 23, 18, 0.52);
+    background-image: repeating-linear-gradient(135deg,
+        rgba(158, 57, 31, 0.7) 0 3px, transparent 3px 9px);
+    box-shadow: inset 0 -3px 0 var(--fault), inset 0 2px 0 var(--fault);
+}
+
+/* The fault ticks that will rip, previewed on the bed that will go. */
+.doomed::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 0.42rem;
+    background-image: linear-gradient(to right, var(--fault) 0 3px, transparent 3px);
+    background-size: calc(100% / 14) 100%;
 }
 
 /* ------------------------------------------------------------------
@@ -1069,12 +1341,39 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
     50%, 100% { opacity: 0.2; }
 }
 
-/* Gravity, then a short settle: a core that has just landed compresses
-   a fraction into its bed rather than stopping dead. */
+/* Gravity, then the landing. The fall occupies the first 78% under a curve
+   close to s = t^2; the rest is the core compressing into its bed and coming
+   back, which is why the timing function is stated per segment here rather
+   than once on the shorthand. */
 @keyframes coreFall {
-    from { transform: translateY(var(--fall-from, -300%)) translateZ(0); }
-    72% { transform: translateY(0) scaleY(0.9) scaleX(1.06) translateZ(0); }
+    0% {
+        transform: translateY(var(--fall-from, -160%)) translateZ(0);
+        animation-timing-function: cubic-bezier(0.36, 0, 0.66, 0.28);
+    }
+    78% {
+        transform: translateY(0) scale(1) translateZ(0);
+        animation-timing-function: ease-out;
+    }
+    88% {
+        transform: translateY(0) scaleY(0.87) scaleX(1.09) translateZ(0);
+        animation-timing-function: ease-out;
+    }
     100% { transform: translateY(0) scale(1) translateZ(0); }
+}
+
+/* The reading the plate takes where a core lands. */
+@keyframes landTick {
+    0% { transform: scaleX(0); opacity: 1; }
+    38% { transform: scaleX(1); opacity: 1; }
+    100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* The plate taking the hit as the overburden lands. */
+@keyframes jolt {
+    0% { transform: translateY(0); }
+    28% { transform: translateY(4px); }
+    58% { transform: translateY(-2px); }
+    100% { transform: translateY(0); }
 }
 
 @keyframes heldIn {
@@ -1094,8 +1393,15 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
     100% { transform: scaleX(1); opacity: 0; }
 }
 
-@keyframes strikeIn {
-    to { stroke-dashoffset: 0; }
+@keyframes tickIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes struckIn {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.14); }
+    100% { transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1103,15 +1409,23 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
     .roster__row,
     .toast,
     .verdict__stamp,
-    .core--fresh { animation: none; }
+    .core--fresh,
+    .core--fresh::after,
+    .core--struck,
+    .strike__tick { animation: none; }
+    .strike__tick { opacity: 1; }
     .held { animation: none; }
 
     /* The cave still has to be legible without moving anything, so the
-       section simply cuts to its settled state. */
-    .stack.is-caving .core,
-    .beds.is-caving .beds__bands { transition: none; }
-    .frame.is-caving .trench__rule { animation: none; }
-    .strike line { animation: none; stroke-dashoffset: 0; }
+       section simply cuts to its settled state. script.js collapses the
+       three beats into one there too, so nothing is left waiting out a hold
+       with nothing on screen to show for it. */
+    .stack.is-cutting .core--drawn,
+    .beds.is-cutting .band--drawn,
+    .stack.is-collapsing .core:not(.core--drawn),
+    .beds.is-collapsing .beds__bands { transition: none; }
+    .frame.is-cutting .trench__rule,
+    .frame.is-collapsing { animation: none; }
     .door__hit,
     .door__arrow,
     .btn { transition: none; }
@@ -1127,8 +1441,9 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
     body.is-playing .titleblock::after { margin-left: -1.6rem; margin-right: -1.6rem; }
     .titleblock::after { margin-left: -1.6rem; margin-right: -1.6rem; }
     .deck { font-size: 0.62rem; }
-    .shafts { grid-template-columns: 3rem repeat(7, 1fr); }
-    .scale { flex-basis: 3rem; }
+    /* One token, so the shaft heads, the collars and the depth scale can
+       never disagree about where the gutter ends. */
+    :root { --gutter: 3rem; }
     .scale__mark { font-size: 0.55rem; }
 }
 

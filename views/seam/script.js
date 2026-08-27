@@ -27,9 +27,23 @@ const LANG_KEY = 'seam:lang';
 
 /** Metres of section per bed, for the depth scale. */
 const BED_METRES = 5;
-/** How long the plate holds a core above the datum before the bottom goes. */
-const HOLD_MS = 480;
-const CAVE_MS = 520;
+// The cave, in beats. It is the one thing in the game that takes a whole
+// row off both players at once, so it is allowed to take a moment; there are
+// at most six of them in a section.
+/** The core waits in its collar while the plate works out what it costs. */
+const HOLD_MS = 380;
+/** The basement shears out through the floor. */
+const CUT_MS = 340;
+/** One beat of empty drawpoint, so a void is actually seen. */
+const VOID_MS = 130;
+/** The overburden drops into it. */
+const COLLAPSE_MS = 400;
+
+/** Beds a core falls through above the datum before it crosses it. */
+const COLLAR_BEDS = 1.2;
+/** How long the longest possible fall takes; every shorter one is scaled off
+ *  it by sqrt(distance), which is one constant acceleration for every row. */
+const FALL_MAX_MS = 520;
 
 const $ = (id) => document.getElementById(id);
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -62,6 +76,9 @@ let sending = false;
 
 let painted = null;          // the board string currently on the plate
 let painting = false;        // an animation owns the plate right now
+let plateState = null;       // the state the plate is showing, for the preview
+let plateMine = false;       // whether the viewer may cut into it
+let pointerCol = -1;         // the shaft the pointer or keyboard is on
 let gateIntent = 'open';     // 'open' | 'join'
 let toastTimer = null;
 
@@ -101,7 +118,12 @@ function updateSignal() {
 // ------------------------------------------------------------------
 
 async function loadTable() {
-    const res = await fetch('i18n/ui.json', { cache: 'force-cache' });
+    // 'no-cache' REVALIDATES, it does not skip the cache: an unchanged table
+    // still comes back as a bodyless 304. force-cache was the wrong trade and
+    // views/spy/CLAUDE.md documents why: it serves a stale copy without ever
+    // asking, so every row added after a visitor's first load renders as its
+    // raw key on that device forever.
+    const res = await fetch('i18n/ui.json', { cache: 'no-cache' });
     uiTable = await res.json();
 }
 
@@ -174,7 +196,10 @@ function paintBeds(caves) {
         const band = document.createElement('div');
         // The section continues below the window, so the pattern rolls: the
         // deeper you get, the older the rock.
-        band.className = `band band--${((caves + i - 1) % 5 + 5) % 5}`;
+        // The last band covers the basement bed, which is the one a cut
+        // takes away, so it is marked for the cave to shear out on its own.
+        band.className = `band band--${((caves + i - 1) % 5 + 5) % 5}`
+            + (i === ROWS ? ' band--drawn' : '');
         band.style.top = `calc(var(--cell) * ${i})`;
         bands.appendChild(band);
     }
@@ -228,57 +253,180 @@ function paintCores(board) {
     }
 }
 
-function paintStrike(cells) {
+// The seam svg is 100 units per bed (viewBox 700x600 over a grid locked to
+// 7/6), so every number below is in beds and both axes scale alike.
+const U = 100;
+const svgEl = (name) => document.createElementNS('http://www.w3.org/2000/svg', name);
+
+/** Centre of cell `i`, in seam-svg units. */
+const cellAt = (i) => ({ x: ((i % COLS) + 0.5) * U, y: (Math.floor(i / COLS) + 0.5) * U });
+
+/**
+ * The struck seam: a hatched corridor of ore running BEHIND the four cores,
+ * squared at both ends and ticked like a fault. Drawing it across their
+ * centres, however heavily, reads as a row being cancelled rather than as
+ * something being found, which is the opposite of what just happened.
+ *
+ * Every dash length is read back off the element with getTotalLength(). The
+ * old code hard-coded `stroke-dasharray: 200` against a non-scaling stroke,
+ * so the dash was 200 SCREEN pixels: any seam longer than that (every
+ * diagonal, and every horizontal on a plate wider than a phone) painted 200
+ * pixels and then stopped mid-air.
+ */
+function paintStrike(cells, seat) {
     const svg = $('strike');
     svg.textContent = '';
-    if (!cells || cells.length < 2) return;
-    const at = (i) => ({ x: ((i % COLS) + 0.5) * (100 / COLS), y: (Math.floor(i / COLS) + 0.5) * (100 / ROWS) });
-    // A seam is drawn the way a fault is: one heavy stroke, overhanging both
-    // end cores so it reads as a line struck THROUGH them rather than as a
-    // tidy connector between two dots.
-    const OVER = 0.42;
-    for (let i = 0; i + 3 < cells.length + 1; i += 4) {
-        const a = at(cells[i]);
-        const b = at(cells[i + 3]);
-        const dx = (b.x - a.x) / 3 * OVER;
-        const dy = (b.y - a.y) / 3 * OVER;
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', a.x - dx);
-        line.setAttribute('y1', a.y - dy);
-        line.setAttribute('x2', b.x + dx);
-        line.setAttribute('y2', b.y + dy);
-        svg.appendChild(line);
+    // paintCores reuses a core element whose seat has not changed, so a ring
+    // struck in the last section would otherwise survive into the next one.
+    document.querySelectorAll('.core--struck').forEach((el) => el.classList.remove('core--struck'));
+    $('grid').classList.toggle('is-struck', Boolean(cells && cells.length >= 4));
+    if (!cells || cells.length < 4) return;
+
+    svg.appendChild(seamHatches());
+    const s = seat === 2 ? 2 : 1;
+
+    for (let i = 0; i + 3 < cells.length; i += 4) {
+        const a = cellAt(cells[i]);
+        const b = cellAt(cells[i + 3]);
+        // Squared off half a bed past each end core, so the corridor contains
+        // all four rather than starting and stopping inside the outer two.
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        const ux = (b.x - a.x) / len;
+        const uy = (b.y - a.y) / len;
+        // Just short of the outer bed boundaries, so an end tick on a seam
+        // that reaches the edge of the plate is not half-clipped by it.
+        const end = U * 0.44;
+        const p = { x1: a.x - ux * end, y1: a.y - uy * end, x2: b.x + ux * end, y2: b.y + uy * end };
+
+        // Outline, ore, hatch: three strokes on one path, drawn on together.
+        for (const cls of [`strike__rule`, `strike__band strike__band--${s}`, `strike__hatch strike__hatch--${s}`]) {
+            const line = svgEl('line');
+            line.setAttribute('class', cls);
+            for (const [k, v] of Object.entries(p)) line.setAttribute(k, v);
+            svg.appendChild(line);
+            drawOn(line);
+        }
+
+        // Fault ticks: short strokes square to the corridor at both ends.
+        for (const [t, dir] of [[0, 1], [1, -1]]) {
+            const cx = t === 0 ? p.x1 : p.x2;
+            const cy = t === 0 ? p.y1 : p.y2;
+            const tick = svgEl('line');
+            tick.setAttribute('class', 'strike__tick');
+            tick.setAttribute('x1', cx + uy * U * 0.3 * dir);
+            tick.setAttribute('y1', cy - ux * U * 0.3 * dir);
+            tick.setAttribute('x2', cx - uy * U * 0.3 * dir);
+            tick.setAttribute('y2', cy + ux * U * 0.3 * dir);
+            svg.appendChild(tick);
+        }
+    }
+
+    // The four that struck it ink up; style.css steps the other cells back.
+    for (const i of cells) {
+        $('grid').children[i]?.firstElementChild?.classList.add('core--struck');
     }
 }
 
-/** The core waiting above the rim while the bottom is drawn for it. */
+/** Draws a stroke on from one end, off its own measured length. */
+function drawOn(line) {
+    if (reduced()) return;
+    const len = line.getTotalLength();
+    line.style.strokeDasharray = String(len);
+    line.style.strokeDashoffset = String(len);
+    requestAnimationFrame(() => {
+        line.style.transition = 'stroke-dashoffset 0.44s cubic-bezier(0.16, 1, 0.3, 1) 0.1s';
+        line.style.strokeDashoffset = '0';
+    });
+}
+
+/** The two seat hatches, as svg patterns: dots for ochre and 45-degree dashes
+ *  for azurite, matching --hatch-core-1 and --hatch-core-2 exactly. */
+function seamHatches() {
+    const defs = svgEl('defs');
+    const dots = svgEl('pattern');
+    dots.setAttribute('id', 'seamDots');
+    dots.setAttribute('width', '16');
+    dots.setAttribute('height', '16');
+    dots.setAttribute('patternUnits', 'userSpaceOnUse');
+    const dot = svgEl('circle');
+    dot.setAttribute('cx', '5'); dot.setAttribute('cy', '5'); dot.setAttribute('r', '2.6');
+    dot.setAttribute('fill', 'rgba(34, 31, 28, 0.42)');
+    dots.appendChild(dot);
+
+    const dash = svgEl('pattern');
+    dash.setAttribute('id', 'seamDash');
+    dash.setAttribute('width', '14');
+    dash.setAttribute('height', '14');
+    dash.setAttribute('patternUnits', 'userSpaceOnUse');
+    dash.setAttribute('patternTransform', 'rotate(45)');
+    const bar = svgEl('rect');
+    bar.setAttribute('width', '4.5'); bar.setAttribute('height', '14');
+    bar.setAttribute('fill', 'rgba(230, 225, 211, 0.42)');
+    dash.appendChild(bar);
+
+    defs.append(dots, dash);
+    return defs;
+}
+
+/** The highest occupied bed in a shaft, which is the core most recently
+ *  played into it, or -1 if the shaft is empty. */
+function topRow(board, col) {
+    for (let r = 0; r < ROWS; r++) {
+        if (board[r * COLS + col] !== '.') return r;
+    }
+    return -1;
+}
+
+/** The bed a core would come to rest in, or -1 if the shaft has no room. */
+function landingRow(board, col) {
+    for (let r = ROWS - 1; r >= 0; r--) {
+        if (board[r * COLS + col] === '.') return r;
+    }
+    return -1;
+}
+
+/** The core waiting in its collar while the bottom is drawn for it. */
 function holdCore(col, seat) {
     releaseCore();
-    const shaft = $('shafts').children[col];
-    if (!shaft) return;
     const core = document.createElement('span');
     core.className = `held held--${seat}`;
-    shaft.appendChild(core);
+    core.style.setProperty('--col', String(col));
+    $('collar').appendChild(core);
 }
 
 function releaseCore() {
     document.querySelectorAll('.held').forEach((el) => el.remove());
 }
 
-/** Marks the core that just landed so it falls in rather than appearing. */
+/**
+ * Marks the core that just landed so it falls in rather than appearing.
+ *
+ * The distance is quoted in BEDS, released at the top of the collar. It used
+ * to be a percentage, which is a fraction of the core's own 78%-of-a-bed
+ * height, so the fall came up short by a different amount on every row and
+ * was invisible on the top one. One constant acceleration for every row means
+ * the time follows sqrt(distance): the basement is four and a half times as
+ * far as the surface and takes twice as long to reach.
+ */
 function dropIn(board, col) {
-    let row = -1;
-    for (let r = ROWS - 1; r >= 0; r--) {
-        if (board[r * COLS + col] !== '.') { row = r; break; }
-    }
+    // The core that just landed is the TOPMOST occupied bed in the shaft.
+    // This used to scan from the basement up and take the lowest one, so
+    // every drop after the first in a shaft animated somebody else's core
+    // falling from the sky: after a cave, into a full shaft, it was the
+    // opponent's piece in the basement that fell rather than the one that
+    // had just been played.
+    const row = topRow(board, col);
     if (row < 0 || reduced()) return;
     const core = $('grid').children[row * COLS + col].firstElementChild;
     if (!core) return;
-    // Falls from above the surface, so the distance is honest: a core landing
-    // in the basement falls further, and takes longer doing it.
-    core.style.setProperty('--fall-from', `${-(row + 1.6) * 100}%`);
-    core.style.setProperty('--fall-time', `${0.18 + row * 0.045}s`);
+    const beds = row + COLLAR_BEDS;
+    const fall = FALL_MAX_MS * Math.sqrt(beds / (ROWS - 1 + COLLAR_BEDS));
+    core.style.setProperty('--fall-from', `calc(var(--cell) * ${-beds})`);
+    core.style.setProperty('--fall-time', `${Math.round(fall)}ms`);
+    // The keyframe spends its first 78% falling and the rest landing.
+    core.style.setProperty('--fall-total', `${Math.round(fall / 0.78)}ms`);
     core.classList.add('core--fresh');
+    return Math.round(fall);
 }
 
 /**
@@ -293,6 +441,7 @@ async function paintSection(state, edge) {
 
     if (painting) { painted = null; return; }
 
+    const seam = state.seams?.[0] ?? null;
     const animate = edge && !reduced() && painted !== null && painted !== state.board;
     if (!animate) {
         paintBeds(caves);
@@ -301,56 +450,94 @@ async function paintSection(state, edge) {
         paintMeta(caves);
         measureCell();
         painted = state.board;
-        paintStrike(state.seams?.[0]?.cells ?? null);
+        paintStrike(seam?.cells ?? null, seam?.seat);
         return;
     }
 
     painting = true;
+    paintHot();
+    paintStrike(null);
     const frame = $('frame');
     const stack = $('stack');
     const beds = $('beds');
 
-    if (edge.caved) {
-        // The core is played above the rim of a shaft that has no room left,
-        // so the plate shows it there: held over the shaft head, outside the
-        // section, while the bottom is drawn to make room for it.
-        // The core held over the rim and the status line together say what is
-        // happening; a third floating label over the middle of the section
-        // only ever looked like it belonged to whichever shaft it landed on.
-        holdCore(edge.col, edge.seat);
-        $('boardStatus').textContent = t('board.drawing');
-        await sleep(HOLD_MS);
-
-        for (let c = 0; c < COLS; c++) {
-            const core = $('grid').children[(ROWS - 1) * COLS + c].firstElementChild;
-            if (core) core.classList.add('core--drawn');
-        }
-        measureCell();
-        frame.classList.add('is-caving');
-        stack.classList.add('is-caving');
-        beds.classList.add('is-caving');
-        // The overburden caves in behind the drawn bed, so a fresh band of
-        // rock arrives at the top as everything settles.
-        requestAnimationFrame(() => {
-            beds.querySelector('.beds__bands').style.transform = 'translateY(0)';
-        });
-        await sleep(CAVE_MS);
-
-        frame.classList.remove('is-caving');
-        stack.classList.remove('is-caving');
-        beds.classList.remove('is-caving');
-        releaseCore();
-    }
+    if (edge.caved) await caveIn(frame, stack, beds, edge);
 
     paintBeds(caves);
     paintScale();
     paintCores(state.board);
     paintMeta(caves);
     measureCell();
-    dropIn(state.board, edge.col);
+    const landing = dropIn(state.board, edge.col);
     painted = state.board;
-    paintStrike(state.seams?.[0]?.cells ?? null);
+
+    // The lock lifts the moment the core is in its bed, not when the landing
+    // squash has finished playing out on top of it. cut() refuses everything
+    // while the plate is animating, so every millisecond held past the point
+    // where the move is really over is a tap silently swallowed.
+    if (landing) await sleep(landing);
     painting = false;
+    paintHot();
+
+    // The seam is struck on a settled plate: drawn while a core is still in
+    // the air, it announces the win before the move that won it has landed.
+    if (!seam) return;
+    if (landing) await sleep(Math.round(landing * 0.28));
+    paintStrike(seam.cells, seam.seat);
+}
+
+/**
+ * The cave, in three beats.
+ *
+ * The whole mechanic is that the floor is taken away, so the floor has to be
+ * seen leaving. Moving everything at once, which is what this used to do,
+ * never opens a void: the basement and the overburden travel together and the
+ * read is "the strata scrolled" while the bottom row quietly dissolves.
+ *
+ *   1  THE CUT       the fault rips and the basement shears out through the
+ *                    floor, alone. Nothing above it moves.
+ *   2  THE VOID      one beat of empty drawpoint, held, so the hole is seen.
+ *   3  THE COLLAPSE  the overburden drops into it and the plate takes the hit.
+ */
+async function caveIn(frame, stack, beds, edge) {
+    // The core is played above the rim of a shaft with no room left, so it
+    // waits in its collar, over its own shaft, while the bottom is drawn out
+    // to make space for it. That plus the status line says what is happening;
+    // a floating label over the middle of the section only ever looked like it
+    // belonged to whichever shaft it happened to land on.
+    holdCore(edge.col, edge.seat);
+    // Restored at the end: the poll repaints this line, but only on its own
+    // schedule, so leaving it changed left the opponent's plate reading
+    // DRAWING THE BOTTOM for a second after the bottom had gone.
+    const said = $('boardStatus').textContent;
+    $('boardStatus').textContent = t('board.drawing');
+    await sleep(HOLD_MS);
+
+    for (let c = 0; c < COLS; c++) {
+        $('grid').children[(ROWS - 1) * COLS + c].firstElementChild?.classList.add('core--drawn');
+    }
+    measureCell();
+
+    frame.classList.add('is-cutting');
+    stack.classList.add('is-cutting');
+    beds.classList.add('is-cutting');
+    await sleep(CUT_MS + VOID_MS);
+
+    frame.classList.add('is-collapsing');
+    stack.classList.add('is-collapsing');
+    beds.classList.add('is-collapsing');
+    // Fresh rock caves in behind the drawn bed: the bands rest one bed high
+    // for exactly this, so there is always something to arrive at the top.
+    requestAnimationFrame(() => {
+        beds.querySelector('.beds__bands').style.transform = 'translateY(0)';
+    });
+    await sleep(COLLAPSE_MS);
+
+    for (const el of [frame, stack, beds]) {
+        el.classList.remove('is-cutting', 'is-collapsing');
+    }
+    releaseCore();
+    $('boardStatus').textContent = said;
 }
 
 // ------------------------------------------------------------------
@@ -377,6 +564,37 @@ function buildShafts() {
         b.dataset.col = String(c);
         b.textContent = String(c + 1);
         b.addEventListener('click', () => cut(c));
+        b.addEventListener('pointerenter', () => setHot(c));
+        b.addEventListener('pointerleave', () => setHot(-1));
+        b.addEventListener('focus', () => setHot(c));
+        b.addEventListener('blur', () => setHot(-1));
+        box.appendChild(b);
+    }
+}
+
+/**
+ * The shafts as hit areas: the whole column, not the numbered strip above it.
+ * A person reaches for the column they want a core in, and the heads are 33
+ * pixels tall on a phone.
+ *
+ * These are deliberately NOT focusable. The heads stay the labelled control
+ * for keyboard and screen readers, so the shaft still has exactly one tab
+ * stop; fourteen stops for seven shafts would be worse than the problem.
+ */
+function buildLanes() {
+    const box = $('lanes');
+    if (box.childElementCount === COLS) return;
+    box.textContent = '';
+    for (let c = 0; c < COLS; c++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'lane';
+        b.dataset.col = String(c);
+        b.tabIndex = -1;
+        b.setAttribute('aria-hidden', 'true');
+        b.addEventListener('click', () => cut(c));
+        b.addEventListener('pointerenter', () => setHot(c));
+        b.addEventListener('pointerleave', () => setHot(-1));
         box.appendChild(b);
     }
 }
@@ -386,13 +604,76 @@ function buildShafts() {
  *  player tapping something that was always going to be refused. */
 function paintShafts(state, mine) {
     buildShafts();
+    buildLanes();
+    plateState = state;
+    plateMine = mine;
     for (const b of $('shafts').children) {
+        // The first child is the gutter's unit label, not a shaft. It used to
+        // fall through this loop and pick up aria-label="Shaft NaN".
         const col = Number(b.dataset.col);
+        if (!Number.isInteger(col)) continue;
         const blocked = !mine || moveError(state, col) !== null;
         b.disabled = blocked;
         b.classList.toggle('is-draw', mine && !blocked && columnFull(state.board, col));
         b.setAttribute('aria-label', t('board.shaftLabel', { n: col + 1 }));
+        $('lanes').children[col].disabled = blocked;
     }
+    paintHot();
+}
+
+/**
+ * Where the pointer or keyboard is. Deliberately only records that, and lets
+ * paintHot() decide every time whether it is currently worth lighting: a
+ * pointer resting on a shaft does not send another event when the turn passes
+ * or an animation ends, so a hot column latched at event time went dark after
+ * your own move and stayed dark until you physically moved the mouse.
+ */
+function setHot(col) {
+    if (col === pointerCol) return;
+    pointerCol = col;
+    paintHot();
+}
+
+/**
+ * The lit shaft and what cutting into it would do. On a shaft with room the
+ * ghost is simply where the core lands. On a full one it cannot mean that, so
+ * the plate states both ends of the trade instead: the basement marks up as
+ * going, and the ghost sits at the surface, where the core ends up once the
+ * section has settled onto it.
+ */
+function paintHot() {
+    const st = plateState;
+    const hot = pointerCol >= 0 && st && plateMine && !painting
+        && moveError(st, pointerCol) === null ? pointerCol : -1;
+
+    for (const el of $('lanes').children) {
+        el.classList.toggle('is-hot', Number(el.dataset.col) === hot);
+    }
+    for (const el of $('shafts').children) {
+        el.classList.toggle('is-hot', Number(el.dataset.col) === hot);
+    }
+    document.querySelectorAll('.ghost').forEach((el) => el.remove());
+
+    const full = hot >= 0 && columnFull(st.board, hot);
+    $('doomed').hidden = !full;
+    if (hot < 0) return;
+
+    const ghost = document.createElement('span');
+    ghost.className = `ghost ghost--${st.turn}`;
+    if (full) {
+        // A full shaft has no bed to point at, and putting the ghost in the
+        // top one drew it on top of a core that is still sitting there. It
+        // goes where it really goes: above the rim, in its collar, which is
+        // exactly where the cave will hold it while the bottom is drawn.
+        ghost.classList.add('ghost--rim');
+        ghost.style.setProperty('--col', String(hot));
+        $('collar').appendChild(ghost);
+        return;
+    }
+    const row = landingRow(st.board, hot);
+    if (row < 0) return;
+    ghost.style.setProperty('--row', String(row));
+    $('lanes').children[hot].appendChild(ghost);
 }
 
 function permitPips(left) {

@@ -90,13 +90,55 @@ The plate is a block-cave working, and that fiction is load-bearing:
   `caveCount(charges)` from the permits already spent. The server sends no
   cave counter and does not need to.
 
-## The animation
+## The collar, and why the plate has a lane above the datum
 
-One orchestrated gesture, in `paintSection(state, edge)`:
+`.collar` is 1.2 beds of drawn ground between the shaft heads and the datum.
+It is not decoration and it is not spacing:
 
-hold the core above the rim (`holdCore`, `HOLD_MS`) &rarr; the fault rips
-across the trench and the section settles a bed (`CAVE_MS`) &rarr; the held
-core drops into the freed surface (`dropIn`).
+- Every core is **released at the top of it** and crosses the datum in view,
+  which is what gives a drop a cause you can watch. `.stack` carries a
+  `clip-path` opened by exactly `--collar` above and `--trench-h` below;
+  `overflow` cannot express that, since it clips four sides or none.
+- It is where a core **waits during a cave** (`.held`) and where the ghost
+  goes when the shaft is full (`.ghost--rim`). Both used to hang above the
+  shaft heads, outside the plate, where they collided with the away HUD.
+- `--gutter` is shared by `.shafts`, `.collar__gutter` and `.scale`. Three
+  rows have to agree about where the depth gutter ends; it was three literals.
+
+## The cave, in three beats
+
+`caveIn()`, and the beat structure is the point:
+
+1. `HOLD_MS` the core waits in its collar, `board.drawing` on the status line
+2. `CUT_MS` the fault rips and the **basement alone** shears out through the
+   floor (`.is-cutting`); nothing above it moves, which is what opens a void
+3. `VOID_MS` one beat of empty drawpoint, held, so the hole is actually seen
+4. `COLLAPSE_MS` the overburden drops into it and the plate takes the hit
+   (`.is-collapsing` + `jolt`)
+
+This used to be one simultaneous move, and a void never appeared: the
+basement and the overburden travelled together and the read was "the strata
+scrolled" while the bottom row quietly dissolved in place. **Do not merge the
+beats back.** `.is-cutting` stays on through beat 4 so the drawn bed keeps
+travelling; `.beds` is backed with `--trench` so the void is drawpoint rather
+than paper, and `.band--drawn` is the last band, which is the one covering the
+basement bed.
+
+## The drop
+
+- **The fresh core is the TOPMOST occupied bed in the shaft** (`topRow`), not
+  the lowest. Scanning up from the basement animated the wrong piece on every
+  drop after a shaft's first, and after a cave it fell the opponent's core.
+- **Fall distance is quoted in beds, never in percentages.** A percentage of a
+  core is a fraction of its own 78%-of-a-bed height, so it came up short by a
+  different amount on every row and was invisible on the top one.
+- One acceleration for every row, so time follows `sqrt(distance)` off
+  `FALL_MAX_MS`. The basement is 4.5x as far as the surface and takes 2x as
+  long, which is the whole reason the fall reads as gravity.
+- **`painting` lifts when the core reaches its bed**, not when the landing
+  squash has finished playing. `cut()` refuses everything while the plate
+  animates, so every millisecond held past the end of the move is a tap
+  silently swallowed.
 
 - `--cell` is measured from the rendered grid by `measureCell()` and every
   translate is expressed in it. Re-measure after any layout change.
@@ -105,6 +147,28 @@ core drops into the freed surface (`dropIn`).
 - Events give the **edge** worth animating, the snapshot gives the **truth**.
   More than one `move` op in a page (a phone coming back from the background)
   deliberately snaps instead of animating.
+
+## Two hit areas, one control
+
+The numbered heads are 33px tall on a phone, and people reach for the column
+they want a core in. `.lanes` lays seven transparent buttons over the grid;
+both surfaces call `cut(c)` and both feed `setHot`.
+
+- The lanes are **deliberately not focusable** (`tabindex="-1"`,
+  `aria-hidden`). The heads stay the labelled control, so a shaft still has
+  exactly one tab stop.
+- `setHot` records only **where the pointer is**; `paintHot` decides on every paint
+  whether that is worth lighting. A pointer resting on a shaft sends no new
+  event when the turn passes or an animation ends, so a hot column latched at
+  event time went dark after your own move and stayed dark until you moved the
+  mouse.
+- On a shaft with room the ghost is the landing bed. On a **full** one it is
+  `.ghost--rim`, in the collar, and `.doomed` marks the basement: the plate
+  states both ends of the trade rather than drawing a ghost on top of a core
+  that is still there.
+- **`.doomed` darkens toward the trench, it does not wash in fault red.** The
+  five bands roll, so a red marking disappeared entirely on the one cave in
+  five where the basement was sitting on the red bed.
 
 ## Things that will bite
 
@@ -122,6 +186,26 @@ core drops into the freed surface (`dropIn`).
 - **An SVG given only a width takes its height from its viewBox ratio.**
   `.strike` states both, and lives inside `.stack` so it matches the grid
   exactly. Given only a width it drew every seam below the clipped grid.
+- **Never write a dash length as a literal.** `.strike` used
+  `stroke-dasharray: 200` with `vector-effect: non-scaling-stroke`, which
+  makes the dash 200 **screen pixels**: every diagonal (271px on a phone) and
+  every horizontal on a plate wider than a phone (338px) painted 200 pixels of
+  line and then stopped in mid-air. The viewBox is now `700 600`, 100 units
+  per bed against a grid locked to `7/6`, so the mapping is uniform in both
+  axes and stroke widths are quoted in beds; `drawOn()` reads the dash length
+  back off the element with `getTotalLength()`.
+- **The seam is a band the cores sit ON, not a line struck THROUGH them.**
+  `.strike` sits before `.grid` in the markup for that reason. A stroke across
+  four centres reads as a row being cancelled, which is the opposite of
+  finding something.
+- **Losing cores are drained with a `filter`, never faded with `opacity`.**
+  A translucent core lets the band behind it through and the two mix into a
+  colour belonging to neither seat: azurite over the olivine bed came out
+  teal. The same rule governs `.ghost`, which is opaque linen under a veil of
+  the seat's ink.
+- **`paintCores` reuses a core element whose seat has not changed**, so
+  `paintStrike` clears `.core--struck` itself; otherwise a ring struck in one
+  section survives into the next.
 - **A flex title block swallows its own `::after` rule.** `body.is-playing
   .titleblock` is a flex row, so the double-rule pseudo-element becomes a flex
   item and shoves the metadata off the paper. It is `flex: 1 0 100%` for that
@@ -140,6 +224,12 @@ core drops into the freed surface (`dropIn`).
 - **Bot depth is measured, not guessed.** Full self-play worst case: depth 2 =
   12ms, 4 = 47ms, 5 = 174ms, 6 = 673ms. The search runs on the main thread, so
   `DEPTHS.chief` stops at 5.
+- **`i18n/ui.json` is fetched `no-cache`, and must stay that way.** That
+  revalidates rather than skipping the cache, so an unchanged table still
+  costs a bodyless 304. It shipped as `force-cache`, the exact trade
+  `views/spy/CLAUDE.md` documents as wrong: a stale copy is served without
+  ever asking, so every row added after a visitor's first load renders as its
+  raw key on that device forever.
 - **A new user-facing string is a row in `i18n/ui.json`, never a literal**,
   and the controller reads the same file. `tests/seam-i18n.test.mjs` fails on a
   half-filled language and on any `refuse.*` code the controller can send

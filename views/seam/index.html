@@ -221,12 +221,27 @@
         <div class="frame" id="frame">
             <div class="shafts" id="shafts" role="group" aria-label="Shafts"></div>
 
+            <!-- The collars: the seven shafts carried down from their heads to
+                 the datum. A core is released here and crosses the neatline in
+                 full view, and it is where one waits above the rim while the
+                 bottom is drawn out to make room for it. -->
+            <div class="collar" aria-hidden="true">
+                <div class="collar__gutter"></div>
+                <div class="collar__shafts" id="collar"></div>
+            </div>
+
             <div class="workings">
                 <div class="scale" id="scale" aria-hidden="true"></div>
                 <div class="stack" id="stack">
                     <div class="beds" id="beds" aria-hidden="true"></div>
+                    <!-- Before .grid, so a struck seam is a band the cores sit
+                         ON rather than a line struck THROUGH them. The viewBox
+                         is 100 units per bed and the grid is locked to 7/6, so
+                         the mapping is uniform and a diagonal is undistorted. -->
+                    <svg class="strike" id="strike" viewBox="0 0 700 600" preserveAspectRatio="none" aria-hidden="true"></svg>
                     <div class="grid" id="grid"></div>
-                    <svg class="strike" id="strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+                    <div class="doomed" id="doomed" hidden aria-hidden="true"></div>
+                    <div class="lanes" id="lanes"></div>
                 </div>
             </div>
 
