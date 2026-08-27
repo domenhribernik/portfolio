@@ -725,7 +725,9 @@ $armedAt = poll($vr)['body']['room']['graceLeft'];
 check('the full table arms the countdown', $armedAt !== null);
 backdate($pdo, "UPDATE spy_rooms SET round_ends_at = NOW() + INTERVAL 2 SECOND WHERE code = ?",
     [$vr['code']]);
-check('the countdown is running down', poll($vr)['body']['room']['graceLeft'] <= 2);
+$ticking = poll($vr)['body']['room']['graceLeft'];
+check('the countdown is running down', $ticking !== null && $ticking <= 2,
+    'null <= 2 is true in PHP, so the null check has to be explicit');
 event($v3, 'castvote', ['target' => $v2['id']]);
 check('changing a ballot restarts the countdown',
     poll($vr)['body']['room']['graceLeft'] > 2,
@@ -756,6 +758,30 @@ check('an early close still counts what was cast',
     $early['room']['status'] === 'debrief'
     && (int) ($early['reveal']['accused']['id'] ?? 0) === $vr['id']);
 check('closing a vote that is not open is refused', event($vr, 'closevote')['status'] === 409);
+
+// A tap that arrives after the countdown has already run out is too late. It
+// must neither land nor push the deadline back, or "closes ten seconds after
+// the last tap" would really mean "ten seconds after the last tap AND a poll".
+$lr2 = openRoom('LATE ONE');
+$lb = seat($lr2['code'], 'LATE TWO');
+$lc = seat($lr2['code'], 'LATE THREE');
+event($lr2, 'deal');
+event($lr2, 'start');
+event($lr2, 'end');
+event($lr2, 'castvote', ['target' => $lb['id']]);
+event($lb, 'castvote', ['target' => $lc['id']]);
+event($lc, 'castvote', ['target' => $lb['id']]);
+backdate($pdo, "UPDATE spy_rooms SET round_ends_at = NOW() - INTERVAL 1 SECOND WHERE code = ?",
+    [$lr2['code']]);
+check('a ballot cast after the countdown expired is refused',
+    event($lc, 'castvote', ['target' => $lr2['id']])['status'] === 409);
+$late = poll($lr2)['body'];
+check('and it did not rewind the countdown',
+    $late['room']['status'] === 'debrief',
+    'graceLeft: ' . json_encode($late['room']['graceLeft']));
+check('the refused ballot is not in the tally',
+    (int) ($late['reveal']['accused']['id'] ?? 0) === $lb['id']
+    && array_sum(array_column($late['reveal']['tally'], 'votes')) === 3);
 
 // The host's button is also the escape hatch for a table that keeps switching
 // its pick and so keeps pushing the countdown back. It must beat the clock,
@@ -816,7 +842,12 @@ event($sr, 'end');
 event($sr, 'castvote', ['target' => $s2['id']]);
 event($s2, 'castvote', ['target' => $sr['id']]);
 backdate($pdo, 'UPDATE spy_players SET last_seen = NOW() - INTERVAL 16 MINUTE WHERE id = ?', [$s3['id']]);
-poll($sr); // the sweep and the arming both happen on the poll path
+// Assert the ARMING, not just the close: runOutGrace backdates the deadline
+// unconditionally and advancePhase closes on `expired` alone, so checking
+// only the debrief would pass even if the sweep had never run.
+check('sweeping the missing voter arms the countdown on the poll path',
+    poll($sr)['body']['room']['graceLeft'] !== null,
+    'the sweep is the only thing that can complete this table');
 check('a swept voter also releases the vote',
     runOutGrace($pdo, $sr)['room']['status'] === 'debrief');
 
@@ -826,6 +857,32 @@ $rows = $pdo->query(
 )->fetchColumn();
 check('no room is ever in debrief without an outcome', (int) $rows === 0,
     "$rows rooms are in debrief with no verdict");
+
+// The verdict is frozen at close time while the debrief's tally is recomputed
+// live from voted_for, so the two can only agree if nothing can add a ballot
+// to a room that has already been counted. A disagreement here means a
+// last-second tap slipped past closeVote, and the screen would print an
+// ACCUSED that the bar chart under it contradicts.
+$drifted = [];
+foreach ($pdo->query("SELECT id, code, accused_id FROM spy_rooms WHERE status = 'debrief'") as $r) {
+    $t = $pdo->prepare(
+        'SELECT voted_for AS id, COUNT(*) AS votes FROM spy_players
+         WHERE room_id = ? AND voted_for IS NOT NULL GROUP BY voted_for ORDER BY votes DESC'
+    );
+    $t->execute([$r['id']]);
+    $rowsNow = $t->fetchAll();
+    $winner = null;
+    if (count($rowsNow) === 1
+        || (count($rowsNow) > 1 && (int) $rowsNow[0]['votes'] > (int) $rowsNow[1]['votes'])) {
+        $winner = (int) $rowsNow[0]['id'];
+    }
+    $frozen = $r['accused_id'] !== null ? (int) $r['accused_id'] : null;
+    if ($winner !== $frozen) {
+        $drifted[] = "{$r['code']}: accused=" . json_encode($frozen) . " but the tally says " . json_encode($winner);
+    }
+}
+check('THE FROZEN VERDICT STILL MATCHES THE TALLY THE DEBRIEF PRINTS',
+    $drifted === [], implode('; ', $drifted));
 
 // Closing with nothing cast at all: the table simply never voted.
 $er = openRoom('EMPTY BALLOT');

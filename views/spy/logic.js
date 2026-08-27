@@ -174,8 +174,11 @@ export function pollDelay({ status, hidden, failures, grace }) {
     if (failures > 0) return Math.min(10000, 800 * 2 ** failures);
     // The vote's grace countdown is the one moment a phone has to keep up
     // with a deadline it cannot see coming: a ballot changed on somebody
-    // else's phone restarts it. It only runs for VOTE_GRACE_SECONDS, so the
-    // extra polls are bounded, and a hidden tab still wants the verdict.
+    // else's phone restarts it, so the number on screen can go UP. A hidden
+    // tab still wants the verdict, so this deliberately beats that check.
+    // Note this is NOT bounded by VOTE_GRACE_SECONDS: a table that keeps
+    // switching keeps re-arming, and the host's CLOSE THE VOTE is what ends
+    // that rather than the clock.
     if (grace) return 700;
     if (hidden) return 4000;
     if (status === 'round') return 3000;

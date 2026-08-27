@@ -14,7 +14,7 @@ import {
     clamp, spyMax, suggestedSpies, clampRoundSeconds, defaultRoundSeconds,
     formatClock, dealRoles, pickLocation,
     normalizeCode, isValidCode, cleanName, isValidName,
-    createRoomModel, applyEvents, pollDelay, endVoteThreshold,
+    createRoomModel, applyEvents, pollDelay, endVoteThreshold, VOTE_GRACE_SECONDS,
     DEFAULT_LANG, createTranslator, tableLanguages, normalizeLang, spyWord,
 } from './logic.js';
 
@@ -1163,6 +1163,12 @@ function castVote(targetId) {
     // a changed vote look like it had been ignored.
     session.you.votedFor = targetId;
     pendingBallot = { value: targetId, until: Date.now() + 2500 };
+    // The server restarts the countdown for this ballot, so restart it here
+    // too rather than letting the old deadline keep ticking down until the
+    // confirming poll. Otherwise switching at "CLOSING IN 1" shows a 0 right
+    // after the tap that just bought the table ten more seconds, which is the
+    // same "it ignored me" the pending shields exist to prevent.
+    if (graceBase !== null) graceBase = { left: VOTE_GRACE_SECONDS, at: Date.now() };
     queueEvent('castvote', { target: targetId });
     renderVote();
 }

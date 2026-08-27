@@ -534,15 +534,47 @@ function postEvent(array $body): void
                 sendError('The vote is not open', 409);
             }
             $target = validateBallot($db, $roomId, (int) $player['id'], $body['data'] ?? null);
-            $db->prepare('UPDATE spy_players SET voted_for = ? WHERE id = ?')
-               ->execute([$target, (int) $player['id']]);
+            // The WRITE carries the phase check, not just the read above.
+            // Those are separate round trips, and closeVote() can land
+            // between them: an unguarded write drops a ballot into a room
+            // whose verdict is already frozen, and the debrief then prints a
+            // tally that disagrees with the accused it names. Joining
+            // spy_rooms makes the check and the write one statement, and it
+            // takes the room's row lock, which is the half closeVote() holds.
+            //
+            // The deadline is the same guard doing its second job: a tap that
+            // arrives after the countdown has already run out must not rewind
+            // it, or closing would mean "ten seconds since the last tap AND a
+            // poll happened" rather than ten seconds.
+            $cast = $db->prepare(
+                "UPDATE spy_players p JOIN spy_rooms r ON r.id = p.room_id
+                    SET p.voted_for = ?
+                  WHERE p.id = ? AND r.status = 'vote'
+                    AND (r.round_ends_at IS NULL OR r.round_ends_at > NOW())"
+            );
+            $cast->execute([$target, (int) $player['id']]);
+            if ($cast->rowCount() === 0) {
+                // rowCount counts CHANGED rows, so naming the same player
+                // twice is a legitimate zero. Only a room that has since
+                // closed is an error worth telling the phone about.
+                $open = $db->prepare(
+                    "SELECT 1 FROM spy_rooms WHERE id = ? AND status = 'vote'
+                       AND (round_ends_at IS NULL OR round_ends_at > NOW())"
+                );
+                $open->execute([$roomId]);
+                if ($open->fetchColumn() === false) {
+                    sendError('The vote has closed', 409);
+                }
+            }
             // Disarm the grace countdown. A ballot is changeable right up to
             // the moment the vote closes, so every arriving one restarts the
             // clock: advancePhase() below re-arms it once the table is full
             // again. Only this one line is needed for that, because arming
             // lives in exactly one place.
-            $db->prepare("UPDATE spy_rooms SET round_ends_at = NULL WHERE id = ? AND status = 'vote'")
-               ->execute([$roomId]);
+            $db->prepare(
+                "UPDATE spy_rooms SET round_ends_at = NULL
+                 WHERE id = ? AND status = 'vote' AND round_ends_at > NOW()"
+            )->execute([$roomId]);
             // The log is public, so the ballot never travels in it. Only the
             // fact that this player has now voted is visible to the room.
             $data = null;
@@ -811,10 +843,34 @@ function advancePhase(PDO $db, int $roomId): void
  */
 function closeVote(PDO $db, int $roomId): ?int
 {
-    // Count BEFORE touching the status. Flipping to 'debrief' first would
-    // leave a window in which another poller reads a debrief whose verdict
-    // has not been written yet, and a null outcome paints as a spy win on
-    // the client: the wrong answer, at the one moment everybody is looking.
+    // The whole close is one transaction, and it CLAIMS the room before it
+    // counts. Two things fall out of that order, and both matter:
+    //
+    //   - the claim's rowCount is still the single-writer guard, so of
+    //     however many callers race here exactly one announces the result;
+    //   - the claim locks the room's row, and castvote's write joins that
+    //     same row, so no ballot can be added to a tally that has already
+    //     been counted. Counting first left several round trips in which a
+    //     last-second tap landed in the debrief's tally but not in the
+    //     verdict, and the grace countdown exists to invite exactly those
+    //     taps.
+    //
+    // Counting first used to be deliberate, to stop a poller reading a
+    // debrief whose verdict was not written yet. The transaction closes that
+    // window instead of reopening it: nothing outside sees the new status
+    // until the outcome is committed alongside it.
+    $db->beginTransaction();
+
+    $claim = $db->prepare(
+        "UPDATE spy_rooms SET status = 'debrief', round_ends_at = NULL
+         WHERE id = ? AND status = 'vote'"
+    );
+    $claim->execute([$roomId]);
+    if ($claim->rowCount() === 0) {
+        $db->rollBack();
+        return null;
+    }
+
     $tally = $db->prepare(
         'SELECT voted_for AS id, COUNT(*) AS votes FROM spy_players
          WHERE room_id = ? AND voted_for IS NOT NULL
@@ -838,22 +894,14 @@ function closeVote(PDO $db, int $roomId): ?int
         }
     }
 
-    // One write settles the phase and the verdict together, and its
-    // rowCount is still the single-writer guard: of however many callers
-    // race here, exactly one announces the result.
-    $stmt = $db->prepare(
-        "UPDATE spy_rooms SET status = 'debrief', accused_id = ?, outcome = ?,
-                round_ends_at = NULL
-         WHERE id = ? AND status = 'vote'"
-    );
-    $stmt->execute([$accusedId, $outcome, $roomId]);
-    if ($stmt->rowCount() === 0) {
-        return null;
-    }
-
+    $db->prepare('UPDATE spy_rooms SET accused_id = ?, outcome = ? WHERE id = ?')
+       ->execute([$accusedId, $outcome, $roomId]);
     $db->prepare("INSERT INTO spy_events (room_id, player_id, type) VALUES (?, NULL, 'verdict')")
        ->execute([$roomId]);
-    return (int) $db->lastInsertId();
+    $seq = (int) $db->lastInsertId();
+
+    $db->commit();
+    return $seq;
 }
 
 /**

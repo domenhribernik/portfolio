@@ -2,8 +2,9 @@
 // Run: node --test tests/     (Windows: node --test "tests/**/*.test.mjs")
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
-    MIN_PLAYERS, MAX_PLAYERS, MIN_ROUND_SECONDS, MAX_ROUND_SECONDS,
+    MIN_PLAYERS, MAX_PLAYERS, MIN_ROUND_SECONDS, MAX_ROUND_SECONDS, ROUND_STEP_SECONDS,
     clamp, spyMax, suggestedSpies,
     clampRoundSeconds, defaultRoundSeconds, formatClock,
     dealRoles, pickLocation,
@@ -264,10 +265,29 @@ test('pollDelay eases off for hidden tabs and running rounds', () => {
 
 test('the vote leaves a grace period long enough to change your mind in', () => {
     // Whoever votes last would otherwise be the one player who could never
-    // switch, since their own ballot closed the room. Mirrored in
-    // spy-controller.php.
+    // switch, since their own ballot closed the room.
     assert.ok(VOTE_GRACE_SECONDS >= 5, 'too short to actually reach for the phone');
     assert.ok(VOTE_GRACE_SECONDS <= 30, 'long enough to stall the table');
+});
+
+test('the constants duplicated into spy-controller.php still agree with it', () => {
+    // views/spy/CLAUDE.md says these live in two places and must be changed in
+    // both. A comment cannot enforce that, so read the PHP and compare: a
+    // client clamping a round to different bounds than the server, or drawing
+    // a countdown of a different length, is a silent desync nothing else
+    // catches.
+    const php = readFileSync(new URL('../app/controllers/spy-controller.php', import.meta.url), 'utf8');
+    const constant = (name) => {
+        const m = php.match(new RegExp(`^const\\s+${name}\\s*=\\s*(\\d+)\\s*;`, 'm'));
+        assert.ok(m, `spy-controller.php no longer declares ${name}`);
+        return Number(m[1]);
+    };
+    assert.equal(constant('MIN_ROUND_SECONDS'), MIN_ROUND_SECONDS);
+    assert.equal(constant('MAX_ROUND_SECONDS'), MAX_ROUND_SECONDS);
+    assert.equal(constant('ROUND_STEP_SECONDS'), ROUND_STEP_SECONDS);
+    assert.equal(constant('VOTE_GRACE_SECONDS'), VOTE_GRACE_SECONDS);
+    assert.equal(constant('MIN_PLAYERS'), MIN_PLAYERS);
+    assert.equal(constant('ROOM_CAP'), MAX_PLAYERS);
 });
 
 test('endVoteThreshold is a simple majority of the seated players', () => {
