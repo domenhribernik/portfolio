@@ -1,0 +1,179 @@
+{
+  "origin": "https://domenhribernik.com",
+  "pages": {
+    "": {
+      "title": "Domen Hribernik",
+      "description": "Full-stack developer in Slovenia. Portfolio of hand-built web apps: a live sky atlas, 3D CSS bouquets, a tarok scorekeeper, and more, plus a blog on building small software.",
+      "icon": "fas fa-house",
+      "gradient": "linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)"
+    },
+    "views/thesis": {
+      "title": "Virtual Runner",
+      "description": "My thesis focuses on creating a digital twin of a runner, integrating multiple subprojects into an application to demonstrate practical use of various technologies.",
+      "icon": "fas fa-running",
+      "gradient": "linear-gradient(45deg, #667eea 0%, #a779e9 100%)"
+    },
+    "views/music": {
+      "title": "Guitar Backing Tracks",
+      "description": "I got tired of digging through folders every time I wanted to practice. So I built a simple player that keeps all my backing tracks in one place, ready to go.",
+      "icon": "fas fa-music",
+      "gradient": "linear-gradient(45deg, #667eea 0%, #56ccf2 100%)"
+    },
+    "views/seam": {
+      "title": "Seam",
+      "description": "Connect four, except the ground keeps disappearing. Play into a column that is already full and the deepest row of the whole board is cut away, so every piece drops a row and the line you were building may be gone.",
+      "icon": "fas fa-layer-group",
+      "gradient": "linear-gradient(45deg, #1f8a86 0%, #e0a11c 100%)"
+    },
+    "views/spy": {
+      "title": "Spy Game",
+      "description": "Everyone knows the location except one person. That person is the spy. Pass one phone round the table, or open a room so everyone gets their own screen, votes in secret and finds out together who was lying.",
+      "icon": "fas fa-user-secret",
+      "gradient": "linear-gradient(45deg, #b24592 0%, #f15f79 100%)"
+    },
+    "views/tarok": {
+      "title": "Tarok Scoring",
+      "description": "A scorekeeper for Slovenia's beloved card game. Handles radelci, multipliers, and full game history, so the table argument about who's winning stays settled.",
+      "icon": "fa fa-trophy",
+      "gradient": "linear-gradient(45deg, #ff006e 0%, #ff4d4d 100%)"
+    },
+    "views/beseda": {
+      "title": "Beseda",
+      "description": "Duolingo doesn't teach Slovenian and the apps that do want your money, so here is a free one. A new word every day inside real sentences, where hovering any word tells you what it means.",
+      "icon": "fas fa-language",
+      "gradient": "linear-gradient(45deg, #2f5b53 0%, #7fa89c 100%)"
+    },
+    "views/tells": {
+      "title": "Tells",
+      "description": "A logical fallacy sits in the argument where anyone can point at it, a cognitive bias sits in your head where nobody can, and a tactic is someone triggering that bias on purpose.",
+      "icon": "fas fa-crosshairs",
+      "gradient": "linear-gradient(45deg, #1c1a17 0%, #d4451f 100%)"
+    },
+    "views/botaniq": {
+      "title": "Botaniq",
+      "description": "Never forget to water a plant again. Add your plants, set a watering schedule, and write down exactly how to care for each one. Simple and always one glance away.",
+      "icon": "fas fa-leaf",
+      "gradient": "linear-gradient(45deg, #56ab2f 0%, #a8e063 100%)"
+    },
+    "views/ip": {
+      "title": "Multi-Source IP Locator",
+      "description": "Asks ten independent geolocation services where an IP lives and draws every answer on one map, so you see where the consensus lands and not just one provider's best guess.",
+      "icon": "fas fa-map-marker-alt",
+      "gradient": "linear-gradient(45deg, #11998e 0%, #38ef7d 100%)"
+    },
+    "views/workout": {
+      "title": "Workout Tracker",
+      "description": "Build workouts from your own exercise library, whether it's reps, weights, holds, or runs, then log every round as you go. Each session is saved, so you can look back and see yourself getting stronger.",
+      "icon": "fas fa-dumbbell",
+      "gradient": "linear-gradient(45deg, #f46b45 0%, #eea849 100%)"
+    },
+    "views/maze": {
+      "title": "Maze Generator",
+      "description": "Generate your own maze puzzles and print them out. Pick a shape, pick a style, and get a unique maze every time with the solution ready if you need it.",
+      "icon": "fas fa-puzzle-piece",
+      "gradient": "linear-gradient(45deg, #3d5af1 0%, #22d1ee 100%)"
+    },
+    "views/sourdough": {
+      "title": "Sourdough Tracker",
+      "description": "Good sourdough takes days, and it is easy to lose track. This keeps the whole process in one place so you always know where your dough is: fed, folded, proofing, or ready for the oven.",
+      "icon": "fas fa-bread-slice",
+      "gradient": "linear-gradient(45deg, #c8741a 0%, #f3e3c3 100%)"
+    },
+    "views/blog": {
+      "title": "Blog",
+      "description": "A place to write down the occasional thought on building software and the projects on this site. Rendered straight in the browser.",
+      "icon": "fas fa-book-open",
+      "gradient": "linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)"
+    },
+    "views/recipes": {
+      "title": "Recipes",
+      "description": "A cozy recipe box where anyone can browse and cooks can write their own. A guided cooking mode walks you through each step with built in timers and a bell.",
+      "icon": "fas fa-utensils",
+      "gradient": "linear-gradient(45deg, #e0731d 0%, #efe9dd 100%)"
+    },
+    "views/parlour": {
+      "title": "The Drawing Room",
+      "description": "A little multiplayer parlour: open a room, hand friends the four letter code, and when the host rings the bell everyone draws on the same sheet, live. Real time sync over plain PHP and MySQL, no websockets needed.",
+      "icon": "fas fa-bell",
+      "gradient": "linear-gradient(45deg, #42101c 0%, #c9992e 100%)"
+    },
+    "views/flowers": {
+      "title": "Paper Flowers",
+      "description": "Build a bouquet out of nothing but CSS: pick roses, sunflowers, poppies and more, and every petal is a flat div rotated into place. Then send someone a link to their arrangement.",
+      "icon": "fas fa-spa",
+      "gradient": "linear-gradient(45deg, #b13a6e 0%, #f6c1d9 100%)"
+    },
+    "views/nebo": {
+      "title": "Nebo",
+      "description": "A live map of the night sky: every naked eye star, the five visible planets, and the Moon in its exact phase, computed right in your browser from orbital mechanics. Drag time and watch dusk fall over the dome.",
+      "icon": "fas fa-moon",
+      "gradient": "linear-gradient(45deg, #0b102a 0%, #2c3e70 100%)"
+    },
+    "views/trails": {
+      "title": "Trails",
+      "description": "Somewhere over the Alps with no wifi, you want to know where you are and what that city under the wing is called.",
+      "icon": "fas fa-plane-up",
+      "gradient": "linear-gradient(45deg, #0a151d 0%, #ff2d78 100%)"
+    },
+    "views/share": {
+      "title": "Share",
+      "description": "Put share. in front of any address on this site and you get a page built to be pointed at a phone: what the project is, what it does, and a QR code big enough to scan across a room.",
+      "icon": "fas fa-qrcode",
+      "gradient": "linear-gradient(45deg, #1f35e0 0%, #d4451f 100%)"
+    },
+    "views/about": {
+      "title": "About Domen Hribernik",
+      "description": "About Domen Hribernik, a full-stack developer based in Celje, Slovenia: education, work experience, the technologies I use, and the projects I build.",
+      "icon": "fas fa-user",
+      "gradient": "linear-gradient(45deg, #2f5b53 0%, #6b6256 100%)"
+    },
+    "views/projects": {
+      "title": "Project Portfolio",
+      "description": "The full edition: every project by Domen Hribernik on one broadsheet page, from client sites and passion builds to academic research. Updated as work ships.",
+      "icon": "fas fa-newspaper",
+      "gradient": "linear-gradient(45deg, #1f35e0 0%, #1c1a17 100%)"
+    },
+    "views/store": {
+      "title": "Everbloom",
+      "description": "Send a handcrafted 3D bouquet that blooms when they open it. Delivered by link, anywhere on earth, in one second. It never wilts.",
+      "icon": "fas fa-seedling",
+      "gradient": "linear-gradient(45deg, #2f5b53 0%, #f2b705 100%)"
+    },
+    "views/rocks": {
+      "title": "Our Rock Pile",
+      "description": "A small 3D museum of collected rocks built with Three.js. Spin each one around, read where it came from, and watch the pile grow one find at a time.",
+      "icon": "fas fa-gem",
+      "gradient": "linear-gradient(45deg, #4a4036 0%, #a49a8a 100%)"
+    },
+    "views/dnd": {
+      "title": "Session Zero",
+      "description": "New to Dungeons and Dragons? Take a short quiz to find your class, then learn everything you need for your first session.",
+      "icon": "fas fa-dice-d20",
+      "gradient": "linear-gradient(45deg, #4c1d95 0%, #d4451f 100%)"
+    },
+    "views/jeger": {
+      "title": "Dom's Jeger",
+      "description": "Kontrolni seznam za domači zeliščni liker: katera zelišča so že nabrana, kaj še manjka in kdaj gre vse skupaj v žganje.",
+      "icon": "fas fa-wine-bottle",
+      "gradient": "linear-gradient(45deg, #0f0d0a 0%, #f2b705 100%)"
+    },
+    "views/on-this-day": {
+      "title": "On This Day",
+      "description": "On This Day, a daily almanac of history. Every event, birth and death recorded on today's date, drawn from Wikipedia.",
+      "icon": "fas fa-calendar-day",
+      "gradient": "linear-gradient(45deg, #1c1a17 0%, #2f5b53 100%)"
+    },
+    "views/blog/building-this-blog": {
+      "title": "Building a Blog With No Build Step",
+      "description": "The whole site is hand written static files, so the blog had to be too. Here is how it reads Markdown straight from a folder with no framework, no bundler, and no database.",
+      "icon": "fas fa-book-open",
+      "gradient": "linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)"
+    },
+    "views/blog/in-praise-of-small-software": {
+      "title": "In Praise of Small Software",
+      "description": "Most of the projects on this site solve a problem exactly one person had. That is not a limitation. It might be the whole point.",
+      "icon": "fas fa-book-open",
+      "gradient": "linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)"
+    }
+  }
+}

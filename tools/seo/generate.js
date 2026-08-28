@@ -16,6 +16,9 @@
 //?     <!-- seo:posts:start/end --> markers inside #post-grid.
 //?   - views/blog/<slug>/index.html: one prerendered page per post in
 //?     views/blog/posts/manifest.json, from the markdown + frontmatter.
+//?   - views/share/catalog.json: one share card per public page, for the QR
+//?     landing page on the share. subdomain, which is served from its own
+//?     document root and so cannot import project-data.js.
 //?
 //? Hand-edited heads (titles, descriptions, canonicals) are deliberately NOT
 //? generated; the views/seo checklist is the guard for those. The generator
@@ -42,6 +45,7 @@ import {
     tellsFallbackHtml, validateSlug,
 } from './logic.js';
 import { renderMarkdown } from './markdown.js';
+import { SHARE_EXTRAS, buildShareCatalog } from './share-catalog.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CHECK = process.argv.includes('--check');
@@ -186,6 +190,37 @@ for (const post of posts) {
         origin: SITE_ORIGIN,
     }));
 }
+
+//? ----------------------------------------------------------- share catalog
+
+//? Card copy for the pages the registry does not describe comes from their own
+//? hand-written head, so there is one place to edit and it is the page itself.
+function headMetaOf(page) {
+    let html;
+    try {
+        html = read(`${page}/index.html`);
+    } catch {
+        return null;
+    }
+    const title = html.match(/<title>([^<]*)<\/title>/i);
+    const description = html.match(/<meta\s+name="description"\s+content="([^"]*)"/i);
+    if (!title || !description) return null;
+    return { title: title[1], description: description[1] };
+}
+
+const headMeta = {};
+for (const page of Object.keys(SHARE_EXTRAS)) {
+    const meta = headMetaOf(page);
+    if (meta) headMeta[page] = meta;
+}
+
+outputs.set('views/share/catalog.json', JSON.stringify(buildShareCatalog({
+    projects,
+    pages,
+    headMeta,
+    posts,
+    origin: SITE_ORIGIN,
+}), null, 2) + '\n');
 
 //? ---------------------------------------------------------------- write/check
 

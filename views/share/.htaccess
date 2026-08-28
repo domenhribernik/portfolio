@@ -1,0 +1,15 @@
+# This directory is the document root of share.domenhribernik.com. Every
+# address there names a page of the main site, and none of those pages exist
+# here as files, so anything that is not a real file is the share page itself.
+#
+# No RewriteBase on purpose: the substitution then resolves against whichever
+# directory this file sits in, which is what makes the same rule correct both
+# as a document root and at /views/share/ on the main domain. There the only
+# request that reaches here is index.html, so the rule never fires.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . index.html [L]
+</IfModule>

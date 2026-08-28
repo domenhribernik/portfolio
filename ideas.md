@@ -35,4 +35,3 @@
   - No ads, completely free to use, from any device (pc, iphone, android)
   - Fast development, took me 5 minutes to create the workout app (ui, not connected to db)
 - **Battleship** 2 player battleship, can have history on profile
-- **Share website** share.domenhribernik.com/... to share the page with qr code

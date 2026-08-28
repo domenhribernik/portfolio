@@ -248,5 +248,15 @@ export const projects = {
       visitSite: "views/trails",
     },
     iconClass: "fas fa-plane-up",
+  },
+  share: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #1f35e0 0%, #d4451f 100%)",
+    title: "Share",
+    description: "Put share. in front of any address on this site and you get a page built to be pointed at a phone: what the project is, what it does, and a QR code big enough to scan across a room. The encoder is written by hand, so the code is drawn without loading anyone else's script.",
+    links: {
+      visitSite: "views/share",
+    },
+    iconClass: "fas fa-qrcode",
   }
 };

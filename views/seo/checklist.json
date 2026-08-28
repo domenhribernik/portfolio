@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08",
+  "updated": "2026-08-28",
   "requirements": [
     {
       "id": "title",
@@ -589,6 +589,24 @@
         "jsonld": "na",
         "h1": "done",
         "crawlable": "partial",
+        "robots": "done",
+        "sitemap": "done",
+        "indexed": "todo",
+        "cwv": "unknown"
+      }
+    },
+    {
+      "path": "views/share",
+      "name": "Share (QR landing)",
+      "tier": "public",
+      "status": {
+        "title": "done",
+        "description": "done",
+        "canonical": "done",
+        "og": "done",
+        "jsonld": "na",
+        "h1": "done",
+        "crawlable": "done",
         "robots": "done",
         "sitemap": "done",
         "indexed": "todo",
