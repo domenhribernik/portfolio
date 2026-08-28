@@ -9,6 +9,11 @@ Connect four on a board that eats its own floor. Three ways in, one section:
   for the polling rationale, the event-log cursor and the outbox contract,
   none of which is repeated here.
 
+The boot screen offers both room doors: `doorRoom` opens a section, `doorJoin`
+opens the same gate with the code field shown. Joining used to be reachable
+only by following a shared link, which left two people in one room with a code
+read aloud and nowhere to type it.
+
 `showScreen(id)` takes a raw element id and toggles `.is-open`. Spy's takes an
 id and toggles `.active`, the parlour's takes a logical name and toggles `.on`.
 Do not mix the three.
@@ -203,6 +208,19 @@ both surfaces call `cut(c)` and both feed `setHot`.
   colour belonging to neither seat: azurite over the olivine bed came out
   teal. The same rule governs `.ghost`, which is opaque linen under a veil of
   the seat's ink.
+- **A finished fall still pins its core's transform.** `coreFall` fills `both`
+  and `core--fresh` is never removed by the paint, so the filled animation
+  keeps winning over the plain declaration in `.stack.is-collapsing .core` and
+  the collapse cannot move a single core: the strata travel a bed and every
+  core stays where it was until the repaint snaps it into register. `caveIn()`
+  clears the class before beat three, which is late enough that no fall or
+  landing squash is ever cut short. It cannot be done in `paintCores`, which
+  runs after `caveIn()`, nor left to `dropIn()`, which runs after that again.
+- **The landing mark is quoted in percentages of the CORE, not of a bed.** The
+  core is 78% of a bed, so `bottom: -16%` puts the mark *below* the cell's
+  border rather than inside the bed, and on the basement row, whose cells carry
+  no bottom border, it lands on the trench's graphite lip and the two read as
+  one black bar. Keep it a hairline, inside its own shaft, clear of every rule.
 - **`paintCores` reuses a core element whose seat has not changed**, so
   `paintStrike` clears `.core--struck` itself; otherwise a ring struck in one
   section survives into the next.
@@ -212,7 +230,21 @@ both surfaces call `cut(c)` and both feed `setHot`.
   reason.
 - **`join` starts the match**, in the same transaction that seats the second
   player, with the room row locked. There is no host tap between a shared link
-  and a live section; that is the one place this diverges from spy.
+  and a live section; that is the one place this diverges from spy. The poll
+  re-checks the rule through `startIfSeated()`, so both seats filled always
+  ends up dealt even if something else got the room back into the lobby.
+- **Anything that counts seats MUST take the room lock first.**
+  `reopenIfAbandoned()` counted them without it and lost a race with `join`: the
+  joiner holds the room row from its own `FOR UPDATE` until commit, so a poll
+  arriving inside that window saw one seat (the INSERT was uncommitted, and
+  invisible to a consistent read), decided the section was abandoned, and
+  blocked on the UPDATE. `join` then committed `play`, the waiting UPDATE
+  re-read the row, matched `status <> 'lobby'` and put it straight back. `deal`
+  and `abandon` a second apart, both seats filled, in the lobby, permanently:
+  `startMatch()` is reachable only from `join` at the moment the second seat is
+  taken and from `again` on a finished section, so nothing could ever deal it.
+  Both halves are fixed, and both are pinned by
+  `tests/seam-controller.test.php` ("a section stranded in the lobby").
 - **A match needs two seats.** Losing one (leaving, or being swept) voids the
   section and `reopenIfAbandoned()` puts the room back in `lobby`, so the
   shared link still works for whoever turns up next.

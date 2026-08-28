@@ -10,6 +10,8 @@
     "boot.localHint":      { "en": "TWO SURVEYORS, ONE DEVICE",             "sl": "DVA GEOLOGA, ENA NAPRAVA" },
     "boot.room":           { "en": "SHARE A LINK",                          "sl": "DELI POVEZAVO" },
     "boot.roomHint":       { "en": "A PLATE EACH",                          "sl": "VSAK SVOJA PLOŠČA" },
+    "boot.join":           { "en": "TYPE A CODE",                            "sl": "VPIŠI KODO" },
+    "boot.joinHint":       { "en": "TAKE THE SECOND SEAT",                   "sl": "ZASEDI DRUGO MESTO" },
     "boot.solo":           { "en": "WORK ALONE",                            "sl": "DELAJ SAM" },
     "boot.soloHint":       { "en": "AGAINST THE MACHINE",                   "sl": "PROTI STROJU" },
     "boot.rules":          { "en": "HOW IT WORKS",                          "sl": "KAKO DELUJE" },

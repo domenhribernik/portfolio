@@ -14,6 +14,19 @@ Everything else is already wired.
 
 Pass-the-plate and the bot work without it. Only room mode needs the tables.
 
+Two more, both optional and both already run once:
+
+- `seam-model.sql` now also seeds the `projects` row, so the section is listed
+  in the admin dashboard's projects tab. It grants nobody anything, and the
+  controller has no Auth gate to grant against; it is a registry entry.
+- **Run
+  [../../app/models/seeds/dashboard-tile-seam.sql](../../app/models/seeds/dashboard-tile-seam.sql)**
+  for the Dashboard launcher tile. It is public and opt-in (`project_id` NULL,
+  `is_default` 0), the same shape as Spy Game and the Drawing Room, so it
+  writes nothing to anyone's shelf: pick it yourself from the launcher's tile
+  picker. Do not point that tile at the `seam` project row, or the only person
+  who can see it is you.
+
 ## The four bugs you reported, and what was actually wrong
 
 All four were real, and three of them had a cause worth knowing about.
@@ -67,6 +80,75 @@ Not reported, but they would have bitten a real player.
    as the fall. It now lifts the moment the core is in its bed.
 3. **"DRAWING THE BOTTOM" outlived the cave** on the opponent's plate by about
    a second, because only the next poll rewrote that line.
+
+## The black bar you saw, and the bigger one it was hiding
+
+**The bar under a landing core was the landing mark, drawn far too heavy.**
+`.core--fresh::after` is meant to be the reading the plate takes where a core
+comes to rest. Every offset on it is a percentage of the *core*, which is 78%
+of a bed, so the numbers were smaller than they looked: at `bottom: -16%` the
+mark landed a fraction of a pixel **below** the cell's own border instead of
+resting inside the bed, and at `left/right: -38%` it ran to 176% of the core's
+width and crossed into the neighbouring shafts. In 2px of graphite, the same
+ink as the heaviest rules on the plate. On the basement bed it was worst: that
+row's cells carry no bottom border, so the mark fell straight onto the trench's
+2px graphite lip and the two read as one black bar flashing across the foot of
+the plate. It is now a 1px slate hairline that sits inside its own bed and
+starts fading the moment it is drawn.
+
+**Chasing it turned up something worse: the cave was moving the rock and
+leaving every core behind.** `core--fresh` was added on each drop and never
+removed, and `paintCores` reuses a core element whose seat has not changed, so
+the class accumulated until every core on the plate carried it. `coreFall`
+fills `both`, and a filled animation outranks a plain declaration in the
+cascade, so the collapse rule could not move a single one of them: measured
+mid-collapse, all five surviving cores sat at `translateY(0)` while the strata
+travelled a full bed under them, and then snapped into register when the
+repaint rebuilt the grid. That is why a cave read as "the colours moved" rather
+than "the ground fell", which is the exact thing the three-beat sequence was
+built to fix. `caveIn()` now strips the class before beat three.
+
+## The three multiplayer bugs, and the race behind the worst one
+
+**The player list looked like it was looping.** `rowIn` is a one-shot entrance
+animation, but `renderRoster()` clears the list and rebuilds both rows on every
+poll, so it replayed a couple of times a second and read as a loop. The
+animation is gone from `.roster__row`.
+
+**There was no way to type a code.** The join gate already existed, complete
+with its code field, its title and its own strings; the only thing missing was
+a door to it, so it could be reached only by following a shared link. Two
+people sitting in the same room had nowhere to type the code they were reading
+out. `TYPE A CODE` is now the second door on the boot screen and opens the
+gate that was already there.
+
+**The match would not start, and this one was a real race.** Your section SMZN
+is still in the database and it tells the whole story: `deal` and `abandon`,
+both at 10:15:42, two surveyors seated, status `lobby`.
+
+`joinRoom` locks the room row, inserts the second player, deals, and commits.
+While it held that lock, the other plate's poll ran `reopenIfAbandoned()`,
+which counted seats **without taking the lock**. The insert was still
+uncommitted and therefore invisible to it, so it counted one seat, concluded
+the section had been abandoned, and went to write `status = 'lobby'`. That
+write blocked on the lock `join` was holding. `join` committed `play`; the
+waiting write then re-read the row, found `status <> 'lobby'` was true, and put
+the section straight back into the lobby with both seats full.
+
+That is a dead end, because `startMatch()` can only be reached from `join` at
+the moment the second seat is taken, or from `again` on a finished section.
+Neither can ever happen to a full room sitting in the lobby, and there is no
+start button because there was never meant to be one.
+
+Two fixes. `reopenIfAbandoned()` now takes the room lock before it counts, so
+it runs strictly before the join or strictly after it, never through the middle
+of it. And the poll now re-checks the rule it used to trust: both seats filled
+means the section is dealt, whatever got it into the lobby. A section stranded
+the way yours was recovers on the next poll from either plate.
+
+I hammered twelve rooms with six concurrent pollers across the join: all twelve
+came out dealt, with no spurious `abandon`. The regression test fails against
+the old controller and passes against the new one.
 
 ## The finding that changes the game
 

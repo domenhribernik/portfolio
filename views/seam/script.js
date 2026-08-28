@@ -523,6 +523,18 @@ async function caveIn(frame, stack, beds, edge) {
     beds.classList.add('is-cutting');
     await sleep(CUT_MS + VOID_MS);
 
+    // A fall that has finished still pins its core's transform, because
+    // `coreFall` fills `both` and a filled animation outranks a plain
+    // declaration in the cascade. Nothing used to take the class off again and
+    // paintCores reuses a core whose seat has not changed, so it accumulated
+    // until every core on the plate carried it and the collapse could not move
+    // one of them: measured mid-beat, all five survivors sat at translateY(0)
+    // while the strata travelled a full bed under them, and then snapped into
+    // register on the repaint. Clearing it here rather than in paintCores is
+    // deliberate: paintCores runs after this, and dropIn after that again.
+    // Beat three is also late enough that no fall or squash is cut short.
+    stack.querySelectorAll('.core--fresh').forEach((el) => el.classList.remove('core--fresh'));
+
     frame.classList.add('is-collapsing');
     stack.classList.add('is-collapsing');
     beds.classList.add('is-collapsing');
@@ -1272,6 +1284,10 @@ async function resume() {
 
 function wire() {
     $('doorRoom').addEventListener('click', () => openGate('open'));
+    // The join gate is the same gate, with the code field shown. It used to be
+    // reachable only by following a shared link, which left anyone sitting in
+    // the same room reading the code aloud with nowhere to type it.
+    $('doorJoin').addEventListener('click', () => openGate('join'));
     $('doorLocal').addEventListener('click', () => startLocal('local'));
     $('doorSolo').addEventListener('click', () => { renderSolo(); showScreen('soloScreen'); });
     $('doorRules').addEventListener('click', () => showScreen('rulesScreen'));

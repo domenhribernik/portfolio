@@ -12,6 +12,16 @@
 -- deleting a room cascades to its players and events.
 -- Run manually in phpMyAdmin. Safe to re-run.
 
+-- The auth registry row, so the section shows up as a project in the admin
+-- dashboard's #projects tab. It grants nobody anything: no user_project_roles
+-- row is seeded here, and seam-controller.php carries NO Auth gate at all. A
+-- player is a token, not an account, which is the whole point of a throwaway
+-- four-letter code. So do not read this row as "seam is gated"; it is the
+-- registry entry a project needs to be listed, nothing more. Grant roles from
+-- the admin dashboard if the feature ever needs an audience.
+INSERT INTO projects (project_key, name) VALUES ('seam', 'Seam')
+ON DUPLICATE KEY UPDATE active = 1;
+
 CREATE TABLE IF NOT EXISTS seam_rooms (
     id INT AUTO_INCREMENT PRIMARY KEY,
     code CHAR(4) NOT NULL UNIQUE,

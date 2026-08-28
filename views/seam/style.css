@@ -593,13 +593,16 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
 
 .roster { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hair-firm); }
 
+/* No entrance animation here, deliberately. renderRoster() clears the list and
+   rebuilds both rows on every poll, so a one-shot `rowIn` replayed a couple of
+   times a second and read as a loop: the lobby appeared to be flickering at
+   you while you waited for the other surveyor. */
 .roster__row {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.8rem 0.1rem;
     border-bottom: 1px solid var(--hair-firm);
-    animation: rowIn 0.35s var(--ease-settle) both;
 }
 
 .roster__core { flex: 0 0 auto; width: 1.4rem; height: 1.4rem; border-radius: 50%; border: 1.5px solid var(--graphite); }
@@ -958,17 +961,26 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
 }
 
 /* The mark the plate registers where a core lands. A plate does not raise
-   dust; it takes a reading. */
+   dust; it takes a reading.
+
+   It rests IN the bed, never on a rule. Every offset here is a percentage of
+   the CORE, which is 78% of a bed, so the numbers are smaller than they look:
+   at `bottom: -16%` and 2px of graphite it landed a fraction of a pixel BELOW
+   the cell's own border and stretched to 176% of the core's width, crossing
+   into the neighbouring shafts. On the basement bed, where the cell carries no
+   border, it fell straight onto the trench's 2px graphite lip and the two read
+   as one black bar flashing across the foot of the plate on every drop. A
+   reading is a hairline in slate, clear of the rule and inside its own shaft. */
 .core--fresh::after {
     content: '';
     position: absolute;
-    left: -38%;
-    right: -38%;
-    bottom: -16%;
-    height: 2px;
-    background: var(--graphite);
+    left: -10%;
+    right: -10%;
+    bottom: -8%;
+    height: 1px;
+    background: var(--slate);
     transform: scaleX(0);
-    animation: landTick 0.34s var(--ease-settle) var(--fall-time, 0.34s) both;
+    animation: landTick 0.28s var(--ease-settle) var(--fall-time, 0.34s) both;
 }
 
 /* ------------------------------------------------------------------
@@ -1361,10 +1373,11 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
     100% { transform: translateY(0) scale(1) translateZ(0); }
 }
 
-/* The reading the plate takes where a core lands. */
+/* The reading the plate takes where a core lands. It starts fading as soon as
+   it is drawn: a mark that holds at full strength registers as a bar. */
 @keyframes landTick {
-    0% { transform: scaleX(0); opacity: 1; }
-    38% { transform: scaleX(1); opacity: 1; }
+    0% { transform: scaleX(0); opacity: 0.9; }
+    30% { transform: scaleX(1); opacity: 0.9; }
     100% { transform: scaleX(1); opacity: 0; }
 }
 
@@ -1406,7 +1419,6 @@ body.is-playing #verdictScreen.is-open { flex: 1 1 auto; justify-content: center
 
 @media (prefers-reduced-motion: reduce) {
     .screen.is-open,
-    .roster__row,
     .toast,
     .verdict__stamp,
     .core--fresh,

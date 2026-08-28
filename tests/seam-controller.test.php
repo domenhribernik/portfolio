@@ -641,6 +641,29 @@ $swept = poll($q1)['body'];
 check('a phone silent for a quarter of an hour forfeits its seat', count($swept['players']) === 1);
 check('and the section reopens for a replacement', $swept['room']['status'] === 'lobby');
 
+echo "\n-- a section stranded in the lobby --\n";
+
+// Both seats filled but still in the lobby is a dead end: startMatch() is
+// reachable only from join, at the moment the second seat is taken, and from
+// again, on a finished section. A poll that raced a join used to leave a real
+// room in exactly this state, with `deal` and `abandon` a second apart, and
+// nothing on either plate could ever start it. The poll now re-checks the
+// rule rather than trusting it was applied once at join time.
+[$d1, $d2] = openPair();
+backdate($pdo, "UPDATE seam_rooms SET status = 'lobby' WHERE code = ?", [$d1['code']]);
+$dealt = poll($d1)['body'];
+check('a full section left in the lobby deals itself on the next poll',
+    $dealt['room']['status'] === 'play', $dealt['room']['status']);
+check('and both surveyors keep their seats', count($dealt['players']) === 2);
+check('the other plate sees it too', poll($d2)['body']['room']['status'] === 'play');
+
+// The counterpart still has to hold: one seat means the lobby, not a deal.
+[$e1, $e2] = openPair();
+api('leave', ['code' => $e2['code'], 'token' => $e2['token']]);
+$alone = poll($e1)['body'];
+check('a half empty section is not dealt by the same rule',
+    $alone['room']['status'] === 'lobby', $alone['room']['status']);
+
 echo "\n-- the host walking out --\n";
 
 [$h1, $h2] = openPair();

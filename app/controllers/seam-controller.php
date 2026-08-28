@@ -537,32 +537,108 @@ function leaveRoom(array $body): void
 /**
  * A match needs two surveyors. When one walks out (or is swept for going
  * quiet), the section is void: it returns to the lobby so the shared link
- * still works and somebody new can take the empty seat. Guarded on the
- * status so two simultaneous pollers cannot both announce it.
+ * still works and somebody new can take the empty seat.
+ *
+ * The seat count MUST be taken under the room lock. Without it this raced
+ * `joinRoom` and lost: the joiner holds the room row from its own FOR UPDATE
+ * until commit, so a poll arriving in that window counted one seat (the
+ * INSERT was still uncommitted and invisible to a consistent read), decided
+ * the section was abandoned, and then blocked on the UPDATE. The join
+ * committed `play`; the waiting UPDATE re-read the row, matched
+ * `status <> 'lobby'`, and put the section straight back in the lobby with
+ * both seats filled. `deal` and `abandon` landed in the same second and the
+ * match could never be started again by anything. Locking first means this
+ * runs strictly before the join (one seat, already lobby, no-op) or strictly
+ * after it (two seats, returns here), never through the middle of it.
  */
 function reopenIfAbandoned(PDO $db, int $roomId): void
 {
-    $seated = $db->prepare('SELECT COUNT(*) FROM seam_players WHERE room_id = ? AND left_at IS NULL');
-    $seated->execute([$roomId]);
-    if ((int) $seated->fetchColumn() >= ROOM_CAP) {
-        return;
+    $owned = !$db->inTransaction();
+    if ($owned) {
+        $db->beginTransaction();
     }
+    try {
+        $db->prepare('SELECT id FROM seam_rooms WHERE id = ? FOR UPDATE')->execute([$roomId]);
 
-    $claim = $db->prepare(
-        "UPDATE seam_rooms
-            SET status = 'lobby', board = ?, turn = starter,
-                charges_1 = ?, charges_2 = ?, cooling_1 = 0, cooling_2 = 0,
-                moves = 0, outcome = NULL, seam = NULL
-          WHERE id = ? AND status <> 'lobby'"
-    );
-    $claim->execute([emptyBoard(), CHARGES, CHARGES, $roomId]);
-    if ($claim->rowCount() === 0) {
-        return;
+        // A locking read as well, so the count is the committed truth rather
+        // than this transaction's snapshot of it.
+        $seated = $db->prepare(
+            'SELECT COUNT(*) FROM seam_players WHERE room_id = ? AND left_at IS NULL FOR UPDATE'
+        );
+        $seated->execute([$roomId]);
+        if ((int) $seated->fetchColumn() >= ROOM_CAP) {
+            if ($owned) {
+                $db->commit();
+            }
+            return;
+        }
+
+        // Still guarded on the status: it is what keeps the announcement to
+        // one, and what makes a second call a no-op.
+        $claim = $db->prepare(
+            "UPDATE seam_rooms
+                SET status = 'lobby', board = ?, turn = starter,
+                    charges_1 = ?, charges_2 = ?, cooling_1 = 0, cooling_2 = 0,
+                    moves = 0, outcome = NULL, seam = NULL
+              WHERE id = ? AND status <> 'lobby'"
+        );
+        $claim->execute([emptyBoard(), CHARGES, CHARGES, $roomId]);
+        if ($claim->rowCount() > 0) {
+            $db->prepare('UPDATE seam_players SET wants_again = 0 WHERE room_id = ?')->execute([$roomId]);
+            $db->prepare("INSERT INTO seam_events (room_id, player_id, type) VALUES (?, NULL, 'abandon')")
+               ->execute([$roomId]);
+        }
+        if ($owned) {
+            $db->commit();
+        }
+    } catch (PDOException $e) {
+        if ($owned && $db->inTransaction()) {
+            $db->rollBack();
+        }
+        throw $e;
     }
+}
 
-    $db->prepare('UPDATE seam_players SET wants_again = 0 WHERE room_id = ?')->execute([$roomId]);
-    $db->prepare("INSERT INTO seam_events (room_id, player_id, type) VALUES (?, NULL, 'abandon')")
-       ->execute([$roomId]);
+/**
+ * The other half of reopenIfAbandoned, and the reason a stuck section can now
+ * unstick itself. `startMatch()` is reachable only from `joinRoom` at the
+ * moment the second seat is taken, and from `postAgain` on a finished
+ * section. So a section sitting in the lobby with BOTH seats filled is a dead
+ * end: nothing on either plate can ever deal it, and there is no button for
+ * it because there is not meant to be one. That state is not supposed to
+ * exist, and with the locking above it should not arise again, but a rule the
+ * poll re-checks every few seconds is worth more than one applied once at
+ * join time. Same rule as joinRoom's, enforced continuously.
+ */
+function startIfSeated(PDO $db, int $roomId): void
+{
+    $owned = !$db->inTransaction();
+    if ($owned) {
+        $db->beginTransaction();
+    }
+    try {
+        $locked = $db->prepare('SELECT status, starter FROM seam_rooms WHERE id = ? FOR UPDATE');
+        $locked->execute([$roomId]);
+        $room = $locked->fetch();
+
+        if ($room && $room['status'] === 'lobby') {
+            $seated = $db->prepare(
+                'SELECT COUNT(*) FROM seam_players WHERE room_id = ? AND left_at IS NULL FOR UPDATE'
+            );
+            $seated->execute([$roomId]);
+            if ((int) $seated->fetchColumn() >= ROOM_CAP) {
+                startMatch($db, $roomId, (int) $room['starter']);
+            }
+        }
+        if ($owned) {
+            $db->commit();
+        }
+    } catch (PDOException $e) {
+        if ($owned && $db->inTransaction()) {
+            $db->rollBack();
+        }
+        throw $e;
+    }
 }
 
 // ------------------------------------------------------------------
@@ -869,6 +945,9 @@ function heartbeat(PDO $db, int $roomId, int $playerId): void
     // between the host walking out and a section nobody can restart.
     handOverHost($db, $roomId);
     reopenIfAbandoned($db, $roomId);
+    // ...and its counterpart: both seats filled but still in the lobby is a
+    // section nothing else can ever deal.
+    startIfSeated($db, $roomId);
 
     // Keep the section off the idle-purge list while anyone is still polling.
     $db->prepare(
