@@ -24,15 +24,17 @@
  *   }
  */
 
-// All views live at views/<name>/, so the account page is always one level up.
+// Most views live at views/<name>/, so the account page is one level up.
+// A view nested deeper (views/<name>/<sub>/) passes its own path instead.
 const ACCOUNT_PATH = '../account/';
 
 /**
  * Build the sign-in URL that returns the user to this page after login.
  * @param {string} [redirectPath] Defaults to the current page's path.
+ * @param {string} [accountPath] Relative path to views/account/ from this page.
  */
-export function loginUrl(redirectPath = location.pathname) {
-    return ACCOUNT_PATH + '?redirect=' + encodeURIComponent(redirectPath);
+export function loginUrl(redirectPath = location.pathname, accountPath = ACCOUNT_PATH) {
+    return accountPath + '?redirect=' + encodeURIComponent(redirectPath);
 }
 
 /**

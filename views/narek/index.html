@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narek | Slovenian Speech to Text</title>
+    <meta name="description" content="Press one key and talk. Narek transcribes spoken Slovenian into a written record as you speak, then proofreads it with AI and shows you every single word it changed before you accept anything.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        paper2: '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        faint: '#a49a8a',
+                        clay: '#d4451f',
+                        claydk: '#b8371a',
+                        cobalt: '#1f35e0',
+                        pine: '#2f5b53',
+                        marigold: '#f2b705',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.12)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-sans bg-paper text-ink min-h-screen leading-relaxed">
+
+<div class="max-w-[1080px] mx-auto px-4 sm:px-6 pb-6">
+
+    <!-- ============ Masthead ============ -->
+    <header class="reveal reveal-1 pt-6 sm:pt-9">
+        <div class="flex items-center justify-between gap-4 mb-7">
+            <a id="back-link" href="../../" class="shrink-0 text-stone no-underline hover:text-clay transition-colors font-mono text-sm">&larr; nazaj</a>
+            <nav class="seg" aria-label="Način">
+                <a href="./" class="seg__item is-active" aria-current="page">Narek</a>
+                <a href="tolmac/" class="seg__item">Tolmač</a>
+            </nav>
+        </div>
+
+        <div class="flex flex-wrap items-end justify-between gap-x-10 gap-y-5 border-b-2 border-ink pb-6">
+            <div class="min-w-0">
+                <h1 class="font-display font-extrabold uppercase text-[clamp(3.2rem,13vw,7rem)] leading-[0.82] tracking-[-0.04em]">Narek</h1>
+                <p class="mt-5 max-w-[58ch] text-stone text-[clamp(0.98rem,2vw,1.1rem)]">
+                    Pritisni tipko in govori. Zapisnik se polni sproti, stavek za stavkom.
+                    Ko ga daš lektorirat, ti <em class="not-italic text-ink font-medium">označi vsako besedo, ki jo je spremenil</em>,
+                    preden karkoli sprejmeš.
+                </p>
+            </div>
+
+            <dl id="counters" class="hidden shrink-0 gap-7 sm:gap-9">
+                <div>
+                    <dt class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-1.5">Besed</dt>
+                    <dd id="countWords" class="font-display font-extrabold text-3xl leading-none tabular-nums">0</dd>
+                </div>
+                <div>
+                    <dt class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-1.5">Odsekov</dt>
+                    <dd id="countSegments" class="font-display font-extrabold text-3xl leading-none tabular-nums">0</dd>
+                </div>
+                <div>
+                    <dt class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-1.5">Čas</dt>
+                    <dd id="countClock" class="font-display font-extrabold text-3xl leading-none tabular-nums">00:00</dd>
+                </div>
+            </dl>
+        </div>
+    </header>
+
+    <!-- ============ Banner: the one place every failure surfaces ============ -->
+    <div id="banner" class="hidden mt-5 border-2 border-clay bg-clay/[0.06] px-5 py-4" role="alert">
+        <p id="bannerTitle" class="font-mono text-[0.72rem] tracking-[0.2em] uppercase text-clay mb-1.5"></p>
+        <p id="bannerText" class="text-[0.95rem] text-ink/80 max-w-[70ch]"></p>
+        <button id="bannerAction" type="button" class="hidden mt-3 font-mono text-[0.72rem] tracking-[0.16em] uppercase text-clay underline underline-offset-4 hover:text-ink">
+        </button>
+    </div>
+
+    <!-- ============ Access gate: this tool spends one person's key ============ -->
+    <section id="gate" class="hidden mt-6" style="--acc:#d4451f" aria-live="polite">
+        <div class="flex items-baseline justify-between gap-4 border-b border-hairline pb-2">
+            <h2 class="font-mono text-[0.72rem] tracking-[0.24em] uppercase text-clay">Zasebno orodje</h2>
+            <p class="font-mono text-[0.72rem] tracking-[0.14em] uppercase text-faint">samo lastnik</p>
+        </div>
+        <div class="sheet-ruled py-14 sm:py-20 px-5 text-center">
+            <p id="gateTitle" class="font-display font-extrabold text-[clamp(1.6rem,5vw,2.6rem)] leading-[0.95] tracking-[-0.025em]"></p>
+            <p id="gateText" class="mt-5 mx-auto max-w-[52ch] text-stone text-[0.95rem]"></p>
+            <a id="gateLink" href="../account/" class="press hidden mt-8 inline-block font-mono text-[0.72rem] tracking-[0.18em] uppercase bg-ink text-paper px-7 py-3.5 rounded-[2px] no-underline">
+                Prijava
+            </a>
+        </div>
+    </section>
+
+    <div id="tool" class="hidden">
+    <!-- ============ The console: transport key + chart trace ============ -->
+    <section class="console reveal reveal-2 sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-5 pb-4 mt-5" style="--acc:#d4451f" aria-label="Snemanje">
+        <div class="border border-hairline bg-card">
+            <div class="flex items-stretch gap-0">
+
+                <!-- Transport key -->
+                <div class="shrink-0 p-3.5 sm:p-4 border-r border-hairline">
+                    <button id="recordKey" type="button" aria-pressed="false"
+                            class="key relative grid place-items-center w-[62px] h-[62px] sm:w-[72px] sm:h-[72px] bg-ink text-paper rounded-[3px]">
+                        <span class="key-glyph block w-5 h-5 sm:w-6 sm:h-6 bg-clay rounded-[2px]" aria-hidden="true"></span>
+                        <span class="sr-only" id="recordKeyLabel">Začni snemati</span>
+                    </button>
+                </div>
+
+                <!-- Chart trace -->
+                <div class="min-w-0 flex-1 flex flex-col">
+                    <div class="relative flex-1 min-h-[52px] bg-paper2 overflow-hidden">
+                        <canvas id="trace" class="block w-full h-full"></canvas>
+                        <span id="traceHint" class="absolute inset-0 grid place-items-center font-mono text-[0.62rem] tracking-[0.22em] uppercase text-faint pointer-events-none">
+                            mirovanje
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 px-3.5 py-2 border-t border-hairline">
+                        <p id="stateLine" class="font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone truncate">
+                            Pripravljen
+                        </p>
+                        <p id="stateClock" class="shrink-0 font-mono text-[0.72rem] tracking-[0.14em] text-faint tabular-nums">00:00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ The record sheet ============ -->
+    <main class="reveal reveal-3 mt-8" style="--acc:#d4451f">
+
+        <div class="flex items-baseline justify-between gap-4 border-b border-hairline pb-2 mb-0">
+            <h2 class="font-mono text-[0.72rem] tracking-[0.24em] uppercase text-clay">Zapisnik</h2>
+            <p id="sheetMode" class="font-mono text-[0.72rem] tracking-[0.14em] uppercase text-faint">surov prepis</p>
+        </div>
+
+        <!-- Empty state -->
+        <div id="sheetEmpty" class="sheet-ruled py-12 sm:py-16 text-center">
+            <p class="font-display font-extrabold text-[clamp(1.4rem,4vw,2.1rem)] leading-tight tracking-[-0.02em] max-w-[22ch] mx-auto">
+                Prazen list.
+            </p>
+            <p class="mt-4 font-mono text-[0.72rem] tracking-[0.16em] uppercase text-stone">
+                Pritisni <span class="text-clay">&#9632;</span> in začni govoriti
+            </p>
+            <ul class="mt-8 inline-flex flex-col gap-2 text-left font-mono text-[0.72rem] tracking-[0.04em] text-faint">
+                <li><span class="text-clay">&middot;</span>&nbsp;&nbsp; premor konča stavek in ga pošlje v prepis</li>
+                <li><span class="text-clay">&middot;</span>&nbsp;&nbsp; en odsek naenkrat, največ 18 sekund</li>
+                <li><span class="text-clay">&middot;</span>&nbsp;&nbsp; posnetek nikamor ne gre razen v prepis</li>
+            </ul>
+        </div>
+
+        <!-- The record itself: one ruled row per segment -->
+        <ol id="sheetRows" class="hidden sheet-ruled"></ol>
+
+        <!-- Proof sheet: what the correction wants to change -->
+        <div id="proof" class="hidden mt-0 border-x border-b border-hairline bg-card">
+            <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 sm:px-5 py-3.5 border-b border-hairline">
+                <p class="font-mono text-[0.72rem] tracking-[0.2em] uppercase text-stone">
+                    Popravki lektorja
+                </p>
+                <p id="proofStats" class="font-mono text-[0.72rem] tracking-[0.08em] text-stone tabular-nums"></p>
+            </div>
+
+            <div id="proofOverreach" class="hidden px-4 sm:px-5 py-3 border-b border-hairline bg-marigold/[0.13]">
+                <p class="font-mono text-[0.72rem] tracking-[0.14em] uppercase text-ink mb-1">Veliko sprememb</p>
+                <p class="text-[0.95rem] text-ink/75 max-w-[68ch]">
+                    Lektor je popravil več kot četrtino besedila. To je pogosto znak, da ni popravljal, ampak preubesedoval.
+                    Preglej vsak popravek posebej, preden sprejmeš.
+                </p>
+            </div>
+
+            <div id="proofBody" class="px-4 sm:px-5 py-5 text-base leading-[1.75] max-w-[72ch]"></div>
+
+            <div class="flex flex-wrap gap-3 px-4 sm:px-5 py-4 border-t border-hairline">
+                <button id="proofAccept" type="button" class="press font-mono text-[0.72rem] tracking-[0.18em] uppercase bg-ink text-paper px-6 py-3 rounded-[2px]">
+                    Sprejmi popravke
+                </button>
+                <button id="proofReject" type="button" class="press-ghost font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone border border-hairline px-5 py-3 rounded-[2px]">
+                    Zavrni
+                </button>
+            </div>
+        </div>
+
+        <!-- ============ Actions ============ -->
+        <div class="mt-7 flex flex-wrap items-center gap-3">
+            <button id="correctBtn" type="button" disabled
+                    class="press font-mono text-[0.72rem] tracking-[0.18em] uppercase bg-clay text-paper px-6 py-3.5 rounded-[3px] disabled:bg-paper2 disabled:text-faint disabled:cursor-not-allowed">
+                Lektoriraj z AI
+            </button>
+            <button id="revertBtn" type="button"
+                    class="hidden press-ghost font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone border border-hairline px-5 py-3.5 rounded-[2px]">
+                Nazaj na surov prepis
+            </button>
+            <button id="copyBtn" type="button" disabled
+                    class="press-ghost font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone border border-hairline px-5 py-3.5 rounded-[2px] disabled:text-faint disabled:border-hairline disabled:cursor-not-allowed">
+                Kopiraj
+            </button>
+            <button id="downloadBtn" type="button" disabled
+                    class="press-ghost font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone border border-hairline px-5 py-3.5 rounded-[2px] disabled:text-faint disabled:border-hairline disabled:cursor-not-allowed">
+                Prenesi .txt
+            </button>
+            <button id="clearBtn" type="button" disabled
+                    class="ml-auto font-mono text-[0.72rem] tracking-[0.16em] uppercase text-faint hover:text-clay underline underline-offset-4 disabled:text-faint/60 disabled:cursor-not-allowed disabled:no-underline">
+                Počisti
+            </button>
+        </div>
+
+        <!-- ============ Vocabulary ============ -->
+        <details id="vocabPanel" class="mt-9 border-t border-hairline pt-4" style="--acc:#2f5b53">
+            <summary class="cursor-pointer list-none flex items-center gap-3 font-mono text-[0.72rem] tracking-[0.2em] uppercase text-stone hover:text-pine">
+                <span class="vocab-caret text-pine" aria-hidden="true">&rsaquo;</span>
+                Slovar
+                <span id="vocabCount" class="text-faint tracking-[0.08em] normal-case"></span>
+            </summary>
+            <div class="pt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_28ch] md:gap-8 items-start">
+                <div>
+                    <label for="vocabInput" class="block font-mono text-[0.62rem] tracking-[0.18em] uppercase text-stone mb-2">
+                        Lastna imena in izrazi
+                    </label>
+                    <textarea id="vocabInput" rows="3" spellcheck="false"
+                              placeholder="Ljubljana, Kranjska Gora, Hribernik, PHP, Gemini"
+                              class="field w-full bg-paper text-ink text-[0.95rem] px-3 py-2.5 rounded-[3px] resize-y"></textarea>
+                </div>
+                <p class="text-[0.95rem] text-stone leading-relaxed">
+                    Imena, kratice in žargon, ki jih prepoznavalnik sicer zapiše po posluhu.
+                    Loči jih z vejico. Shrani se v tvojem brskalniku.
+                </p>
+            </div>
+        </details>
+    </main>
+
+    </div>
+
+    <!-- ============ Colophon ============ -->
+    <footer class="reveal reveal-4 mt-16 pt-4 border-t-2 border-ink">
+        <div class="border-t border-hairline pt-5 grid gap-x-10 gap-y-5 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+            <div>
+                <p class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-2.5">Kaj to pravzaprav je</p>
+                <p class="text-[0.95rem] text-stone leading-relaxed max-w-[70ch]">
+                    Preizkus koncepta. Zvok se v brskalniku nareže na stavke, vsak gre kot 16 kHz WAV
+                    prek strežnika v Gemini in se vrne kot besedilo. Posnetkov in prepisov nihče ne shrani, strežnik vodi le števec zahtevkov.
+                    Prepoznava je zanesljiva pri zbranem govoru v tihem prostoru; narečje, hrup in
+                    preskakovanje v angleščino jo opazno poslabšajo.
+                    Lektoriranje je ločen, namenoma ozek korak, ker je prav tam največje tveganje:
+                    jezikovni modeli radi „popravijo“ sklon ali dvojino in s tem tiho spremenijo pomen.
+                    Zato ga vidiš kot popravke in ne kot novo besedilo.
+                </p>
+            </div>
+            <div>
+                <p class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-2.5">Pod pokrovom</p>
+                <ul class="font-mono text-[0.72rem] text-stone/85 leading-[2] tabular-nums">
+                    <li>zajem &nbsp;<span class="text-ink">AudioWorklet, 16 kHz mono</span></li>
+                    <li>rez &nbsp;<span class="text-ink">prilagodljiv prag tišine</span></li>
+                    <li>prepis &nbsp;<span class="text-ink" id="modelLine">Gemini</span></li>
+                    <li>koda &nbsp;<a href="https://github.com/domenhribernik" class="text-ink underline underline-offset-2 hover:text-clay">github</a></li>
+                </ul>
+            </div>
+        </div>
+        <p class="mt-6 font-mono text-[0.72rem] text-stone/60">Zgradil Domen Hribernik</p>
+    </footer>
+
+</div>
+
+<div id="toast" class="toast font-mono text-[0.72rem] tracking-[0.16em] uppercase" role="status" aria-live="polite"></div>
+
+<script src="../../components/back-link.js"></script>
+<script type="module" src="script.js"></script>
+<script src="../../components/gtranslate.js"></script>
+</body>
+</html>
