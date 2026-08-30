@@ -145,6 +145,15 @@ body {
     left: 1rem;
     color: var(--muted);
     text-decoration: none;
+    /* A <button> so it can leave the room rather than the site, stripped back
+       to the link it has always looked like. */
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
     transition: color 0.2s ease, transform 0.2s ease;
 }
 
@@ -637,16 +646,26 @@ body {
 /* The ballot puts a paragraph of instructions right under its heading, and
    the stamp would sit across the one piece of prose on the screen anybody
    actually has to read. Lift it into the empty right of the signal line. */
+/* Same treatment, same reason: the ballot's heading is two lines in some
+   languages and the stamp was landing across it. In the flow it sits above
+   the heading, which is where it was always meant to look like it was. */
 #voteScreen .stamp-tr {
-    top: 2.9rem;
+    position: static;
+    display: table;
+    margin: 0 0 0.9rem auto;
 }
 
-/* The room debrief opens on the verdict banner, which fills the band the
-   stamp normally sits in. Drop it past the banner and the accused, into the
-   clear right of the tally. One phone mode still shows the wordmark there,
-   keeps its hidden verdict block, and so keeps the original placement. */
-#verdictBlock:not(.hidden) ~ .stamp-tr {
-    top: 19rem;
+/* The room debrief has no band an absolute stamp can safely sit in: the block
+   above it is a tally that grows a row per player, so any fixed offset tuned
+   for four lands on top of the bars at twelve. Take it out of the layer and
+   put it in the flow instead, in the gap the tally already leaves above the
+   host's call, where it cannot collide with anything at any table size.
+   Keyed off the ballot block, which is what makes this the ROOM debrief: one
+   phone mode keeps the stamp in its corner. */
+#ballotBlock:not(.hidden) ~ .stamp-tr {
+    position: static;
+    display: table;
+    margin: -0.6rem 0 1.6rem auto;
 }
 
 /* ---------------- Briefing / pass-around card ---------------- */
@@ -1507,6 +1526,23 @@ body {
     color: rgba(232, 230, 227, 0.75);
 }
 
+/* How many names this ballot still wants. Amber while it is an instruction,
+   and it steps back once the ballot is full: at that point the highlighted
+   rows say it better than a line of text can. */
+.vote-pick {
+    margin-bottom: 0.9rem;
+    color: var(--amber);
+    font-family: "Black Ops One", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+}
+
+.vote-pick.is-full {
+    color: var(--muted);
+    font-family: "Share Tech Mono", monospace;
+    letter-spacing: 0.16em;
+}
+
 /* Every seated ballot is in and the room is about to close. Loud enough to
    read across a table, because it is the last chance to switch. */
 .vote-grace {
@@ -1567,12 +1603,79 @@ body {
     }
 }
 
+/* What the ballot alone managed, under the verdict banner: the rule the
+   table plays by is "every spy in the top n or they got away", so the count
+   is the interesting half of the result. */
+.verdict-caught {
+    margin: -0.6rem 0 1.8rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+}
+
 .verdict-accused {
     margin-bottom: 1.6rem;
     color: var(--ink);
     font-family: "Black Ops One", sans-serif;
     font-size: 1.3rem;
     letter-spacing: 0.1em;
+}
+
+/* ---------------- The host's call ---------------- */
+
+/* The one control that ends a round, and the only way the dossier opens. Two
+   answers side by side, coloured as the two sides rather than as primary and
+   secondary: neither is the safe default, which is the whole point of asking
+   a person instead of counting the ballots. */
+.hostcall {
+    background: var(--panel);
+    border: 1px dashed var(--line);
+    padding: 1.1rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.hostcall .btn-row {
+    margin: 0.8rem 0 0.7rem;
+}
+
+/* Amber and blood, the two colours the verdict banner already uses for the
+   two sides, so the button you press and the banner it produces match. */
+.btn-agents {
+    border-color: var(--amber);
+    color: var(--amber);
+}
+
+.btn-agents:hover,
+.btn-agents:active {
+    background: var(--amber);
+    color: #16110a;
+    border-color: var(--amber);
+}
+
+.btn-spies {
+    border-color: var(--blood);
+    color: var(--blood-glow);
+}
+
+.btn-spies:hover,
+.btn-spies:active {
+    background: var(--blood);
+    color: #fff;
+    border-color: var(--blood);
+}
+
+/* Which way it was called, kept on screen so a host who tapped the wrong one
+   can see that and put it right. */
+.btn-agents.is-called {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #16110a;
+}
+
+.btn-spies.is-called {
+    background: var(--blood);
+    border-color: var(--blood);
+    color: #fff;
 }
 
 /* ---------------- The ballot tally ---------------- */

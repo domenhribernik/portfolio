@@ -21,13 +21,19 @@ require_once __DIR__ . '/../config/database.php';
 // JSON POST bodies, never in URLs, so they stay out of access logs.
 //
 // THE SECRECY RULE, which is what makes this game different from the parlour
-// it is built on: spy_rooms.location_key, spy_players.role and
-// spy_players.voted_for are secrets. The event log is public to the room, so
-// none of them may ever be written into an event. They leave this file in
-// exactly three places: the `you` block of a poll response (the polling
-// player's own role and ballot, plus the location only when that player is a
-// citizen), and the `reveal` block, which exists only once the room reaches
-// 'debrief'. Nothing else selects those columns.
+// it is built on: spy_rooms.location_key, spy_players.role and the spy_ballots
+// rows are secrets. The event log is public to the room, so none of them may
+// ever be written into an event. They leave this file in exactly two places:
+// the `you` block of a poll response (the polling player's own role and own
+// ballot, plus the location only when that player is a citizen), and the
+// `reveal` block, which the HOST opens and which does not exist in any payload
+// before they do. Nothing else selects those columns.
+//
+// The debrief now has two halves, and the split is the point. `ballot` (who
+// the table accused, and the tally) is public the moment the vote closes,
+// because that is what the accused has to defend themselves against. `reveal`
+// (the location, who the spies actually were, and the verdict) waits for the
+// host to call the round, so nothing on a phone can cut the defence short.
 
 // Catch fatal errors (e.g. out-of-memory) that bypass try-catch
 register_shutdown_function(function () {
@@ -141,10 +147,13 @@ function createRoom(array $body): void
             sendJson([
                 'code'  => $code,
                 'token' => $token,
-                'you'   => ['id' => $playerId, 'host' => true, 'ready' => false, 'role' => null, 'location' => null],
+                'you'   => [
+                    'id' => $playerId, 'host' => true, 'ready' => false,
+                    'ballot' => [], 'role' => null, 'location' => null,
+                ],
                 'room'  => [
                     'code' => $code, 'status' => 'lobby', 'lang' => $lang,
-                    'spies' => 1, 'roundSeconds' => 300,
+                    'spies' => 1, 'picks' => 1, 'roundSeconds' => 300,
                 ],
             ], 201);
         } catch (PDOException $e) {
@@ -197,8 +206,11 @@ function joinRoom(array $body): void
     sendJson([
         'code'  => $room['code'],
         'token' => $token,
-        'you'   => ['id' => $playerId, 'host' => false, 'ready' => false, 'role' => null, 'location' => null],
-        'room'  => roomSummary($room),
+        'you'   => [
+            'id' => $playerId, 'host' => false, 'ready' => false,
+            'ballot' => [], 'role' => null, 'location' => null,
+        ],
+        'room'  => roomSummary($db, $room),
     ]);
 }
 
@@ -263,6 +275,11 @@ function reclaimSeat(array $body): void
     $db->prepare('UPDATE spy_players SET token_hash = ?, last_seen = NOW() WHERE id = ?')
        ->execute([hash('sha256', $token), $id]);
 
+    // A seat taken back mid-vote keeps the ballot it had cast, for the same
+    // reason it keeps its role: it is the same seat.
+    $mine = $db->prepare('SELECT target_id FROM spy_ballots WHERE voter_id = ? ORDER BY id ASC');
+    $mine->execute([$id]);
+
     sendJson([
         'code'  => $room['code'],
         'token' => $token,
@@ -270,12 +287,13 @@ function reclaimSeat(array $body): void
             'id'       => $id,
             'host'     => (bool) $player['is_host'],
             'ready'    => (bool) $player['ready'],
+            'ballot'   => array_map('intval', $mine->fetchAll(PDO::FETCH_COLUMN)),
             'role'     => $player['role'],
-            'location' => $player['role'] === 'citizen'
+            'location' => $player['role'] === 'citizen' && cardIsLive($room)
                 ? locationText($room['location_key'], $room['lang'])
                 : null,
         ],
-        'room'  => roomSummary($room),
+        'room'  => roomSummary($db, $room),
     ]);
 }
 
@@ -303,38 +321,55 @@ function pollRoom(array $body): void
     $room   = roomById($db, $roomId);
     $player = playerById($db, (int) $player['id']);
 
-    // Note what this SELECT does not ask for: role, and the ballot itself.
-    // The player list is public to the room, so it carries only what is safe
-    // to show everyone. `voted` says a ballot exists, never who it names:
-    // that is the whole reason the vote is simultaneous.
+    // Note what this SELECT does not ask for: role, and the names on anyone's
+    // ballot. The player list is public to the room, so it carries only what is
+    // safe to show everyone. It counts a player's picks to answer "have they
+    // voted", and never which names they are: that is the whole reason the
+    // vote is simultaneous.
     $stmt = $db->prepare(
-        'SELECT id, name, is_host, ready, wants_end,
-                (voted_for IS NOT NULL) AS voted,
-                (last_seen >= NOW() - INTERVAL ' . ONLINE_SECONDS . ' SECOND) AS online
-         FROM spy_players WHERE room_id = ? AND left_at IS NULL
-         ORDER BY joined_at ASC, id ASC'
+        'SELECT p.id, p.name, p.is_host, p.ready, p.wants_end,
+                (SELECT COUNT(*) FROM spy_ballots b WHERE b.voter_id = p.id) AS picks,
+                (p.last_seen >= NOW() - INTERVAL ' . ONLINE_SECONDS . ' SECOND) AS online
+         FROM spy_players p WHERE p.room_id = ? AND p.left_at IS NULL
+         ORDER BY p.joined_at ASC, p.id ASC'
     );
     $stmt->execute([$roomId]);
+    $rows   = $stmt->fetchAll();
+    $seated = count($rows);
+    // A ballot is only cast once it names as many suspects as there are spies,
+    // so this is what "everyone has voted" is measured against.
+    $needed = picksNeeded((int) $room['spies'], $seated);
+
     $players = array_map(fn (array $p) => [
         'id'       => (int) $p['id'],
         'name'     => $p['name'],
         'host'     => (bool) $p['is_host'],
         'ready'    => (bool) $p['ready'],
         'wantsEnd' => (bool) $p['wants_end'],
-        'voted'    => (bool) $p['voted'],
+        'voted'    => (int) $p['picks'] >= $needed,
         'online'   => (bool) $p['online'],
-    ], $stmt->fetchAll());
+    ], $rows);
+
+    // The caller's own ballot, in the order they picked it, which is the order
+    // their phone drops the oldest from when it is already holding as many
+    // names as there are spies.
+    $mine = $db->prepare('SELECT target_id FROM spy_ballots WHERE voter_id = ? ORDER BY id ASC');
+    $mine->execute([(int) $player['id']]);
+    $ballot = array_map('intval', $mine->fetchAll(PDO::FETCH_COLUMN));
 
     [$events, $last, $more] = eventsSince($db, $roomId, $since);
 
     $paused   = $room['paused_seconds'] !== null;
-    $seated   = count($players);
     $response = [
         'room' => [
             'code'         => $room['code'],
             'status'       => $room['status'],
             'lang'         => $room['lang'],
             'spies'        => (int) $room['spies'],
+            // How many names one ballot carries. Sent rather than derived on
+            // the phone so a room that lost players mid-vote cannot end up
+            // with clients disagreeing about what a finished ballot looks like.
+            'picks'        => $needed,
             'roundSeconds' => (int) $room['round_seconds'],
             'secondsLeft'  => $room['status'] === 'round'
                 ? ($paused ? (int) $room['paused_seconds'] : (int) $room['seconds_left'])
@@ -355,19 +390,22 @@ function pollRoom(array $body): void
             'endVotes'     => count(array_filter($players, fn ($p) => $p['wantsEnd'])),
             'endVotesNeeded' => endVoteThreshold($seated),
             'ballots'      => count(array_filter($players, fn ($p) => $p['voted'])),
+            // Whether the host has called the round yet. Until they have, the
+            // debrief is a waiting room and no `reveal` block exists at all.
+            'revealed'     => (bool) $room['revealed'],
         ],
         // The only disclosure of a role, and only ever the caller's own. The
         // location rides along solely for citizens; a spy's payload must not
-        // contain it anywhere, which is what the test suite pins. votedFor is
-        // likewise only ever the caller's own ballot.
+        // contain it anywhere, which is what the test suite pins. `ballot` is
+        // likewise only ever the caller's own.
         'you' => [
             'id'       => (int) $player['id'],
             'host'     => (bool) $player['is_host'],
             'ready'    => (bool) $player['ready'],
             'wantsEnd' => (bool) $player['wants_end'],
-            'votedFor' => $player['voted_for'] !== null ? (int) $player['voted_for'] : null,
+            'ballot'   => $ballot,
             'role'     => $player['role'],
-            'location' => $player['role'] === 'citizen'
+            'location' => $player['role'] === 'citizen' && cardIsLive($room)
                 ? locationText($room['location_key'], $room['lang'])
                 : null,
         ],
@@ -377,52 +415,77 @@ function pollRoom(array $body): void
         'more'    => $more,
     ];
 
-    // The dossier. The round is over by now, so this is safe to hand to
-    // everyone; before the debrief it is not in the payload at all.
     if ($room['status'] === 'debrief') {
-        // Includes players who walked out mid-round: a spy who dropped is
-        // still a spy, and the table wants to know.
-        $spies = $db->prepare(
-            "SELECT id, name FROM spy_players WHERE room_id = ? AND role = 'spy' ORDER BY joined_at ASC, id ASC"
-        );
-        $spies->execute([$roomId]);
-
-        // Now, and only now, the ballots become readable. Every vote cast in
-        // the room is counted, including any by a player who has since left.
+        // Half one, public the moment the vote closed: who the table accused
+        // and by how much. This is what the accused defends themselves
+        // against, so it cannot wait for the host.
+        //
+        // Every ballot cast in the room counts, including those of players who
+        // have since walked out.
         $tally = $db->prepare(
-            'SELECT t.id, t.name, COUNT(v.id) AS votes
-             FROM spy_players t
-             LEFT JOIN spy_players v ON v.voted_for = t.id AND v.room_id = t.room_id
-             WHERE t.room_id = ?
-             GROUP BY t.id, t.name
-             HAVING votes > 0
-             ORDER BY votes DESC, t.joined_at ASC, t.id ASC'
+            'SELECT p.id, p.name, COUNT(b.id) AS votes
+             FROM spy_players p
+             JOIN spy_ballots b ON b.target_id = p.id AND b.room_id = p.room_id
+             WHERE p.room_id = ?
+             GROUP BY p.id, p.name, p.joined_at
+             ORDER BY votes DESC, p.joined_at ASC, p.id ASC'
         );
         $tally->execute([$roomId]);
 
-        $accusedId = $room['accused_id'] !== null ? (int) $room['accused_id'] : null;
-        $accused   = null;
-        if ($accusedId !== null) {
-            $row = $db->prepare('SELECT id, name FROM spy_players WHERE id = ?');
-            $row->execute([$accusedId]);
-            $found   = $row->fetch();
-            $accused = $found ? ['id' => (int) $found['id'], 'name' => $found['name']] : null;
+        $accusedIds = idList($room['accused_ids']);
+        $accused    = [];
+        if ($accusedIds !== []) {
+            $marks = implode(',', array_fill(0, count($accusedIds), '?'));
+            $names = $db->prepare("SELECT id, name FROM spy_players WHERE id IN ($marks)");
+            $names->execute($accusedIds);
+            $byId = [];
+            foreach ($names->fetchAll() as $row) {
+                $byId[(int) $row['id']] = $row['name'];
+            }
+            // Kept in the order the vote settled them, so the most accused
+            // name reads first however the SELECT came back.
+            foreach ($accusedIds as $id) {
+                if (isset($byId[$id])) {
+                    $accused[] = ['id' => $id, 'name' => $byId[$id]];
+                }
+            }
         }
 
-        $response['reveal'] = [
-            'location' => locationText($room['location_key'], $room['lang']),
-            'spies'    => array_map(
-                fn (array $p) => ['id' => (int) $p['id'], 'name' => $p['name']],
-                $spies->fetchAll()
-            ),
-            'accused'  => $accused,
-            'outcome'  => $room['outcome'],
-            'tally'    => array_map(fn (array $t) => [
+        $response['ballot'] = [
+            'accused' => $accused,
+            // How many names the table had to agree on, so a phone can say
+            // "1 of 2 spies caught" without knowing the room's settings.
+            'wanted'  => (int) $room['spies'],
+            'tally'   => array_map(fn (array $t) => [
                 'id'    => (int) $t['id'],
                 'name'  => $t['name'],
                 'votes' => (int) $t['votes'],
             ], $tally->fetchAll()),
         ];
+
+        // Half two, the dossier, and it exists in NO payload until the host
+        // has called the round. A spy is entitled to their defence, and a
+        // phone quietly showing the answer is what took that away.
+        if ((bool) $room['revealed']) {
+            // Includes players who walked out mid-round: a spy who dropped is
+            // still a spy, and the table wants to know.
+            $spies = $db->prepare(
+                "SELECT id, name FROM spy_players WHERE room_id = ? AND role = 'spy' ORDER BY joined_at ASC, id ASC"
+            );
+            $spies->execute([$roomId]);
+
+            $response['reveal'] = [
+                'location' => locationText($room['location_key'], $room['lang']),
+                'spies'    => array_map(
+                    fn (array $p) => ['id' => (int) $p['id'], 'name' => $p['name']],
+                    $spies->fetchAll()
+                ),
+                // The host's call, not the ballot's arithmetic: the accused
+                // has spoken by now, and a caught spy who named the location
+                // still takes the round.
+                'outcome'  => $room['outcome'],
+            ];
+        }
     }
 
     sendJson($response);
@@ -533,38 +596,44 @@ function postEvent(array $body): void
             if ($room['status'] !== 'vote') {
                 sendError('The vote is not open', 409);
             }
-            $target = validateBallot($db, $roomId, (int) $player['id'], $body['data'] ?? null);
+            // One ballot names as many suspects as there are spies: with two
+            // in play the agents only win by putting BOTH of them on top, and
+            // a table that catches one of two has let the other walk.
+            $needed  = picksNeeded((int) $room['spies'], seatedCount($db, $roomId));
+            $targets = validateBallot($db, $roomId, (int) $player['id'], $body['data'] ?? null, $needed);
+
             // The WRITE carries the phase check, not just the read above.
             // Those are separate round trips, and closeVote() can land
             // between them: an unguarded write drops a ballot into a room
             // whose verdict is already frozen, and the debrief then prints a
-            // tally that disagrees with the accused it names. Joining
-            // spy_rooms makes the check and the write one statement, and it
-            // takes the room's row lock, which is the half closeVote() holds.
+            // tally that disagrees with the accused it names. Taking the
+            // room's row FOR UPDATE is the half closeVote()'s claim holds, so
+            // the two serialize and the replacement below is atomic against it.
             //
             // The deadline is the same guard doing its second job: a tap that
             // arrives after the countdown has already run out must not rewind
-            // it, or closing would mean "ten seconds since the last tap AND a
-            // poll happened" rather than ten seconds.
-            $cast = $db->prepare(
-                "UPDATE spy_players p JOIN spy_rooms r ON r.id = p.room_id
-                    SET p.voted_for = ?
-                  WHERE p.id = ? AND r.status = 'vote'
-                    AND (r.round_ends_at IS NULL OR r.round_ends_at > NOW())"
+            // it, or closing would mean "five seconds since the last tap AND a
+            // poll happened" rather than five seconds.
+            $db->beginTransaction();
+            $open = $db->prepare(
+                "SELECT 1 FROM spy_rooms WHERE id = ? AND status = 'vote'
+                   AND (round_ends_at IS NULL OR round_ends_at > NOW())
+                 FOR UPDATE"
             );
-            $cast->execute([$target, (int) $player['id']]);
-            if ($cast->rowCount() === 0) {
-                // rowCount counts CHANGED rows, so naming the same player
-                // twice is a legitimate zero. Only a room that has since
-                // closed is an error worth telling the phone about.
-                $open = $db->prepare(
-                    "SELECT 1 FROM spy_rooms WHERE id = ? AND status = 'vote'
-                       AND (round_ends_at IS NULL OR round_ends_at > NOW())"
-                );
-                $open->execute([$roomId]);
-                if ($open->fetchColumn() === false) {
-                    sendError('The vote has closed', 409);
-                }
+            $open->execute([$roomId]);
+            if ($open->fetchColumn() === false) {
+                $db->rollBack();
+                sendError('The vote has closed', 409);
+            }
+            // A ballot is replaced wholesale rather than diffed: the phone
+            // sends the whole set every time, so there is no order of
+            // operations in which a half-applied change can be read.
+            $db->prepare('DELETE FROM spy_ballots WHERE voter_id = ?')->execute([(int) $player['id']]);
+            $pick = $db->prepare('INSERT INTO spy_ballots (room_id, voter_id, target_id) VALUES (?, ?, ?)');
+            foreach ($targets as $target) {
+                // Inserted in the order they were picked, so id order is pick
+                // order and a phone that reloads drops the same oldest name.
+                $pick->execute([$roomId, (int) $player['id'], $target]);
             }
             // Disarm the grace countdown. A ballot is changeable right up to
             // the moment the vote closes, so every arriving one restarts the
@@ -575,6 +644,7 @@ function postEvent(array $body): void
                 "UPDATE spy_rooms SET round_ends_at = NULL
                  WHERE id = ? AND status = 'vote' AND round_ends_at > NOW()"
             )->execute([$roomId]);
+            $db->commit();
             // The log is public, so the ballot never travels in it. Only the
             // fact that this player has now voted is visible to the room.
             $data = null;
@@ -588,6 +658,27 @@ function postEvent(array $body): void
             $seq = closeVote($db, $roomId);
             touchRoom($db, $roomId);
             sendJson(['seq' => $seq ?? 0]);
+
+        case 'reveal':
+            // The one that ends the round. The vote settled who was accused,
+            // then the accused defended themselves out loud, and only the
+            // table knows how that went: a spy who was caught but named the
+            // location has still stolen it. So the host calls it, and calling
+            // it is what declassifies the dossier for every phone at once.
+            // Repeatable on purpose, so a misjudged call can be corrected.
+            requireHost($isHost);
+            if ($room['status'] !== 'debrief') {
+                sendError('There is nothing to declassify yet', 409);
+            }
+            $outcome = is_array($body['data'] ?? null) ? ($body['data']['outcome'] ?? null) : null;
+            if ($outcome !== 'agents' && $outcome !== 'spies') {
+                sendError('Call it for the agents or for the spies', 400);
+            }
+            $db->prepare('UPDATE spy_rooms SET revealed = 1, outcome = ? WHERE id = ?')
+               ->execute([$outcome, $roomId]);
+            // Public by definition: this event IS the announcement.
+            $data = ['outcome' => $outcome];
+            break;
 
         case 'again':
             requireHost($isHost);
@@ -663,8 +754,9 @@ function dealRoles(PDO $db, array $room): array
     }
 
     // Spies never outnumber the citizens. Mirrors spyMax() in logic.js.
-    $spies    = max(1, min((int) $room['spies'], intdiv($count, 2)));
-    $location = randomLocationKey();
+    $spies = max(1, min((int) $room['spies'], intdiv($count, 2)));
+    // Never the same place twice in one room: the deck remembers.
+    [$location, $used] = dealLocation($room['used_location_keys'] ?? null);
 
     // Fisher-Yates with a CSPRNG: the deal is the one thing in this game
     // that must not be predictable.
@@ -679,37 +771,76 @@ function dealRoles(PDO $db, array $room): array
     // walked out keeps their old role otherwise, and the debrief would name
     // them as a spy of a round they were never in.
     $db->prepare(
-        'UPDATE spy_players SET role = NULL, ready = 0, wants_end = 0, voted_for = NULL
-         WHERE room_id = ?'
+        'UPDATE spy_players SET role = NULL, ready = 0, wants_end = 0 WHERE room_id = ?'
     )->execute([$roomId]);
+    $db->prepare('DELETE FROM spy_ballots WHERE room_id = ?')->execute([$roomId]);
     $db->prepare("UPDATE spy_players SET role = 'citizen' WHERE room_id = ? AND left_at IS NULL")
        ->execute([$roomId]);
     $marks = implode(',', array_fill(0, count($chosen), '?'));
     $db->prepare("UPDATE spy_players SET role = 'spy' WHERE id IN ($marks)")->execute($chosen);
     $db->prepare(
-        "UPDATE spy_rooms SET status = 'brief', location_key = ?, spies = ?,
+        "UPDATE spy_rooms SET status = 'brief', location_key = ?, used_location_keys = ?, spies = ?,
                 round_ends_at = NULL, paused_seconds = NULL,
-                accused_id = NULL, outcome = NULL
+                accused_ids = NULL, outcome = NULL, revealed = 0
          WHERE id = ?"
-    )->execute([$location, $spies, $roomId]);
+    )->execute([$location, $used, $spies, $roomId]);
     $db->commit();
 
     return ['players' => $count, 'spies' => $spies];
 }
 
-/** Back to the lobby: the dossier is shredded and every card goes blank. */
+/**
+ * Back to the lobby: the dossier is shredded and every card goes blank.
+ * used_location_keys deliberately survives, because the room does: the same
+ * people are about to play again and would notice the same place twice.
+ */
 function resetRoom(PDO $db, int $roomId): void
 {
     $db->prepare(
-        'UPDATE spy_players SET role = NULL, ready = 0, wants_end = 0, voted_for = NULL
-         WHERE room_id = ?'
+        'UPDATE spy_players SET role = NULL, ready = 0, wants_end = 0 WHERE room_id = ?'
     )->execute([$roomId]);
+    $db->prepare('DELETE FROM spy_ballots WHERE room_id = ?')->execute([$roomId]);
     $db->prepare(
         "UPDATE spy_rooms SET status = 'lobby', location_key = NULL,
                 round_ends_at = NULL, paused_seconds = NULL,
-                accused_id = NULL, outcome = NULL
+                accused_ids = NULL, outcome = NULL, revealed = 0
          WHERE id = ?"
     )->execute([$roomId]);
+}
+
+/**
+ * Whether a player's own card is still live: their location travels with the
+ * poll while there is a round to use it in, and stops at the debrief.
+ *
+ * Nobody legitimate loses anything, because by the debrief a citizen has known
+ * the place for the whole round and the screen showing it is behind them. What
+ * it closes is the reclaim door: a seat goes reclaimable after twenty quiet
+ * seconds, and the debrief (phones down, everyone arguing) is exactly when
+ * seats go quiet. A spy taking one over used to read the location out of the
+ * grant and then "guess" it out loud, which is the one move the whole
+ * two-half debrief exists to make them earn.
+ */
+function cardIsLive(array $room): bool
+{
+    return $room['status'] !== 'debrief';
+}
+
+/** How many players are still in their seats. */
+function seatedCount(PDO $db, int $roomId): int
+{
+    $stmt = $db->prepare('SELECT COUNT(*) FROM spy_players WHERE room_id = ? AND left_at IS NULL');
+    $stmt->execute([$roomId]);
+    return (int) $stmt->fetchColumn();
+}
+
+/**
+ * How many names one ballot carries: one per spy, capped at the number of
+ * people a voter can actually name. Mirrors picksNeeded() in views/spy/logic.js:
+ * change them in both.
+ */
+function picksNeeded(int $spies, int $seated): int
+{
+    return min(max(1, $spies), max(1, $seated - 1));
 }
 
 function applySettings(PDO $db, int $roomId, mixed $raw): array
@@ -723,9 +854,7 @@ function applySettings(PDO $db, int $roomId, mixed $raw): array
         sendError('Bad settings', 400);
     }
 
-    $stmt = $db->prepare('SELECT COUNT(*) FROM spy_players WHERE room_id = ? AND left_at IS NULL');
-    $stmt->execute([$roomId]);
-    $seated = (int) $stmt->fetchColumn();
+    $seated = seatedCount($db, $roomId);
 
     $spies   = max(1, min($spies, max(1, intdiv($seated, 2))));
     $seconds = (int) round($seconds / ROUND_STEP_SECONDS) * ROUND_STEP_SECONDS;
@@ -789,15 +918,14 @@ function openVote(PDO $db, int $roomId): ?int
 function advancePhase(PDO $db, int $roomId): void
 {
     $stmt = $db->prepare(
-        'SELECT r.status,
+        'SELECT r.status, r.spies,
                 (r.round_ends_at IS NOT NULL AND r.round_ends_at <= NOW()) AS expired,
                 COUNT(p.id) AS seated,
-                COALESCE(SUM(p.wants_end), 0) AS wanting,
-                COUNT(p.voted_for) AS cast
+                COALESCE(SUM(p.wants_end), 0) AS wanting
          FROM spy_rooms r
          LEFT JOIN spy_players p ON p.room_id = r.id AND p.left_at IS NULL
          WHERE r.id = ?
-         GROUP BY r.id, r.status, expired'
+         GROUP BY r.id, r.status, r.spies, expired'
     );
     $stmt->execute([$roomId]);
     $row = $stmt->fetch();
@@ -821,9 +949,30 @@ function advancePhase(PDO $db, int $roomId): void
         // countdown, so anybody can still change their mind. Casting a ballot
         // clears the deadline, and this re-arms it a moment later, which is
         // the whole of "changing your pick restarts the countdown".
+        // "Everyone has voted" now means everyone has named as many suspects
+        // as there are spies. Counted here rather than in the query above,
+        // because how many that is depends on the seated count that query is
+        // the one computing.
+        // One player left and nobody to accuse: `cast >= seated` can never come
+        // true, so the room would sit on a ballot with an empty list until the
+        // survivor found CLOSE THE VOTE. Settle it for them.
+        if ($seated <= 1) {
+            closeVote($db, $roomId);
+            return;
+        }
+
+        $needed = picksNeeded((int) $row['spies'], $seated);
+        $done   = $db->prepare(
+            'SELECT COUNT(*) FROM spy_players p
+             WHERE p.room_id = ? AND p.left_at IS NULL
+               AND (SELECT COUNT(*) FROM spy_ballots b WHERE b.voter_id = p.id) >= ?'
+        );
+        $done->execute([$roomId, $needed]);
+        $cast = (int) $done->fetchColumn();
+
         if ((bool) $row['expired']) {
             closeVote($db, $roomId);
-        } elseif ((int) $row['cast'] >= $seated) {
+        } elseif ($cast >= $seated) {
             // Guarded on round_ends_at IS NULL so twenty phones polling the
             // same second cannot each shove the deadline further out.
             $db->prepare(
@@ -835,11 +984,18 @@ function advancePhase(PDO $db, int $roomId): void
 }
 
 /**
- * Counts the ballots and settles the room. The verdict is decided here, once,
- * rather than each time the debrief is read, so it cannot drift as players
- * come and go afterwards. The most-voted player is the accused; if they turn
- * out to be a spy the agents win. A tie, or nobody voting at all, means the
- * table failed to agree, and that is a win for the spies.
+ * Counts the ballots and settles WHO THE TABLE ACCUSED, once, rather than
+ * each time the debrief is read, so it cannot drift as players come and go
+ * afterwards. With n spies in play the accused are the top n of the tally.
+ *
+ * A tie across that line settles nothing, so the tied names are left out
+ * rather than picked between: accusing four people of being two spies is not
+ * an answer the table gave. What survives is the unambiguous head of the
+ * list, which is why the accused can come back SHORT of n.
+ *
+ * Deliberately no verdict here. The accused has not spoken yet, and a spy who
+ * is caught can still take the round by naming the location, so the host
+ * calls it later (the 'reveal' event) and this only lays out the evidence.
  */
 function closeVote(PDO $db, int $roomId): ?int
 {
@@ -871,31 +1027,30 @@ function closeVote(PDO $db, int $roomId): ?int
         return null;
     }
 
+    $spies = $db->prepare('SELECT spies FROM spy_rooms WHERE id = ?');
+    $spies->execute([$roomId]);
+    $wanted = max(1, (int) $spies->fetchColumn());
+
     $tally = $db->prepare(
-        'SELECT voted_for AS id, COUNT(*) AS votes FROM spy_players
-         WHERE room_id = ? AND voted_for IS NOT NULL
-         GROUP BY voted_for ORDER BY votes DESC'
+        'SELECT target_id AS id, COUNT(*) AS votes FROM spy_ballots
+         WHERE room_id = ? GROUP BY target_id ORDER BY votes DESC'
     );
     $tally->execute([$roomId]);
     $rows = $tally->fetchAll();
 
-    $accusedId = null;
-    if (count($rows) === 1
-        || (count($rows) > 1 && (int) $rows[0]['votes'] > (int) $rows[1]['votes'])) {
-        $accusedId = (int) $rows[0]['id'];
-    }
-
-    $outcome = 'spies';
-    if ($accusedId !== null) {
-        $role = $db->prepare('SELECT role FROM spy_players WHERE id = ?');
-        $role->execute([$accusedId]);
-        if ($role->fetchColumn() === 'spy') {
-            $outcome = 'agents';
+    // Everything above the cut line, and only what clears it outright. The
+    // first name NOT in the top n sets the bar: anyone level with it is tied
+    // for the last place and cannot be told from the people who missed out.
+    $bar     = isset($rows[$wanted]) ? (int) $rows[$wanted]['votes'] : 0;
+    $accused = [];
+    foreach (array_slice($rows, 0, $wanted) as $row) {
+        if ((int) $row['votes'] > $bar) {
+            $accused[] = (int) $row['id'];
         }
     }
 
-    $db->prepare('UPDATE spy_rooms SET accused_id = ?, outcome = ? WHERE id = ?')
-       ->execute([$accusedId, $outcome, $roomId]);
+    $db->prepare('UPDATE spy_rooms SET accused_ids = ? WHERE id = ?')
+       ->execute([$accused === [] ? null : implode(',', $accused), $roomId]);
     $db->prepare("INSERT INTO spy_events (room_id, player_id, type) VALUES (?, NULL, 'verdict')")
        ->execute([$roomId]);
     $seq = (int) $db->lastInsertId();
@@ -949,7 +1104,8 @@ function roomByCode(PDO $db, mixed $raw): array
     }
     $stmt = $db->prepare(
         'SELECT id, code, status, lang, spies, round_seconds, location_key,
-                round_ends_at, paused_seconds, accused_id, outcome
+                used_location_keys, round_ends_at, paused_seconds,
+                accused_ids, outcome, revealed
          FROM spy_rooms WHERE code = ?'
     );
     $stmt->execute([$code]);
@@ -963,14 +1119,20 @@ function roomByCode(PDO $db, mixed $raw): array
 /**
  * What create/join/reclaim hand back about the room. Enough for the client to
  * paint the lobby at once instead of sitting blank for a poll round-trip.
+ *
+ * `picks` is in here for the reclaim path specifically: a phone taking its
+ * seat back lands straight into whatever phase is running, and one that
+ * guessed a one name ballot in a two spy room would shift a name off the
+ * ballot it had just been handed back on the player's first tap.
  */
-function roomSummary(array $room): array
+function roomSummary(PDO $db, array $room): array
 {
     return [
         'code'         => $room['code'],
         'status'       => $room['status'],
         'lang'         => $room['lang'],
         'spies'        => (int) $room['spies'],
+        'picks'        => picksNeeded((int) $room['spies'], seatedCount($db, (int) $room['id'])),
         'roundSeconds' => (int) $room['round_seconds'],
     ];
 }
@@ -980,7 +1142,7 @@ function roomById(PDO $db, int $roomId): array
 {
     $stmt = $db->prepare(
         'SELECT id, code, status, lang, spies, round_seconds, location_key, paused_seconds,
-                accused_id, outcome,
+                accused_ids, outcome, revealed,
                 GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), round_ends_at)) AS seconds_left
          FROM spy_rooms WHERE id = ?'
     );
@@ -999,7 +1161,7 @@ function playerByToken(PDO $db, int $roomId, mixed $raw): array
         sendError('Not in this room', 401);
     }
     $stmt = $db->prepare(
-        'SELECT id, is_host, ready, role, wants_end, voted_for FROM spy_players
+        'SELECT id, is_host, ready, role, wants_end FROM spy_players
          WHERE room_id = ? AND token_hash = ? AND left_at IS NULL'
     );
     $stmt->execute([$roomId, hash('sha256', $token)]);
@@ -1013,7 +1175,7 @@ function playerByToken(PDO $db, int $roomId, mixed $raw): array
 function playerById(PDO $db, int $id): array
 {
     $stmt = $db->prepare(
-        'SELECT id, is_host, ready, role, wants_end, voted_for FROM spy_players WHERE id = ?'
+        'SELECT id, is_host, ready, role, wants_end FROM spy_players WHERE id = ?'
     );
     $stmt->execute([$id]);
     $player = $stmt->fetch();
@@ -1129,10 +1291,71 @@ function locationRows(): array
     return $rows;
 }
 
-function randomLocationKey(): string
+/**
+ * The next location for a room, plus the deck to store back on it. Drawn from
+ * what this room has NOT played, because the same place turning up twice in
+ * one party is the one thing that makes a fresh round feel like a rerun. When
+ * the deck runs out it reshuffles, minus the place just played, so a party
+ * longer than the table can neither repeat nor run out of places.
+ *
+ * Mirrors pickUnusedLocation() in views/spy/logic.js, which does the same job
+ * for the one-phone game: change them in both.
+ *
+ * @return array{0: string, 1: string} the key, and the new comma separated deck
+ */
+function dealLocation(?string $usedCsv): array
 {
-    $rows = locationRows();
-    return (string) $rows[random_int(0, count($rows) - 1)]['key'];
+    $keys = array_map(fn (array $row) => (string) $row['key'], locationRows());
+    $used = idList($usedCsv, false);
+    $used = array_values(array_intersect($used, $keys)); // drop places since retired
+
+    $pool = array_values(array_diff($keys, $used));
+    if ($pool === []) {
+        $last = $used === [] ? null : $used[count($used) - 1];
+        $pool = array_values(array_filter($keys, fn (string $key) => $key !== $last));
+        if ($pool === []) {
+            $pool = $keys; // a one-place table has no choice to make
+        }
+        $used = [];
+    }
+
+    $key    = $pool[random_int(0, count($pool) - 1)];
+    $used[] = $key;
+    return [$key, implode(',', $used)];
+}
+
+/**
+ * A plain JSON array rather than an object. array_is_list() would say this in
+ * one call, but it landed in PHP 8.1 and this runs on 8.0.
+ */
+function isList(mixed $value): bool
+{
+    if (!is_array($value)) {
+        return false;
+    }
+    $expected = 0;
+    foreach ($value as $key => $_) {
+        if ($key !== $expected++) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * A comma separated column back into a list, in the order it was stored.
+ * Used for both the accused and the location deck, which is why it can hand
+ * back either ints or the raw strings.
+ *
+ * @return list<int|string>
+ */
+function idList(mixed $raw, bool $asInt = true): array
+{
+    if (!is_string($raw) || $raw === '') {
+        return [];
+    }
+    $parts = array_values(array_filter(array_map('trim', explode(',', $raw)), fn ($p) => $p !== ''));
+    return $asInt ? array_map('intval', $parts) : $parts;
 }
 
 /**
@@ -1169,30 +1392,53 @@ function requireHost(bool $isHost): void
 }
 
 /**
- * One ballot. The target must be somebody actually seated in this room, and
- * never the voter: accusing yourself is not a move, it is a way to skew a
- * tally. Returns the target's id.
+ * One ballot: as many names as there are spies, or fewer while the voter is
+ * still making their mind up (an empty ballot is how a pick is taken back).
+ * Every target must be somebody actually seated in this room, and never the
+ * voter: accusing yourself is not a move, it is a way to skew a tally. Naming
+ * the same person twice is refused for the same reason.
+ *
+ * @return list<int> the targets, in the order they were picked
  */
-function validateBallot(PDO $db, int $roomId, int $voterId, mixed $raw): int
+function validateBallot(PDO $db, int $roomId, int $voterId, mixed $raw, int $needed): array
 {
     if (!is_array($raw)) {
         sendError('Ballot required', 400);
     }
-    $target = $raw['target'] ?? null;
-    if (!is_int($target)) {
+    $targets = $raw['targets'] ?? null;
+    if (!isList($targets)) {
         sendError('Bad ballot', 400);
     }
-    if ($target === $voterId) {
-        sendError('You cannot accuse yourself', 400);
+    if (count($targets) > $needed) {
+        sendError('That is more names than there are spies', 400);
     }
-    $stmt = $db->prepare(
-        'SELECT 1 FROM spy_players WHERE id = ? AND room_id = ? AND left_at IS NULL'
-    );
-    $stmt->execute([$target, $roomId]);
-    if ($stmt->fetchColumn() === false) {
-        sendError('That player is not at the table', 400);
+
+    $seen = [];
+    foreach ($targets as $target) {
+        if (!is_int($target)) {
+            sendError('Bad ballot', 400);
+        }
+        if ($target === $voterId) {
+            sendError('You cannot accuse yourself', 400);
+        }
+        if (isset($seen[$target])) {
+            sendError('That name is on the ballot twice', 400);
+        }
+        $seen[$target] = true;
     }
-    return $target;
+
+    if ($targets !== []) {
+        $marks = implode(',', array_fill(0, count($targets), '?'));
+        $stmt  = $db->prepare(
+            "SELECT COUNT(*) FROM spy_players
+             WHERE room_id = ? AND left_at IS NULL AND id IN ($marks)"
+        );
+        $stmt->execute(array_merge([$roomId], $targets));
+        if ((int) $stmt->fetchColumn() !== count($targets)) {
+            sendError('That player is not at the table', 400);
+        }
+    }
+    return array_values($targets);
 }
 
 function validatePlayerName(mixed $raw): string

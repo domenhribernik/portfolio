@@ -11,11 +11,11 @@
 
 import {
     MIN_PLAYERS, MAX_PLAYERS, MIN_ROUND_SECONDS, MAX_ROUND_SECONDS, ROUND_STEP_SECONDS,
-    clamp, spyMax, suggestedSpies, clampRoundSeconds, defaultRoundSeconds,
-    formatClock, dealRoles, pickLocation,
+    clamp, spyMax, suggestedSpies, picksNeeded, clampRoundSeconds, defaultRoundSeconds,
+    formatClock, dealRoles, pickUnusedLocation,
     normalizeCode, isValidCode, cleanName, isValidName,
     createRoomModel, applyEvents, pollDelay, endVoteThreshold, VOTE_GRACE_SECONDS,
-    DEFAULT_LANG, createTranslator, tableLanguages, normalizeLang, spyWord, hasString,
+    DEFAULT_LANG, createTranslator, tableLanguages, normalizeLang, pluralString, hasString,
 } from './logic.js';
 
 const API = '../../app/controllers/spy-controller.php';
@@ -40,6 +40,12 @@ let uiTable = null;
 let locTable = null;
 let lang = DEFAULT_LANG;
 let t = (key) => key;
+/**
+ * A counted word or whole sentence in the form its count takes. Slovene needs
+ * four (one, two, few, other), so the table carries the forms and nothing on
+ * this page appends an -s.
+ */
+const plural = (base, n, vars) => pluralString(t, uiTable, base, n, vars);
 
 // ---------------- one-phone state ----------------
 
@@ -47,6 +53,10 @@ const state = {
     players: 5,
     spies: 1,
     locationKey: '',
+    // Places this sitting has already played. PLAY AGAIN draws from what is
+    // left, so passing one phone round the table twice never lands on the
+    // same location. Deliberately not persisted: a reload is a new party.
+    usedLocations: [],
     spyIndices: [],
     revealIndex: 0,
     revealShown: false,
@@ -62,7 +72,12 @@ let session = null;          // {code, token, you:{...}, name}
 let model = createRoomModel();
 let players = [];            // last server snapshot of the seats
 let roomInfo = null;         // last server snapshot of the room
-let reveal = null;           // the dossier, only ever present during a debrief
+// The debrief arrives in two halves, and the split is the feature: `ballot`
+// (who the table accused) is public the moment the vote closes, because that
+// is what the accused answers for. `reveal` (the location, the spies, the
+// verdict) does not exist in any payload until the HOST calls the round.
+let ballotResult = null;
+let reveal = null;
 let failures = 0;
 let pollTimer = null;
 let pollBusy = false;
@@ -91,7 +106,23 @@ let graceTimer = null;
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
     $(id).classList.add('active');
+    // The title screen is the one place with nothing to walk out of, so EXIT
+    // hides there rather than turning into a link off the site.
+    show('exitBtn', id !== 'bootScreen');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * What the top-left EXIT does: leave the room, or the one-phone game, or the
+ * menu you wandered into, and stop at the title screen. It used to be a link
+ * to the site root, which is nobody's intention mid-party.
+ */
+function exitHere() {
+    if (mode === 'room' && session) {
+        leaveRoom();
+        return;
+    }
+    mainMenu();
 }
 
 function toast(msg, ms = 2800) {
@@ -159,6 +190,10 @@ function applyLang(next) {
 
     for (const el of document.querySelectorAll('[data-i18n]')) {
         el.textContent = t(el.dataset.i18n);
+        // .glitch draws its two offset copies from attr(data-text), so a
+        // translated heading whose data-text stayed English renders the old
+        // words in red and cyan behind the new ones.
+        if (el.dataset.text !== undefined) el.dataset.text = el.textContent;
     }
     for (const el of document.querySelectorAll('[data-i18n-placeholder]')) {
         el.placeholder = t(el.dataset.i18nPlaceholder);
@@ -254,7 +289,9 @@ function changeSpies(delta) {
 // ------------------------------------------------------------------
 
 function assignRoles() {
-    state.locationKey = pickLocation(locTable.locations)?.key ?? '';
+    const drawn = pickUnusedLocation(locTable.locations, state.usedLocations);
+    state.locationKey = drawn.key;
+    state.usedLocations = drawn.used;
     state.spyIndices = dealRoles(state.players, state.spies);
     state.revealIndex = 0;
     state.revealShown = false;
@@ -279,9 +316,11 @@ function roleMarkup(isSpy, location, spyCount) {
     }
     const el = document.createElement('div');
     el.textContent = location;
+    // The flavour line is looked up whole rather than assembled, because
+    // Slovene has to agree the verb of its trailing clause with the count too.
     return `<p class="role-kicker">${t('brief.locationKicker')}</p>
             <div class="role-location">${el.innerHTML}</div>
-            <p class="role-flavor">${t('brief.citizenFlavor', { spyWord: spyWord(t, spyCount) })}</p>`;
+            <p class="role-flavor">${plural('brief.citizenFlavor', spyCount)}</p>`;
 }
 
 function renderBriefCard() {
@@ -418,32 +457,37 @@ function endSoloRound() {
 function renderSoloDebriefChrome() {
     $('playAgainSub').textContent = t('debrief.subSolo', {
         players: state.players,
+        playerWord: plural('word.player', state.players),
         spies: state.spies,
-        spyWord: spyWord(t, state.spies),
+        spyWord: plural('word.spy', state.spies),
     });
 }
 
 function showSoloDebrief() {
     showScreen('debriefScreen');
+    show('declassifyBox', true);
     show('declassifyResult', false);
     show('declassifyBtn', true);
     show('debriefSolo', true);
     show('verdictBlock', false);
+    show('ballotBlock', false);
+    show('hostCall', false);
+    show('debriefDefend', false);
     show('debriefSoloActions', true);
     show('debriefRoomActions', false);
+    $('debriefStamp').textContent = t('stamp.closed');
     renderSoloDebriefChrome();
 }
 
+/**
+ * The one-phone reveal, which is still a button on this device: there is only
+ * one screen and the table is looking at it. A room's reveal is the host's
+ * call instead, and lands on every phone at once (see renderDebriefRoom).
+ */
 function declassify() {
-    if (mode === 'room') {
-        if (!reveal) return;
-        $('resultSpies').textContent = reveal.spies.map((s) => s.name).join('  ·  ');
-        $('resultLocation').textContent = reveal.location ?? '';
-    } else {
-        $('resultSpies').textContent = state.spyIndices
-            .map((i) => t('brief.playerN', { n: i + 1 })).join('  ·  ');
-        $('resultLocation').textContent = locationText(state.locationKey);
-    }
+    $('resultSpies').textContent = state.spyIndices
+        .map((i) => t('brief.playerN', { n: i + 1 })).join('  ·  ');
+    $('resultLocation').textContent = locationText(state.locationKey);
     show('declassifyResult', true);
     show('declassifyBtn', false);
 }
@@ -611,6 +655,7 @@ function enterRoom(granted, name) {
     pendingCall = null;
     cardSignature = null;
     tallySignature = null;
+    ballotResult = null;
     stopGraceClock();
     outbox.length = 0;
     failures = 0;
@@ -629,6 +674,7 @@ function enterRoom(granted, name) {
         status: granted.room.status,
         lang: granted.room.lang ?? lang,
         spies: granted.room.spies ?? 1,
+        picks: granted.room.picks ?? 1,
         roundSeconds: granted.room.roundSeconds ?? 300,
         secondsLeft: null,
         paused: false,
@@ -636,11 +682,13 @@ function enterRoom(granted, name) {
         endVotes: 0,
         endVotesNeeded: 1,
         ballots: 0,
+        revealed: false,
     };
     players = [{
         id: granted.you.id, name, host: granted.you.host, ready: granted.you.ready,
         wantsEnd: false, voted: false, online: true,
     }];
+
 
     routeRoom();
     renderRoom();
@@ -661,6 +709,7 @@ function leaveLocal(message) {
     players = [];
     roomInfo = null;
     reveal = null;
+    ballotResult = null;
     routedStatus = null;
     pendingSettings = null;
     pendingBallot = null;
@@ -716,6 +765,7 @@ async function pollOnce() {
         hidden: document.hidden,
         failures,
         grace: graceBase !== null,
+        revealed: Boolean(reveal),
     }));
 }
 
@@ -736,6 +786,7 @@ function handlePoll(body) {
     session.you = body.you;
     players = body.players;
     roomInfo = body.room;
+    ballotResult = body.ballot ?? null;
     reveal = body.reveal ?? null;
 
     // Hold the host's un-confirmed stepper choice over the snapshot, so it
@@ -752,7 +803,7 @@ function handlePoll(body) {
     // Same shield for this player's own two flippable answers. Each clears the
     // moment the server agrees, so the snapshot takes over again as soon as it
     // is telling the truth.
-    pendingBallot = holdPending(pendingBallot, 'votedFor');
+    pendingBallot = holdPending(pendingBallot, 'ballot');
     pendingCall = holdPending(pendingCall, 'wantsEnd');
 
     // The room owns the language, so a phone that resumed adopts it.
@@ -767,6 +818,10 @@ function handlePoll(body) {
         else if (op.op === 'pause') toast(t('toast.paused'));
         else if (op.op === 'resume') toast(t('toast.resumed'));
         else if (op.op === 'host' && op.mine) toast(t('toast.hostLeft'));
+        // The host has called the round, so the dossier is about to appear on
+        // this phone. Redraw the tally from scratch: it was deliberately not
+        // marking the spies a moment ago.
+        else if (op.op === 'reveal') tallySignature = null;
     }
     // A resume seeds `you` with id 0, so the first poll always looks like a
     // promotion. Only a genuine change mid-session is worth announcing.
@@ -788,10 +843,25 @@ function handlePoll(body) {
  */
 function holdPending(pending, field) {
     if (!pending) return null;
-    if (session.you[field] === pending.value) return null; // the server agrees
-    if (Date.now() >= pending.until) return null;          // gave it long enough
+    if (sameAnswer(session.you[field], pending.value)) return null; // the server agrees
+    if (Date.now() >= pending.until) return null;                   // gave it long enough
     session.you[field] = pending.value;
     return pending;
+}
+
+/**
+ * Whether the server is now telling us what we told it. A ballot is a LIST of
+ * names since the table can be hunting several spies, so identity is not
+ * enough: two arrays holding the same ids in the same order are the same
+ * answer, and the order matters because it decides which pick makes way next.
+ */
+function sameAnswer(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) {
+        const x = Array.isArray(a) ? a : [];
+        const y = Array.isArray(b) ? b : [];
+        return x.length === y.length && x.every((v, i) => v === y[i]);
+    }
+    return a === b;
 }
 
 function updateSignal() {
@@ -967,12 +1037,11 @@ function routeRoom() {
     } else if (model.status === 'debrief') {
         showScreen('debriefScreen');
         tallySignature = null; // a fresh debrief always draws its own graph
-        show('declassifyResult', false);
-        show('declassifyBtn', true);
         show('debriefSolo', false);
-        show('verdictBlock', true);
         show('debriefSoloActions', false);
         show('debriefRoomActions', true);
+        // Everything else on this screen is decided by whether the host has
+        // called the round yet, which renderDebriefRoom answers every poll.
     }
 }
 
@@ -1025,17 +1094,19 @@ function renderLobby() {
     $('roomTimePlus').disabled = roomInfo.roundSeconds >= MAX_ROUND_SECONDS;
 
     const deal = $('roomDealBtn');
+    const short = MIN_PLAYERS - seated;
     deal.disabled = seated < MIN_PLAYERS;
-    deal.textContent = seated < MIN_PLAYERS
-        ? t('lobby.needMore', { n: MIN_PLAYERS - seated })
+    deal.textContent = short > 0
+        ? plural('lobby.needMore', short, { n: short })
         : t('lobby.deal');
 
     const hostName = players.find((p) => p.host)?.name ?? t('lobby.theHost');
     $('hostNameWait').textContent = t('lobby.waitingFor', { name: hostName.toUpperCase() });
     $('guestSettings').textContent = t('lobby.summary', {
         seated,
+        agentWord: plural('word.agent', seated),
         spies: roomInfo.spies,
-        spyWord: spyWord(t, roomInfo.spies),
+        spyWord: plural('word.spy', roomInfo.spies),
         clock: formatClock(roomInfo.roundSeconds),
     });
 }
@@ -1088,12 +1159,22 @@ function renderRoundRoom() {
     $('callVoteFill').style.width = `${clamp((wanted / Math.max(1, needed)) * 100, 0, 100)}%`;
 }
 
+/** How many names this room's ballot carries: one per spy in play. */
+function ballotSize() {
+    return roomInfo?.picks ?? picksNeeded(roomInfo?.spies ?? 1, players.length);
+}
+
 /**
  * The ballot. Everyone picks at the same time and the page shows only how
  * many have voted, never for whom, which is the entire reason the phase
  * exists: nobody has to accuse anyone out loud first.
+ *
+ * A table hunting two spies names two, and the agents only win by putting
+ * both of them on top: catching one of two means the other walked.
  */
 function renderVote() {
+    const needed = ballotSize();
+    const ballot = session.you.ballot ?? [];
     const candidates = players.filter((p) => p.id !== session.you.id);
     syncById($('ballotList'), candidates, () => {
         const btn = document.createElement('button');
@@ -1103,14 +1184,28 @@ function renderVote() {
             + '<span class="ballot-name"></span><span class="ballot-state"></span>';
         return btn;
     }, (btn, p) => {
-        const picked = session.you.votedFor === p.id;
+        const picked = ballot.includes(p.id);
         btn.classList.toggle('is-picked', picked);
         btn.classList.toggle('is-offline', !p.online);
         btn.setAttribute('aria-pressed', picked ? 'true' : 'false');
         btn.querySelector('.ballot-name').textContent = p.name;
         btn.querySelector('.ballot-state').textContent = p.voted ? t('tag.voted') : '';
-        btn.onclick = () => castVote(p.id);
+        btn.onclick = () => togglePick(p.id);
     });
+
+    // What this phone still owes the room, then what the room is waiting for.
+    // Both faces are written into an element that ships empty, so the full one
+    // needs the same guard vote.grace has: a phone holding a ui.json from
+    // before these rows existed would otherwise print "vote.picked" at a
+    // player. plural() is safe by construction, it answers a miss with ''.
+    const full = ballot.length >= needed;
+    $('votePick').textContent = full
+        ? (hasString(uiTable, 'vote.picked') ? t('vote.picked') : '')
+        : plural('vote.pick', needed, { n: needed });
+    $('votePick').classList.toggle('is-full', full);
+    // Only worth saying at the moment it applies: one more tap now costs the
+    // oldest pick, and with a single spy that is just switching your vote.
+    show('voteSwapHint', needed > 1 && full);
 
     const cast = players.filter((p) => p.voted).length;
     $('voteTally').textContent = t('vote.cast', { n: cast, total: players.length });
@@ -1171,63 +1266,132 @@ function paintGraceClock() {
         : String(left);
 }
 
-function castVote(targetId) {
-    if (session.you.votedFor === targetId) return;
+/**
+ * Tap a name on or off your ballot. At the limit the OLDEST pick makes way
+ * rather than the tap doing nothing: a control that ignores a tap reads as
+ * broken, and with one spy in play this is exactly the "switch your vote" the
+ * ballot has always had.
+ */
+function togglePick(targetId) {
+    const needed = ballotSize();
+    const next = [...(session.you.ballot ?? [])];
+    const at = next.indexOf(targetId);
+    if (at >= 0) {
+        next.splice(at, 1);
+    } else {
+        next.push(targetId);
+        while (next.length > needed) next.shift();
+    }
+
     // Paint at once and hold it over the next snapshot: a poll already in
     // flight still believes the old pick, and letting it win here is what made
     // a changed vote look like it had been ignored.
-    session.you.votedFor = targetId;
-    pendingBallot = { value: targetId, until: Date.now() + 2500 };
+    session.you.ballot = next;
+    pendingBallot = { value: next, until: Date.now() + 2500 };
     // The server restarts the countdown for this ballot, so restart it here
     // too rather than letting the old deadline keep ticking down until the
     // confirming poll. Otherwise switching at "CLOSING IN 1" shows a 0 right
     // after the tap that just bought the table ten more seconds, which is the
     // same "it ignored me" the pending shields exist to prevent.
     if (graceBase !== null) graceBase = { left: VOTE_GRACE_SECONDS, at: Date.now() };
-    queueEvent('castvote', { target: targetId });
+    queueEvent('castvote', { targets: next });
     renderVote();
 }
 
+/**
+ * The debrief, in the two halves the server sends it in.
+ *
+ * The ballot result is up as soon as the vote closes, because the accused has
+ * to answer for it. Everything else waits for the HOST: they hear the defence,
+ * and a caught spy who names the location has still taken the round, so the
+ * app cannot know the winner and does not guess. Their call is one tap, and
+ * that tap declassifies the dossier on every phone at once.
+ */
 function renderDebriefRoom() {
     const host = session.you.host;
-    show('roomAgainBtn', host);
-    show('roomLobbyBtn', host);
-    show('debriefWait', !host);
+    const called = Boolean(reveal);
+
+    show('ballotBlock', true);
+    show('verdictBlock', called);
+    show('declassifyBox', called);
+    show('declassifyResult', called);
+    show('declassifyBtn', false); // a room reveals together or not at all
+    $('debriefStamp').textContent = called ? t('stamp.closed') : t('stamp.pending');
+
+    // The call. It stays on screen afterwards, showing which way it went, so
+    // a host who tapped the wrong one can put it right instead of replaying
+    // the round.
+    show('hostCall', host);
+    show('debriefDefend', !host && !called);
+    $('hostCallHint').textContent = called ? t('debrief.callAgain') : t('debrief.callHint');
+    $('callAgentsBtn').classList.toggle('is-called', reveal?.outcome === 'agents');
+    $('callSpiesBtn').classList.toggle('is-called', reveal?.outcome === 'spies');
+
+    // Nothing to play again until the round has actually been called.
+    show('roomAgainBtn', host && called);
+    show('roomLobbyBtn', host && called);
+    show('debriefWait', !host && called);
     $('roomAgainSub').textContent = t('debrief.subSolo', {
         players: players.length,
+        playerWord: plural('word.player', players.length),
         spies: roomInfo.spies,
-        spyWord: spyWord(t, roomInfo.spies),
+        spyWord: plural('word.spy', roomInfo.spies),
     });
 
-    if (!reveal) return;
-    const agentsWon = reveal.outcome === 'agents';
-    const verdict = $('verdict');
-    verdict.classList.toggle('is-agents', agentsWon);
-    verdict.classList.toggle('is-spies', !agentsWon);
-    $('verdictTitle').textContent = agentsWon ? t('outcome.agentsWin') : t('outcome.spiesWin');
-    $('verdictSub').textContent = agentsWon ? t('outcome.agentsWinSub') : t('outcome.spiesWinSub');
-    $('verdictAccused').textContent = reveal.accused?.name ?? t('debrief.noAccused');
+    const accused = ballotResult?.accused ?? [];
+    $('verdictAccused').textContent = accused.length > 0
+        ? accused.map((a) => a.name).join('  ·  ')
+        : t('debrief.noAccused');
 
-    // The ballots, readable at last. Bars are drawn against the largest
-    // count so a runaway winner still reads as one.
-    //
-    // Only redrawn when the figures actually change, for the same reason the
-    // brief card is: the debrief keeps polling, and rebuilding these nodes
-    // every couple of seconds threw away whatever the reader was looking at.
-    const signature = JSON.stringify([
-        reveal.tally, reveal.accused?.id ?? null, reveal.spies.map((sp) => sp.id),
-    ]);
+    if (called) {
+        const agentsWon = reveal.outcome === 'agents';
+        const verdict = $('verdict');
+        verdict.classList.toggle('is-agents', agentsWon);
+        verdict.classList.toggle('is-spies', !agentsWon);
+        $('verdictTitle').textContent = agentsWon ? t('outcome.agentsWin') : t('outcome.spiesWin');
+        $('verdictSub').textContent = agentsWon ? t('outcome.agentsWinSub') : t('outcome.spiesWinSub');
+        // What the ballot alone managed, which is the rule the table plays by:
+        // every spy in the top n or the round got away from you.
+        const caught = accused.filter((a) => reveal.spies.some((sp) => sp.id === a.id)).length;
+        const total = Math.max(reveal.spies.length, ballotResult?.wanted ?? 0);
+        // Empty element, so guard it: an old table would print the key here.
+        // The bare figures say the same thing in every language.
+        $('verdictCaught').textContent = hasString(uiTable, 'debrief.caught')
+            ? t('debrief.caught', { n: caught, total })
+            : `${caught} / ${total}`;
+        $('resultSpies').textContent = reveal.spies.map((sp) => sp.name).join('  ·  ');
+        $('resultLocation').textContent = reveal.location ?? '';
+    }
+
+    renderTally(accused, called);
+}
+
+/**
+ * The ballots, readable as soon as the vote closes. Bars are drawn against
+ * the largest count so a runaway winner still reads as one.
+ *
+ * Only redrawn when the figures actually change, for the same reason the
+ * brief card is: the debrief keeps polling, and rebuilding these nodes every
+ * couple of seconds threw away whatever the reader was looking at. The
+ * signature carries `called` because the rows only mark who the spies were
+ * once the host has said so, and marking them a moment early would hand the
+ * answer to everyone mid-defence.
+ */
+function renderTally(accused, called) {
+    const rows = ballotResult?.tally ?? [];
+    const spyIds = called ? reveal.spies.map((sp) => sp.id) : [];
+    const signature = JSON.stringify([rows, accused.map((a) => a.id), spyIds, called]);
     if (signature === tallySignature) return;
     tallySignature = signature;
 
-    const top = Math.max(1, ...reveal.tally.map((row) => row.votes));
+    const top = Math.max(1, ...rows.map((row) => row.votes));
     const chart = $('tallyChart');
     chart.replaceChildren();
-    for (const row of reveal.tally) {
+    for (const row of rows) {
         const line = document.createElement('div');
         line.className = 'tally-row';
-        if (reveal.accused && row.id === reveal.accused.id) line.classList.add('is-accused');
-        if (reveal.spies.some((s) => s.id === row.id)) line.classList.add('is-spy');
+        if (accused.some((a) => a.id === row.id)) line.classList.add('is-accused');
+        if (spyIds.includes(row.id)) line.classList.add('is-spy');
 
         const name = document.createElement('span');
         name.className = 'tally-name';
@@ -1250,6 +1414,18 @@ function renderDebriefRoom() {
 // ------------------------------------------------------------------
 //  Host controls
 // ------------------------------------------------------------------
+
+/**
+ * The host calls the round, which is also what declassifies it. Nothing is
+ * painted optimistically here: the point of the tap is that every phone sees
+ * the same thing at the same moment, and it arrives on the next poll, which
+ * an uncalled debrief runs at lobby speed for exactly this reason.
+ */
+function callRound(outcome) {
+    if (!session?.you.host || model.status !== 'debrief') return;
+    if (reveal?.outcome === outcome) return; // already called that way
+    queueEvent('reveal', { outcome });
+}
 
 let settingsTimer = null;
 
@@ -1317,7 +1493,7 @@ async function arrive() {
             code: saved.code,
             token: saved.token,
             name: saved.name ?? '',
-            you: { id: 0, host: false, ready: false, wantsEnd: false, votedFor: null, role: null, location: null },
+            you: { id: 0, host: false, ready: false, wantsEnd: false, ballot: [], role: null, location: null },
         };
         // since: 0 replays the room from the start, so a phone that was away
         // rebuilds its whole picture in one request.
@@ -1327,7 +1503,10 @@ async function arrive() {
             history.replaceState(null, '', `?room=${saved.code}`);
             handlePoll(res.body);
             updateSignal();
-            schedulePoll(pollDelay({ status: model.status, hidden: document.hidden, failures: 0 }));
+            schedulePoll(pollDelay({
+                status: model.status, hidden: document.hidden, failures: 0,
+                revealed: Boolean(reveal),
+            }));
             return;
         }
         mode = null;
@@ -1367,6 +1546,9 @@ async function init() {
         applyLang(DEFAULT_LANG);
     }
     renderSetup();
+
+    // Persistent chrome
+    $('exitBtn').addEventListener('click', exitHere);
 
     // Menus
     $('initiateBtn').addEventListener('click', goToMode);
@@ -1440,8 +1622,11 @@ async function init() {
     // The ballot
     $('closeVoteBtn').addEventListener('click', () => queueEvent('closevote'));
 
-    // The debrief
+    // The debrief. In a room the reveal is the host's call, so there is no
+    // per-phone declassify button: one tap settles the round for everyone.
     $('declassifyBtn').addEventListener('click', declassify);
+    $('callAgentsBtn').addEventListener('click', () => callRound('agents'));
+    $('callSpiesBtn').addEventListener('click', () => callRound('spies'));
     $('playAgainBtn').addEventListener('click', startBriefing);
     $('changeSettingsBtn').addEventListener('click', goToSetup);
     $('mainMenuBtn').addEventListener('click', mainMenu);

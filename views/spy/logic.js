@@ -21,6 +21,20 @@ export const spyMax = (players) => Math.max(1, Math.floor(players / 2));
 export const suggestedSpies = (players) =>
     clamp(Math.round(players / 4), 1, spyMax(players));
 
+/**
+ * How many names one ballot carries. The table is hunting `spies` of them, so
+ * it accuses that many, and the agents only win by putting every spy in the
+ * top n. Capped at the number of people a voter can actually name (everyone
+ * but themselves), because players walking out mid-vote must not leave a room
+ * whose ballots can never be completed. Mirrors picksNeeded() in
+ * spy-controller.php: change them in both.
+ */
+export function picksNeeded(spies, seated) {
+    const n = Math.max(1, Math.floor(Number(spies) || 1));
+    const others = Math.max(1, Math.floor(Number(seated) || 0) - 1);
+    return Math.min(n, others);
+}
+
 // ------------------------------------------------------------------
 //  The clock
 // ------------------------------------------------------------------
@@ -67,9 +81,41 @@ export function dealRoles(count, spies, rng = Math.random) {
     return idx.slice(0, wanted).sort((a, b) => a - b);
 }
 
-export function pickLocation(locations, rng = Math.random) {
-    if (!Array.isArray(locations) || locations.length === 0) return '';
-    return locations[Math.floor(rng() * locations.length)];
+/**
+ * A location this table has not played yet, plus the deck to remember for
+ * next time. Repeats are the one thing that makes a second round feel like a
+ * rerun, so the draw is from what is LEFT rather than from the whole list.
+ * When the deck runs out it reshuffles minus the place just played, so a
+ * party longer than the table can neither repeat nor dead-end. Mirrors
+ * dealLocation() in spy-controller.php: change them in both.
+ */
+export function pickUnusedLocation(locations, used = [], rng = Math.random) {
+    const keys = (Array.isArray(locations) ? locations : [])
+        .map((row) => row?.key)
+        .filter((key) => typeof key === 'string' && key !== '');
+    if (keys.length === 0) return { key: '', used: [] };
+
+    // Drop places since retired from the table, so a deck holding a key that no
+    // longer exists cannot make `last` point at nothing and re-allow the place
+    // actually just played. dealLocation() in the controller does the same.
+    const known = new Set(keys);
+    const played = used.filter((key) => known.has(key));
+
+    const seen = new Set(played);
+    let pool = keys.filter((key) => !seen.has(key));
+    let history = [...played];
+    if (pool.length === 0) {
+        // Deck exhausted. Reshuffle, but never straight back onto the place
+        // this table has just walked out of.
+        const last = played[played.length - 1];
+        pool = keys.filter((key) => key !== last);
+        if (pool.length === 0) pool = [...keys]; // a one-place deck has no choice
+        history = [];
+    }
+
+    const key = pool[Math.floor(rng() * pool.length)];
+    history.push(key);
+    return { key, used: history };
 }
 
 // ------------------------------------------------------------------
@@ -139,6 +185,12 @@ export function applyEvents(model, events, selfId) {
                 model.status = 'debrief';
                 ops.push({ op: 'verdict' });
                 break;
+            case 'reveal':
+                // The host has called the round, which is what declassifies
+                // the dossier. No phase moves: the room was already in the
+                // debrief, watching the accused defend themselves.
+                ops.push({ op: 'reveal', outcome: ev.data?.outcome ?? null });
+                break;
             case 'again':
                 model.status = 'lobby';
                 ops.push({ op: 'again' });
@@ -170,7 +222,7 @@ export function applyEvents(model, events, selfId) {
  * pause or an early end has to arrive quickly, while the lobby and the
  * briefing need live joiner and ready counts.
  */
-export function pollDelay({ status, hidden, failures, grace }) {
+export function pollDelay({ status, hidden, failures, grace, revealed }) {
     if (failures > 0) return Math.min(10000, 800 * 2 ** failures);
     // The vote's grace countdown is the one moment a phone has to keep up
     // with a deadline it cannot see coming: a ballot changed on somebody
@@ -182,7 +234,11 @@ export function pollDelay({ status, hidden, failures, grace }) {
     if (grace) return 700;
     if (hidden) return 4000;
     if (status === 'round') return 3000;
-    if (status === 'debrief') return 2500;
+    // A debrief nobody has called yet is a waiting room: every phone is
+    // watching for the host's verdict, and it must land like a light coming
+    // on rather than a couple of seconds after the room reacts out loud.
+    // Once it has, the screen is finished and can go back to idling.
+    if (status === 'debrief') return revealed ? 2500 : 1200;
     // The lobby, the briefing and the ballot all show a live count of who
     // has acted, so they are the phases worth watching closely.
     return 1200;
@@ -272,10 +328,42 @@ export function normalizeLang(raw, table) {
 }
 
 /**
- * The right word for "spy" in a sentence that counts them. Slovene needs the
- * accusative here ("razkrinkaj vohuna"), so the choice lives in the table as
- * two rows rather than as an -s the page appends.
+ * Which plural form a count takes, by the CLDR rules for Slovene, which are
+ * the widest the tables have to serve: singular, dual, a 3-4 form, and a
+ * genitive-plural everything-else. English needs only two of the four, so it
+ * fills `one` with the singular and the other three with the plural and the
+ * same row set answers both languages.
+ *
+ * Counting past a hundred goes by the last two digits (101 agents is one
+ * agent's worth of grammar), which is why this is a % 100. That same rule is
+ * applied to English, where it is wrong: 101 would pick the `one` row and
+ * render "101 spy". Nothing here can reach it (MAX_PLAYERS is 20 and every
+ * count is derived from that), so do not wire this to an uncapped number
+ * without giving English its own two-way rule first.
  */
-export function spyWord(t, count) {
-    return count > 1 ? t('word.spies') : t('word.spy');
+export function pluralCategory(n) {
+    const i = Math.abs(Math.trunc(Number(n) || 0)) % 100;
+    if (i === 1) return 'one';
+    if (i === 2) return 'two';
+    if (i === 3 || i === 4) return 'few';
+    return 'other';
+}
+
+/**
+ * One row of a counted set, e.g. pluralString(t, ui, 'count.spy', 2) -> the
+ * `count.spy.two` row. Whole sentences are looked up the same way when the
+ * grammar reaches past the noun: Slovene has to agree the verb of a trailing
+ * clause with the count too, so "smoke out the spy who cannot" is four rows
+ * rather than a noun dropped into one.
+ *
+ * These are written into elements that start EMPTY, so a table too old to
+ * carry the row would print "count.spy.two" at a player. Falling through the
+ * other forms first is wrong grammar at worst, which is a great deal better
+ * than a key, and only ever happens to a tab left open across a deploy.
+ */
+export function pluralString(t, table, base, n, vars) {
+    for (const key of [`${base}.${pluralCategory(n)}`, `${base}.other`, `${base}.one`]) {
+        if (hasString(table, key)) return t(key, vars);
+    }
+    return '';
 }

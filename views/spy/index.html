@@ -65,8 +65,11 @@
     <div class="grain" aria-hidden="true"></div>
     <div class="vignette" aria-hidden="true"></div>
 
-    <!-- Persistent chrome -->
-    <a class="exit-link" href="/"><i class="fas fa-chevron-left"></i> <span data-i18n="chrome.exit">EXIT</span></a>
+    <!-- Persistent chrome. EXIT walks back out of whatever you are in (a
+         room, a one-phone game, a menu) and stops at the title screen, where
+         it hides: leaving the site is not what anyone reaches for mid-party. -->
+    <button class="exit-link hidden" id="exitBtn" type="button"><i class="fas fa-chevron-left"></i> <span
+            data-i18n="chrome.exit">EXIT</span></button>
     <div class="rec" aria-hidden="true"><span class="rec-dot"></span> REC</div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -311,7 +314,13 @@
             <p class="vote-lead" data-i18n="vote.lead">Everyone picks at once, so nobody has to speak first. Nothing is
                 shown until the last ballot is in.</p>
 
+            <!-- One name per spy in play, so a table hunting two has to agree
+                 on both. Filled by JS, because the count decides the wording. -->
+            <p class="vote-pick" id="votePick"></p>
+
             <div class="ballot" id="ballotList"></div>
+            <p class="field-hint hidden" id="voteSwapHint" data-i18n="vote.swapHint">at your limit, a new pick drops your
+                oldest one</p>
 
             <p class="tally" id="voteTally" aria-live="polite">0 / 0 BALLOTS CAST</p>
             <!-- Only once every seated ballot is in. The pick stays changeable
@@ -332,20 +341,45 @@
                 </p>
             </div>
 
-            <!-- Room mode ends on a verdict the ballot already settled. -->
+            <!-- Room mode, half two: the verdict the HOST called. Nothing
+                 here exists on any phone until they do. -->
             <div id="verdictBlock" class="hidden">
                 <div class="verdict" id="verdict">
                     <h1 class="verdict-title" id="verdictTitle">AGENTS WIN</h1>
                     <p class="verdict-sub" id="verdictSub">the mole is burned</p>
                 </div>
+                <p class="verdict-caught" id="verdictCaught"></p>
+            </div>
+
+            <!-- Room mode, half one: public the moment the vote closed, because
+                 it is what the accused has to answer for. -->
+            <div id="ballotBlock" class="hidden">
                 <p class="muted-line" data-i18n="debrief.accused">ACCUSED</p>
                 <p class="verdict-accused" id="verdictAccused">----</p>
                 <div class="tally-chart" id="tallyChart"></div>
             </div>
 
-            <div class="stamp stamp-tr" data-i18n="stamp.closed">CASE CLOSED</div>
+            <div class="stamp stamp-tr" id="debriefStamp" data-i18n="stamp.closed">CASE CLOSED</div>
 
-            <div class="declassify">
+            <!-- The host's call, and the only way the dossier opens. One tap
+                 declassifies for everyone and stamps the verdict, because by
+                 now the table has heard the defence and the app has not: a
+                 caught spy who named the location still takes the round. -->
+            <div class="hostcall hidden" id="hostCall">
+                <p class="muted-line" id="hostCallTitle" data-i18n="debrief.whoWon">// WHO TOOK THE ROUND?</p>
+                <div class="btn-row">
+                    <button class="btn btn-agents" id="callAgentsBtn" type="button"
+                        data-i18n="debrief.callAgents">AGENTS</button>
+                    <button class="btn btn-spies" id="callSpiesBtn" type="button"
+                        data-i18n="debrief.callSpies">SPIES</button>
+                </div>
+                <p class="field-hint" id="hostCallHint" data-i18n="debrief.callHint">this declassifies the file for
+                    everyone</p>
+            </div>
+            <p class="field-hint hidden" id="debriefDefend" data-i18n="debrief.defend">// THE ACCUSED ANSWERS FIRST, THEN
+                THE HOST CALLS IT</p>
+
+            <div class="declassify" id="declassifyBox">
                 <button class="btn" id="declassifyBtn" type="button" data-i18n="debrief.declassify">⊘ DECLASSIFY FILE</button>
                 <div class="declassify-result hidden" id="declassifyResult">
                     <p class="muted-line" data-i18n="debrief.dossier">SPY DOSSIER</p>

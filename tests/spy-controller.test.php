@@ -116,6 +116,36 @@ foreach (array_filter(array_map('trim', explode(';', $schema))) as $stmt) {
     $pdo->exec($stmt);
 }
 
+// CREATE TABLE IF NOT EXISTS cannot upgrade a scratch DB that still carries an
+// older spy schema, so bring it forward here the way the seed does in
+// production. Idempotent, and it keeps the suite runnable on a pre-rework
+// database instead of failing with a column nobody can see is missing.
+function columnExists(PDO $pdo, string $table, string $column): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT 1 FROM information_schema.columns
+         WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?'
+    );
+    $stmt->execute([$table, $column]);
+    return $stmt->fetchColumn() !== false;
+}
+
+foreach ([
+    ['spy_rooms', 'used_location_keys', 'ALTER TABLE spy_rooms ADD COLUMN used_location_keys TEXT DEFAULT NULL AFTER location_key'],
+    ['spy_rooms', 'accused_ids',        'ALTER TABLE spy_rooms ADD COLUMN accused_ids VARCHAR(255) DEFAULT NULL AFTER paused_seconds'],
+    ['spy_rooms', 'revealed',           'ALTER TABLE spy_rooms ADD COLUMN revealed TINYINT NOT NULL DEFAULT 0 AFTER outcome'],
+] as [$table, $column, $ddl]) {
+    if (!columnExists($pdo, $table, $column)) {
+        $pdo->exec($ddl);
+    }
+}
+if (columnExists($pdo, 'spy_rooms', 'accused_id')) {
+    $pdo->exec('ALTER TABLE spy_rooms DROP COLUMN accused_id');
+}
+if (columnExists($pdo, 'spy_players', 'voted_for')) {
+    $pdo->exec('ALTER TABLE spy_players DROP COLUMN voted_for');
+}
+
 /** Room codes created by this run, deleted again on shutdown. */
 $CREATED_CODES = [];
 
@@ -135,6 +165,15 @@ function teardown(PDO $pdo): void
     }
     $in = implode(',', array_fill(0, count($CREATED_CODES), '?'));
     $pdo->prepare("DELETE FROM spy_rooms WHERE code IN ($in)")->execute($CREATED_CODES);
+}
+
+/**
+ * One ballot: as many names as there are spies in play. The ids are sent in
+ * pick order, which is the order the phone drops the oldest from.
+ */
+function castBallot(array $who, array $targets): array
+{
+    return event($who, 'castvote', ['targets' => array_values($targets)]);
 }
 
 /** Time travel: the suite never sleeps, it backdates rows instead. */
@@ -402,26 +441,34 @@ check('nobody has voted yet',
     $open['room']['ballots'] === 0
     && count(array_filter($open['players'], fn ($p) => $p['voted'])) === 0);
 
-check('a ballot for somebody outside the room is refused',
-    event($voterA, 'castvote', ['target' => 99999999])['status'] === 400);
-check('accusing yourself is refused',
-    event($voterA, 'castvote', ['target' => $voterA['id']])['status'] === 400);
-check('a ballot must name a whole number',
-    event($voterA, 'castvote', ['target' => 'x'])['status'] === 400);
+check('one spy in play means a ballot of one name', $open['room']['picks'] === 1);
+check('there is nothing to declassify while the ballot is still open',
+    event($host, 'reveal', ['outcome' => 'agents'])['status'] === 409);
 
-check('a player casts a ballot', event($voterA, 'castvote', ['target' => $spyId])['status'] === 200);
+check('a ballot for somebody outside the room is refused',
+    castBallot($voterA, [99999999])['status'] === 400);
+check('accusing yourself is refused',
+    castBallot($voterA, [$voterA['id']])['status'] === 400);
+check('a ballot must name whole numbers',
+    castBallot($voterA, ['x'])['status'] === 400);
+check('a ballot cannot name more people than there are spies',
+    castBallot($voterA, [$spyId, $innocentId])['status'] === 400);
+check('a ballot cannot name the same person twice',
+    event($voterA, 'castvote', ['targets' => [$spyId, $spyId]])['status'] === 400);
+
+check('a player casts a ballot', castBallot($voterA, [$spyId])['status'] === 200);
 
 $mid = poll($voterB)['body'];
 check('the room learns that a ballot exists',
     $mid['room']['ballots'] === 1
     && count(array_filter($mid['players'], fn ($p) => $p['voted'])) === 1);
 check('THE BALLOT ITSELF IS SECRET UNTIL THE VOTE CLOSES',
-    !str_contains(json_encode($mid['players']), 'votedFor')
-    && $mid['you']['votedFor'] === null
+    !str_contains(json_encode($mid['players']), 'ballot')
+    && $mid['you']['ballot'] === []
     && !array_key_exists('reveal', $mid),
     'a ballot leaked before the vote closed');
 check('a voter can see their own ballot and nobody else can',
-    poll($voterA)['body']['you']['votedFor'] === $spyId);
+    poll($voterA)['body']['you']['ballot'] === [$spyId]);
 
 // The log is the thing the design is actually protecting: it is handed to
 // every player in the room, so a ballot must not be recoverable from it.
@@ -448,13 +495,16 @@ $switchTo = (int) array_values(array_filter(
     fn ($id) => $id !== $spyId && $id !== $voterA['id']
 ))[0];
 check('a voter may change their ballot',
-    event($voterA, 'castvote', ['target' => $switchTo])['status'] === 200);
+    castBallot($voterA, [$switchTo])['status'] === 200);
 check('the change replaces the first ballot rather than adding a second',
-    poll($voterA)['body']['you']['votedFor'] === $switchTo);
+    poll($voterA)['body']['you']['ballot'] === [$switchTo]);
 check('changing a ballot does not add a second voter to the room',
     poll($voterB)['body']['room']['ballots'] === 1);
+check('a ballot can be taken back entirely',
+    castBallot($voterA, [])['status'] === 200
+    && poll($voterA)['body']['room']['ballots'] === 0);
 // Put it back, so the verdict section below still has its clear plurality.
-event($voterA, 'castvote', ['target' => $spyId]);
+castBallot($voterA, [$spyId]);
 
 // ------------------------------------------------------------------
 //  7. The verdict
@@ -464,7 +514,7 @@ event($voterA, 'castvote', ['target' => $spyId]);
 // else. That leaves the spy with a clear plurality.
 foreach ([$host, $marko, $jaka] as $who) {
     $target = $who['id'] === $spyId ? $innocentId : $spyId;
-    event($who, 'castvote', ['target' => $target]);
+    castBallot($who, [$target]);
 }
 
 // The last ballot no longer slams the vote shut. It arms a countdown, which
@@ -481,18 +531,77 @@ check('the last ballot arms the grace countdown instead of closing the vote',
 $done = runOutGrace($pdo, $marko);
 check('the countdown running out closes the vote', $done['room']['status'] === 'debrief');
 check('a closed vote carries no countdown', $done['room']['graceLeft'] === null);
-check('the dossier now names the spies and the location',
-    isset($done['reveal']['location'])
-    && $done['reveal']['location'] === $location
-    && count($done['reveal']['spies']) === 1
-    && (int) $done['reveal']['spies'][0]['id'] === $spyId);
-check('catching the spy is a win for the agents',
-    $done['reveal']['outcome'] === 'agents'
-    && (int) ($done['reveal']['accused']['id'] ?? 0) === $spyId);
+
+// Half one of the debrief: what the table decided, public at once, because it
+// is what the accused has to answer for.
 check('the ballots are readable at last, and add up',
-    array_sum(array_column($done['reveal']['tally'], 'votes')) === 3);
+    array_sum(array_column($done['ballot']['tally'], 'votes')) === 3);
+check('the accused is the most voted, and there are as many as there are spies',
+    count($done['ballot']['accused']) === 1
+    && (int) $done['ballot']['accused'][0]['id'] === $spyId
+    && $done['ballot']['wanted'] === 1);
+
+// Half two waits for the host. This is the whole point of the phase: the
+// accused gets to defend themselves, and a phone quietly showing the answer
+// is what cut that short.
+check('NO DOSSIER IS OFFERED BEFORE THE HOST CALLS THE ROUND',
+    !array_key_exists('reveal', $done) && $done['room']['revealed'] === false);
+$spyStillBlind = poll($spies[0]['who'])['raw'];
+check('THE LOCATION IS STILL SECRET IN AN UNCALLED DEBRIEF',
+    !str_contains($spyStillBlind, $location),
+    'the location leaked into an uncalled debrief');
+
+// The same rule, on the two paths that hand a player their own card. A
+// citizen has known the place all round and has no screen left that shows it,
+// so withholding it costs them nothing. What it buys is the reclaim door
+// below: the debrief is when phones go down and seats go quiet.
+check('a citizen is not handed the location back in an uncalled debrief',
+    poll($citizens[0]['who'])['body']['you']['location'] === null);
+
+// A seat goes reclaimable after twenty quiet seconds, and reclaiming hands
+// back that seat's card. In an uncalled debrief that used to include the
+// location, so a spy could take a quiet citizen's seat, read the place, and
+// "guess" it out loud to steal a round they had already lost.
+backdate($pdo, 'UPDATE spy_players SET last_seen = NOW() - INTERVAL 60 SECOND WHERE id = ?',
+    [$jaka['id']]);
+$graveRobber = api('reclaim', ['code' => $host['code'], 'playerId' => $jaka['id']]);
+check('RECLAIMING A SEAT IN AN UNCALLED DEBRIEF READS NO LOCATION',
+    $graveRobber['status'] === 200
+    && $graveRobber['body']['you']['location'] === null
+    && !str_contains($graveRobber['raw'], $location),
+    'reclaim handed out the location the host had not revealed yet');
+// Reclaiming mints a new token, so the handle has to follow it.
+$jaka = ['code' => $host['code'], 'token' => $graveRobber['body']['token'], 'id' => $jaka['id']];
+
+check('only the host may call the round',
+    event($marko, 'reveal', ['outcome' => 'agents'])['status'] === 403);
+check('the call has to name one side or the other',
+    event($host, 'reveal', ['outcome' => 'nobody'])['status'] === 400);
+check('a call with no outcome at all is refused',
+    event($host, 'reveal')['status'] === 400);
+check('the host calls it for the agents',
+    event($host, 'reveal', ['outcome' => 'agents'])['status'] === 200);
+
+$called = poll($marko)['body'];
+check('calling the round declassifies the dossier for everyone',
+    $called['room']['revealed'] === true
+    && isset($called['reveal']['location'])
+    && $called['reveal']['location'] === $location
+    && count($called['reveal']['spies']) === 1
+    && (int) $called['reveal']['spies'][0]['id'] === $spyId);
+check('the verdict is the one the host called, not one the ballot computed',
+    $called['reveal']['outcome'] === 'agents');
 check('the dossier is the same for everyone, spy or not',
-    json_encode(poll($host)['body']['reveal']) === json_encode($done['reveal']));
+    json_encode(poll($host)['body']['reveal']) === json_encode($called['reveal']));
+check('the call is announced in the log, so every phone reveals together',
+    count(array_filter($called['events'], fn ($e) => $e['type'] === 'reveal')) === 1);
+
+// The host hears the defence before they call it, so calling it wrong is a
+// live possibility and must not need a whole new round to fix.
+check('the host can correct a call they got wrong',
+    event($host, 'reveal', ['outcome' => 'spies'])['status'] === 200
+    && poll($marko)['body']['reveal']['outcome'] === 'spies');
+event($host, 'reveal', ['outcome' => 'agents']);
 
 // ------------------------------------------------------------------
 //  8. Playing again, and going back to the lobby
@@ -504,6 +613,11 @@ $fresh = poll($host)['body'];
 check('a fresh deal clears every memorized card',
     $fresh['room']['status'] === 'brief'
     && count(array_filter($fresh['players'], fn ($p) => $p['ready'])) === 0);
+check('a fresh deal shreds the last round entirely',
+    !array_key_exists('reveal', $fresh)
+    && !array_key_exists('ballot', $fresh)
+    && $fresh['room']['revealed'] === false
+    && $fresh['room']['ballots'] === 0);
 
 event($host, 'start');
 event($host, 'end');
@@ -511,7 +625,7 @@ event($host, 'end');
 foreach ([$host, $marko, $jaka] as $who) {
     $others = array_values(array_filter([$host['id'], $marko['id'], $jaka['id']],
         fn ($id) => $id !== $who['id']));
-    event($who, 'castvote', ['target' => $others[0]]);
+    castBallot($who, [$others[0]]);
 }
 runOutGrace($pdo, $marko);
 check('back to the lobby is host only', event($marko, 'again')['status'] === 403);
@@ -522,7 +636,193 @@ check('the lobby shreds the dossier and every role',
     $lobby['room']['status'] === 'lobby'
     && $lobby['you']['role'] === null
     && $lobby['you']['location'] === null
+    && $lobby['you']['ballot'] === []
+    && $lobby['room']['revealed'] === false
     && !array_key_exists('reveal', $lobby));
+check('no ballot outlives the round it was cast in',
+    (int) $pdo->query(
+        "SELECT COUNT(*) FROM spy_ballots b JOIN spy_rooms r ON r.id = b.room_id
+         WHERE r.code = '{$host['code']}'"
+    )->fetchColumn() === 0);
+
+// ------------------------------------------------------------------
+//  8b. Two spies: a ballot of two names, and the top TWO rule
+// ------------------------------------------------------------------
+//
+// The rule the whole phase turns on: with n spies in play the agents win only
+// by putting every one of them in the top n. Catching one of two means the
+// other walked, and that is a win for the spies. A table that cannot separate
+// its top n (a tie across the line) has not named them either.
+
+$twoRoom = openRoom('DIRECTOR');
+$two2 = seat($twoRoom['code'], 'TWO2');
+$two3 = seat($twoRoom['code'], 'TWO3');
+$two4 = seat($twoRoom['code'], 'TWO4');
+$twoAll = [$twoRoom, $two2, $two3, $two4];
+
+event($twoRoom, 'settings', ['spies' => 2, 'roundSeconds' => 60]);
+check('four players may hunt two spies', poll($twoRoom)['body']['room']['spies'] === 2);
+
+event($twoRoom, 'deal');
+$twoRoles = [];
+foreach ($twoAll as $who) {
+    $twoRoles[$who['id']] = poll($who)['body']['you']['role'];
+}
+$twoSpies = array_values(array_keys(array_filter($twoRoles, fn ($r) => $r === 'spy')));
+$twoCits  = array_values(array_keys(array_filter($twoRoles, fn ($r) => $r === 'citizen')));
+check('a two spy deal marks exactly two of the four', count($twoSpies) === 2);
+
+event($twoRoom, 'start');
+event($twoRoom, 'end');
+
+$twoOpen = poll($two2)['body'];
+check('two spies in play means a ballot of two names', $twoOpen['room']['picks'] === 2);
+
+$byId = [];
+foreach ($twoAll as $who) {
+    $byId[$who['id']] = $who;
+}
+// These next few are about the mechanics of a two name ballot, not about
+// roles, so they are cast by a KNOWN seat with targets picked by id. The deal
+// is random: reaching for "the first citizen" here can land on the host, and
+// the reclaim below would then invalidate the handle every host-only event
+// after this point uses.
+$mechanic = $two4;
+$notMe    = array_values(array_filter(array_column($twoAll, 'id'), fn ($id) => $id !== $mechanic['id']));
+
+check('a half filled ballot is not a cast one',
+    castBallot($mechanic, [$notMe[0]])['status'] === 200
+    && poll($two2)['body']['room']['ballots'] === 0,
+    'a one name ballot counted as complete while two were wanted');
+check('a full ballot counts',
+    castBallot($mechanic, [$notMe[0], $notMe[1]])['status'] === 200
+    && poll($two2)['body']['room']['ballots'] === 1);
+check('a voter sees their own two names, in the order they picked them',
+    poll($mechanic)['body']['you']['ballot'] === [$notMe[0], $notMe[1]]);
+
+// A phone that dropped out mid-ballot and took its seat back has to find the
+// names it had already picked. It keeps its role, so keeping its ballot is the
+// same promise: it is the same seat.
+backdate($pdo, 'UPDATE spy_players SET last_seen = NOW() - INTERVAL 60 SECOND WHERE id = ?',
+    [$mechanic['id']]);
+$backAgain = api('reclaim', ['code' => $twoRoom['code'], 'playerId' => $mechanic['id']]);
+check('a seat taken back mid-vote comes with the ballot it had cast',
+    $backAgain['status'] === 200
+    && $backAgain['body']['you']['ballot'] === [$notMe[0], $notMe[1]],
+    'got ' . json_encode($backAgain['body']['you']['ballot'] ?? null));
+// Reclaiming mints a new token and kills the old one, so every handle on that
+// seat has to follow it.
+$two4 = ['code' => $twoRoom['code'], 'token' => $backAgain['body']['token'], 'id' => $mechanic['id']];
+$byId[$two4['id']] = $two4;
+check('and the room still counts it as one ballot, not two',
+    poll($two2)['body']['room']['ballots'] === 1);
+
+// Now the real vote. Both citizens name both spies; each spy names the other
+// spy and a citizen, which they have to do to fill a ballot they cannot put
+// themselves on. That leaves the two spies clear of everyone else.
+castBallot($byId[$twoCits[0]], [$twoSpies[0], $twoSpies[1]]);
+castBallot($byId[$twoCits[1]], [$twoSpies[0], $twoSpies[1]]);
+castBallot($byId[$twoSpies[0]], [$twoSpies[1], $twoCits[0]]);
+castBallot($byId[$twoSpies[1]], [$twoSpies[0], $twoCits[0]]);
+
+$twoDone = runOutGrace($pdo, $two2);
+check('every seat holding two names closes the vote', $twoDone['room']['status'] === 'debrief');
+check('THE TOP TWO ARE BOTH ACCUSED WHEN TWO SPIES ARE IN PLAY',
+    count($twoDone['ballot']['accused']) === 2
+    && $twoDone['ballot']['wanted'] === 2
+    && in_array($twoSpies[0], array_column($twoDone['ballot']['accused'], 'id'), true)
+    && in_array($twoSpies[1], array_column($twoDone['ballot']['accused'], 'id'), true),
+    'accused: ' . json_encode($twoDone['ballot']['accused']));
+check('eight ballots are counted, two from each of the four',
+    array_sum(array_column($twoDone['ballot']['tally'], 'votes')) === 8);
+
+event($twoRoom, 'reveal', ['outcome' => 'agents']);
+check('the dossier names both spies once the host calls it',
+    count(poll($two2)['body']['reveal']['spies']) === 2);
+
+// Now the case the rule exists for: one spy in the top two and one who got
+// away. The table cannot separate second place from third, so second place is
+// not accused at all, and the accused list comes back SHORT of the two spies.
+event($twoRoom, 'deal');
+event($twoRoom, 'start');
+event($twoRoom, 'end');
+
+$ids = array_column($twoAll, 'id');
+// P1 takes three votes, P2 and P3 take two each: the cut line falls inside a
+// tie, so only P1 is named.
+castBallot($byId[$ids[0]], [$ids[1], $ids[2]]);
+castBallot($byId[$ids[1]], [$ids[0], $ids[2]]);
+castBallot($byId[$ids[2]], [$ids[0], $ids[3]]);
+castBallot($byId[$ids[3]], [$ids[0], $ids[1]]);
+
+$tied = runOutGrace($pdo, $two2);
+$tiedTally = [];
+foreach ($tied['ballot']['tally'] as $row) {
+    $tiedTally[(int) $row['id']] = (int) $row['votes'];
+}
+check('the tally is what the ballots said',
+    $tiedTally[$ids[0]] === 3 && $tiedTally[$ids[1]] === 2
+    && $tiedTally[$ids[2]] === 2 && $tiedTally[$ids[3]] === 1,
+    json_encode($tiedTally));
+check('A TIE ACROSS THE CUT LINE NAMES NOBODY BELOW IT',
+    count($tied['ballot']['accused']) === 1
+    && (int) $tied['ballot']['accused'][0]['id'] === $ids[0],
+    'accused: ' . json_encode($tied['ballot']['accused']));
+
+// ------------------------------------------------------------------
+//  8c. A room never plays the same location twice
+// ------------------------------------------------------------------
+//
+// The deck belongs to the room and outlives its rounds. A party that gets the
+// supermarket twice in an evening has been handed a rerun, which is exactly
+// what the testers reported.
+
+$deckRoom = openRoom('QUARTER');
+seat($deckRoom['code'], 'DECK2');
+seat($deckRoom['code'], 'DECK3');
+
+$deckSize = count(json_decode(
+    (string) file_get_contents(DOC_ROOT . '/views/spy/i18n/locations.json'), true
+)['locations']);
+
+/** Deals again from wherever the room is, and reports the place it drew. */
+$dealAgain = function () use ($pdo, $deckRoom) {
+    $pdo->prepare("UPDATE spy_rooms SET status = 'lobby' WHERE code = ?")->execute([$deckRoom['code']]);
+    event($deckRoom, 'deal');
+    return (string) $pdo->query(
+        "SELECT location_key FROM spy_rooms WHERE code = '{$deckRoom['code']}'"
+    )->fetchColumn();
+};
+
+$drawn = [];
+for ($i = 0; $i < $deckSize; $i++) {
+    $drawn[] = $dealAgain();
+}
+check('A ROOM NEVER DEALS THE SAME LOCATION TWICE',
+    count(array_unique($drawn)) === $deckSize,
+    'drew ' . count(array_unique($drawn)) . ' distinct places in ' . $deckSize . ' deals');
+check('a full deck is exactly the places the table knows about',
+    count(array_diff($drawn, array_column(json_decode(
+        (string) file_get_contents(DOC_ROOT . '/views/spy/i18n/locations.json'), true
+    )['locations'], 'key'))) === 0);
+
+// One more than the deck holds. It has to answer with something rather than
+// dead-end, and not with the place the table has just walked out of.
+$wrapped = $dealAgain();
+check('an exhausted deck reshuffles instead of running out', $wrapped !== '');
+check('the reshuffle never lands straight back on the last place',
+    $wrapped !== $drawn[$deckSize - 1],
+    "wrapped onto $wrapped, which was the round before");
+check('the deck starts over rather than growing forever',
+    $pdo->query("SELECT used_location_keys FROM spy_rooms WHERE code = '{$deckRoom['code']}'")
+        ->fetchColumn() === $wrapped);
+
+// A trip back to the lobby is not a new party, so the deck survives it.
+$pdo->prepare("UPDATE spy_rooms SET status = 'debrief' WHERE code = ?")->execute([$deckRoom['code']]);
+event($deckRoom, 'again');
+check('going back to the lobby keeps the deck the room has played',
+    $pdo->query("SELECT used_location_keys FROM spy_rooms WHERE code = '{$deckRoom['code']}'")
+        ->fetchColumn() === $wrapped);
 
 // ------------------------------------------------------------------
 //  9. Settings
@@ -707,7 +1007,7 @@ event($vr, 'deal');
 event($vr, 'start');
 
 check('calling a vote outside a round is refused',
-    event($v2, 'castvote', ['target' => $vr['id']])['status'] === 409);
+    castBallot($v2, [$vr['id']])['status'] === 409);
 
 check('anybody may call the vote, not only the host',
     event($v3, 'callvote')['status'] === 200);
@@ -730,9 +1030,9 @@ check('the call appends exactly one end event',
     count(array_filter($carried['events'], fn ($e) => $e['type'] === 'end')) === 1);
 
 // Everyone accuses somebody different, so nobody has a plurality.
-event($vr, 'castvote', ['target' => $v2['id']]);
-event($v2, 'castvote', ['target' => $v3['id']]);
-event($v3, 'castvote', ['target' => $vr['id']]);
+castBallot($vr, [$v2['id']]);
+castBallot($v2, [$v3['id']]);
+castBallot($v3, [$vr['id']]);
 
 // The countdown is armed, but it is not a deadline anyone is locked out by:
 // a ballot arriving while it runs puts the full grace period back, so the
@@ -744,35 +1044,37 @@ backdate($pdo, "UPDATE spy_rooms SET round_ends_at = NOW() + INTERVAL 2 SECOND W
 $ticking = poll($vr)['body']['room']['graceLeft'];
 check('the countdown is running down', $ticking !== null && $ticking <= 2,
     'null <= 2 is true in PHP, so the null check has to be explicit');
-event($v3, 'castvote', ['target' => $v2['id']]);
+castBallot($v3, [$v2['id']]);
 check('changing a ballot restarts the countdown',
     poll($vr)['body']['room']['graceLeft'] > 2,
     'a late switch has to buy the table its time back');
 // Put the tie back before letting it expire.
-event($v3, 'castvote', ['target' => $vr['id']]);
+castBallot($v3, [$vr['id']]);
 runOutGrace($pdo, $vr);
 
 $tied = poll($v2)['body'];
 check('a table that cannot agree still reaches a verdict',
     $tied['room']['status'] === 'debrief');
-check('a tie names nobody and hands the win to the spies',
-    $tied['reveal']['accused'] === null && $tied['reveal']['outcome'] === 'spies');
+check('a three way tie names nobody at all',
+    $tied['ballot']['accused'] === []);
 check('the tally still shows every ballot that was cast',
-    count($tied['reveal']['tally']) === 3
-    && array_sum(array_column($tied['reveal']['tally'], 'votes')) === 3);
+    count($tied['ballot']['tally']) === 3
+    && array_sum(array_column($tied['ballot']['tally'], 'votes')) === 3);
+check('a debrief nobody has called carries no verdict either',
+    !array_key_exists('reveal', $tied) && $tied['room']['revealed'] === false);
 
 // The host can close a vote early rather than waiting on a missing phone.
 event($vr, 'deal');
 event($vr, 'start');
 event($vr, 'end');
 check('only the host may close the vote early', event($v2, 'closevote')['status'] === 403);
-event($v2, 'castvote', ['target' => $vr['id']]);
+castBallot($v2, [$vr['id']]);
 check('the host closes the vote with ballots still missing',
     event($vr, 'closevote')['status'] === 200);
 $early = poll($v3)['body'];
 check('an early close still counts what was cast',
     $early['room']['status'] === 'debrief'
-    && (int) ($early['reveal']['accused']['id'] ?? 0) === $vr['id']);
+    && (int) ($early['ballot']['accused'][0]['id'] ?? 0) === $vr['id']);
 check('closing a vote that is not open is refused', event($vr, 'closevote')['status'] === 409);
 
 // A tap that arrives after the countdown has already run out is too late. It
@@ -784,20 +1086,20 @@ $lc = seat($lr2['code'], 'LATE THREE');
 event($lr2, 'deal');
 event($lr2, 'start');
 event($lr2, 'end');
-event($lr2, 'castvote', ['target' => $lb['id']]);
-event($lb, 'castvote', ['target' => $lc['id']]);
-event($lc, 'castvote', ['target' => $lb['id']]);
+castBallot($lr2, [$lb['id']]);
+castBallot($lb, [$lc['id']]);
+castBallot($lc, [$lb['id']]);
 backdate($pdo, "UPDATE spy_rooms SET round_ends_at = NOW() - INTERVAL 1 SECOND WHERE code = ?",
     [$lr2['code']]);
 check('a ballot cast after the countdown expired is refused',
-    event($lc, 'castvote', ['target' => $lr2['id']])['status'] === 409);
+    castBallot($lc, [$lr2['id']])['status'] === 409);
 $late = poll($lr2)['body'];
 check('and it did not rewind the countdown',
     $late['room']['status'] === 'debrief',
     'graceLeft: ' . json_encode($late['room']['graceLeft']));
 check('the refused ballot is not in the tally',
-    (int) ($late['reveal']['accused']['id'] ?? 0) === $lb['id']
-    && array_sum(array_column($late['reveal']['tally'], 'votes')) === 3);
+    (int) ($late['ballot']['accused'][0]['id'] ?? 0) === $lb['id']
+    && array_sum(array_column($late['ballot']['tally'], 'votes')) === 3);
 
 // The host's button is also the escape hatch for a table that keeps switching
 // its pick and so keeps pushing the countdown back. It must beat the clock,
@@ -808,18 +1110,18 @@ $c3 = seat($cr['code'], 'ALSO DITHERING');
 event($cr, 'deal');
 event($cr, 'start');
 event($cr, 'end');
-event($cr, 'castvote', ['target' => $c2['id']]);
-event($c2, 'castvote', ['target' => $c3['id']]);
-event($c3, 'castvote', ['target' => $c2['id']]);
+castBallot($cr, [$c2['id']]);
+castBallot($c2, [$c3['id']]);
+castBallot($c3, [$c2['id']]);
 check('the countdown is running before the host steps in',
     poll($cr)['body']['room']['graceLeft'] !== null);
 check('the host closes the vote without waiting for the countdown',
     event($cr, 'closevote')['status'] === 200);
 $cut = poll($c2)['body'];
-check('an early close still settles the verdict it had',
+check('an early close still settles the accusation it had',
     $cut['room']['status'] === 'debrief'
-    && (int) ($cut['reveal']['accused']['id'] ?? 0) === $c2['id']
-    && array_sum(array_column($cut['reveal']['tally'], 'votes')) === 3);
+    && (int) ($cut['ballot']['accused'][0]['id'] ?? 0) === $c2['id']
+    && array_sum(array_column($cut['ballot']['tally'], 'votes')) === 3);
 
 // ------------------------------------------------------------------
 //  15. The vote has no clock, so leaving has to be able to end it
@@ -832,8 +1134,8 @@ event($lr, 'deal');
 event($lr, 'start');
 event($lr, 'end');
 
-event($lr, 'castvote', ['target' => $l2['id']]);
-event($l2, 'castvote', ['target' => $lr['id']]);
+castBallot($lr, [$l2['id']]);
+castBallot($l2, [$lr['id']]);
 check('the room waits while a ballot is outstanding',
     poll($lr)['body']['room']['status'] === 'vote');
 
@@ -845,8 +1147,27 @@ check('the last voter leaving arms the countdown on the poll path',
 check('and the countdown then closes the vote by itself',
     runOutGrace($pdo, $lr)['room']['status'] === 'debrief',
     'a room with no clock and no actor would hang here');
-check('the verdict is settled, not left blank',
-    poll($lr)['body']['reveal']['outcome'] !== null);
+// Those two ballots accuse each other, so the room reaches a debrief with a
+// counted tally and nobody clear of it. Settled, and settled as a tie.
+$walked = poll($lr)['body'];
+check('the ballots are counted even though nobody carried the vote',
+    array_sum(array_column($walked['ballot']['tally'], 'votes')) === 2
+    && $walked['ballot']['accused'] === []);
+
+// A vote with nobody left to accuse. `cast >= seated` can never come true with
+// one player and no candidates, so without a guard the survivor sits on a
+// ballot listing nobody until they find CLOSE THE VOTE.
+$ar = openRoom('LAST ONE');
+$a2 = seat($ar['code'], 'FIRST OUT');
+$a3 = seat($ar['code'], 'SECOND OUT');
+event($ar, 'deal');
+event($ar, 'start');
+event($ar, 'end');
+api('leave', ['code' => $a2['code'], 'token' => $a2['token']]);
+api('leave', ['code' => $a3['code'], 'token' => $a3['token']]);
+check('a vote with nobody left to accuse settles itself',
+    poll($ar)['body']['room']['status'] === 'debrief',
+    'the last player would sit on an empty ballot');
 
 // The same thing, but the phone simply goes quiet and gets swept.
 $sr = openRoom('SWEPT HOST');
@@ -855,8 +1176,8 @@ $s3 = seat($sr['code'], 'VANISHES');
 event($sr, 'deal');
 event($sr, 'start');
 event($sr, 'end');
-event($sr, 'castvote', ['target' => $s2['id']]);
-event($s2, 'castvote', ['target' => $sr['id']]);
+castBallot($sr, [$s2['id']]);
+castBallot($s2, [$sr['id']]);
 backdate($pdo, 'UPDATE spy_players SET last_seen = NOW() - INTERVAL 16 MINUTE WHERE id = ?', [$s3['id']]);
 // Assert the ARMING, not just the close: runOutGrace backdates the deadline
 // unconditionally and advancePhase closes on `expired` alone, so checking
@@ -867,37 +1188,61 @@ check('sweeping the missing voter arms the countdown on the poll path',
 check('a swept voter also releases the vote',
     runOutGrace($pdo, $sr)['room']['status'] === 'debrief');
 
-// A verdict must never be readable before it has been decided.
-$rows = $pdo->query(
-    "SELECT COUNT(*) FROM spy_rooms WHERE status = 'debrief' AND outcome IS NULL"
-)->fetchColumn();
-check('no room is ever in debrief without an outcome', (int) $rows === 0,
-    "$rows rooms are in debrief with no verdict");
+// An outcome must never exist before somebody decided it: the whole point of
+// handing the call to the host is that a debrief sits there UNDECIDED while
+// the accused defends themselves.
+$ours       = implode(',', array_fill(0, count($CREATED_CODES), '?'));
+$premature  = $pdo->prepare(
+    "SELECT COUNT(*) FROM spy_rooms WHERE code IN ($ours) AND revealed = 0 AND outcome IS NOT NULL"
+);
+$premature->execute($CREATED_CODES);
+$prematureN = (int) $premature->fetchColumn();
+check('no room carries a verdict the host has not called', $prematureN === 0,
+    "$prematureN rooms hold an outcome nobody called");
+$halfCalled = $pdo->prepare(
+    "SELECT COUNT(*) FROM spy_rooms WHERE code IN ($ours) AND revealed = 1 AND outcome IS NULL"
+);
+$halfCalled->execute($CREATED_CODES);
+check('and no call ever lands without the verdict it carried', (int) $halfCalled->fetchColumn() === 0);
 
-// The verdict is frozen at close time while the debrief's tally is recomputed
-// live from voted_for, so the two can only agree if nothing can add a ballot
+// The accused list is frozen at close time while the debrief's tally is read
+// live from the ballots, so the two can only agree if nothing can add a ballot
 // to a room that has already been counted. A disagreement here means a
 // last-second tap slipped past closeVote, and the screen would print an
 // ACCUSED that the bar chart under it contradicts.
-$drifted = [];
-foreach ($pdo->query("SELECT id, code, accused_id FROM spy_rooms WHERE status = 'debrief'") as $r) {
+$drifted  = [];
+$debriefs = $pdo->prepare(
+    "SELECT id, code, spies, accused_ids FROM spy_rooms WHERE code IN ($ours) AND status = 'debrief'"
+);
+$debriefs->execute($CREATED_CODES);
+foreach ($debriefs->fetchAll() as $r) {
     $t = $pdo->prepare(
-        'SELECT voted_for AS id, COUNT(*) AS votes FROM spy_players
-         WHERE room_id = ? AND voted_for IS NOT NULL GROUP BY voted_for ORDER BY votes DESC'
+        'SELECT target_id AS id, COUNT(*) AS votes FROM spy_ballots
+         WHERE room_id = ? GROUP BY target_id ORDER BY votes DESC'
     );
     $t->execute([$r['id']]);
     $rowsNow = $t->fetchAll();
-    $winner = null;
-    if (count($rowsNow) === 1
-        || (count($rowsNow) > 1 && (int) $rowsNow[0]['votes'] > (int) $rowsNow[1]['votes'])) {
-        $winner = (int) $rowsNow[0]['id'];
+
+    // The same top-n rule closeVote applies, recomputed from what is on disk
+    // now: everything clear of the first name that missed the cut.
+    $wanted = max(1, (int) $r['spies']);
+    $bar    = isset($rowsNow[$wanted]) ? (int) $rowsNow[$wanted]['votes'] : 0;
+    $now    = [];
+    foreach (array_slice($rowsNow, 0, $wanted) as $row) {
+        if ((int) $row['votes'] > $bar) {
+            $now[] = (int) $row['id'];
+        }
     }
-    $frozen = $r['accused_id'] !== null ? (int) $r['accused_id'] : null;
-    if ($winner !== $frozen) {
-        $drifted[] = "{$r['code']}: accused=" . json_encode($frozen) . " but the tally says " . json_encode($winner);
+    $frozen = $r['accused_ids'] === null || $r['accused_ids'] === ''
+        ? []
+        : array_map('intval', explode(',', (string) $r['accused_ids']));
+    sort($now);
+    sort($frozen);
+    if ($now !== $frozen) {
+        $drifted[] = "{$r['code']}: accused=" . json_encode($frozen) . " but the tally says " . json_encode($now);
     }
 }
-check('THE FROZEN VERDICT STILL MATCHES THE TALLY THE DEBRIEF PRINTS',
+check('THE FROZEN ACCUSATION STILL MATCHES THE TALLY THE DEBRIEF PRINTS',
     $drifted === [], implode('; ', $drifted));
 
 // Closing with nothing cast at all: the table simply never voted.
@@ -910,11 +1255,11 @@ event($er, 'end');
 check('the host can close a vote nobody took part in',
     event($er, 'closevote')['status'] === 200);
 $empty = poll($e2)['body'];
-check('no ballots means nobody is accused and the spies walk',
+check('no ballots means nobody is accused at all',
     $empty['room']['status'] === 'debrief'
-    && $empty['reveal']['accused'] === null
-    && $empty['reveal']['outcome'] === 'spies'
-    && $empty['reveal']['tally'] === []);
+    && $empty['ballot']['accused'] === []
+    && $empty['ballot']['tally'] === []
+    && !array_key_exists('reveal', $empty));
 
 // ------------------------------------------------------------------
 //  16. The language a room plays in

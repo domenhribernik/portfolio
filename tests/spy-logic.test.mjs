@@ -7,11 +7,11 @@ import {
     MIN_PLAYERS, MAX_PLAYERS, MIN_ROUND_SECONDS, MAX_ROUND_SECONDS, ROUND_STEP_SECONDS,
     clamp, spyMax, suggestedSpies,
     clampRoundSeconds, defaultRoundSeconds, formatClock,
-    dealRoles, pickLocation,
+    picksNeeded, dealRoles, pickUnusedLocation,
     normalizeCode, isValidCode, cleanName, isValidName,
     createRoomModel, applyEvents, pollDelay, endVoteThreshold, VOTE_GRACE_SECONDS,
     DEFAULT_LANG, fillTemplate, resolveString, createTranslator,
-    tableLanguages, normalizeLang, spyWord, hasString,
+    tableLanguages, normalizeLang, pluralCategory, pluralString, hasString,
 } from '../views/spy/logic.js';
 
 // ------------------------------------------------------------------
@@ -36,6 +36,19 @@ test('suggestedSpies stays inside the max it suggests against', () => {
         const s = suggestedSpies(n);
         assert.ok(s >= 1 && s <= spyMax(n), `suggestion ${s} out of range for ${n}`);
     }
+});
+
+test('picksNeeded gives the ballot one name per spy, capped at the table', () => {
+    assert.equal(picksNeeded(1, 5), 1);
+    assert.equal(picksNeeded(2, 5), 2);
+    assert.equal(picksNeeded(3, 7), 3);
+    // Nobody can accuse themselves, so a shrinking room caps the ballot at the
+    // number of other people left. Without this a vote that loses players can
+    // never be completed and the room hangs in the ballot phase.
+    assert.equal(picksNeeded(3, 3), 2);
+    assert.equal(picksNeeded(2, 2), 1);
+    assert.equal(picksNeeded(2, 1), 1, 'never asks for zero names');
+    assert.equal(picksNeeded(0, 5), 1);
 });
 
 test('clamp holds the ends', () => {
@@ -101,12 +114,40 @@ test('dealRoles copes with degenerate asks', () => {
     assert.equal(dealRoles(3, 99).length, 3); // cannot deal more spies than seats
 });
 
-test('pickLocation stays inside the list and survives an empty one', () => {
-    const list = ['Beach', 'Casino', 'Farm'];
-    assert.equal(pickLocation(list, () => 0), 'Beach');
-    assert.equal(pickLocation(list, () => 0.99), 'Farm');
-    assert.equal(pickLocation([], () => 0), '');
-    assert.equal(pickLocation(null, () => 0), '');
+const DECK = [{ key: 'beach' }, { key: 'casino' }, { key: 'farm' }];
+
+test('pickUnusedLocation stays inside the list and survives an empty one', () => {
+    assert.deepEqual(pickUnusedLocation(DECK, [], () => 0), { key: 'beach', used: ['beach'] });
+    assert.deepEqual(pickUnusedLocation(DECK, [], () => 0.99), { key: 'farm', used: ['farm'] });
+    assert.deepEqual(pickUnusedLocation([], [], () => 0), { key: '', used: [] });
+    assert.deepEqual(pickUnusedLocation(null, [], () => 0), { key: '', used: [] });
+});
+
+test('pickUnusedLocation never repeats a place the room has already played', () => {
+    // The whole point: the draw is from what is LEFT, so a party works its way
+    // through the deck instead of landing on the same place twice.
+    let used = [];
+    const seen = [];
+    for (let i = 0; i < DECK.length; i++) {
+        const drawn = pickUnusedLocation(DECK, used, () => 0); // always the first left
+        seen.push(drawn.key);
+        used = drawn.used;
+    }
+    assert.deepEqual(seen, ['beach', 'casino', 'farm']);
+    assert.deepEqual(new Set(seen).size, DECK.length, 'no repeats inside one pass');
+});
+
+test('an exhausted deck reshuffles without landing back on the last place', () => {
+    const spent = ['beach', 'casino', 'farm'];
+    // Every rng value, so this asserts the property rather than one draw.
+    for (const r of [0, 0.34, 0.5, 0.67, 0.99]) {
+        const drawn = pickUnusedLocation(DECK, spent, () => r);
+        assert.notEqual(drawn.key, 'farm', 'never straight back onto the place just played');
+        assert.deepEqual(drawn.used, [drawn.key], 'the deck starts over');
+    }
+    // A one-place deck has no choice and must still answer rather than hang.
+    const only = pickUnusedLocation([{ key: 'beach' }], ['beach'], () => 0);
+    assert.equal(only.key, 'beach');
 });
 
 // ------------------------------------------------------------------
@@ -253,7 +294,10 @@ test('pollDelay eases off for hidden tabs and running rounds', () => {
     // The clock ticks locally during a round, so only a pause or an early
     // end has to arrive quickly.
     assert.equal(pollDelay({ status: 'round', hidden: false, failures: 0 }), 3000);
-    assert.equal(pollDelay({ status: 'debrief', hidden: false, failures: 0 }), 2500);
+    assert.equal(pollDelay({ status: 'debrief', hidden: false, failures: 0, revealed: true }), 2500);
+    // A debrief the host has not called yet is a waiting room: every phone is
+    // watching for a verdict that lands on all of them at once.
+    assert.equal(pollDelay({ status: 'debrief', hidden: false, failures: 0 }), 1200);
     // The lobby and the briefing show live joiner and ready counts.
     assert.equal(pollDelay({ status: 'lobby', hidden: false, failures: 0 }), 1200);
     assert.equal(pollDelay({ status: 'brief', hidden: false, failures: 0 }), 1200);
@@ -369,12 +413,57 @@ test('tableLanguages and normalizeLang mirror the PHP validator', () => {
     assert.equal(normalizeLang(null, TABLE), 'en');
 });
 
-test('spyWord picks the counted form from the table, not an appended s', () => {
-    // Slovene needs the accusative here, so the plural cannot be derived.
-    const t = createTranslator({
+test('pluralCategory follows the Slovene rules, which are the widest we serve', () => {
+    assert.equal(pluralCategory(1), 'one');
+    assert.equal(pluralCategory(2), 'two');
+    assert.equal(pluralCategory(3), 'few');
+    assert.equal(pluralCategory(4), 'few');
+    assert.equal(pluralCategory(5), 'other');
+    assert.equal(pluralCategory(0), 'other');
+    // Past a hundred the grammar goes by the last two digits.
+    assert.equal(pluralCategory(101), 'one');
+    assert.equal(pluralCategory(102), 'two');
+    assert.equal(pluralCategory(100), 'other');
+    assert.equal(pluralCategory(null), 'other');
+});
+
+test('pluralString picks the counted form from the table, not an appended s', () => {
+    // Slovene needs four forms of "spy" where English needs two, so the table
+    // carries them and nothing in the page appends anything.
+    const table = {
         languages: ['en', 'sl'],
-        strings: { 'word.spy': { en: 'spy', sl: 'vohuna' }, 'word.spies': { en: 'spies', sl: 'vohune' } },
-    }, 'sl');
-    assert.equal(spyWord(t, 1), 'vohuna');
-    assert.equal(spyWord(t, 2), 'vohune');
+        strings: {
+            'word.spy.one':   { en: 'spy', sl: 'vohun' },
+            'word.spy.two':   { en: 'spies', sl: 'vohuna' },
+            'word.spy.few':   { en: 'spies', sl: 'vohuni' },
+            'word.spy.other': { en: 'spies', sl: 'vohunov' },
+        },
+    };
+    const sl = createTranslator(table, 'sl');
+    assert.equal(pluralString(sl, table, 'word.spy', 1), 'vohun');
+    assert.equal(pluralString(sl, table, 'word.spy', 2), 'vohuna');
+    assert.equal(pluralString(sl, table, 'word.spy', 3), 'vohuni');
+    assert.equal(pluralString(sl, table, 'word.spy', 7), 'vohunov');
+    const en = createTranslator(table, 'en');
+    assert.equal(pluralString(en, table, 'word.spy', 1), 'spy');
+    assert.equal(pluralString(en, table, 'word.spy', 4), 'spies');
+});
+
+test('pluralString falls through rather than printing a key at a player', () => {
+    // A tab left open across a deploy holds the table it fetched at load, so
+    // it can be asked for a form its copy has never heard of. Wrong grammar
+    // beats "word.spy.two" on screen; a table with nothing at all stays quiet.
+    const partial = { languages: ['en'], strings: { 'word.spy.other': { en: 'spies' } } };
+    const t = createTranslator(partial, 'en');
+    assert.equal(pluralString(t, partial, 'word.spy', 2), 'spies');
+    assert.equal(pluralString(t, partial, 'word.nothing', 2), '');
+});
+
+test('pluralString fills its template like any other string', () => {
+    const table = {
+        languages: ['en'],
+        strings: { 'lobby.needMore.two': { en: '> NEED {n} MORE' } },
+    };
+    const t = createTranslator(table, 'en');
+    assert.equal(pluralString(t, table, 'lobby.needMore', 2, { n: 2 }), '> NEED 2 MORE');
 });
