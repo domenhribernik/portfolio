@@ -1,8 +1,11 @@
 class MainNavbar extends HTMLElement {
     connectedCallback() {
         const site = this.getAttribute('site') || '';
+        //? The bar is light by default (see .navbar in base-style.css). A page
+        //  whose ground is dark opts into the retired navy skin explicitly.
+        const dark = this.getAttribute('theme') === 'dark' ? ' navbar--dark' : '';
         this.innerHTML = `
-            <nav class="navbar">
+            <nav class="navbar${dark}">
                 <div class="nav-container">
                     <a href="${site}#home" class="logo" aria-label="Domen Hribernik — home">
                         <span class="logo__mark" aria-hidden="true">DH</span>
@@ -21,8 +24,9 @@ class MainNavbar extends HTMLElement {
                             <div class="gtranslate_wrapper lang-picker__panel"></div>
                         </li>
                     </ul>
-                    <button class="mobile-menu-btn" id="mobileMenuBtn">
-                        <i class="fas fa-bars"></i>
+                    <button class="mobile-menu-btn" id="mobileMenuBtn" type="button"
+                            aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
+                        <i class="fas fa-bars" aria-hidden="true"></i>
                     </button>
                 </div>
             </nav>
@@ -34,24 +38,64 @@ window.addEventListener('DOMContentLoaded', () => {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const navMenu = document.getElementById('navMenu');
 
+    //? A page can load this module without rendering <main-navbar>; bail
+    //  rather than throwing on a null button and killing the rest of the file.
+    if (!mobileMenuBtn || !navMenu) return;
+
+    const setMenuOpen = open => {
+        navMenu.classList.toggle('active', open);
+        mobileMenuBtn.setAttribute('aria-expanded', String(open));
+        mobileMenuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    };
+
     mobileMenuBtn.addEventListener('click', () => {
-        navMenu.classList.toggle('active');
+        setMenuOpen(!navMenu.classList.contains('active'));
     });
+
+    //? Respect the OS "reduce motion" setting: a smooth scroll is exactly the
+    //  vestibular motion that setting exists to suppress. Read it per click so
+    //  a mid-session change is honoured.
+    const prefersReducedMotion = () =>
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
+            const hash = this.getAttribute('href');
+            if (hash === '#') return;
+            const target = document.querySelector(hash);
+            if (!target) return;              // let the browser handle a dead anchor
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-
-                navMenu.classList.remove('active');
-            }
+            target.scrollIntoView({
+                behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+                block: 'start'
+            });
+            setMenuOpen(false);
         });
     });
+
+    //? Wayfinding: mark the nav link whose section is currently in view, so
+    //  assistive tech can answer "where am I?". Purely semantic, no styling,
+    //  and it self-disables on pages that have none of these sections.
+    const spied = [...navMenu.querySelectorAll('.nav-link[href*="#"]')]
+        .map(link => {
+            const id = link.getAttribute('href').split('#')[1];
+            return { link, section: id ? document.getElementById(id) : null };
+        })
+        .filter(entry => entry.section);
+
+    if (spied.length && 'IntersectionObserver' in window) {
+        const spy = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                const hit = spied.find(s => s.section === entry.target);
+                if (!hit) return;
+                if (entry.isIntersecting) {
+                    spied.forEach(s => s.link.removeAttribute('aria-current'));
+                    hit.link.setAttribute('aria-current', 'true');
+                }
+            });
+        }, { rootMargin: '-45% 0px -45% 0px' });
+        spied.forEach(s => spy.observe(s.section));
+    }
 
     const langPicker = document.getElementById('langPicker');
     const langPickerBtn = document.getElementById('langPickerBtn');
@@ -126,12 +170,22 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    //? Navbar background on scroll (theme-aware via .scrolled class)
-    window.addEventListener('scroll', () => {
-        const navbar = document.querySelector('.navbar');
-        if (!navbar) return;
-        navbar.classList.toggle('scrolled', window.scrollY > 100);
-    });
+    //? Navbar background on scroll (theme-aware via .scrolled class).
+    //  Passive, and the element is looked up once rather than on every
+    //  scroll event; the class write is coalesced into one frame so a
+    //  fast scroll cannot queue up hundreds of style recalculations.
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                navbar.classList.toggle('scrolled', window.scrollY > 100);
+                ticking = false;
+            });
+        }, { passive: true });
+    }
 });
 
 customElements.define('main-navbar', MainNavbar);

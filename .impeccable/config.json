@@ -8,6 +8,96 @@
         "value": "fraunces",
         "createdAt": "2026-08-06T00:01:30.626Z",
         "reason": "User confirmed Fraunces is intentional: documented design system in views/admin/CLAUDE.md, shared with views/account and the homepage"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "base-style.css"
+        ],
+        "createdAt": "2026-08-13T14:53:50.352Z",
+        "reason": "Pre-existing type ramp; raising these reflows chips, pills, ears and folios across pages. Deliberately out of scope for the design-system consolidation (2026-08-13)."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "views/homepage/kinetic.css"
+        ],
+        "createdAt": "2026-08-13T14:53:50.479Z",
+        "reason": "Pre-existing type ramp; raising these reflows chips, pills, ears and folios across pages. Deliberately out of scope for the design-system consolidation (2026-08-13)."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "views/homepage/style.css"
+        ],
+        "createdAt": "2026-08-13T14:53:50.602Z",
+        "reason": "Pre-existing type ramp; raising these reflows chips, pills, ears and folios across pages. Deliberately out of scope for the design-system consolidation (2026-08-13)."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "views/about/style.css"
+        ],
+        "createdAt": "2026-08-13T14:53:50.725Z",
+        "reason": "Pre-existing type ramp; raising these reflows chips, pills, ears and folios across pages. Deliberately out of scope for the design-system consolidation (2026-08-13)."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "views/blog/style.css"
+        ],
+        "createdAt": "2026-08-13T14:53:50.849Z",
+        "reason": "Pre-existing type ramp; raising these reflows chips, pills, ears and folios across pages. Deliberately out of scope for the design-system consolidation (2026-08-13)."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "views/thesis/style.css"
+        ],
+        "createdAt": "2026-08-13T14:53:50.972Z",
+        "reason": "Pre-existing type ramp; raising these reflows chips, pills, ears and folios across pages. Deliberately out of scope for the design-system consolidation (2026-08-13)."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "views/on-this-day/style.css"
+        ],
+        "createdAt": "2026-08-13T14:53:51.097Z",
+        "reason": "Pre-existing type ramp; raising these reflows chips, pills, ears and folios across pages. Deliberately out of scope for the design-system consolidation (2026-08-13)."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "views/projects/style.css"
+        ],
+        "createdAt": "2026-08-13T14:53:51.223Z",
+        "reason": "Pre-existing type ramp; raising these reflows chips, pills, ears and folios across pages. Deliberately out of scope for the design-system consolidation (2026-08-13)."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "files": [
+          "components/editorial/poster.css"
+        ],
+        "createdAt": "2026-08-13T14:54:00.016Z",
+        "reason": "Not a colour: it is the opaque stop of the poster grid's mask-image gradient, where black/white are alpha channels."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#fff",
+        "files": [
+          "views/projects/style.css"
+        ],
+        "createdAt": "2026-08-13T14:54:00.149Z",
+        "reason": "Inside @media print. Printing the broadsheet on the warm paper ground would waste ink; white stock is correct."
       }
     ]
   }

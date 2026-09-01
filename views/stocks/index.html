@@ -10,34 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        paper: '#f6f2ea',
-                        paper2: '#efe9dd',
-                        card: '#fffdf8',
-                        ink: '#1c1a17',
-                        stone: '#6b6256',
-                        clay: '#d4451f',
-                        claydk: '#b8371a',
-                        pine: '#2f5b53',
-                        gain: '#177d5b',
-                        loss: '#d4451f',
-                    },
-                    fontFamily: {
-                        display: ['Fraunces', 'Georgia', 'serif'],
-                        mono: ['"Space Mono"', 'monospace'],
-                        sans: ['"IBM Plex Sans"', 'sans-serif'],
-                    },
-                    borderColor: {
-                        hairline: 'rgba(28, 26, 23, 0.14)',
-                    },
-                }
-            }
-        }
-    </script>
+    <script src="../../components/editorial/theme.js"></script>
+    <!-- hairline drifted to 0.14 here; DESIGN.md says 0.12. Kept as-is to avoid a silent visual change. -->
+    <script>editorialTheme({ fonts: { display: ['Fraunces', 'Georgia', 'serif'] }, colors: { gain: '#177d5b', loss: '#d4451f', hairline: 'rgba(28, 26, 23, 0.14)' } });</script>
+    <link rel="stylesheet" href="../../components/editorial/theme.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="font-sans bg-paper text-ink min-h-screen leading-relaxed">

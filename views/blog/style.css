@@ -6,18 +6,6 @@
    scroll reveal that Tailwind can't cleanly express.
    ============================================================ */
 
-/* ---- Scroll reveal (mirrors the homepage) ---- */
-.reveals-on .reveal {
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-}
-
-.reveal.is-visible {
-    opacity: 1;
-    transform: none;
-}
-
 /* ---- Hero tweaks ---- */
 .blog-hero {
     min-height: 92svh;
@@ -71,8 +59,11 @@
 }
 
 .filter-pill.is-active {
-    background: var(--clay);
-    border-color: var(--clay);
+    /* clay-dk, not clay: paper on clay is 4.03:1 and misses AA at this
+       0.66rem label size. Darkening the fill reaches 5.23:1. Flipping to
+       ink-on-clay would have been worse (3.86:1). */
+    background: var(--clay-dk);
+    border-color: var(--clay-dk);
     color: var(--paper);
 }
 
@@ -89,7 +80,9 @@
     height: 100%;
     background: var(--card);
     border: 1px solid var(--hairline);
-    border-radius: 6px;
+    /* DESIGN.md caps editorial surfaces at 4px; this card was the only
+       thing on the spine sitting above the scale, at 6px. */
+    border-radius: var(--border-radius);
     padding: 1.6rem 1.5rem 1.4rem;
     text-decoration: none;
     color: inherit;
@@ -127,7 +120,7 @@
     font-size: 0.58rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--clay);
+    color: var(--clay-dk);
     border: 1px solid var(--hairline);
     border-radius: 999px;
     padding: 0.28rem 0.65rem;
@@ -174,7 +167,7 @@
 }
 
 .post-card__sep {
-    color: var(--clay);
+    color: var(--clay-dk);
     opacity: 0.7;
 }
 
@@ -197,7 +190,7 @@
 }
 
 .blog-state--error {
-    color: var(--clay);
+    color: var(--clay-dk);
 }
 
 /* ============================================================
@@ -284,7 +277,7 @@
     font-size: 0.7rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--clay);
+    color: var(--clay-dk);
 }
 
 .post-title {
@@ -309,7 +302,7 @@
 }
 
 .post-meta__sep {
-    color: var(--clay);
+    color: var(--clay-dk);
     opacity: 0.7;
 }
 

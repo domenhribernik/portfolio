@@ -1,0 +1,95 @@
+/* ============================================================
+   The editorial theme, CSS half.
+
+   Mirrors the palette in theme.js as custom properties so
+   hand-written CSS and Tailwind utilities draw from one source.
+   tests/editorial-theme.test.mjs fails if the two drift apart.
+
+   Also carries the two things that were previously reinvented per
+   page: the motion scale (there were 19 easing curves, six of them
+   visually identical) and the focus ring.
+
+   Load AFTER base-style.css and BEFORE the view's own style.css:
+
+       <link rel="stylesheet" href="../../base-style.css">
+       <link rel="stylesheet" href="../../components/editorial/theme.css">
+       <link rel="stylesheet" href="style.css">
+   ============================================================ */
+
+:root {
+    /* Palette, mirrored from theme.js and asserted by the parity test */
+    --paper: #f6f2ea;
+    --paper-2: #efe9dd;
+    --paper-3: #f0e2cf;
+    --card: #fffdf8;
+    --ink: #1c1a17;
+    --stone: #6b6256;
+    --faint: #a49a8a;
+    --clay: #d4451f;
+    --clay-dk: #b8371a;
+    --pine: #2f5b53;
+    --cobalt: #1f35e0;
+    --marigold: #f2b705;
+    --danger: #b3261e;
+
+    /* Derived rules and hairlines, all ink at low alpha */
+    --hairline: rgba(28, 26, 23, 0.12);
+    --rule: rgba(28, 26, 23, 0.25);
+    --rule-soft: rgba(28, 26, 23, 0.14);
+
+    /* Cobalt's dark step is only ever used for hover on cobalt */
+    --cobalt-dk: #1226c0;
+
+    /* The standard hard offset (DESIGN.md "Elevation & Depth"): flat at
+       rest, zero blur, in the section accent, only as a response to
+       state. The 3px and 9px steps are written inline where they occur,
+       which is rare enough not to earn a token. */
+    --hard: 6px 6px 0;
+
+    /* ---- Motion ----
+       Two curves, replacing 19 hand-written ones (six of which were
+       visually indistinguishable). `--ease-out` is the house curve for
+       hovers; `--ease-emph` is for larger travel. Deliberately no
+       overshoot curve: nothing on this site is gesture-driven, and a
+       bounce on a hover reads as dated rather than physical. */
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-emph: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================
+   FOCUS RING
+
+   Clay, per DESIGN.md ("Kiln Clay: ... active link underlines, focus
+   rings, error text"). Clay on paper is 4.03:1, which clears the 3:1
+   bar for non-text UI indicators even though it misses the 4.5:1 text
+   bar that sends small clay *type* to --clay-dk elsewhere.
+
+   Wrapped in :where() so it has zero specificity: it fills the gaps
+   left by the ~20 rules that set `outline: none` without a
+   replacement, and loses to any focus style a view defines
+   deliberately (such as the documented soft clay halo on inputs).
+   Never remove a focus indicator without providing another.
+   ============================================================ */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--clay);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* ============================================================
+   REDUCED MOTION BASELINE
+
+   A floor, not a replacement for per-view handling: kills looping
+   ambient animation and collapses long transitions everywhere, so a
+   new view is safe by default rather than by remembering.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

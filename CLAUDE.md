@@ -54,7 +54,21 @@ Everything else under `views/` is public. Two exceptions to the "public means po
 
 ### Frontend: Styling
 
-Default to **Tailwind CSS** on any new view, via the CDN (`<script src="https://cdn.tailwindcss.com"></script>`), configuring custom colors and fonts inline with `tailwind.config = { ... }`. See [views/rocks/index.html](views/rocks/index.html) and [views/ip/index.html](views/ip/index.html). There is no build step.
+Default to **Tailwind CSS** on any new view, via the CDN (`<script src="https://cdn.tailwindcss.com"></script>`). There is no build step.
+
+**Do not retype the editorial palette.** A view in the house style loads the shared theme instead of declaring its own `tailwind.config`:
+
+```html
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../../components/editorial/theme.js"></script>   <!-- classic script, NOT type="module" -->
+<link rel="stylesheet" href="../../components/editorial/theme.css">
+```
+
+`theme.js` **must** be a classic `<script src>` immediately after the CDN tag: a `type="module"` script is deferred and would run after Tailwind's first pass, so the theme would silently not apply. Extra tokens or a different display face go through `editorialTheme({ colors: {...}, fonts: {...} })` on the next line, never by editing the shared file. `tests/editorial-theme.test.mjs` fails if a page declares the palette inline again, or if `theme.js` and `theme.css` drift apart.
+
+A view with its own world (see the costume list in [DESIGN.md](DESIGN.md)) still configures Tailwind inline; that is what the shared theme is opting out of. See [views/rocks/index.html](views/rocks/index.html).
+
+Views with the poster hero also load [components/editorial/poster.css](components/editorial/poster.css) and use `.poster-hero` / `.poster-grid` / `.poster-grain` rather than re-implementing the grain SVG and the 1/6 grid.
 
 Use the view's `style.css` only for what Tailwind can't cleanly express:
 - `@keyframes` and named animations

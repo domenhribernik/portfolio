@@ -17,7 +17,7 @@ rest in ruled newspaper columns.
 A section is **newest-first unless it pins a presentation lead** via `leadKey` in its
 `SECTIONS` entry. Section C pins `thesis`, so Virtual Runner fronts Academic & Research.
 
-Type: headlines in Fraunces (the site's editorial serif), furniture in Space Mono.
+Type: headlines in Bricolage Grotesque (the site's display face), furniture in Space Mono.
 
 ## logic.js
 

@@ -1,0 +1,121 @@
+/* ============================================================
+   THE POSTER LAYER
+
+   The homepage hero was copy-pasted twice: once into
+   views/thesis/style.css as `.vr-*` and once into
+   views/on-this-day/style.css as `.otd-*`. Three identical poster
+   grids, three identical grain overlays (thesis carried the same
+   SVG data-URI three times in one file), three identical sets of
+   keyframes, and six copies of the scroll-reveal block. This file
+   is the one copy.
+
+   The three pages were NOT pixel-identical: the grid alpha and the
+   mask stop differed, and the reveal distance differed across all
+   six. Rather than snapping them to one value and quietly moving
+   two pages, every difference is a custom property each page sets
+   on a scope it already owns. Deduplicating changed nothing on
+   screen; see the token defaults on each primitive below.
+
+   Load after theme.css and before the view's own style.css.
+   ============================================================ */
+
+/* ============================================================
+   HERO SHELL
+   Byte-identical in all three pages before extraction.
+   ============================================================ */
+.poster-hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--paper);
+    isolation: isolate;
+}
+
+/* ============================================================
+   POSTER GRID
+   Faint vertical rules every 1/6 of the width.
+
+   `round()` pixel-snaps the column so the 1px rules land on whole
+   device pixels; un-snapped calc(100%/6) anti-aliases into fuzzy
+   streaks on hi-DPI screens. The plain 240px line above it is the
+   fallback for browsers without round().
+   ============================================================ */
+.poster-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px);
+    background-size: 240px 100%;
+    background-size: round(calc(100% / 6), 1px) 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 var(--poster-mask-end, 82%), transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 var(--poster-mask-end, 82%), transparent);
+}
+
+/* ============================================================
+   GRAIN
+   Multiplied over the largest surfaces so the paper reads as
+   printed stock rather than flat colour.
+   ============================================================ */
+.poster-grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: var(--poster-grain-opacity, 0.5);
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   KEYFRAMES
+   Previously duplicated as blink/vrBlink/otdBlink,
+   chRise/vrChRise/otdChRise, fadeUp/vrFadeUp/otdFadeUp.
+   ============================================================ */
+@keyframes poster-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.15; }
+}
+
+/* Per-character hero rise. The element sets the `from` state
+   (translateY + rotate) and staggers with --i; this lands it. */
+@keyframes poster-ch-rise {
+    to { transform: translateY(0) rotate(0); opacity: 1; }
+}
+
+@keyframes poster-fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   SCROLL REVEAL
+
+   Gated on JS adding `.reveals-on`, so without script.js nothing
+   is ever hidden. Both settle classes are honoured: the spine uses
+   `.is-visible`, views/projects uses `.is-in`.
+   ============================================================ */
+.reveals-on .reveal {
+    opacity: 0;
+    transform: translateY(var(--reveal-distance, 24px));
+    transition: opacity var(--reveal-duration, 0.7s) ease,
+                transform var(--reveal-duration, 0.7s) var(--reveal-ease, ease);
+}
+
+/* Equal specificity to the rule above, so this must stay below it. */
+.reveals-on .reveal.is-visible,
+.reveals-on .reveal.is-in {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveals-on .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}

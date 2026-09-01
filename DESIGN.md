@@ -132,7 +132,7 @@ A warm neutral ground with four saturated inks that are used as punctuation, nev
 
 ### Primary
 - **Kiln Clay** (`#d4451f`): The site's voice. Eyebrows, section labels, the logo dot, active link underlines, focus rings, error text, and the default `--acc` on the first section of a page. Present on nearly every surface but never covering one.
-- **Fired Clay** (`#b8371a`): The pressed and hovered state of any clay fill. Never used at rest.
+- **Fired Clay** (`#b8371a`): Two roles. The pressed and hovered state of any clay fill, and the resting colour of **small clay text**. Clay on paper measures 4.03:1, under the 4.5:1 AA bar, so any clay type below 18.66px uses fired clay instead (5.23:1). Clay keeps the rules, borders, underlines, fills and large display type, where the bar is 3:1.
 
 ### Secondary
 - **Poster Cobalt** (`#1f35e0`): The second-position accent. Marks the shift into deeper territory: the featured project rows, the edition banner, the wordmark's hover shadow on the homepage. An electric blue against a warm ground, deliberately jarring at small sizes and only ever at small sizes.
@@ -179,7 +179,7 @@ A warm neutral ground with four saturated inks that are used as punctuation, nev
 
 **The Tight Display Rule.** Display and headline type is set tighter than it looks comfortable: line-height under 1.0, tracking negative to -0.035em. The size does the shouting, the spacing keeps it from sprawling.
 
-**The Fraunces Migration Rule.** Bricolage Grotesque is the display face. Fraunces is the previous one and survives on `views/projects`, `views/account`, `views/admin`, `views/stocks`, `views/compass`, `views/ip`, `views/download`, `views/recipes`, and `views/nebo`, plus the `body.editorial` fallbacks in [base-style.css](base-style.css). That is documented drift, not a second option. New surfaces use Bricolage; convert a Fraunces surface when you are already working in it, not as a separate errand.
+**The Fraunces Migration Rule.** Bricolage Grotesque is the display face. Fraunces is the previous one and now survives only on the signed-in tools: `views/account`, `views/admin`, `views/stocks`, `views/compass`, `views/ip`, `views/download`, `views/masaza`, plus the costume views `views/recipes` and `views/nebo`, which own their palettes. `views/projects` was converted, and the `body.editorial` fallbacks in [base-style.css](base-style.css) now ask for Bricolage (they used to name a face those pages never loaded, so every project card title on `views/about` rendered in the browser's default serif). That is documented drift, not a second option. New surfaces use Bricolage; convert a Fraunces surface when you are already working in it, not as a separate errand.
 
 ## Layout
 
@@ -249,7 +249,7 @@ Recurring silhouettes: the ruled section head (label, then a rule flexing to fil
 - **Badge:** Ink fill, paper text, 2px radius, 0.65rem at tracking 0.08em uppercase, pinned top-right.
 
 ### Navigation
-Fixed bar over a translucent paper wash (`rgba(246, 242, 234, 0.8)`, deepening to 0.95 on scroll) with a `backdrop-filter: blur(10px)` and a hairline bottom border. Links are Space Mono 700 uppercase at 0.82rem tracked 0.14em in stone, inking to full ink on hover with a clay underline growing from the left. Below 768px the menu becomes a full-width stacked panel sliding down from the bar, each row a full-bleed 1.25rem tap target divided by hairlines.
+Fixed bar over a translucent paper wash (`rgba(246, 242, 234, 0.8)`, deepening to 0.95 on scroll) with a `backdrop-filter: blur(10px)` and a hairline bottom border. This is the **default** skin, and the bar carries its own `--nav-*` tokens with fallbacks so it renders the same on a page that loads neither `theme.css` nor `body.editorial`. A page whose ground is genuinely dark opts into the retired navy skin with `<main-navbar theme="dark">`. Links are Space Mono 700 uppercase at 0.82rem tracked 0.14em in stone, inking to full ink on hover with a clay underline growing from the left. Below 768px the menu becomes a full-width stacked panel sliding down from the bar, each row a full-bleed 1.25rem tap target divided by hairlines.
 
 The wordmark is a square monogram tile (2.15rem, 3px radius, ink-on-paper inverted) beside the name in Space Mono 700 with a clay dot. On hover the tile shifts `-1px, -1px` onto a 3px hard shadow, cobalt on the homepage and clay elsewhere.
 
@@ -282,6 +282,31 @@ A label, a rule, and a count. The ordinal is set in outline (`-webkit-text-strok
 - **Don't** use a pure grey, a pure black, or a pure white. Every neutral in this system is warm.
 - **Don't** ship a native `<input type="date">`.
 - **Don't** apply the house palette to a showcase project that has committed to its own world.
+
+### Where the system lives
+
+The palette and type scale are declared **once**, in
+[components/editorial/theme.js](components/editorial/theme.js) (hex, so Tailwind's
+slash-opacity utilities like `text-stone/80` can compute an alpha) and mirrored as CSS
+custom properties in [theme.css](components/editorial/theme.css), which also carries the
+motion scale, the radius scale and the focus ring. They used to be retyped in 22 inline
+`tailwind.config` blocks; `tests/editorial-theme.test.mjs` fails if the two halves drift
+or if a 23rd page starts declaring its own.
+
+The poster hero (grid, grain, hero shell, the rise/blink/fade keyframes and the scroll
+reveal) lives in [components/editorial/poster.css](components/editorial/poster.css). It
+was previously copy-pasted into `views/thesis` as `.vr-*` and `views/on-this-day` as
+`.otd-*`. Per-page differences that survived the merge (grid alpha, mask stop, reveal
+distance) are custom properties each page sets on a scope it already owns, so
+deduplicating it moved nothing on screen.
+
+A page joins the system with three tags in the head:
+
+```html
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../../components/editorial/theme.js"></script>   <!-- classic, not module -->
+<link rel="stylesheet" href="../../components/editorial/theme.css">
+```
 
 ### Scope
 

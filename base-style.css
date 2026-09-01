@@ -22,17 +22,27 @@
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.25);
     --shadow-hover-alt: 0 10px 30px rgba(100, 100, 100, 0.2);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* --transition was `all 0.3s`, which made the browser watch every
+       animatable property. Each rule now names what it changes; see
+       --ease-out / --dur-* in components/editorial/theme.css. */
     --contact-card-bg: rgba(30, 41, 59, 0.9);
     --contact-card-border: rgba(102, 126, 234, 0.2);
     --contact-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* scroll-behavior has to sit on the scrolling element, which is <html>, not
+   <body>: it did nothing here. Honour the OS reduce-motion setting, since a
+   long smooth scroll is exactly the vestibular motion that setting suppresses. */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
 }
 
 body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: var(--text-primary);
-    scroll-behavior: smooth;
     background: var(--bg-dark-about);
 }
 
@@ -76,21 +86,41 @@ body {
     }
 }
 
-/* Navigation */
+/* ---- Navigation ----
+   The bar carries its own palette rather than inheriting the page theme,
+   because it is one component and used to render in two different skins:
+   light editorial on twelve pages and the retired dark navy on
+   views/slovenia, purely because that page never opted into .editorial.
+   The fallbacks make it correct even where theme.css is not loaded.
+   A genuinely dark page can opt back in with <main-navbar theme="dark">. */
 .navbar {
+    --nav-bg: 246, 242, 234;
+    --nav-ink: var(--ink, #1c1a17);
+    --nav-stone: var(--stone, #6b6256);
+    --nav-accent: var(--clay, #d4451f);
+    --nav-hairline: var(--hairline, rgba(28, 26, 23, 0.12));
+
     position: fixed;
     top: 0;
     width: 100%;
-    background: rgba(15, 23, 42, 0.95);
+    background: rgba(var(--nav-bg), 0.8);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--nav-hairline);
     z-index: 1000;
     padding: 1.2rem 0;
-    transition: var(--transition);
+    transition: background 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)), border-color 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .navbar.scrolled {
-    background: rgba(15, 23, 42, 0.98);
+    background: rgba(var(--nav-bg), 0.95);
+}
+
+/* The retired dark skin, kept opt-in for a page whose ground is dark. */
+.navbar--dark {
+    --nav-bg: 15, 23, 42;
+    --nav-ink: rgba(255, 255, 255, 0.9);
+    --nav-stone: rgba(255, 255, 255, 0.7);
+    --nav-hairline: rgba(255, 255, 255, 0.1);
 }
 
 .nav-container {
@@ -110,7 +140,7 @@ body {
     align-items: center;
     gap: 0.6rem;
     text-decoration: none;
-    color: var(--text-light);
+    color: var(--nav-ink);
 }
 
 .logo__mark {
@@ -123,8 +153,8 @@ body {
     font-size: 0.95rem;
     letter-spacing: 0.01em;
     line-height: 1;
-    color: var(--bg-dark);
-    background: var(--text-light);
+    color: rgba(var(--nav-bg), 1);
+    background: var(--nav-ink);
     border-radius: 3px;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
@@ -134,21 +164,21 @@ body {
     font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: 0.005em;
-    color: var(--text-light);
+    color: var(--nav-ink);
     transition: color 0.2s ease;
 }
 
 .logo__dot {
-    color: var(--primary-color);
+    color: var(--nav-accent);
 }
 
 .logo:hover .logo__mark {
     transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0 var(--primary-color);
+    box-shadow: 3px 3px 0 var(--nav-accent);
 }
 
 .logo:hover .logo__name {
-    color: var(--primary-color);
+    color: var(--nav-accent);
 }
 
 @media (max-width: 480px) {
@@ -165,38 +195,44 @@ body {
 }
 
 .nav-link {
-    color: var(--text-muted);
+    color: var(--nav-stone);
     text-decoration: none;
     font-weight: 500;
     font-size: 1rem;
-    transition: var(--transition);
+    transition: color 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1));
     position: relative;
 }
 
 .nav-link:hover {
-    color: var(--text-light);
+    color: var(--nav-ink);
 }
 
+/* The underline grows from the left on hover. It scales rather than
+   animating `width`, so the whole thing runs on the compositor instead of
+   forcing a layout pass on every frame; the result on screen is identical. */
 .nav-link::after {
     content: '';
     position: absolute;
     bottom: -5px;
     left: 0;
-    width: 0;
+    width: 100%;
     height: 2px;
-    background: var(--primary-color);
-    transition: var(--transition);
+    background: var(--nav-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
-.nav-link:hover::after {
-    width: 100%;
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+    transform: scaleX(1);
 }
 
 .mobile-menu-btn {
     display: none;
     background: none;
     border: none;
-    color: var(--text-light);
+    color: var(--nav-ink);
     font-size: 1.5rem;
     cursor: pointer;
 }
@@ -212,20 +248,20 @@ body {
     align-items: center;
     gap: 0.45rem;
     padding: 0.38rem 0.8rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: transparent;
+    border: 1px solid var(--nav-hairline);
     border-radius: 999px;
-    color: var(--text-muted);
+    color: var(--nav-stone);
     font-family: 'Space Mono', monospace;
     font-size: 0.72rem;
     cursor: pointer;
-    transition: var(--transition);
+    transition: color 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)), border-color 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)), background 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .lang-picker__trigger:hover {
-    color: var(--text-light);
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--nav-ink);
+    border-color: color-mix(in srgb, var(--nav-ink) 30%, transparent);
+    background: color-mix(in srgb, var(--nav-ink) 4%, transparent);
 }
 
 .lang-picker__flag {
@@ -340,18 +376,6 @@ body {
 }
 
 /* Editorial theme overrides */
-body.editorial .lang-picker__trigger {
-    background: transparent;
-    border-color: var(--hairline);
-    color: var(--stone);
-}
-
-body.editorial .lang-picker__trigger:hover {
-    color: var(--ink);
-    border-color: rgba(28, 26, 23, 0.3);
-    background: rgba(28, 26, 23, 0.04);
-}
-
 body.editorial .lang-picker__panel {
     background: var(--card);
     border-color: var(--hairline);
@@ -446,74 +470,6 @@ body.editorial .gtranslate_wrapper .nturl.is-active {
   filter: brightness(0) invert(1) drop-shadow(0 0 2px #667eea) !important;
 }
 
-/* Hero Section */
-.hero {
-    min-height: 100vh;
-    background: var(--bg-gradient);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: white;
-    position: relative;
-    overflow: hidden;
-    z-index: 3;
-}
-
-.hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.03)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
-    max-width: 800px;
-    padding: 0 2rem;
-}
-
-.hero h1 {
-    font-size: clamp(3rem, 6vw, 5rem);
-    font-weight: 700;
-    margin-bottom: 1rem;
-    background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.hero h2 {
-    font-size: clamp(1.2rem, 3vw, 1.8rem);
-    font-weight: 400;
-    margin-bottom: 2rem;
-    color: var(--text-muted);
-}
-
-.cta-button {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    padding: 1rem 2rem;
-    text-decoration: none;
-    border-radius: var(--border-radius);
-    font-weight: 600;
-    transition: var(--transition);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-}
-
-.cta-button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
 /* Sections */
 .section {
     padding: 6rem 0;
@@ -557,7 +513,7 @@ body.editorial .gtranslate_wrapper .nturl.is-active {
         transform: translateY(-100%);
         opacity: 0;
         visibility: hidden;
-        transition: var(--transition);
+        transition: transform 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)), opacity 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)), visibility 0.3s var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1));
     }
 
     .nav-menu li {
@@ -582,10 +538,6 @@ body.editorial .gtranslate_wrapper .nturl.is-active {
         display: block;
     }
 
-    .hero h1 {
-        font-size: 2.5rem;
-    }
-
     .section {
         padding: 6rem 0;
     }
@@ -598,16 +550,11 @@ body.editorial .gtranslate_wrapper .nturl.is-active {
    section titles, footer, loading overlay, APOD) flips with it.
    ============================================================ */
 body.editorial {
-    --paper: #f6f2ea;
-    --paper-2: #efe9dd;
-    --card: #fffdf8;
-    --ink: #1c1a17;
-    --stone: #6b6256;
-    --clay: #d4451f;
-    --clay-dk: #b8371a;
-    --pine: #2f5b53;
-    --hairline: rgba(28, 26, 23, 0.12);
-
+    /* The palette itself lives in components/editorial/theme.css, which
+       every .editorial page loads. What stays here is only the remap of
+       the retired dark theme's variable names onto it, so the legacy
+       rules above (navbar, footer, loading overlay) flip with the theme
+       instead of being rewritten. */
     --text-light: var(--ink);
     --text-muted: var(--stone);
     --text-muted-about: var(--stone);
@@ -629,37 +576,6 @@ body.editorial {
     font-family: 'IBM Plex Sans', sans-serif;
 }
 
-/* Navbar */
-body.editorial .navbar {
-    background: rgba(246, 242, 234, 0.8);
-    border-bottom: 1px solid var(--hairline);
-}
-
-body.editorial .navbar.scrolled {
-    background: rgba(246, 242, 234, 0.95);
-}
-
-body.editorial .logo__name {
-    color: var(--ink);
-}
-
-body.editorial .logo__dot,
-body.editorial .logo:hover .logo__name {
-    color: var(--clay);
-}
-
-body.editorial .nav-link {
-    color: var(--stone);
-}
-
-body.editorial .nav-link:hover {
-    color: var(--ink);
-}
-
-body.editorial .mobile-menu-btn {
-    color: var(--ink);
-}
-
 /* Loading overlay */
 body.editorial .loading-overlay {
     background: var(--paper);
@@ -671,11 +587,6 @@ body.editorial .loading-spinner {
 }
 
 /* Section titles + footer */
-body.editorial .section-title {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-}
 
 body.editorial .footer {
     background: var(--paper);
@@ -753,10 +664,15 @@ body.editorial .project-content {
     padding: 1.5rem;
 }
 
+/* Bricolage, not Fraunces. This rule used to ask for a face that none of
+   the pages rendering a project card actually load, so every card title
+   on views/about fell back to the browser's default serif (Times). See
+   "The Fraunces Migration Rule" in DESIGN.md. */
 body.editorial .project-title {
-    font-family: 'Fraunces', serif;
+    font-family: 'Bricolage Grotesque', sans-serif;
     font-size: 1.3rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -0.01em;
     color: var(--ink);
     margin-bottom: 0.6rem;
 }

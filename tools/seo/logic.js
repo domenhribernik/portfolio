@@ -247,26 +247,10 @@ ${JSON.stringify(breadcrumbs, null, 4).replace(/^/gm, '    ')}
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        paper: '#f6f2ea', 'paper-2': '#efe9dd', card: '#fffdf8',
-                        ink: '#1c1a17', stone: '#6b6256', clay: '#d4451f',
-                        'clay-dk': '#b8371a', pine: '#2f5b53', cobalt: '#1f35e0', marigold: '#f2b705',
-                    },
-                    fontFamily: {
-                        display: ['"Bricolage Grotesque"', 'sans-serif'],
-                        serif: ['"Bricolage Grotesque"', 'sans-serif'],
-                        sans: ['"IBM Plex Sans"', 'sans-serif'],
-                        mono: ['"Space Mono"', 'monospace'],
-                    },
-                }
-            }
-        }
-    </script>
+    <script src="../../../components/editorial/theme.js"></script>
     <link rel="stylesheet" href="../../../base-style.css">
+    <link rel="stylesheet" href="../../../components/editorial/theme.css">
+    <link rel="stylesheet" href="../../../components/editorial/poster.css">
     <link rel="stylesheet" href="../../homepage/kinetic.css">
     <link rel="stylesheet" href="../style.css">
 </head>

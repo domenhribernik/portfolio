@@ -4,25 +4,16 @@
    homepage teases seven stories; this page is the whole paper:
    masthead with ears and a live dateline, then one section per
    category, each opening on a photo lead and running the rest
-   in ruled newspaper columns. Headlines run in Fraunces (the site's
-   editorial serif), decks in IBM Plex Sans, furniture in Space
-   Mono. Hover stays in the site's quiet manner: headlines
+   in ruled newspaper columns. Headlines run in Bricolage Grotesque
+   (the site's display face), decks in IBM Plex Sans, furniture in
+   Space Mono. Hover stays in the site's quiet manner: headlines
    underline in the section's accent ink, nothing moves.
    Halftone dots turn each project's registry gradient into the
    story's press photo.
    ============================================================ */
 
-:root {
-    --paper: #f6f2ea;
-    --paper-2: #efe9dd;
-    --ink: #1c1a17;
-    --stone: #6b6256;
-    --clay: #d4451f;
-    --cobalt: #1f35e0;
-    --pine: #2f5b53;
-    --rule: rgba(28, 26, 23, 0.25);
-    --rule-soft: rgba(28, 26, 23, 0.14);
-}
+/* The palette (including --rule and --rule-soft) comes from
+   components/editorial/theme.css, loaded in index.html. */
 
 /* base-style paints body with the navy gradient shorthand; a full-page
    view must reassert its own background (see root CLAUDE.md). */
@@ -67,12 +58,12 @@ body {
 }
 
 .bsheet__name {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Bricolage Grotesque', sans-serif;
     font-optical-sizing: auto;
-    font-weight: 700;
+    font-weight: 800;
     font-size: clamp(2.4rem, 7.5vw, 5.4rem);
     line-height: 0.95;
-    letter-spacing: 0.005em;
+    letter-spacing: -0.02em;
     text-transform: uppercase;
     text-align: center;
     text-wrap: balance;
@@ -125,15 +116,12 @@ body {
 /* ============================================================
    SCROLL REVEAL (gated on JS: without script.js nothing hides)
    ============================================================ */
-body.reveals-on .reveal {
-    opacity: 0;
-    transform: translateY(18px);
-    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-body.reveals-on .reveal.is-in {
-    opacity: 1;
-    transform: none;
+/* The shared reveal lives in components/editorial/poster.css; this page
+   travels a little less and settles on a different curve. */
+body.reveals-on {
+    --reveal-distance: 18px;
+    --reveal-duration: 0.6s;
+    --reveal-ease: var(--ease-emph);
 }
 
 /* ============================================================
@@ -212,10 +200,11 @@ body.reveals-on .reveal.is-in {
 }
 
 .bsheet__sec-label {
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 700;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
     font-size: clamp(1.1rem, 2vw, 1.45rem);
     line-height: 1.1;
+    letter-spacing: -0.01em;
 }
 
 .bsheet__sec-folio {
@@ -271,10 +260,11 @@ body.reveals-on .reveal.is-in {
 
 .bsheet__head {
     margin-top: 0.2rem;
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 600;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
     font-size: 1.12rem;
     line-height: 1.2;
+    letter-spacing: -0.01em;
     text-decoration: underline;
     text-decoration-color: transparent;
     text-decoration-thickness: 2px;

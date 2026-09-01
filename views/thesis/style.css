@@ -9,68 +9,11 @@
    ============================================================ */
 
 body.editorial {
-    --cobalt: #1f35e0;
-    --cobalt-dk: #1226c0;
+    /* Palette comes from components/editorial/theme.css. These are the
+       two places this page differs from the shared poster layer. */
     --grid-line: rgba(22, 20, 15, 0.10);
+    --reveal-distance: 26px;
     background: var(--paper);
-}
-
-/* Use the poster display face for the navbar logo (this page doesn't
-   load Fraunces, which the base editorial logo rule asks for). */
-body.editorial .logo {
-    font-family: 'Bricolage Grotesque', sans-serif;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-}
-
-/* Reusable grain overlay used by the hero + dark band */
-.vr-grain::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    opacity: 0.5;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-}
-
-/* ============================================================
-   HERO
-   ============================================================ */
-.vr-hero {
-    position: relative;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
-    background: var(--paper);
-    isolation: isolate;
-}
-
-.vr-hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    opacity: 0.5;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-}
-
-/* Poster grid: faint vertical rules every 1/6 of the width */
-.vr-grid {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px);
-    background-size: 240px 100%;
-    background-size: round(calc(100% / 6), 1px) 100%;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
 }
 
 .vr-hero__inner {
@@ -97,22 +40,17 @@ body.editorial .logo {
     text-transform: uppercase;
     letter-spacing: 0.26em;
     font-size: 0.68rem;
-    color: var(--clay);
+    color: var(--clay-dk);
     margin-bottom: 1.6rem;
     opacity: 0;
-    animation: vrFadeUp 0.7s ease 0.1s forwards;
+    animation: poster-fade-up 0.7s ease 0.1s forwards;
 }
 
 .vr-eyebrow__dot {
     width: 0.55rem;
     height: 0.55rem;
     background: var(--cobalt);
-    animation: vrBlink 1.4s steps(1) infinite;
-}
-
-@keyframes vrBlink {
-    0%, 49% { opacity: 1; }
-    50%, 100% { opacity: 0.15; }
+    animation: poster-blink 1.4s steps(1) infinite;
 }
 
 .vr-title {
@@ -136,7 +74,7 @@ body.editorial .logo {
     display: inline-block;
     transform: translateY(118%) rotate(5deg);
     opacity: 0;
-    animation: vrChRise 0.85s cubic-bezier(0.16, 0.84, 0.34, 1) both;
+    animation: poster-ch-rise 0.85s cubic-bezier(0.16, 0.84, 0.34, 1) both;
     animation-delay: calc(var(--i) * 0.04s + 0.18s);
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease;
 }
@@ -150,10 +88,6 @@ body.editorial .logo {
     color: var(--cobalt);
 }
 
-@keyframes vrChRise {
-    to { transform: translateY(0) rotate(0); opacity: 1; }
-}
-
 .vr-sub {
     display: flex;
     align-items: flex-start;
@@ -161,7 +95,7 @@ body.editorial .logo {
     max-width: 44rem;
     margin-top: 2.2rem;
     opacity: 0;
-    animation: vrFadeUp 0.8s ease 0.7s forwards;
+    animation: poster-fade-up 0.8s ease 0.7s forwards;
 }
 
 .vr-sub__bar {
@@ -187,7 +121,7 @@ body.editorial .logo {
     gap: 2rem;
     margin-top: 2.8rem;
     opacity: 0;
-    animation: vrFadeUp 0.8s ease 0.85s forwards;
+    animation: poster-fade-up 0.8s ease 0.85s forwards;
 }
 
 .vr-btn {
@@ -330,7 +264,7 @@ body.editorial .logo {
     text-transform: uppercase;
     letter-spacing: 0.22em;
     font-size: 0.72rem;
-    color: var(--clay);
+    color: var(--clay-dk);
     white-space: nowrap;
 }
 
@@ -757,7 +691,7 @@ body.editorial .logo {
     text-transform: uppercase;
     letter-spacing: 0.24em;
     font-size: 0.7rem;
-    color: var(--clay);
+    color: var(--clay-dk);
     margin-bottom: 1.2rem;
 }
 
@@ -796,17 +730,6 @@ body.editorial .logo {
 /* ============================================================
    SCROLL REVEAL (enabled by script.js adding .reveals-on)
    ============================================================ */
-.reveals-on .reveal {
-    opacity: 0;
-    transform: translateY(26px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-}
-
-.reveal.is-visible {
-    opacity: 1;
-    transform: none;
-}
-
 /* ============================================================
    RESPONSIVE
    ============================================================ */
@@ -892,10 +815,3 @@ body.editorial .logo {
     }
 }
 
-/* ============================================================
-   SHARED KEYFRAMES
-   ============================================================ */
-@keyframes vrFadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: none; }
-}

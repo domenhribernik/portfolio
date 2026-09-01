@@ -9,16 +9,19 @@
    columns, and the contact composition.
    ============================================================ */
 
+/* Palette, --hard and the motion scale come from
+   components/editorial/theme.css. What stays here is only what this
+   page does differently from the shared poster layer: a fractionally
+   stronger grid rule and a mask that fades two percent earlier. */
 .kinetic {
-    --cobalt: #1f35e0;
-    --cobalt-dk: #1226c0;
-    --marigold: #f2b705;
     --grid-line: rgba(22, 20, 15, 0.11);
-    --hard: 6px 6px 0;
+    --poster-mask-end: 80%;
 }
 
-/* Display + label faces override the editorial Fraunces on this page */
-.kinetic .section-title,
+/* The gallery and APOD titles set no face of their own, so this is where
+   they get the display face. (`.section-title` used to be in this list,
+   back when base-style.css asked for Fraunces; that rule now sets
+   Bricolage itself, so the override is gone rather than duplicated.) */
 .kinetic .otd-title,
 .kinetic .gallery-title,
 .kinetic .apod-main-title,
@@ -52,36 +55,6 @@
     font-size: 0.82rem;
 }
 
-/* ============================================================
-   HERO
-   ============================================================ */
-.kinetic-hero {
-    position: relative;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
-    background: var(--paper);
-    isolation: isolate;
-}
-
-/* Poster grid: faint vertical rules every 1/6 of the width */
-.kinetic-grid {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px);
-    /* Pixel-snap the column width so the 1px rules land on whole pixels and stay
-       crisp on hi-DPI screens (un-snapped calc(100%/6) anti-aliases into fuzzy
-       streaks). Fallback keeps sharp whole-px columns where round() is unsupported. */
-    background-size: 240px 100%;
-    background-size: round(calc(100% / 6), 1px) 100%;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 80%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 80%, transparent);
-}
-
 /* Cursor-following blend blobs (positions driven by kinetic.js) */
 .kinetic-blob {
     position: absolute;
@@ -98,14 +71,20 @@
     transform: translate(50vw, 38vh) translate(-50%, -50%);
 }
 
+/* Both blobs read their ink from the palette. The cobalt one always did
+   (it spelled #1f35e0 out in rgba); the clay one had drifted to #e0431d,
+   twelve points redder than the site's clay, which is invisible under a
+   64px blur but is one more literal that could go stale on its own. */
 .kinetic-blob--clay {
-    background: radial-gradient(circle at center, rgba(224, 67, 29, 0.85), rgba(224, 67, 29, 0) 60%);
+    background: radial-gradient(circle at center,
+        color-mix(in srgb, var(--clay) 85%, transparent), transparent 60%);
     opacity: 0.6;
     animation: blobFloatA 16s ease-in-out infinite;
 }
 
 .kinetic-blob--cobalt {
-    background: radial-gradient(circle at center, rgba(31, 53, 224, 0.7), rgba(31, 53, 224, 0) 60%);
+    background: radial-gradient(circle at center,
+        color-mix(in srgb, var(--cobalt) 70%, transparent), transparent 60%);
     opacity: 0.5;
     animation: blobFloatB 20s ease-in-out infinite;
 }
@@ -123,18 +102,6 @@
 @keyframes blobFloatB {
     0%, 100% { transform: translate(66vw, 50vh) translate(-50%, -50%); }
     50%      { transform: translate(44vw, 30vh) translate(-50%, -50%); }
-}
-
-/* Grain texture */
-.kinetic-hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    opacity: 0.5;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
 }
 
 .kinetic-hero__inner {
@@ -162,10 +129,10 @@
     text-transform: uppercase;
     letter-spacing: 0.28em;
     font-size: 0.7rem;
-    color: var(--clay);
+    color: var(--clay-dk);
     margin-bottom: 1.6rem;
     opacity: 0;
-    animation: fadeUp 0.7s ease 0.1s forwards;
+    animation: poster-fade-up 0.7s ease 0.1s forwards;
 }
 
 .kinetic-eyebrow::before {
@@ -173,12 +140,7 @@
     width: 0.55rem;
     height: 0.55rem;
     background: var(--cobalt);
-    animation: blink 1.4s steps(1) infinite;
-}
-
-@keyframes blink {
-    0%, 49% { opacity: 1; }
-    50%, 100% { opacity: 0.15; }
+    animation: poster-blink 1.4s steps(1) infinite;
 }
 
 /* The giant kinetic title */
@@ -210,7 +172,7 @@
     display: inline-block;
     transform: translateY(118%) rotate(5deg);
     opacity: 0;
-    animation: chRise 0.85s cubic-bezier(0.16, 0.84, 0.34, 1) both;
+    animation: poster-ch-rise 0.85s cubic-bezier(0.16, 0.84, 0.34, 1) both;
     animation-delay: calc(var(--i) * 0.04s + 0.18s);
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease;
 }
@@ -224,10 +186,6 @@
     color: var(--cobalt);
 }
 
-@keyframes chRise {
-    to { transform: translateY(0) rotate(0); opacity: 1; }
-}
-
 /* Subtitle */
 .kinetic-sub {
     display: flex;
@@ -236,7 +194,7 @@
     max-width: 40rem;
     margin-top: 2.4rem;
     opacity: 0;
-    animation: fadeUp 0.8s ease 0.7s forwards;
+    animation: poster-fade-up 0.8s ease 0.7s forwards;
 }
 
 .kinetic-sub__bar {
@@ -262,7 +220,7 @@
     gap: 1rem 1.6rem;
     margin-top: 2.6rem;
     opacity: 0;
-    animation: fadeUp 0.8s ease 0.85s forwards;
+    animation: poster-fade-up 0.8s ease 0.85s forwards;
 }
 
 .kinetic-btn {
@@ -365,7 +323,7 @@
     text-transform: uppercase;
     letter-spacing: 0.24em;
     font-size: 0.75rem;
-    color: var(--clay);
+    color: var(--clay-dk);
     white-space: nowrap;
 }
 
@@ -843,7 +801,7 @@
     font-family: 'Space Mono', monospace;
     font-size: 0.68rem;
     letter-spacing: 0.02em;
-    color: var(--clay);
+    color: var(--clay-dk);
 }
 
 /* Honeypot: kept in the DOM for bots, pushed off-screen for people
@@ -922,7 +880,7 @@
 }
 
 .colophon__status--error {
-    color: var(--clay);
+    color: var(--clay-dk);
 }
 
 /* Ruled index line: location, education, socials */
@@ -1126,14 +1084,6 @@ html:has(body.kinetic)::-webkit-scrollbar-corner {
         padding-top: 0.2rem;
         border-top: 0;
     }
-}
-
-/* ============================================================
-   SHARED KEYFRAMES + REDUCED MOTION
-   ============================================================ */
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
