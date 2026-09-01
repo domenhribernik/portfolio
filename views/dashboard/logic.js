@@ -274,3 +274,95 @@ export function folderHitTest(folderRects, x, y, inset = 0) {
     }
     return null;
 }
+
+// ------------------------------------------------------------------
+//  Gesture reducer (pure: press/move/release intent, no DOM)
+// ------------------------------------------------------------------
+//
+// iOS is the reason this exists as a state machine rather than a few ifs in
+// script.js. Safari decides whether a touch belongs to the page (a scroll) or
+// to us at the FIRST move of the gesture, and it latches `touch-action` at
+// touchstart, so a tile cannot become draggable half way through a press by
+// flipping CSS. The only thing that reliably wins the gesture is calling
+// preventDefault() on a non-passive touchmove BEFORE Safari has committed to
+// scrolling. So the rule is: a press is the page's until a hold fires, and
+// ours the instant it does, with nothing ambiguous in between.
+
+export const LONGPRESS_MS = 450;    // hold on a still shelf: competes with tap-to-open
+export const ARRANGE_HOLD_MS = 160; // hold once arranging: intent is unambiguous, so make it quick
+
+// How long to hold before the tile lifts (touch), and whether plain movement
+// past the slop lifts it instead (mouse, which has no hold to speak of).
+export function pressIntent({ pointerType, arranging }) {
+    if (pointerType === 'mouse') return { holdMs: null, dragOnMove: !!arranging };
+    return { holdMs: arranging ? ARRANGE_HOLD_MS : LONGPRESS_MS, dragOnMove: false };
+}
+
+export const DRAG_SLOP = 6;  // px of travel before a mouse press becomes a drag
+
+// What a pointermove means, given the phase the press is in.
+//   'pressing'  the finger is down but the tile has not lifted yet
+//   'holding'   the hold fired, the tile is lifted, nothing has moved
+//   'dragging'  the tile is following the pointer
+// Returns 'release' (this was a scroll: let the page have it), 'drag', or
+// 'wait'. 'release' is the branch iOS depends on: keeping a dead press
+// attached is what made Safari fire pointercancel and kill the next drag.
+export function moveIntent(phase, { dragOnMove = false, dx = 0, dy = 0, slop = DRAG_SLOP } = {}) {
+    if (phase === 'dragging' || phase === 'holding') return 'drag';
+    if (phase !== 'pressing') return 'wait';
+    if (Math.hypot(dx, dy) <= slop) return 'wait';
+    return dragOnMove ? 'drag' : 'release';
+}
+
+// True once the press belongs to us rather than the page. script.js gates its
+// non-passive touchmove preventDefault() on this: claim the gesture at pickup,
+// never before, so an ordinary swipe on a tile still scrolls the shelf.
+export function ownsGesture(phase) {
+    return phase === 'holding' || phase === 'dragging';
+}
+
+// What a pointerup/pointercancel should do.
+//   commit        keep the arrangement the grid has already reflowed to
+//   file          folder id to drop the app into, or null
+//   suppressClick swallow the click that follows, so a drag never opens an app
+// A cancel commits in place but never files: the grid already shows the new
+// order so snapping back would be a lie, while filing is a deliberate act and
+// an interrupted gesture is by definition not deliberate.
+export function releaseIntent({ phase, cancelled = false, folderHit = null } = {}) {
+    if (phase !== 'holding' && phase !== 'dragging') {
+        return { commit: false, file: null, suppressClick: false };
+    }
+    return {
+        commit: true,
+        file: (cancelled || phase === 'holding') ? null : (folderHit ?? null),
+        suppressClick: true,
+    };
+}
+
+export const EDGE_ZONE = 0.15;  // fraction of the box each auto-scroll band covers
+export const EDGE_MAX  = 18;    // px per frame at the very edge
+
+// Auto-scroll speed for a pointer held at `y` inside a box, in px per frame:
+// negative scrolls up, positive down, 0 through the middle. Ramps linearly
+// with how deep into the band the pointer sits, so a tile parked just inside
+// the edge creeps and one pinned against it moves at full tilt. Needed because
+// a held tile owns the gesture, so the page can no longer be scrolled by hand.
+export function edgeScrollVelocity(y, box, { zone = EDGE_ZONE, max = EDGE_MAX } = {}) {
+    const height = box.bottom - box.top;
+    if (!(height > 0)) return 0;
+    const band = height * zone;
+    if (y < box.top + band)    return -max * Math.min(1, (box.top + band - y) / band);
+    if (y > box.bottom - band) return  max * Math.min(1, (y - (box.bottom - band)) / band);
+    return 0;
+}
+
+export const EJECT_BAND = 40;  // px the pointer must clear the folder panel by
+
+// True when a tile dragged inside an open folder has been pulled far enough
+// clear of the panel to mean "take this out of the folder". The band exists
+// because the panel is only ~16px from the screen edge on a phone, so the bare
+// panel bounds would turn half the reorders near an edge into an eject.
+export function escapedPanel(panel, x, y, band = EJECT_BAND) {
+    return x < panel.left - band || x > panel.right + band
+        || y < panel.top - band || y > panel.bottom + band;
+}

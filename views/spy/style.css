@@ -1,5 +1,5 @@
 /* ============================================================
-   SPY // CLASSIFIED  —  dark surveillance-terminal theme
+   SPY // CLASSIFIED  ::  dark surveillance-terminal theme
    Tailwind CDN handles tokens; this file owns the atmosphere,
    animations, state toggles and bespoke components.
    ============================================================ */
@@ -38,16 +38,18 @@ body {
     line-height: 1.5;
     min-height: 100svh;
     overflow-x: hidden;
-    /* faint radial spotlight + base color */
-    background-image:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(193, 18, 31, 0.10), transparent 70%),
-        radial-gradient(ellipse 120% 80% at 50% 120%, rgba(193, 18, 31, 0.06), transparent 70%);
-    background-attachment: fixed;
     -webkit-tap-highlight-color: transparent;
 }
 
 /* ---------------- Atmosphere overlays ---------------- */
 
+/* Every full-bleed layer here is promoted onto its own GPU layer so it
+   rasterizes on the device pixel grid. Without that, their anti-aliased edges
+   land on fractional device pixels on large or high-DPI displays and the
+   corners show hairline seams, and the two animated layers re-dirty the
+   vignette's expensive blur underneath them on every frame. None of them
+   rotates, so backface-visibility is safe on all of them. */
+.spotlight,
 .crt,
 .grain,
 .vignette {
@@ -55,15 +57,30 @@ body {
     inset: 0;
     pointer-events: none;
     z-index: 50;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
-/* scanlines + slow vertical flicker */
+/* The faint radial spotlight. Its own fixed layer rather than a
+   background-attachment: fixed on the body, which repaints both gradients
+   across the whole viewport on every scroll frame. The far stop is an
+   explicitly transparent RED, not the `transparent` keyword: that keyword is
+   rgba(0, 0, 0, 0), so the ramp would interpolate towards transparent BLACK
+   and pick up a grey cast across its whole width. */
+.spotlight {
+    z-index: 0;
+    background-image:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(193, 18, 31, 0.10), rgba(193, 18, 31, 0) 70%),
+        radial-gradient(ellipse 120% 80% at 50% 120%, rgba(193, 18, 31, 0.06), rgba(193, 18, 31, 0) 70%);
+}
+
+/* scanlines + slow vertical flicker. Hard stops on whole pixels: a stop pair
+   at the same offset leaves a 1px anti-aliased ramp instead of a crisp line,
+   which moires on fractional device-pixel ratios. */
 .crt {
     background: repeating-linear-gradient(to bottom,
-            rgba(0, 0, 0, 0) 0px,
-            rgba(0, 0, 0, 0) 2px,
-            rgba(0, 0, 0, 0.18) 3px,
-            rgba(0, 0, 0, 0.18) 3px);
+            rgba(0, 0, 0, 0) 0 2px,
+            rgba(0, 0, 0, 0.18) 2px 3px);
     mix-blend-mode: multiply;
     animation: flicker 6s steps(60) infinite;
 }
@@ -84,20 +101,27 @@ body {
     }
 }
 
-/* subtle moving grain */
+/* Subtle moving grain. It is deliberately BIGGER than the viewport: the
+   animation slides it by 4% / 3%, and at inset: 0 that slid a bare strip into
+   view along the top and right edges twice a second. On a phone that is ~15px
+   and invisible under the vignette; on a 2560px display it is a ~100px
+   rectangle blinking in the corners. */
 .grain {
+    inset: -6%;
     opacity: 0.05;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     animation: grainshift 0.6s steps(2) infinite;
 }
 
+/* translateZ(0) is APPENDED to the shift, never replacing it: the layer has to
+   stay promoted for the whole animation, not only at rest. */
 @keyframes grainshift {
     0% {
-        transform: translate(0, 0);
+        transform: translate(0, 0) translateZ(0);
     }
 
     100% {
-        transform: translate(-4%, 3%);
+        transform: translate(-4%, 3%) translateZ(0);
     }
 }
 
@@ -121,6 +145,15 @@ body {
     left: 1rem;
     color: var(--muted);
     text-decoration: none;
+    /* A <button> so it can leave the room rather than the site, stripped back
+       to the link it has always looked like. */
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
     transition: color 0.2s ease, transform 0.2s ease;
 }
 
@@ -594,8 +627,45 @@ body {
 /* screens that hold an absolute stamp need positioning context */
 #setupScreen,
 #roundScreen,
-#debriefScreen {
+#debriefScreen,
+#modeScreen,
+#gateScreen,
+#lobbyScreen,
+#voteScreen {
     position: relative;
+}
+
+/* A visible signal pip adds a line above the heading, pushing it into the
+   band the stamp sits in. Drop the stamp by that line's height. The rule is
+   keyed off the pip itself, so the round screen keeps its original placement
+   in one-phone mode, where the pip is hidden. */
+.signal:not(.hidden) ~ .stamp-tr {
+    top: 6.3rem;
+}
+
+/* The ballot puts a paragraph of instructions right under its heading, and
+   the stamp would sit across the one piece of prose on the screen anybody
+   actually has to read. Lift it into the empty right of the signal line. */
+/* Same treatment, same reason: the ballot's heading is two lines in some
+   languages and the stamp was landing across it. In the flow it sits above
+   the heading, which is where it was always meant to look like it was. */
+#voteScreen .stamp-tr {
+    position: static;
+    display: table;
+    margin: 0 0 0.9rem auto;
+}
+
+/* The room debrief has no band an absolute stamp can safely sit in: the block
+   above it is a tally that grows a row per player, so any fixed offset tuned
+   for four lands on top of the bars at twelve. Take it out of the layer and
+   put it in the flow instead, in the gap the tally already leaves above the
+   host's call, where it cannot collide with anything at any table size.
+   Keyed off the ballot block, which is what makes this the ROOM debrief: one
+   phone mode keeps the stamp in its corner. */
+#ballotBlock:not(.hidden) ~ .stamp-tr {
+    position: static;
+    display: table;
+    margin: -0.6rem 0 1.6rem auto;
 }
 
 /* ---------------- Briefing / pass-around card ---------------- */
@@ -836,5 +906,840 @@ body {
     .glitch::before,
     .glitch::after {
         display: none;
+    }
+}
+
+/* ============================================================
+   ROOM MODE  ::  mode select, gate, safe house, rosters
+   ============================================================ */
+
+/* ---------------- Toast ---------------- */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.4rem;
+    transform: translateX(-50%) translateY(140%);
+    z-index: 60;
+    max-width: min(92vw, 30rem);
+    padding: 0.7rem 1.1rem;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--blood);
+    color: var(--ink);
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-align: left;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.1), opacity 0.32s ease;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* ---------------- Mode select ---------------- */
+
+.mode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin: 1.8rem 0 2rem;
+}
+
+.mode-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1.05rem 1.1rem;
+    background: var(--panel);
+    border: 1px solid var(--line-soft);
+    border-left: 3px solid var(--blood-dark);
+    color: var(--ink);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.12s ease;
+}
+
+.mode-card:hover {
+    background: var(--panel-2);
+    border-left-color: var(--blood-glow);
+}
+
+.mode-card:active {
+    transform: translateY(1px);
+}
+
+.mode-icon {
+    flex: 0 0 2.6rem;
+    height: 2.6rem;
+    display: grid;
+    place-items: center;
+    background: rgba(193, 18, 31, 0.12);
+    border: 1px solid var(--line);
+    color: var(--blood-glow);
+    font-size: 1.05rem;
+}
+
+.mode-body {
+    display: block;
+    min-width: 0;
+}
+
+.mode-name {
+    display: block;
+    font-family: "Black Ops One", sans-serif;
+    font-size: 1.02rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.2rem;
+}
+
+.mode-desc {
+    display: block;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+/* ---------------- Text inputs ---------------- */
+
+.text-input {
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    /* 16px stops iOS zooming the page on focus */
+    font-family: "Share Tech Mono", monospace;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.text-input::placeholder {
+    color: rgba(138, 134, 128, 0.55);
+    text-transform: none;
+    letter-spacing: 0.04em;
+}
+
+.text-input:focus {
+    outline: none;
+    border-color: var(--blood);
+    box-shadow: var(--glow);
+}
+
+.code-input {
+    font-family: "Black Ops One", sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.55em;
+    padding-left: calc(0.9rem + 0.55em);
+}
+
+.gate-error {
+    margin: 0.2rem 0 1rem;
+    padding: 0.6rem 0.8rem;
+    background: rgba(193, 18, 31, 0.1);
+    border: 1px solid var(--line);
+    color: var(--blood-glow);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+}
+
+/* ---------------- Reclaiming a seat ---------------- */
+
+.reclaim {
+    margin-top: 2rem;
+    padding-top: 1.4rem;
+    border-top: 1px dashed var(--line);
+}
+
+.reclaim-lead {
+    max-width: 34ch;
+    margin: 0.5rem auto 1rem;
+    color: var(--muted);
+    font-family: "Special Elite", monospace;
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+.seat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+}
+
+.seat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.7rem 0.9rem;
+    background: var(--panel);
+    border: 1px solid var(--line-soft);
+    border-left: 3px solid var(--blood);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.86rem;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.seat:hover:not(:disabled) {
+    background: var(--panel-2);
+    border-left-color: var(--blood-glow);
+}
+
+.seat-name {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.seat-state {
+    color: var(--amber);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+}
+
+.seat-live {
+    border-left-color: var(--line-soft);
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.seat-live .seat-state {
+    color: var(--muted);
+}
+
+/* ---------------- Signal pip ---------------- */
+
+.signal {
+    display: inline-block;
+    margin-bottom: 0.9rem;
+    color: var(--muted);
+    font-size: 0.64rem;
+    letter-spacing: 0.24em;
+}
+
+.signal::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    background: #4caf50;
+    vertical-align: middle;
+    animation: signalBreathe 2.8s ease-in-out infinite;
+}
+
+.signal-down {
+    color: var(--blood-glow);
+}
+
+.signal-down::before {
+    background: var(--blood-glow);
+    animation: blink 0.9s steps(2, start) infinite;
+}
+
+@keyframes signalBreathe {
+
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* ---------------- The room code plate ---------------- */
+
+.code-plate {
+    display: block;
+    width: 100%;
+    max-width: 20rem;
+    margin: 0 auto 1.8rem;
+    padding: 1.1rem 1rem 0.9rem;
+    background:
+        repeating-linear-gradient(45deg,
+            rgba(193, 18, 31, 0.05) 0 8px,
+            transparent 8px 16px),
+        var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.code-plate:hover {
+    border-color: var(--blood);
+    box-shadow: var(--glow);
+}
+
+.code-plate-label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+}
+
+.code-plate-value {
+    display: block;
+    margin: 0.35rem 0 0.3rem;
+    color: var(--blood-glow);
+    font-family: "Black Ops One", sans-serif;
+    font-size: clamp(2.4rem, 13vw, 3.4rem);
+    letter-spacing: 0.32em;
+    /* the tracking hangs off the right edge, so pull the block back */
+    padding-left: 0.32em;
+    text-shadow: var(--glow);
+}
+
+.code-plate-hint {
+    display: block;
+    color: var(--muted);
+    font-size: 0.64rem;
+    letter-spacing: 0.18em;
+}
+
+/* ---------------- Roster ---------------- */
+
+.roster {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0.6rem 0 1.8rem;
+}
+
+.roster-sm {
+    margin-bottom: 1.2rem;
+}
+
+.roster-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.8rem;
+    background: var(--panel);
+    border: 1px solid var(--line-soft);
+    border-left: 2px solid var(--line-soft);
+    text-align: left;
+    animation: rosterIn 0.34s ease both;
+}
+
+@keyframes rosterIn {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.roster-row.is-you {
+    border-left-color: var(--blood);
+}
+
+.roster-row.is-offline {
+    opacity: 0.45;
+}
+
+.roster-dot {
+    flex: 0 0 6px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4caf50;
+}
+
+.roster-row.is-offline .roster-dot {
+    background: var(--muted);
+}
+
+.roster-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.roster-tags {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 0.35rem;
+}
+
+.roster-tag {
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--line);
+    color: var(--blood-glow);
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+}
+
+.roster-tag.ok {
+    border-color: rgba(76, 175, 80, 0.4);
+    color: #7bc47f;
+}
+
+.roster-tag.dim {
+    border-color: var(--line-soft);
+    color: var(--muted);
+}
+
+/* ---------------- Waiting states ---------------- */
+
+.wait-line {
+    margin: 1.6rem 0 0.4rem;
+    color: var(--amber);
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    animation: pulseText 2.2s ease-in-out infinite;
+}
+
+.brief-room {
+    margin-top: 1.6rem;
+}
+
+.tally {
+    margin-bottom: 0.9rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+}
+
+/* ---------------- Reduced motion (room mode) ---------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .toast,
+    .roster-row,
+    .wait-line,
+    .signal::before,
+    .signal-down::before {
+        animation: none !important;
+        transition: opacity 0.2s ease !important;
+    }
+
+    .toast {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ============================================================
+   LANGUAGE, THE CALL TO VOTE, THE BALLOT, THE VERDICT
+   ============================================================ */
+
+/* ---------------- Language picker ---------------- */
+
+.lang-picker {
+    position: relative;
+    max-width: 20rem;
+    margin: 0 auto;
+}
+
+.lang-select {
+    width: 100%;
+    padding: 0.8rem 2.4rem 0.8rem 0.9rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: "Share Tech Mono", monospace;
+    font-size: 16px;
+    letter-spacing: 0.14em;
+    text-align: center;
+    text-transform: uppercase;
+    /* the caret below replaces the platform one, which cannot be themed */
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.lang-select:focus-visible {
+    outline: none;
+    border-color: var(--blood);
+    box-shadow: var(--glow);
+}
+
+.lang-select option {
+    background: var(--panel);
+    color: var(--ink);
+}
+
+.lang-caret {
+    position: absolute;
+    top: 50%;
+    right: 0.9rem;
+    transform: translateY(-50%);
+    color: var(--blood-glow);
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+/* ---------------- The call to vote ---------------- */
+
+.callvote {
+    margin-top: 1.6rem;
+    padding-top: 1.4rem;
+    border-top: 1px dashed var(--line);
+}
+
+.btn-call.is-on {
+    border-color: var(--amber);
+    color: var(--amber);
+    box-shadow: 0 0 8px rgba(224, 168, 46, 0.35);
+}
+
+.callvote-meter {
+    height: 3px;
+    margin: 0.9rem 0 0.6rem;
+    background: rgba(232, 230, 227, 0.08);
+    overflow: hidden;
+}
+
+.callvote-fill {
+    height: 100%;
+    width: 0;
+    background: var(--amber);
+    box-shadow: 0 0 8px rgba(224, 168, 46, 0.5);
+    transition: width 0.45s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.callvote-tally {
+    color: var(--amber);
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+}
+
+/* ---------------- The ballot ---------------- */
+
+.vote-lead {
+    max-width: 36ch;
+    margin: 0 auto 1.6rem;
+    color: var(--muted);
+    font-family: "Special Elite", monospace;
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+
+.ballot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.4rem;
+}
+
+.ballot-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--panel);
+    border: 1px solid var(--line-soft);
+    color: var(--ink);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+}
+
+.ballot-row:hover {
+    background: var(--panel-2);
+    border-color: var(--line);
+}
+
+.ballot-row:active {
+    transform: translateY(1px);
+}
+
+.ballot-row.is-offline .ballot-name {
+    opacity: 0.5;
+}
+
+/* The chosen row inverts rather than growing a rule: one unmistakable
+   answer to "which one did I pick", readable at arm's length across a
+   table. */
+.ballot-row.is-picked {
+    background: var(--blood-dark);
+    border-color: var(--blood-glow);
+    box-shadow: var(--glow);
+}
+
+.ballot-mark {
+    flex: 0 0 1.1rem;
+    height: 1.1rem;
+    border: 1px solid var(--line);
+    position: relative;
+}
+
+.ballot-row.is-picked .ballot-mark {
+    background: var(--blood-glow);
+    border-color: var(--blood-glow);
+}
+
+.ballot-row.is-picked .ballot-mark::after {
+    content: "";
+    position: absolute;
+    inset: 0.18rem 0.3rem 0.28rem;
+    border-right: 2px solid var(--bg);
+    border-bottom: 2px solid var(--bg);
+    transform: rotate(42deg);
+}
+
+.ballot-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.ballot-state {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+}
+
+.ballot-row.is-picked .ballot-state {
+    color: rgba(232, 230, 227, 0.75);
+}
+
+/* How many names this ballot still wants. Amber while it is an instruction,
+   and it steps back once the ballot is full: at that point the highlighted
+   rows say it better than a line of text can. */
+.vote-pick {
+    margin-bottom: 0.9rem;
+    color: var(--amber);
+    font-family: "Black Ops One", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+}
+
+.vote-pick.is-full {
+    color: var(--muted);
+    font-family: "Share Tech Mono", monospace;
+    letter-spacing: 0.16em;
+}
+
+/* Every seated ballot is in and the room is about to close. Loud enough to
+   read across a table, because it is the last chance to switch. */
+.vote-grace {
+    color: var(--amber);
+    font-family: "Black Ops One", sans-serif;
+    font-size: 0.86rem;
+    letter-spacing: 0.1em;
+}
+
+/* ---------------- The verdict ---------------- */
+
+/* The one authored moment in the room flow: the result lands like a stamp
+   hitting the file, then everything under it settles in behind it. */
+.verdict {
+    margin: 0.5rem 0 1.6rem;
+    padding: 1.4rem 1rem;
+    border: 2px solid currentColor;
+    animation: verdictSlam 0.5s cubic-bezier(0.2, 0.85, 0.3, 1.05) both;
+}
+
+.verdict.is-agents {
+    color: var(--amber);
+    background: rgba(224, 168, 46, 0.07);
+}
+
+.verdict.is-spies {
+    color: var(--blood-glow);
+    background: rgba(193, 18, 31, 0.09);
+}
+
+.verdict-title {
+    font-family: "Black Ops One", sans-serif;
+    font-size: clamp(1.8rem, 8vw, 2.7rem);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 14px currentColor;
+}
+
+.verdict-sub {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-family: "Special Elite", monospace;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+}
+
+@keyframes verdictSlam {
+    from {
+        opacity: 0;
+        transform: scale(1.35) rotate(-2.5deg);
+        filter: blur(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+        filter: blur(0);
+    }
+}
+
+/* What the ballot alone managed, under the verdict banner: the rule the
+   table plays by is "every spy in the top n or they got away", so the count
+   is the interesting half of the result. */
+.verdict-caught {
+    margin: -0.6rem 0 1.8rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+}
+
+.verdict-accused {
+    margin-bottom: 1.6rem;
+    color: var(--ink);
+    font-family: "Black Ops One", sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.1em;
+}
+
+/* ---------------- The host's call ---------------- */
+
+/* The one control that ends a round, and the only way the dossier opens. Two
+   answers side by side, coloured as the two sides rather than as primary and
+   secondary: neither is the safe default, which is the whole point of asking
+   a person instead of counting the ballots. */
+.hostcall {
+    background: var(--panel);
+    border: 1px dashed var(--line);
+    padding: 1.1rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.hostcall .btn-row {
+    margin: 0.8rem 0 0.7rem;
+}
+
+/* Amber and blood, the two colours the verdict banner already uses for the
+   two sides, so the button you press and the banner it produces match. */
+.btn-agents {
+    border-color: var(--amber);
+    color: var(--amber);
+}
+
+.btn-agents:hover,
+.btn-agents:active {
+    background: var(--amber);
+    color: #16110a;
+    border-color: var(--amber);
+}
+
+.btn-spies {
+    border-color: var(--blood);
+    color: var(--blood-glow);
+}
+
+.btn-spies:hover,
+.btn-spies:active {
+    background: var(--blood);
+    color: #fff;
+    border-color: var(--blood);
+}
+
+/* Which way it was called, kept on screen so a host who tapped the wrong one
+   can see that and put it right. */
+.btn-agents.is-called {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #16110a;
+}
+
+.btn-spies.is-called {
+    background: var(--blood);
+    border-color: var(--blood);
+    color: #fff;
+}
+
+/* ---------------- The ballot tally ---------------- */
+
+.tally-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.tally-row {
+    display: grid;
+    grid-template-columns: minmax(4.5rem, 7rem) 1fr auto;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.tally-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tally-row.is-spy .tally-name {
+    color: var(--blood-glow);
+}
+
+.tally-bar {
+    height: 0.85rem;
+    background: rgba(232, 230, 227, 0.06);
+    overflow: hidden;
+}
+
+/* Deliberately NOT animated. The debrief keeps polling, so an entry animation
+   here restarted every couple of seconds under the reader's eyes. The verdict
+   banner above is the one authored moment on this screen; the graph is a
+   figure to read, and it stays still. */
+.tally-fill {
+    display: block;
+    height: 100%;
+    background: rgba(232, 230, 227, 0.22);
+}
+
+.tally-row.is-accused .tally-fill {
+    background: var(--blood);
+}
+
+.tally-count {
+    color: var(--ink);
+    font-family: "Black Ops One", sans-serif;
+    font-size: 0.86rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .verdict,
+    .callvote-fill {
+        animation: none !important;
+        transition: none !important;
     }
 }

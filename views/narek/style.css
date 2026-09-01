@@ -1,0 +1,569 @@
+/* ============================================================
+   Narek: the house poster press applied to a stenographic pad.
+   Layout and colour live in Tailwind classes (index.html).
+   This file holds only what Tailwind can't cleanly express:
+   the ruled sheet and its margin line, the transport key's
+   mechanics, the proofreader's marks, keyframes and the
+   reduced-motion override.
+   ============================================================ */
+
+/* base-style.css is deliberately not loaded (its navy gradient would beat any
+   Tailwind bg-*), but reassert the ground so nothing can repaint it. */
+body {
+    background: #f6f2ea;
+}
+
+/* `hidden` and `flex` are both display utilities, so which one wins depends on
+   Tailwind's stylesheet order rather than the class attribute. Be explicit. */
+#counters:not(.hidden) {
+    display: flex;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ---- Page-load reveal (house entrance) ---- */
+.reveal {
+    opacity: 0;
+    animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.reveal-1 { animation-delay: 0.04s; }
+.reveal-2 { animation-delay: 0.13s; }
+.reveal-3 { animation-delay: 0.22s; }
+.reveal-4 { animation-delay: 0.34s; }
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   The console
+   ============================================================ */
+
+/* Sticky over a paper wash, so the transport key stays reachable however far
+   down a long record you have scrolled. */
+.console {
+    background: rgba(246, 242, 234, 0.93);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.console::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: rgba(28, 26, 23, 0.12);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.console.is-stuck::after {
+    opacity: 1;
+}
+
+/* ---- The transport key ----
+   Flat at rest, per the house rule. State is a hard offset, never a blur. */
+.key {
+    transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.14s cubic-bezier(0.22, 1, 0.36, 1),
+                background-color 0.2s ease;
+}
+
+.key:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 4px 4px 0 var(--acc);
+}
+
+.key:focus-visible {
+    outline: none;
+    transform: translate(-3px, -3px);
+    box-shadow: 4px 4px 0 var(--acc), 0 0 0 3px rgba(212, 69, 31, 0.3);
+}
+
+.key:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+}
+
+.key-glyph {
+    transition: border-radius 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+/* Recording: the key itself goes hot and the glyph becomes a stop block. */
+.key.is-live {
+    background: var(--acc);
+}
+
+.key.is-live .key-glyph {
+    background: #f6f2ea;
+    transform: scale(0.82);
+}
+
+.key.is-live::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    box-shadow: 0 0 0 0 rgba(212, 69, 31, 0.55);
+    animation: keyring 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    pointer-events: none;
+}
+
+@keyframes keyring {
+    from { box-shadow: 0 0 0 0 rgba(212, 69, 31, 0.5); }
+    to   { box-shadow: 0 0 0 14px rgba(212, 69, 31, 0); }
+}
+
+.key:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ---- The chart trace ----
+   Absolutely positioned on purpose. A canvas in flow takes its layout size
+   from its width/height attributes, which sizeTrace() writes from the measured
+   box, so an in-flow canvas grows itself on every ResizeObserver tick. */
+#trace {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* ============================================================
+   The record sheet
+   ============================================================ */
+
+.sheet-ruled {
+    --gutter: 3.3rem;
+    background-color: #fffdf8;
+    /* The pad's margin rule: one continuous clay hairline down the gutter,
+       painted as a background so it runs through every row and the empty
+       state alike. */
+    background-image: linear-gradient(
+        to right,
+        transparent calc(var(--gutter) - 1px),
+        rgba(212, 69, 31, 0.28) calc(var(--gutter) - 1px),
+        rgba(212, 69, 31, 0.28) var(--gutter),
+        transparent var(--gutter)
+    );
+    border: 1px solid rgba(28, 26, 23, 0.12);
+    border-top: none;
+}
+
+@media (min-width: 640px) {
+    .sheet-ruled { --gutter: 4.6rem; }
+}
+
+.seg-row {
+    display: grid;
+    grid-template-columns: var(--gutter) minmax(0, 1fr);
+    align-items: start;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.09);
+}
+
+.seg-row:last-child {
+    border-bottom: none;
+}
+
+.seg-time {
+    padding: 0.95rem 0.7rem 0.95rem 0;
+    text-align: right;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: #a49a8a;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s ease;
+}
+
+.seg-text {
+    padding: 0.85rem 1rem 0.9rem 1.1rem;
+    font-size: 1rem;
+    line-height: 1.7;
+    max-width: 72ch;
+    border-radius: 2px;
+    word-break: break-word;
+}
+
+.seg-text:focus {
+    outline: none;
+    background: #f6f2ea;
+    box-shadow: inset 0 0 0 1px rgba(212, 69, 31, 0.4);
+}
+
+/* A finished segment lands like a struck key: the authored moment. */
+.seg-row.is-new {
+    animation: land 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.seg-row.is-new .seg-time {
+    animation: timeflash 1.1s ease-out both;
+}
+
+@keyframes land {
+    from { opacity: 0; transform: translateY(-7px); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+
+@keyframes timeflash {
+    0%, 35% { color: #d4451f; }
+    100%    { color: #a49a8a; }
+}
+
+/* ---- Pending: the segment is in flight ---- */
+.seg-row.is-pending .seg-text {
+    color: #a49a8a;
+}
+
+.pending-bar {
+    display: block;
+    height: 0.62rem;
+    border-radius: 2px;
+    background: linear-gradient(90deg,
+        rgba(28, 26, 23, 0.07) 0%,
+        rgba(212, 69, 31, 0.16) 50%,
+        rgba(28, 26, 23, 0.07) 100%);
+    background-size: 220% 100%;
+    animation: sweep 1.15s ease-in-out infinite;
+}
+
+.pending-bar + .pending-bar {
+    margin-top: 0.5rem;
+    width: 62%;
+}
+
+@keyframes sweep {
+    from { background-position: 120% 0; }
+    to   { background-position: -120% 0; }
+}
+
+/* ---- Failed: the record says so rather than losing the line ---- */
+.seg-row.is-failed .seg-time { color: #d4451f; }
+
+.seg-retry {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #d4451f;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    margin-left: 0.7rem;
+}
+
+.seg-retry:hover { color: #1c1a17; }
+
+/* ============================================================
+   Mode toggle: dictation / interpreter
+   ============================================================ */
+
+.seg {
+    display: inline-flex;
+    border: 1px solid rgba(28, 26, 23, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.seg__item {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #6b6256;
+    text-decoration: none;
+    padding: 0.5rem 0.9rem;
+    transition: color 0.16s ease, background-color 0.16s ease;
+}
+
+.seg__item + .seg__item {
+    border-left: 1px solid rgba(28, 26, 23, 0.2);
+}
+
+.seg__item:hover {
+    color: #d4451f;
+    background: rgba(212, 69, 31, 0.07);
+}
+
+.seg__item:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px #d4451f;
+}
+
+.seg__item.is-active {
+    background: #1c1a17;
+    color: #f6f2ea;
+}
+
+/* ============================================================
+   The interpreter's log
+   ============================================================ */
+
+/* The rule between utterances is heavier than the one inside an utterance,
+   so a stacked pair on a phone still reads as one row and not as two. */
+.tr-row {
+    display: grid;
+    grid-template-columns: var(--gutter) minmax(0, 1fr);
+    align-items: stretch;
+    border-bottom: 1px solid rgba(28, 26, 23, 0.16);
+}
+
+.tr-row:last-child {
+    border-bottom: none;
+}
+
+.tr-row .seg-time {
+    align-self: start;
+}
+
+.tr-pair {
+    display: grid;
+    min-width: 0;
+}
+
+/* Heard on the left, translated on the right, divided by a hairline. Below
+   700px the pair stacks and the divider becomes the rule between them. */
+@media (min-width: 700px) {
+    .tr-pair {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .tr-out {
+        border-left: 1px solid rgba(28, 26, 23, 0.09);
+    }
+}
+
+@media (max-width: 699px) {
+    /* A fold, not a new record. */
+    .tr-src + .tr-out {
+        border-top: 1px dashed rgba(28, 26, 23, 0.14);
+    }
+
+    .tr-src {
+        padding-bottom: 0.7rem;
+    }
+
+    .tr-out {
+        padding-top: 0.8rem;
+    }
+}
+
+.tr-cell {
+    padding: 0.85rem 1.1rem 0.95rem;
+    min-width: 0;
+}
+
+.tr-text {
+    margin-top: 0.45rem;
+    word-break: break-word;
+}
+
+/* What was heard is evidence; the translation is the answer. */
+.tr-src .tr-text {
+    color: #6b6256;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.tr-out .tr-text {
+    color: #1c1a17;
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+/* The house badge: ink fill, paper text. The source chip is the quiet one,
+   so the pair reads as one direction rather than as two competing accents. */
+.tr-chip {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1;
+    padding: 0.3rem 0.42rem 0.28rem;
+    border-radius: 2px;
+    background: #1c1a17;
+    color: #f6f2ea;
+}
+
+.tr-chip--muted {
+    background: transparent;
+    color: #a49a8a;
+    box-shadow: inset 0 0 0 1px rgba(28, 26, 23, 0.18);
+}
+
+.tr-row.is-new {
+    animation: land 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.tr-row.is-new .seg-time {
+    animation: timeflash 1.1s ease-out both;
+}
+
+.tr-row.is-pending .tr-cell {
+    padding-top: 1rem;
+    padding-bottom: 1.05rem;
+}
+
+.tr-row.is-failed .seg-time {
+    color: #d4451f;
+}
+
+/* ============================================================
+   Proofreader's marks
+   ============================================================ */
+
+.mark-del {
+    color: #d4451f;
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-skip-ink: none;
+}
+
+.mark-ins {
+    color: #2f5b53;
+    background: rgba(47, 91, 83, 0.09);
+    box-shadow: inset 0 -2px 0 #2f5b53;
+    padding: 0 0.08em;
+}
+
+/* ============================================================
+   Inputs, buttons, toast
+   ============================================================ */
+
+.field {
+    border: 1px solid rgba(28, 26, 23, 0.12);
+    transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.field::placeholder { color: rgba(28, 26, 23, 0.32); }
+
+.field:focus {
+    outline: none;
+    border-color: #d4451f;
+    background: #fffdf8;
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.16);
+}
+
+.press,
+.press-ghost {
+    transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.14s cubic-bezier(0.22, 1, 0.36, 1),
+                color 0.16s ease, border-color 0.16s ease;
+}
+
+.press:hover:not(:disabled),
+.press:focus-visible:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--acc);
+    outline: none;
+}
+
+.press-ghost:hover:not(:disabled),
+.press-ghost:focus-visible:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--acc);
+    border-color: #1c1a17;
+    color: #1c1a17;
+    outline: none;
+}
+
+.press:active:not(:disabled),
+.press-ghost:active:not(:disabled) {
+    transform: translate(0, 0);
+    box-shadow: none;
+}
+
+/* ---- Vocabulary disclosure ---- */
+#vocabPanel summary::-webkit-details-marker { display: none; }
+
+.vocab-caret {
+    display: inline-block;
+    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    font-size: 1.15em;
+    line-height: 1;
+}
+
+#vocabPanel[open] .vocab-caret { transform: rotate(90deg); }
+
+/* ---- Toast ---- */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.6rem;
+    transform: translate(-50%, 1.2rem);
+    background: #1c1a17;
+    color: #f6f2ea;
+    padding: 0.75rem 1.3rem;
+    border-radius: 2px;
+    box-shadow: 4px 4px 0 #d4451f;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 60;
+    max-width: calc(100vw - 2rem);
+}
+
+.toast.is-shown {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .seg-row.is-new,
+    .seg-row.is-new .seg-time,
+    .tr-row.is-new,
+    .tr-row.is-new .seg-time,
+    .pending-bar,
+    .key.is-live::before {
+        animation: none !important;
+    }
+
+    .reveal { opacity: 1; }
+    .seg-time { color: #a49a8a; }
+
+    .pending-bar {
+        background: rgba(28, 26, 23, 0.09);
+    }
+
+    .key,
+    .press,
+    .press-ghost,
+    .toast,
+    .vocab-caret,
+    .seg__item,
+    .console::after {
+        transition-duration: 0.01ms;
+    }
+
+    .key:hover,
+    .key:focus-visible,
+    .press:hover:not(:disabled),
+    .press-ghost:hover:not(:disabled) {
+        transform: none;
+    }
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://domenhribernik.com/components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share | A QR Code for Any Page on This Site</title>
+    <meta name="description" content="Put share. in front of any address on this site and get a page built to be held up to a phone: what the project is, and a QR code big enough to scan across a room.">
+    <link rel="canonical" href="https://domenhribernik.com/views/share/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Share, a QR code for any page on this site">
+    <meta property="og:description" content="Put share. in front of any address on this site and get a QR code big enough to scan across a room, drawn by a hand-written encoder.">
+    <meta property="og:url" content="https://domenhribernik.com/views/share/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Absolute, not ../../: on the share subdomain this directory is the
+         document root, so a relative path climbing out of it resolves to
+         nothing. Same reason there is no navbar and no shared component here. -->
+    <link rel="icon" type="image/x-icon" href="https://domenhribernik.com/assets/favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- No Tailwind CDN. A share link is opened cold, on a phone, on whatever
+         signal the room has, and this page is one card and one square: the JIT
+         compiler would be the largest thing on it. Same call as
+         views/flowers/share. -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="masthead">
+        <p class="eyebrow">Share</p>
+        <a class="masthead__host" id="masthead-host" href="https://domenhribernik.com/">domenhribernik.com</a>
+    </header>
+
+    <main class="sheet">
+        <!-- The static copy below is the landing state and is what a crawler
+             or a visitor without JS sees. script.js replaces it in place when
+             the address names a page. -->
+        <article class="card" id="card">
+            <p class="card__band" aria-hidden="true"></p>
+            <div class="card__inner">
+                <i class="card__icon fas fa-qrcode" id="card-icon" aria-hidden="true"></i>
+                <p class="card__kicker" id="card-kicker">This site</p>
+                <h1 class="card__title" id="card-title">Share</h1>
+                <p class="card__deck" id="card-deck">
+                    Put <b>share.</b> in front of any address on this site and this page draws
+                    the code for it. Point a phone at the square, or hand over the link.
+                </p>
+
+                <figure class="qr" id="qr-figure">
+                    <div class="qr__frame">
+                        <svg class="qr__svg" id="qr-svg" viewBox="0 0 33 33" role="img"
+                            aria-label="QR code" shape-rendering="crispEdges">
+                            <rect width="33" height="33" fill="var(--card)"></rect>
+                            <g transform="translate(4 4)">
+                                <path id="qr-path" d="" fill="var(--ink)"></path>
+                            </g>
+                        </svg>
+                    </div>
+                    <figcaption class="qr__url" id="qr-url">domenhribernik.com</figcaption>
+                </figure>
+
+                <div class="actions">
+                    <a class="btn btn--primary" id="action-open" href="https://domenhribernik.com/">
+                        Open page
+                    </a>
+                    <button class="btn btn--ghost" id="action-copy" type="button">Copy link</button>
+                    <button class="btn btn--ghost" id="action-share" type="button" hidden>Share</button>
+                    <button class="btn btn--ghost" id="action-save" type="button">Save QR</button>
+                </div>
+                <p class="actions__status" id="action-status" role="status" aria-live="polite"></p>
+            </div>
+        </article>
+
+        <section class="index" id="index" hidden>
+            <div class="section-head">
+                <span class="section-head__label">Every page</span>
+                <span class="section-head__rule" aria-hidden="true"></span>
+                <span class="section-head__count" id="index-count"></span>
+            </div>
+            <ol class="index__list" id="index-list"></ol>
+        </section>
+    </main>
+
+    <footer class="foot">
+        <p class="foot__rule" aria-hidden="true"></p>
+        <p class="foot__line">Put share. in front of any url on this site</p>
+        <p class="foot__addr" id="foot-addr"></p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,544 @@
+/* The share page. Mobile first: this is opened on a phone, held up to another
+   phone, and closed. Everything above the fold on a 360px screen is the title,
+   the code and the button.
+
+   Hand written rather than Tailwind, and self-contained rather than importing
+   base-style.css, because on the share subdomain this directory is the document
+   root. Nothing here may reach ../../. The tokens below are DESIGN.md's, copied
+   deliberately: one small duplicated palette is the price of the subdomain. */
+
+:root {
+    --paper: #f6f2ea;
+    --paper-2: #efe9dd;
+    --card: #fffdf8;
+    --ink: #1c1a17;
+    --stone: #6b6256;
+    --faint: #a49a8a;
+    --hairline: rgba(28, 26, 23, 0.12);
+    --clay: #d4451f;
+    --cobalt: #1f35e0;
+
+    /* Set per card by script.js from the project's own gradient. */
+    --acc: var(--clay);
+    --band: linear-gradient(90deg, var(--paper-2) 0%, var(--paper-2) 100%);
+
+    --display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --body: 'IBM Plex Sans', system-ui, sans-serif;
+    --mono: 'Space Mono', ui-monospace, monospace;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Author rules here set display on elements that script.js also toggles with
+   the hidden attribute, and an author display beats the UA stylesheet's
+   [hidden] at equal specificity. Without this the "no such address" state
+   still draws an empty QR frame. */
+[hidden] {
+    display: none !important;
+}
+
+body {
+    margin: 0;
+    /* The one gradient-free ground the whole system sits on. */
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 1.5rem 1.25rem 1.25rem;
+    gap: 1.6rem;
+}
+
+/* ---------------------------------------------------------------- masthead */
+
+.masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.eyebrow {
+    margin: 0;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--acc);
+}
+
+.masthead__host {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--stone);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+}
+
+.masthead__host:hover,
+.masthead__host:focus-visible {
+    color: var(--ink);
+    border-bottom-color: var(--acc);
+}
+
+/* -------------------------------------------------------------------- card */
+
+.sheet {
+    flex: 1;
+    width: 100%;
+    max-width: 34rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* The project's colour, and the only place on the page it appears as a
+   surface. Pulled most of the way to paper by logic.js so it reads as the
+   stock being tinted rather than a second background. */
+.card__band {
+    margin: 0;
+    height: 6px;
+    background: var(--band);
+}
+
+.card__inner {
+    padding: 1.6rem 1.25rem 1.25rem;
+}
+
+.card__icon {
+    display: block;
+    font-size: 1.75rem;
+    line-height: 1;
+    color: var(--acc);
+}
+
+.card__kicker {
+    margin: 0.9rem 0 0;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.62rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--stone);
+}
+
+.card__title {
+    margin: 0.35rem 0 0;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(1.9rem, 8vw, 2.8rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    text-wrap: balance;
+}
+
+.card__deck {
+    margin: 0.9rem 0 0;
+    max-width: 62ch;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--stone);
+}
+
+.card__deck b {
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.card__deck:empty {
+    display: none;
+}
+
+/* ---------------------------------------------------------------------- qr */
+
+.qr {
+    margin: 1.6rem 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.qr__frame {
+    width: min(72vw, 300px);
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    background: var(--card);
+}
+
+.qr__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.qr__url {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--stone);
+    text-align: center;
+    /* A long blog path has to wrap somewhere, and mid-word is fine on an
+       address that is there to be read, not retyped. */
+    overflow-wrap: anywhere;
+    max-width: 100%;
+}
+
+/* ----------------------------------------------------------------- actions */
+
+.actions {
+    margin-top: 1.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.btn {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease,
+        color 0.12s ease, border-color 0.12s ease;
+}
+
+.btn--primary {
+    flex: 1 1 100%;
+    text-align: center;
+    padding: 0.9rem 1.6rem;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--acc);
+}
+
+.btn--primary:hover,
+.btn--primary:focus-visible {
+    background: var(--acc);
+    border-color: var(--acc);
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0 var(--ink);
+}
+
+.btn--primary:active {
+    transform: translate(0, 0);
+    box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn--ghost {
+    flex: 1 1 auto;
+    padding: 0.6rem 0.9rem;
+    background: transparent;
+    color: var(--stone);
+    border: 1px solid var(--hairline);
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+}
+
+.btn--ghost:hover,
+.btn--ghost:focus-visible {
+    color: var(--acc);
+    border-color: var(--acc);
+}
+
+.btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.18), 4px 4px 0 var(--acc);
+}
+
+.btn--ghost:focus-visible {
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.18);
+}
+
+.actions__status {
+    margin: 0.75rem 0 0;
+    min-height: 1rem;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--acc);
+}
+
+/* ------------------------------------------------------------------- index */
+
+/* Its own accent, per the one-accent-per-section rule: the card runs the
+   project's colour, the index runs cobalt. */
+.index {
+    --acc: var(--cobalt);
+}
+
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
+.section-head__label {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.62rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--acc);
+}
+
+.section-head__rule {
+    flex: 1;
+    height: 2px;
+    background: var(--ink);
+}
+
+.section-head__count {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    color: var(--stone);
+}
+
+.index__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--hairline);
+}
+
+.row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.25rem 1fr 1.5rem;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.row__ord {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    color: var(--stone);
+}
+
+.row__title {
+    display: block;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    /* Declared transparent at rest so the offset has something to grow from
+       rather than appearing out of nothing. */
+    text-shadow: 0.06em 0.06em 0 transparent;
+    transition: text-shadow 0.12s ease, color 0.12s ease;
+}
+
+.row__path {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--faint);
+    overflow-wrap: anywhere;
+}
+
+.row__arrow {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--faint);
+    justify-self: end;
+    transition: transform 0.12s ease, color 0.12s ease;
+}
+
+/* The whole row is one tap target, so nothing here depends on hover. */
+.row__cover {
+    position: absolute;
+    inset: 0;
+}
+
+.row:hover .row__title,
+.row:focus-within .row__title {
+    text-shadow: 0.06em 0.06em 0 var(--acc);
+}
+
+.row:hover .row__ord,
+.row:focus-within .row__ord,
+.row:hover .row__arrow,
+.row:focus-within .row__arrow {
+    color: var(--acc);
+}
+
+.row:hover .row__arrow,
+.row:focus-within .row__arrow {
+    transform: translate(4px, -4px);
+}
+
+.row__cover:focus-visible {
+    outline: 2px solid var(--acc);
+    outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------- foot */
+
+.foot {
+    width: 100%;
+    max-width: 34rem;
+    margin: 0 auto;
+    padding-top: 1rem;
+}
+
+/* The thick-over-thin double rule that closes a section. */
+.foot__rule {
+    margin: 0 0 0.6rem;
+    height: 3px;
+    background: var(--ink);
+    border-bottom: 1px solid var(--hairline);
+    box-shadow: 0 4px 0 -3px var(--hairline);
+}
+
+.foot__line {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+
+.foot__addr {
+    margin: 0.4rem 0 0;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--stone);
+    overflow-wrap: anywhere;
+}
+
+.foot__addr:empty {
+    display: none;
+}
+
+/* ------------------------------------------------------------- wider screens */
+
+@media (min-width: 640px) {
+    body {
+        padding: 2.5rem;
+    }
+
+    .card__inner {
+        padding: 2rem 1.75rem 1.75rem;
+    }
+
+    .btn--primary {
+        flex: 0 0 auto;
+    }
+
+    /* One left edge for the whole card once there is room for one. On a phone
+       the code nearly fills the card, so centring it there reads as fitted
+       rather than as a stray indent. */
+    .qr {
+        align-items: flex-start;
+    }
+
+    .qr__frame {
+        width: 320px;
+    }
+
+    .qr__url {
+        text-align: left;
+    }
+}
+
+/* --------------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .btn,
+    .row__title,
+    .row__arrow {
+        transition: none;
+    }
+
+    .btn--primary:hover,
+    .btn--primary:focus-visible,
+    .row:hover .row__arrow,
+    .row:focus-within .row__arrow {
+        transform: none;
+    }
+}
+
+/* ------------------------------------------------------------------- print */
+
+/* Printing this page means one thing: a code to pin on a wall. Keep the name,
+   the square and the address, drop everything that is a control. */
+@media print {
+
+    .masthead,
+    .actions,
+    .actions__status,
+    .index,
+    .foot,
+    .card__icon,
+    .card__kicker,
+    .card__deck {
+        display: none !important;
+    }
+
+    body {
+        padding: 0;
+        background: #fff;
+    }
+
+    .card {
+        border: none;
+    }
+
+    .card__band {
+        display: none;
+    }
+
+    .qr__frame {
+        width: 90mm;
+        border: none;
+    }
+
+    .qr__url {
+        font-size: 9pt;
+        color: #000;
+    }
+}

@@ -1,0 +1,7 @@
+# Served as share.domenhribernik.com/robots.txt when this directory is the
+# subdomain's document root. Every address on that host renders the same page
+# with a different QR code in it, which is a share tool and not a site: keeping
+# it out of the index also keeps it from competing with the pages it points at.
+# The canonical, indexable copy is https://domenhribernik.com/views/share/.
+User-agent: *
+Disallow: /

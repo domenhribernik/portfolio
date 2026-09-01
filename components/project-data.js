@@ -89,11 +89,21 @@ export const projects = {
     },
     iconClass: "fas fa-music",
   },
+  seam: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #1f8a86 0%, #e0a11c 100%)",
+    title: "Seam",
+    description: "Connect four, except the ground keeps disappearing. Play into a column that is already full and the deepest row of the whole board is cut away, so every piece drops a row and the line you were building may be gone. You get three of those, and never two turns running.",
+    links: {
+      visitSite: "views/seam",
+    },
+    iconClass: "fas fa-layer-group",
+  },
   spyGame: {
     category: "passion",
     gradient: "linear-gradient(45deg, #b24592 0%, #f15f79 100%)",
     title: "Spy Game",
-    description: "Everyone knows the location except one person. That person is the spy. Ask the right questions and you might just expose them before they figure out where they are.",
+    description: "Everyone knows the location except one person. That person is the spy. Pass one phone round the table, or open a room so everyone gets their own screen, votes in secret and finds out together who was lying. Plays in English or Slovenian.",
     links: {
       visitSite: "views/spy",
     },
@@ -238,5 +248,15 @@ export const projects = {
       visitSite: "views/trails",
     },
     iconClass: "fas fa-plane-up",
+  },
+  share: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #1f35e0 0%, #d4451f 100%)",
+    title: "Share",
+    description: "Put share. in front of any address on this site and you get a page built to be pointed at a phone: what the project is, what it does, and a QR code big enough to scan across a room. The encoder is written by hand, so the code is drawn without loading anyone else's script.",
+    links: {
+      visitSite: "views/share",
+    },
+    iconClass: "fas fa-qrcode",
   }
 };

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Seam | Connect Four Over Ground That Keeps Giving Way</title>
+    <meta name="description" content="Connect four in a line, but play into a full column and the bottom row of the whole board is cut away. Three of those each, never twice running. Play a friend over a link.">
+    <link rel="canonical" href="https://domenhribernik.com/views/seam/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Seam">
+    <meta property="og:description" content="Connect four in a line, but play into a full column and the bottom row of the whole board is cut away. Three of those each, never twice running. Play a friend over a link.">
+    <meta property="og:url" content="https://domenhribernik.com/views/seam/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#e6e1d3">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Game",
+      "name": "Seam",
+      "url": "https://domenhribernik.com/views/seam/",
+      "genre": "Abstract strategy",
+      "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2 },
+      "inLanguage": ["en", "sl"],
+      "author": { "@type": "Person", "name": "Domen Hribernik", "url": "https://domenhribernik.com/" },
+      "description": "A connect-four variant played as a geological section. Cutting into a full shaft draws the bottom: the deepest bed of the whole board is cut away and every piece settles one row down."
+    }
+    </script>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Martian+Mono:wght@400..700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        linen: '#e6e1d3',
+                        'linen-2': '#dcd5c3',
+                        graphite: '#221f1c',
+                        slate: '#655e51',
+                        trench: '#1a1712',
+                        triassic: '#7b4ea8',
+                        jurassic: '#1f8a86',
+                        olivine: '#8bbf3f',
+                        devonian: '#b5452a',
+                        carbon: '#4a6b8a',
+                        ochre: '#e0a11c',
+                        'ochre-ink': '#7d5406',
+                        azurite: '#1a5fb4',
+                        fault: '#9e391f',
+                    },
+                    fontFamily: {
+                        plate: ['Archivo', 'sans-serif'],
+                        mono: ['"Martian Mono"', 'monospace'],
+                    },
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="exit" id="back-link" href="../../" data-i18n="chrome.exit">EXIT</a>
+<p class="signal" id="signal" hidden><span class="signal__pip" aria-hidden="true"></span><span id="signalText"></span></p>
+
+<main class="plate">
+
+    <header class="titleblock">
+        <h1 class="wordmark" data-i18n="app.name">SEAM</h1>
+        <p class="deck" data-i18n="app.tagline">FOUR IN A LINE, OVER GROUND THAT KEEPS GIVING WAY</p>
+        <p class="titleblock__meta"><span id="plateMeta">7 SHAFTS &middot; 6 BEDS &middot; 1:100</span></p>
+    </header>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  Choosing how to play                                       -->
+    <!-- ---------------------------------------------------------- -->
+    <section class="screen" id="bootScreen">
+        <ul class="doors">
+            <li class="door">
+                <button class="door__hit" type="button" id="doorRoom">
+                    <span class="door__swatch door__swatch--jurassic" aria-hidden="true"></span>
+                    <span class="door__text">
+                        <span class="door__name" data-i18n="boot.room">SHARE A LINK</span>
+                        <span class="door__hint" data-i18n="boot.roomHint">A PLATE EACH</span>
+                    </span>
+                    <span class="door__arrow" aria-hidden="true">&rarr;</span>
+                </button>
+            </li>
+            <li class="door">
+                <button class="door__hit" type="button" id="doorJoin">
+                    <span class="door__swatch door__swatch--olivine" aria-hidden="true"></span>
+                    <span class="door__text">
+                        <span class="door__name" data-i18n="boot.join">TYPE A CODE</span>
+                        <span class="door__hint" data-i18n="boot.joinHint">TAKE THE SECOND SEAT</span>
+                    </span>
+                    <span class="door__arrow" aria-hidden="true">&rarr;</span>
+                </button>
+            </li>
+            <li class="door">
+                <button class="door__hit" type="button" id="doorLocal">
+                    <span class="door__swatch door__swatch--devonian" aria-hidden="true"></span>
+                    <span class="door__text">
+                        <span class="door__name" data-i18n="boot.local">PASS THE PLATE</span>
+                        <span class="door__hint" data-i18n="boot.localHint">TWO SURVEYORS, ONE DEVICE</span>
+                    </span>
+                    <span class="door__arrow" aria-hidden="true">&rarr;</span>
+                </button>
+            </li>
+            <li class="door">
+                <button class="door__hit" type="button" id="doorSolo">
+                    <span class="door__swatch door__swatch--triassic" aria-hidden="true"></span>
+                    <span class="door__text">
+                        <span class="door__name" data-i18n="boot.solo">WORK ALONE</span>
+                        <span class="door__hint" data-i18n="boot.soloHint">AGAINST THE MACHINE</span>
+                    </span>
+                    <span class="door__arrow" aria-hidden="true">&rarr;</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="boot__foot">
+            <button class="btn btn--ghost" type="button" id="doorRules" data-i18n="boot.rules">HOW IT WORKS</button>
+        </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  The rule that matters                                      -->
+    <!-- ---------------------------------------------------------- -->
+    <section class="screen" id="rulesScreen">
+        <h2 class="screen__title" data-i18n="rules.title">THE RULE THAT MATTERS</h2>
+        <ol class="legend">
+            <li class="legend__row">
+                <span class="legend__key legend__key--seam" aria-hidden="true"></span>
+                <p data-i18n="rules.one">Cut four cores into a line and you have struck a seam.</p>
+            </li>
+            <li class="legend__row">
+                <span class="legend__key legend__key--cave" aria-hidden="true"></span>
+                <p data-i18n="rules.two">Cut into a shaft that is already full and the bottom is drawn.</p>
+            </li>
+            <li class="legend__row">
+                <span class="legend__key legend__key--permit" aria-hidden="true"></span>
+                <p data-i18n="rules.three">Three permits each, and never on two of your own cuts running.</p>
+            </li>
+        </ol>
+        <button class="btn btn--ghost" type="button" data-close-rules data-i18n="rules.close">BACK</button>
+    </section>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  Naming yourself, and finding a section                     -->
+    <!-- ---------------------------------------------------------- -->
+    <section class="screen" id="gateScreen">
+        <h2 class="screen__title" id="gateTitle" data-i18n="gate.openTitle">OPEN A SECTION</h2>
+
+        <form class="fields" id="gateForm" novalidate>
+            <label class="field">
+                <span class="field__label" data-i18n="gate.nameLabel">YOUR NAME</span>
+                <input class="field__input" id="gateName" type="text" maxlength="20" autocomplete="nickname"
+                       spellcheck="false" data-i18n-placeholder="gate.namePlaceholder" placeholder="SURVEYOR">
+            </label>
+
+            <label class="field" id="gateCodeField">
+                <span class="field__label" data-i18n="gate.codeLabel">SECTION CODE</span>
+                <input class="field__input field__input--code" id="gateCode" type="text" maxlength="4"
+                       autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX">
+            </label>
+
+            <fieldset class="field" id="gateLangField">
+                <legend class="field__label" data-i18n="gate.langLabel">LANGUAGE</legend>
+                <div class="langs" id="gateLangs"></div>
+            </fieldset>
+
+            <p class="field__error" id="gateError" role="alert" hidden></p>
+
+            <button class="btn btn--primary" type="submit" id="gateSubmit" data-i18n="gate.open">OPEN IT</button>
+            <button class="btn btn--ghost" type="button" data-back-to-boot data-i18n="gate.back">BACK</button>
+        </form>
+    </section>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  Waiting for the second surveyor                            -->
+    <!-- ---------------------------------------------------------- -->
+    <section class="screen" id="lobbyScreen">
+        <h2 class="screen__title" data-i18n="lobby.title">WAITING FOR A SECOND SURVEYOR</h2>
+
+        <button class="codeplate" type="button" id="codePlate">
+            <span class="codeplate__label" data-i18n="lobby.codeLabel">SECTION</span>
+            <span class="codeplate__code" id="codeValue">----</span>
+            <span class="codeplate__hint" id="codeHint" data-i18n="lobby.tapToCopy">[ TAP TO COPY THE LINK ]</span>
+        </button>
+
+        <p class="note" data-i18n="lobby.hint">SEND IT TO WHOEVER YOU ARE PLAYING.</p>
+
+        <ul class="roster" id="lobbyRoster"></ul>
+
+        <button class="btn btn--ghost" type="button" id="lobbyLeave" data-i18n="lobby.leave">LEAVE</button>
+    </section>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  Taking back a seat                                         -->
+    <!-- ---------------------------------------------------------- -->
+    <section class="screen" id="seatsScreen">
+        <h2 class="screen__title" data-i18n="seats.title">WHICH SEAT IS YOURS</h2>
+        <p class="note" data-i18n="seats.hint">THIS SECTION IS ALREADY BEING WORKED.</p>
+        <ul class="roster" id="seatsList"></ul>
+        <button class="btn btn--ghost" type="button" data-back-to-boot data-i18n="gate.back">BACK</button>
+    </section>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  Choosing a machine opponent                                -->
+    <!-- ---------------------------------------------------------- -->
+    <section class="screen" id="soloScreen">
+        <h2 class="screen__title" data-i18n="solo.title">CHOOSE YOUR OPPONENT</h2>
+        <ul class="doors" id="soloDoors"></ul>
+        <button class="btn btn--ghost" type="button" data-back-to-boot data-i18n="gate.back">BACK</button>
+    </section>
+
+    <!-- ---------------------------------------------------------- -->
+    <!--  The section itself                                         -->
+    <!-- ---------------------------------------------------------- -->
+    <section class="screen" id="boardScreen">
+
+        <div class="hud hud--away" id="hudAway"></div>
+
+        <div class="frame" id="frame">
+            <div class="shafts" id="shafts" role="group" aria-label="Shafts"></div>
+
+            <!-- The collars: the seven shafts carried down from their heads to
+                 the datum. A core is released here and crosses the neatline in
+                 full view, and it is where one waits above the rim while the
+                 bottom is drawn out to make room for it. -->
+            <div class="collar" aria-hidden="true">
+                <div class="collar__gutter"></div>
+                <div class="collar__shafts" id="collar"></div>
+            </div>
+
+            <div class="workings">
+                <div class="scale" id="scale" aria-hidden="true"></div>
+                <div class="stack" id="stack">
+                    <div class="beds" id="beds" aria-hidden="true"></div>
+                    <!-- Before .grid, so a struck seam is a band the cores sit
+                         ON rather than a line struck THROUGH them. The viewBox
+                         is 100 units per bed and the grid is locked to 7/6, so
+                         the mapping is uniform and a diagonal is undistorted. -->
+                    <svg class="strike" id="strike" viewBox="0 0 700 600" preserveAspectRatio="none" aria-hidden="true"></svg>
+                    <div class="grid" id="grid"></div>
+                    <div class="doomed" id="doomed" hidden aria-hidden="true"></div>
+                    <div class="lanes" id="lanes"></div>
+                </div>
+            </div>
+
+            <div class="trench" id="trench" aria-hidden="true">
+                <span class="trench__rule"></span>
+            </div>
+        </div>
+
+        <div class="hud hud--home" id="hudHome"></div>
+
+        <p class="status" id="boardStatus" role="status"></p>
+
+        <!-- The result is stamped on the plate, under the section it was
+             struck in. Replacing the board with a results screen would hide
+             the seam at the exact moment it is worth looking at. -->
+        <div class="verdict" id="verdict" hidden>
+            <p class="verdict__stamp" id="verdictStamp" data-i18n="verdict.struck">SEAM STRUCK</p>
+            <h2 class="verdict__who" id="verdictWho"></h2>
+            <p class="verdict__series" id="verdictSeries"></p>
+            <button class="btn btn--primary" type="button" id="verdictAgain" data-i18n="verdict.again">ANOTHER SECTION</button>
+            <p class="note" id="verdictWaiting" hidden></p>
+            <button class="btn btn--ghost" type="button" data-back-to-boot data-i18n="verdict.menu">MAIN MENU</button>
+        </div>
+
+        <button class="btn btn--ghost btn--quiet" type="button" id="boardLeave" data-i18n="board.resign">ABANDON THE SECTION</button>
+    </section>
+
+</main>
+
+<p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+
+<script src="../../components/back-link.js"></script>
+<script type="module" src="script.js"></script>
+</body>
+</html>

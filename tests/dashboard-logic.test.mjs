@@ -8,6 +8,7 @@ import {
     normalizeLayout, moveItem, fileIntoFolder, ejectFromFolder, moveWithinFolder,
     createFolder, renameFolder, dissolveEmptyFolders, layoutToSave, applyCreatedIds,
     folderPreviewIcons, slotIndexFromRects, folderHitTest,
+    LONGPRESS_MS, ARRANGE_HOLD_MS, DRAG_SLOP, pressIntent, moveIntent, ownsGesture, releaseIntent, edgeScrollVelocity, EDGE_MAX, escapedPanel, EJECT_BAND,
 } from '../views/dashboard/logic.js';
 
 // ------------------------------------------------------------------
@@ -267,4 +268,107 @@ test('folderHitTest with inset 0 files anywhere over the folder (filing priority
     assert.equal(folderHitTest(folderRects, 2, 2, 0), 5);    // top-left corner
     assert.equal(folderHitTest(folderRects, 98, 98, 0), 5);  // bottom-right corner
     assert.equal(folderHitTest(folderRects, 101, 50, 0), null); // just outside -> reorder
+});
+
+// ------------------------------------------------------------------
+//  Gesture reducer (the touch drag brain; see views/dashboard/CLAUDE.md)
+// ------------------------------------------------------------------
+
+test('pressIntent arms the long hold for a touch on a still shelf', () => {
+    assert.deepEqual(
+        pressIntent({ pointerType: 'touch', arranging: false }),
+        { holdMs: LONGPRESS_MS, dragOnMove: false }
+    );
+});
+
+test('pressIntent shortens the hold once arrange mode is already on', () => {
+    const intent = pressIntent({ pointerType: 'touch', arranging: true });
+    assert.equal(intent.holdMs, ARRANGE_HOLD_MS);
+    assert.ok(ARRANGE_HOLD_MS < LONGPRESS_MS, 'arranging should feel quicker than the cold hold');
+    assert.equal(intent.dragOnMove, false, 'a swipe must stay a page scroll, never a drag');
+});
+
+test('moveIntent lets a swipe before the hold stay a page scroll', () => {
+    // The iOS bug in one assertion: a finger that travels before the tile has
+    // been picked up belongs to the page, so we must let go of it entirely.
+    const arg = { dragOnMove: false, dx: 0, dy: DRAG_SLOP + 20 };
+    assert.equal(moveIntent('pressing', arg), 'release');
+});
+
+test('moveIntent drags the moment the tile is held, however small the move', () => {
+    // Once the hold has fired the gesture is ours, so there is no second
+    // threshold to clear: the tile tracks the finger from the first pixel.
+    assert.equal(moveIntent('holding', { dx: 1, dy: 0 }), 'drag');
+    assert.equal(moveIntent('dragging', { dx: 0, dy: 0 }), 'drag');
+});
+
+test('moveIntent holds still inside the slop, and lets a mouse drag on travel', () => {
+    assert.equal(moveIntent('pressing', { dx: 2, dy: 2 }), 'wait');
+    assert.equal(moveIntent('pressing', { dragOnMove: true, dx: 40, dy: 0 }), 'drag');
+    assert.equal(moveIntent('pressing', { dragOnMove: true, dx: 2, dy: 2 }), 'wait');
+});
+
+test('ownsGesture claims the touch only from the pickup onward', () => {
+    // This gates preventDefault() on a non-passive touchmove, which is the one
+    // lever that stops Safari scrolling. Claiming it while merely 'pressing'
+    // would break page scrolling on a shelf made almost entirely of tiles.
+    assert.equal(ownsGesture('pressing'), false);
+    assert.equal(ownsGesture('holding'), true);
+    assert.equal(ownsGesture('dragging'), true);
+});
+
+test('releaseIntent files a tile into the folder it was dropped on', () => {
+    assert.deepEqual(
+        releaseIntent({ phase: 'dragging', folderHit: 7 }),
+        { commit: true, file: 7, suppressClick: true }
+    );
+});
+
+test('releaseIntent drops in place on a cancel and never files', () => {
+    // An incoming call or a system edge swipe must not swallow a tile into
+    // whatever folder the finger happened to be over.
+    assert.deepEqual(
+        releaseIntent({ phase: 'dragging', cancelled: true, folderHit: 7 }),
+        { commit: true, file: null, suppressClick: true }
+    );
+});
+
+test('releaseIntent treats a tap that never lifted a tile as a tap', () => {
+    assert.deepEqual(
+        releaseIntent({ phase: 'pressing' }),
+        { commit: false, file: null, suppressClick: false }
+    );
+});
+
+test('releaseIntent commits a pickup released without moving, without filing', () => {
+    // Held long enough to lift the tile, then let go on the spot: nothing
+    // moved, but the click must still be swallowed or the app would open.
+    assert.deepEqual(
+        releaseIntent({ phase: 'holding', folderHit: 7 }),
+        { commit: true, file: null, suppressClick: true }
+    );
+});
+
+test('edgeScrollVelocity is still through the middle of the viewport', () => {
+    assert.equal(edgeScrollVelocity(400, { top: 0, bottom: 800 }), 0);
+});
+
+test('edgeScrollVelocity ramps with depth into the band and reverses at each edge', () => {
+    const box = { top: 0, bottom: 800 };  // band = 120px
+    assert.ok(edgeScrollVelocity(60, box) < 0, 'near the top it scrolls up');
+    assert.ok(edgeScrollVelocity(740, box) > 0, 'near the bottom it scrolls down');
+    assert.ok(Math.abs(edgeScrollVelocity(10, box)) > Math.abs(edgeScrollVelocity(110, box)),
+        'deeper into the band is faster');
+    assert.equal(edgeScrollVelocity(-50, box), -EDGE_MAX, 'past the edge is capped, not runaway');
+    assert.equal(edgeScrollVelocity(400, { top: 100, bottom: 100 }), 0, 'a zero-height box never scrolls');
+});
+
+test('escapedPanel needs a deliberate overshoot before a tile leaves its folder', () => {
+    // On a phone the folder panel sits ~16px from each screen edge, so without
+    // a dead band an ordinary reorder near the edge would eject the tile.
+    const panel = { left: 16, top: 100, right: 374, bottom: 600 };
+    assert.equal(escapedPanel(panel, 200, 300), false, 'inside');
+    assert.equal(escapedPanel(panel, 5, 300), false, 'just outside is still a reorder');
+    assert.equal(escapedPanel(panel, 374 + EJECT_BAND + 1, 300), true, 'cleared the band sideways');
+    assert.equal(escapedPanel(panel, 200, 600 + EJECT_BAND + 1), true, 'cleared the band downward');
 });

@@ -4,6 +4,7 @@ import {
     normalizeLayout, moveItem, fileIntoFolder, ejectFromFolder, moveWithinFolder,
     createFolder, renameFolder, dissolveEmptyFolders, layoutToSave, applyCreatedIds,
     folderPreviewIcons, slotIndexFromRects, folderHitTest,
+    pressIntent, moveIntent, ownsGesture, releaseIntent, edgeScrollVelocity, escapedPanel,
 } from './logic.js';
 
 const API = '../../app/controllers/dashboard-controller.php';
@@ -13,8 +14,6 @@ if ('serviceWorker' in navigator) {
 }
 
 const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const DRAG_THRESHOLD = 6;   // px of movement before a press becomes a drag
-const LONGPRESS_MS = 450;   // touch hold that enters arrange mode
 
 const VIEWS = ['view-loading', 'view-signin', 'view-grid', 'view-empty', 'view-error'];
 function show(id) {
@@ -48,6 +47,7 @@ document.getElementById('today').textContent = new Date()
 // ------------------------------------------------------------------
 
 async function boot() {
+    abortDrag();          // the shelf is about to be rebuilt under any live drag
     show('view-loading');
     controls.classList.add('hidden');
     setArranging(false);
@@ -207,13 +207,57 @@ function renderShelf() {
         li.appendChild(ref.type === 'folder' ? buildFolderTile(layout.folders[ref.id]) : buildAppTile(ref.id));
         grid.appendChild(li);
     });
-    if (arranging) {
+    syncNewFolderTile();
+    document.body.classList.toggle('arranging', arranging);
+}
+
+// The trailing "New folder" tile, added and removed on its own so arrange mode
+// can be entered without rebuilding the shelf.
+function syncNewFolderTile() {
+    const existing = grid.querySelector(':scope > li[data-key="new-folder"]');
+    if (arranging && !existing) {
         const li = document.createElement('li');
         li.dataset.key = 'new-folder';
         li.appendChild(buildNewFolderTile());
         grid.appendChild(li);
+    } else if (!arranging && existing) {
+        existing.remove();
     }
-    document.body.classList.toggle('arranging', arranging);
+}
+
+// ------------------------------------------------------------------
+//  Reordering the live DOM
+// ------------------------------------------------------------------
+//
+// A drag must never rebuild the tiles. Touch events are dispatched for the
+// life of a gesture against the node that was under the finger at touchstart;
+// destroy it and the browser stops sending touchmove, our non-passive
+// preventDefault never runs, and the compositor claims the gesture and fires
+// pointercancel. The drag then dies exactly one slot in, which is what made
+// this feel broken on a phone. Only positions change during a drag, so move
+// the existing <li> nodes instead: cheaper, and it keeps the gesture alive.
+
+function reorderNodes(container, keys) {
+    const have = new Map();
+    container.querySelectorAll(':scope > li').forEach(li => have.set(liKey(li), li));
+    let cursor = container.firstElementChild;
+    for (const key of keys) {
+        const li = have.get(key);
+        if (!li) continue;
+        if (li === cursor) cursor = li.nextElementSibling;
+        else container.insertBefore(li, cursor);
+    }
+}
+
+function reorderShelf() {
+    reorderNodes(grid, layout.order.map(ref => ref.type[0] + ':' + ref.id));
+    const nf = grid.querySelector(':scope > li[data-key="new-folder"]');
+    if (nf) grid.appendChild(nf);   // the New folder tile always trails the shelf
+}
+
+function reorderFolderTray() {
+    const folder = layout.folders[openFolderId];
+    if (folder) reorderNodes(folderTiles, folder.apps.map(id => 'a:' + id));
 }
 
 // ------------------------------------------------------------------
@@ -232,7 +276,9 @@ function setArranging(on) {
 function enterArrange() {
     if (arranging) return;
     setArranging(true);
-    renderShelf();
+    // A press in flight is holding a live touch sequence: adding the one new
+    // affordance keeps every existing tile node intact (see reorderNodes).
+    if (drag) syncNewFolderTile(); else renderShelf();
     updateNote();
 }
 
@@ -351,16 +397,23 @@ document.getElementById('folder-backdrop').addEventListener('click', () => close
 // ------------------------------------------------------------------
 //  Drag engine (pointer events; hand-rolled for reliable touch)
 // ------------------------------------------------------------------
+//
+// The phase machine and every threshold live in logic.js; this half only
+// touches the DOM. Phases: 'pressing' (finger down, tile still seated) ->
+// 'holding' (hold fired, tile lifted) -> 'dragging'. See the note above
+// pressIntent() for why iOS forces the gesture to be won at pickup.
 
-let drag = null;          // active drag session (see startPress)
+let drag = null;          // active press session (see startPress)
 let justDragged = false;  // suppresses the click that follows a drag
-let longPressTimer = null;
+let holdTimer = null;
 
 function startPress(e, el, container) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const isApp = el.classList.contains('tile');
     const isFolder = el.classList.contains('folder-tile');
     if (!isApp && !isFolder) return;
+
+    const intent = pressIntent({ pointerType: e.pointerType, arranging });
 
     justDragged = false;
     const li = el.closest('li');
@@ -371,47 +424,73 @@ function startPress(e, el, container) {
 
     drag = {
         el, li, ref, container, inFolder,
+        phase: 'pressing',
+        dragOnMove: intent.dragOnMove,
         pointerId: e.pointerId,
         startX: e.clientX, startY: e.clientY,
-        dragging: false, ghost: null,
+        ghost: null, capturedBy: null,
         grabX: 0, grabY: 0,
         folderId: inFolder ? openFolderId : null,
         originKey: liKey(li),
         hoverFolder: null,
+        lastX: e.clientX, lastY: e.clientY,
     };
 
-    // Touch hold on a still tile (in normal mode) enters arrange mode.
-    if (!arranging && e.pointerType !== 'mouse') {
-        longPressTimer = setTimeout(() => {
-            longPressTimer = null;
-            enterArrange();
-            if (navigator.vibrate) navigator.vibrate(8);
-        }, LONGPRESS_MS);
+    if (intent.holdMs != null) {
+        holdTimer = setTimeout(() => { holdTimer = null; pickUp(); }, intent.holdMs);
     }
 
     window.addEventListener('pointermove', onPointerMove, { passive: false });
     window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
+    window.addEventListener('pointercancel', onPointerCancel);
+}
+
+// The hold fired: enter arrange mode if we are not in it, then lift the tile.
+function pickUp() {
+    if (!drag || drag.phase !== 'pressing') return;
+    capturePointer();
+    if (!arranging) enterArrange();   // leaves every existing tile node in place
+    beginDrag();
+    if (navigator.vibrate) navigator.vibrate(8);
 }
 
 function onPointerMove(e) {
     if (!drag || e.pointerId !== drag.pointerId) return;
     const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
-    const far = Math.hypot(dx, dy) > DRAG_THRESHOLD;
 
-    if (!drag.dragging) {
-        if (far && longPressTimer) {           // moved before the hold fired: a scroll
-            clearTimeout(longPressTimer); longPressTimer = null;
+    switch (moveIntent(drag.phase, { dragOnMove: drag.dragOnMove, dx, dy })) {
+        case 'release':
+            // A swipe that beat the hold: this touch belongs to the page.
+            // Letting go now is what keeps the scroll smooth and stops Safari
+            // firing pointercancel at us.
+            if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
             teardownPress();
             return;
-        }
-        if (arranging && far) { beginDrag(); }
-        else return;
+        case 'wait':
+            return;
+        case 'drag':
+            if (drag.phase === 'pressing') beginDrag();  // mouse path
+            updateDrag(e);
     }
-    updateDrag(e);
+}
+
+// Re-point the pointer at a node that outlives the drag. A touch pointer is
+// implicitly captured by the element under the finger, and that element gets
+// moved around the grid (and, on an eject, into a different container
+// entirely) while the drag runs. Capturing the container instead keeps pointer
+// delivery stable through all of it. Note this is only half the story: touch
+// events keep their own target, which is why nothing may be rebuilt mid-drag.
+function capturePointer() {
+    if (!drag || drag.capturedBy) return;
+    const anchor = drag.inFolder ? folderTiles : grid;
+    try {
+        anchor.setPointerCapture(drag.pointerId);
+        drag.capturedBy = anchor;
+    } catch { /* nothing to capture (a synthetic or already-released pointer) */ }
 }
 
 function beginDrag() {
+    capturePointer();
     const rect = drag.el.getBoundingClientRect();
     drag.grabX = drag.startX - rect.left;
     drag.grabY = drag.startY - rect.top;
@@ -426,18 +505,35 @@ function beginDrag() {
     document.body.appendChild(ghost);
 
     drag.ghost = ghost;
-    drag.dragging = true;
+    drag.phase = 'holding';
     justDragged = true;
     drag.li.classList.add('tile-origin');
-    if (drag.inFolder) drag.context = 'folder'; else drag.context = 'root';
+    drag.context = drag.inFolder ? 'folder' : 'root';
+    document.body.classList.add('dragging');
+    startEdgeScroll();
 }
 
 function updateDrag(e) {
+    // Belt to the touchmove suspenders: on a mouse this stops text selection,
+    // on a pen it stops the scroll. iOS ignores it, which is why ownsGesture()
+    // also drives a non-passive touchmove handler below.
     e.preventDefault();
-    const x = e.clientX, y = e.clientY;
-    drag.ghost.style.left = (x - drag.grabX) + 'px';
-    drag.ghost.style.top = (y - drag.grabY) + 'px';
+    drag.phase = 'dragging';
+    drag.lastX = e.clientX;
+    drag.lastY = e.clientY;
+    placeGhost();
+    reflow();
+}
 
+function placeGhost() {
+    drag.ghost.style.left = (drag.lastX - drag.grabX) + 'px';
+    drag.ghost.style.top = (drag.lastY - drag.grabY) + 'px';
+}
+
+// Re-evaluate the drop target for the pointer's current position. Split out of
+// updateDrag so the auto-scroll loop can re-run it while the finger is still.
+function reflow() {
+    const x = drag.lastX, y = drag.lastY;
     if (drag.context === 'folder') { updateDragInFolder(x, y); return; }
 
     // Root context: filing wins. If the pointer is anywhere over a folder tile
@@ -455,13 +551,11 @@ function updateDrag(e) {
     const rects = rootSlotRects(drag.originKey);
     const idx = slotIndexFromRects(rects, x, y);
     const next = moveItem(layout, drag.ref, idx);
-    if (!orderEquals(next.order, layout.order)) liveReorder(next, grid, drag.originKey);
+    if (!orderEquals(next.order, layout.order)) liveReorder(next, grid, drag.originKey, reorderShelf);
 }
 
 function updateDragInFolder(x, y) {
-    const r = folderInner.getBoundingClientRect();
-    const outside = x < r.left || x > r.right || y < r.top || y > r.bottom;
-    if (outside) {
+    if (escapedPanel(rectOf(folderInner), x, y)) {
         // Drag-out: eject to the end of the root grid and continue on the shelf.
         layout = ejectFromFolder(layout, drag.ref.id, layout.order.length);
         revision++;
@@ -469,7 +563,10 @@ function updateDragInFolder(x, y) {
         drag.inFolder = false;
         drag.folderId = null;
         closeFolder(true);           // keep body scroll locked; drag is still live
-        renderShelf();
+        // Carry the very same <li> over rather than building a fresh one in the
+        // grid: it is the node the touch sequence is bound to.
+        grid.appendChild(drag.li);
+        reorderShelf();
         markOrigin(grid, drag.originKey);
         return;
     }
@@ -477,48 +574,99 @@ function updateDragInFolder(x, y) {
     const idx = slotIndexFromRects(rects, x, y);
     const next = moveWithinFolder(layout, drag.folderId, drag.ref.id, idx);
     if (!folderAppsEqual(next, layout, drag.folderId)) {
-        liveReorder(next, folderTiles, drag.originKey, renderFolderTiles);
+        liveReorder(next, folderTiles, drag.originKey, reorderFolderTray);
     }
 }
 
-function onPointerUp(e) {
+function onPointerUp(e)     { finishPress(e, false); }
+function onPointerCancel(e) { finishPress(e, true); }
+
+function finishPress(e, cancelled) {
     if (!drag || e.pointerId !== drag.pointerId) return;
-    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
 
-    if (drag.dragging) {
-        const x = e.clientX, y = e.clientY;
-        if (drag.context === 'root' && drag.ref.type === 'app') {
-            const fr = folderRectList(drag.originKey);
-            const hit = folderHitTest(fr, x, y, 0);
-            if (hit != null) {
-                layout = fileIntoFolder(layout, drag.ref.id, hit);
-                revision++;
-                announce('Filed into folder.');
-            }
-        }
-        endDrag();
-        afterEdit();
-    } else {
-        teardownPress();
+    const { commit, file, suppressClick } = releaseIntent({
+        phase: drag.phase,
+        cancelled,
+        folderHit: drag.context === 'root' && drag.ref.type === 'app' ? drag.hoverFolder : null,
+    });
+
+    if (!commit) { teardownPress(); return; }
+
+    if (file != null) {
+        layout = fileIntoFolder(layout, drag.ref.id, file);
+        revision++;
+        announce('Filed into folder.');
     }
+    endDrag(suppressClick);
+    afterEdit();
 }
 
-function endDrag() {
+// Drop the session and its ghost without committing anything. Also the way out
+// when the shelf is reloaded under a live drag (a save coming back 401).
+function abortDrag() {
+    if (!drag) return;
     if (drag.ghost) drag.ghost.remove();
     setFolderHighlight(null);
     teardownPress();
+}
+
+function endDrag(suppressClick) {
+    abortDrag();
     if (openFolderId != null) renderFolderPanel();
     renderShelf();
     // The click that fires right after the drag must be swallowed once.
-    setTimeout(() => { justDragged = false; }, 0);
+    if (suppressClick) setTimeout(() => { justDragged = false; }, 0);
+    else justDragged = false;
 }
 
 function teardownPress() {
+    if (drag && drag.capturedBy) {
+        try { drag.capturedBy.releasePointerCapture(drag.pointerId); } catch { /* already gone */ }
+    }
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
-    window.removeEventListener('pointercancel', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerCancel);
+    stopEdgeScroll();
+    document.body.classList.remove('dragging');
     if (drag && drag.li) drag.li.classList.remove('tile-origin');
     drag = null;
+}
+
+// ------------------------------------------------------------------
+//  Edge auto-scroll: a held tile owns the gesture, so the page can no
+//  longer be scrolled by hand. Park the tile near an edge instead.
+// ------------------------------------------------------------------
+
+let edgeRaf = null;
+
+function startEdgeScroll() {
+    if (edgeRaf != null) return;
+    const step = () => {
+        edgeRaf = requestAnimationFrame(step);
+        if (!drag || !ownsGesture(drag.phase)) return;
+
+        // Inside an open folder the tray scrolls; on the shelf, the window.
+        const tray = drag.context === 'folder' ? folderTiles : null;
+        const box = tray ? rectOf(tray) : { top: 0, bottom: window.innerHeight };
+        const v = edgeScrollVelocity(drag.lastY, box);
+        if (!v) return;
+
+        const before = tray ? tray.scrollTop : window.scrollY;
+        if (tray) tray.scrollTop += v; else window.scrollBy(0, v);
+        const after = tray ? tray.scrollTop : window.scrollY;
+        if (after === before) return;          // hit the end of the scroll range
+
+        // The pointer has not moved, but everything under it has, so the ghost
+        // stays put on screen while the slot it targets changes.
+        placeGhost();
+        reflow();
+    };
+    edgeRaf = requestAnimationFrame(step);
+}
+
+function stopEdgeScroll() {
+    if (edgeRaf != null) { cancelAnimationFrame(edgeRaf); edgeRaf = null; }
 }
 
 // Delegated press start on both the root grid and the open folder tray.
@@ -530,10 +678,33 @@ folderTiles.addEventListener('pointerdown', (e) => {
     const el = e.target.closest('.tile');
     if (el) startPress(e, el, 'folder');
 });
+
+// The one lever that reliably stops iOS scrolling a held tile out from under
+// the finger. Pointer events cannot do this: Safari decides the gesture is a
+// scroll at the first move and ignores preventDefault() on pointermove, and it
+// latches touch-action at touchstart so no CSS flip mid-press can help. A
+// non-passive touchmove, registered up front and refused only once the tile is
+// actually held, is what wins the gesture back. Keep it non-passive.
+document.addEventListener('touchmove', (e) => {
+    if (drag && ownsGesture(drag.phase) && e.cancelable) e.preventDefault();
+}, { passive: false });
+
+// Long-press on a tile must never raise the platform's own menu: iOS shows the
+// link callout for an <a>, desktop and Android the context menu, and either one
+// steals the pointer and kills the drag. CSS -webkit-touch-callout covers iOS;
+// this covers the rest.
+function killContextMenu(e) {
+    if (arranging || (drag && ownsGesture(drag.phase))) e.preventDefault();
+}
+grid.addEventListener('contextmenu', killContextMenu);
+folderTiles.addEventListener('contextmenu', killContextMenu);
+
 // Belt and suspenders for the anchor-drag issue above: kill any native drag
 // that a desktop browser still tries to begin on a tile mid-arrange.
 grid.addEventListener('dragstart', e => e.preventDefault());
 folderTiles.addEventListener('dragstart', e => e.preventDefault());
+grid.addEventListener('selectstart', e => { if (drag) e.preventDefault(); });
+folderTiles.addEventListener('selectstart', e => { if (drag) e.preventDefault(); });
 
 // ------------------------------------------------------------------
 //  Drag helpers (DOM measurement; pure math lives in logic.js)
@@ -686,7 +857,10 @@ async function doSave() {
 
     if (ok) {
         saveFailed = false;
-        if (data && data.created) layout = applyCreatedIds(layout, data.created);
+        if (data && data.created) {
+            layout = applyCreatedIds(layout, data.created);
+            adoptCreatedIds(data.created);
+        }
     } else {
         saveFailed = true;
         scheduleSave();      // one retry on the debounce
@@ -694,6 +868,30 @@ async function doSave() {
     updateNote();
 
     if (resaveWanted) { resaveWanted = false; doSave(); }
+}
+
+// applyCreatedIds() renames a temp folder id in the layout once the server has
+// assigned a real one, but the rendered tile still carries the temp id in
+// data-folder-id, and folderHitTest reads it straight off the DOM. Left stale,
+// a drop resolves to a folder that no longer exists and fileIntoFolder()
+// silently returns the layout unchanged: filing into a folder you had just
+// made did nothing. Patch the attributes in place rather than re-rendering,
+// because a save can land mid-drag and rebuilding tiles would kill the gesture.
+function adoptCreatedIds(created) {
+    for (const [tempId, realId] of Object.entries(created)) {
+        grid.querySelectorAll('.folder-tile').forEach(el => {
+            if (el.dataset.folderId === String(tempId)) el.dataset.folderId = String(realId);
+        });
+        grid.querySelectorAll(':scope > li').forEach(li => {
+            if (li.dataset.key === 'f:' + tempId) li.dataset.key = 'f:' + realId;
+        });
+        if (openFolderId != null && String(openFolderId) === String(tempId)) openFolderId = realId;
+        if (drag) {
+            if (String(drag.folderId) === String(tempId)) drag.folderId = realId;
+            if (drag.originKey === 'f:' + tempId) drag.originKey = 'f:' + realId;
+            if (drag.ref.type === 'folder' && String(drag.ref.id) === String(tempId)) drag.ref.id = realId;
+        }
+    }
 }
 
 function afterEdit() {
