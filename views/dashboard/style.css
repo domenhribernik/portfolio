@@ -21,6 +21,30 @@
 body {
     background-image: radial-gradient(rgba(28, 26, 23, 0.07) 1px, transparent 1px);
     background-size: 22px 22px;
+
+    /* This is an installed launcher, not a document: nothing here is meant to
+       be selected or copied. On iOS a long press on selectable text raises the
+       selection loupe and on a link the share callout, and either one steals
+       the pointer mid-hold and kills the arrange drag. Safari still needs the
+       -webkit- prefixes; -webkit-touch-callout has no unprefixed form at all. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Typing still needs a caret, a selection and paste. */
+input,
+textarea {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+}
+
+/* While a tile is held, stop the rubber-band from scrolling the shelf out
+   from under it at the ends of the page. */
+body.dragging {
+    overscroll-behavior: none;
 }
 
 .sr-only {
@@ -74,10 +98,18 @@ body {
     color: var(--ink);
     text-align: center;
     transition: background 0.16s ease, transform 0.1s ease;
-    touch-action: manipulation;
+    /* pan-y, never `manipulation`. The shelf is almost entirely tiles, so the
+       browser must keep vertical scrolling; everything else is ours. Safari
+       latches touch-action at touchstart, so this value can never be toggled
+       mid-press: the 450ms/160ms hold in logic.js is what separates a scroll
+       from a drag, and a non-passive touchmove in script.js takes the gesture
+       from there. */
+    touch-action: pan-y;
     /* Anchors drag natively on desktop, which would hijack the arrange drag. */
     -webkit-user-drag: none;
+    -webkit-user-select: none;
     user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .tile-icon {
@@ -146,9 +178,11 @@ body {
     color: var(--ink);
     text-align: center;
     transition: background 0.16s ease, transform 0.1s ease, box-shadow 0.16s ease;
-    touch-action: manipulation;
+    touch-action: pan-y;   /* see the note on .tile */
     -webkit-user-drag: none;
+    -webkit-user-select: none;
     user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .folder-preview {
