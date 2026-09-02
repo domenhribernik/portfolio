@@ -209,16 +209,6 @@ export const projects = {
     },
     iconClass: "fas fa-utensils",
   },
-  drawingRoom: {
-    category: "passion",
-    gradient: "linear-gradient(45deg, #42101c 0%, #c9992e 100%)",
-    title: "The Drawing Room",
-    description: "A little multiplayer parlour: open a room, hand friends the four letter code, and when the host rings the bell everyone draws on the same sheet, live. Real time sync over plain PHP and MySQL, no websockets needed.",
-    links: {
-      visitSite: "views/parlour",
-    },
-    iconClass: "fas fa-bell",
-  },
   flowers: {
     category: "passion",
     gradient: "linear-gradient(45deg, #b13a6e 0%, #f6c1d9 100%)",

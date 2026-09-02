@@ -488,24 +488,6 @@
       }
     },
     {
-      "path": "views/parlour",
-      "name": "The Drawing Room",
-      "tier": "public",
-      "status": {
-        "title": "done",
-        "description": "done",
-        "canonical": "done",
-        "og": "done",
-        "jsonld": "na",
-        "h1": "done",
-        "crawlable": "partial",
-        "robots": "done",
-        "sitemap": "done",
-        "indexed": "todo",
-        "cwv": "unknown"
-      }
-    },
-    {
       "path": "views/rocks",
       "name": "Our Rock Pile",
       "tier": "public",

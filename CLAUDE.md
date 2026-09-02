@@ -48,7 +48,7 @@ All page directories live under [views/](views/), **named to match their URL pat
 
 **Unlisted private tools.** These are intentionally not registered in `components/project-data.js`, not linked from `index.html`, and not in the main navbar. Do not add them to any of those:
 
-`account`, `admin`, `compass`, `dashboard`, `download`, `list`, `masaza`, `narek`, `pricing`, `seo`, `stocks`, `valentine`, `vrata`.
+`account`, `admin`, `dashboard`, `download`, `list`, `masaza`, `narek`, `pricing`, `seo`, `stocks`, `valentine`, `vrata`.
 
 Everything else under `views/` is public. Two exceptions to the "public means portfolio" rule: `views/store` is a product (the Everbloom storefront), and `views/wildflowers` is an unregistered experiment; neither belongs in `project-data.js` or the navbar.
 

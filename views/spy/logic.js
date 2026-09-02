@@ -216,11 +216,11 @@ export function applyEvents(model, events, selfId) {
 // ------------------------------------------------------------------
 
 /**
- * How long to wait before the next poll. Spy has no ink flying and up to
- * twenty phones on one room, so this is deliberately lazier than the
- * parlour's: during a round the clock ticks locally between polls and only a
- * pause or an early end has to arrive quickly, while the lobby and the
- * briefing need live joiner and ready counts.
+ * How long to wait before the next poll. Spy has up to twenty phones on one
+ * room and nothing that has to land instantly, so this is deliberately lazy:
+ * during a round the clock ticks locally between polls and only a pause or an
+ * early end has to arrive quickly, while the lobby and the briefing need live
+ * joiner and ready counts.
  */
 export function pollDelay({ status, hidden, failures, grace, revealed }) {
     if (failures > 0) return Math.min(10000, 800 * 2 ** failures);

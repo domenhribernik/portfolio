@@ -5,16 +5,34 @@ Two gamemodes, one set of screens:
 - **one phone** (`mode = 'solo'`): the original pass-and-play game. No
   network at all beyond fetching the two `i18n/` tables once.
 - **room** (`mode = 'room'`): a phone each, over an anonymous four-letter
-  code. Built on the parlour's multiplayer base, see
-  [../parlour/CLAUDE.md](../parlour/CLAUDE.md) for the polling rationale,
-  the event-log cursor and the outbox contract, none of which is repeated
-  here.
+  code, on the repo's multiplayer base (rooms + an append-only event log).
+  This file is the reference for that base; [../seam/CLAUDE.md](../seam/CLAUDE.md)
+  builds on it too and does not repeat the rationale below.
+
+## Why polling, not WebSockets
+
+The production host runs PHP under Apache with no way to keep a socket
+daemon alive (and the repo bans npm dependencies and background services).
+Realtime therefore rides an **append-only event log in MySQL plus adaptive
+short polling**: faster while the round is live, slower in the lobby, slower
+again when idle or in a hidden tab, with exponential backoff (capped 10s) on
+failures. Pacing lives in `pollDelay()` in [logic.js](logic.js); the
+transport is isolated in `post()`/`pollOnce()`/`pumpOutbox()` in
+[script.js](script.js), so a WebSocket could replace it without touching
+game logic.
+
+The event `id` doubles as the **sync cursor**: a client polls with the last
+id it has seen and receives everything newer for its room, resending the
+returned `last` as the next `since`. Unknown event types are ignored by old
+clients and still advance their cursor, so new types are forward compatible.
+The client **outbox** (`queueEvent`) guarantees events arrive in order; 4xx
+rejections drop with a toast, network errors retry forever.
 
 Both modes share `briefScreen`, `roundScreen` and `debriefScreen`; they
 differ only in which controls are visible and where the data comes from.
 That is deliberate: it is what keeps the two modes looking like one game.
-`showScreen(id)` takes a raw element id and toggles `.active` (the parlour's
-takes a logical name and toggles `.on`, do not mix them). It also drives the
+`showScreen(id)` takes a raw element id and toggles `.active` (seam's toggles
+`.is-open`, do not mix them). It also drives the
 top-left EXIT, which **leaves the room or the game and stops at the title
 screen**, and hides itself there. It used to be a link to the site root, which
 is nobody's intention mid-party: people reaching for it want out of the lobby,
@@ -22,9 +40,10 @@ not off the site.
 
 ## The secrecy inversion
 
-The parlour's server guards state but never computes it, because a stroke is
-public. **A role is a secret, so here the server owns the deal.** That single
-difference drives the schema, the controller and the tests:
+A plain shared-canvas server can guard state without ever computing it,
+because a stroke is public. **A role is a secret, so here the server owns the
+deal.** That single difference drives the schema, the controller and the
+tests:
 
 - `spy_rooms.location_key`, `spy_players.role` and the `spy_ballots` rows are
   the secrets. None may ever be written into an event, because the log is
@@ -240,8 +259,8 @@ stops twenty phones polling the same second from writing twenty events:
    appends one `end` event.
 2. **Host handover** (`handOverHost()`, called from `heartbeat()`): only the
    host can deal or start, so a room whose host walked out would be stuck
-   forever. The longest-seated player still present inherits it. The parlour
-   accepts this gap; here it would end the party.
+   forever. The longest-seated player still present inherits it. A casual
+   shared-canvas room could accept that gap; here it would end the party.
 
 `advancePhase()` is the third, and it runs **on the poll path too**, not
 only after a `callvote` or `castvote`. Both its thresholds count the players
@@ -295,8 +314,8 @@ is why the round polls lazily (3s) without the countdown stuttering.
   `spyMax` rule, `picksNeeded()` and the location deck (`pickUnusedLocation()`
   against `dealLocation()`) live in both [logic.js](logic.js) and
   `spy-controller.php`. Change them in both.
-- **The session lives in `localStorage`, not `sessionStorage`** (the parlour
-  uses the latter). Phones lock and browsers discard tabs mid-party, and
+- **The session lives in `localStorage`, not `sessionStorage`.** Phones lock
+  and browsers discard tabs mid-party, and
   "two tabs on one device are one player" is the right answer for spy.
 - **A translated heading with `data-text` needs both written.** `.glitch`
   draws its two offset copies from `attr(data-text)` in CSS, so a heading whose

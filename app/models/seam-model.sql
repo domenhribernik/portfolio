@@ -1,9 +1,9 @@
 -- SEAM (views/seam): two-seat rooms for the connect-four variant whose board
--- eats its own basement. Same shape as parlour-model.sql and spy-model.sql
--- (rooms + players + an append-only event log whose id is the sync cursor),
--- with one difference that drives the whole feature: THE SERVER OWNS THE
--- BOARD. The parlour's server guards state but never computes it, because a
--- stroke is public and harmless. Here a client could otherwise forge a cave
+-- eats its own basement. Same shape as spy-model.sql (rooms + players + an
+-- append-only event log whose id is the sync cursor), with one difference
+-- that drives the whole feature: THE SERVER OWNS THE BOARD. A shared-canvas
+-- server can guard state without ever computing it, because a stroke is
+-- public and harmless. Here a client could otherwise forge a cave
 -- or claim a seam, so seam_rooms.board is the only section that exists and
 -- seam-controller.php is the only thing that may write it.
 -- No accounts: a player is identified by a secret token minted at join time

@@ -20,10 +20,10 @@ require_once __DIR__ . '/../config/database.php';
 // only as a SHA-256 hash (same rule as the sessions table). Tokens travel in
 // JSON POST bodies, never in URLs, so they stay out of access logs.
 //
-// THE AUTHORITY RULE, which is what makes this game different from the
-// parlour it is built on: the parlour's server guards state but never
-// computes it, because a stroke is public and harmless. Here the board is
-// the game. A client sends a shaft number and nothing else; every drop,
+// THE AUTHORITY RULE, which is what makes this game different from a plain
+// shared-room feature: such a server can guard state without ever computing
+// it, because a stroke on a shared canvas is public and harmless. Here the
+// board is the game. A client sends a shaft number and nothing else; every drop,
 // every cave, every permit spent and every seam struck is decided in this
 // file against seam_rooms.board, which is the only section that exists.
 // Anything else in the request body is ignored on purpose.

@@ -105,7 +105,6 @@ INSERT INTO projects (project_key, name) VALUES
     ('recipes',   'Recipes'),
     ('flowers',   'Paper Flowers'),
     ('spy',       'Spy Game'),
-    ('parlour',   'Drawing Room'),
     ('maze',      'Maze'),
     ('music',     'Backing Tracks'),
     ('ip',        'IP Locator'),
@@ -148,7 +147,6 @@ UPDATE dashboard_apps SET sort_order = 40  WHERE url LIKE '/views/recipes%';
 UPDATE dashboard_apps SET sort_order = 50  WHERE url LIKE '/views/tarok%';
 UPDATE dashboard_apps SET sort_order = 60  WHERE url LIKE '/views/flowers%';
 UPDATE dashboard_apps SET sort_order = 70  WHERE url LIKE '/views/spy%';
-UPDATE dashboard_apps SET sort_order = 80  WHERE url LIKE '/views/parlour%';
 UPDATE dashboard_apps SET sort_order = 90  WHERE url LIKE '/views/maze%';
 UPDATE dashboard_apps SET sort_order = 100 WHERE url LIKE '/views/music%';
 -- Also covers the Lists tile dashboard-model.sql seeds when it runs first.
@@ -183,11 +181,6 @@ ON DUPLICATE KEY UPDATE dashboard_apps.name = dashboard_apps.name;
 INSERT INTO dashboard_apps (name, icon, gradient, url, sort_order, project_id)
 SELECT 'Spy Game', 'fas fa-user-secret', 'linear-gradient(45deg, #b24592 0%, #f15f79 100%)', '/views/spy/', 70, NULL FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM dashboard_apps h WHERE h.url LIKE '/views/spy%')
-ON DUPLICATE KEY UPDATE dashboard_apps.name = dashboard_apps.name;
-
-INSERT INTO dashboard_apps (name, icon, gradient, url, sort_order, project_id)
-SELECT 'Drawing Room', 'fas fa-bell', 'linear-gradient(45deg, #42101c 0%, #c9992e 100%)', '/views/parlour/', 80, NULL FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM dashboard_apps h WHERE h.url LIKE '/views/parlour%')
 ON DUPLICATE KEY UPDATE dashboard_apps.name = dashboard_apps.name;
 
 INSERT INTO dashboard_apps (name, icon, gradient, url, sort_order, project_id)

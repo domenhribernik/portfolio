@@ -2,9 +2,9 @@
 //
 // Three ways in, one board. `local` passes one device across a table,
 // `solo` plays the bot in logic.js, and `room` is the shared-link gamemode
-// built on the repo's multiplayer base (see ../parlour/CLAUDE.md for the
-// polling rationale and the outbox contract, and ../spy/CLAUDE.md for the
-// server-owns-the-state variant this follows).
+// built on the repo's multiplayer base (see ../spy/CLAUDE.md for the polling
+// rationale, the outbox contract and the server-owns-the-state variant this
+// follows).
 //
 // Everything that decides anything lives in logic.js. This file only wires
 // it to the DOM, and in room mode it does not even do that: the server owns

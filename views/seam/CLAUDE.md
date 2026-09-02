@@ -5,9 +5,9 @@ Connect four on a board that eats its own floor. Three ways in, one section:
 - **local** (`mode = 'local'`): pass-the-plate, two people on one device.
 - **solo** (`mode = 'solo'`): the alpha-beta bot in [logic.js](logic.js).
 - **room** (`mode = 'room'`): a plate each over a four-letter code, built on the
-  parlour's multiplayer base. See [../parlour/CLAUDE.md](../parlour/CLAUDE.md)
-  for the polling rationale, the event-log cursor and the outbox contract,
-  none of which is repeated here.
+  repo's multiplayer base. See [../spy/CLAUDE.md](../spy/CLAUDE.md) for the
+  polling rationale, the event-log cursor and the outbox contract, none of
+  which is repeated here.
 
 The boot screen offers both room doors: `doorRoom` opens a section, `doorJoin`
 opens the same gate with the code field shown. Joining used to be reachable
@@ -15,8 +15,7 @@ only by following a shared link, which left two people in one room with a code
 read aloud and nowhere to type it.
 
 `showScreen(id)` takes a raw element id and toggles `.is-open`. Spy's takes an
-id and toggles `.active`, the parlour's takes a logical name and toggles `.on`.
-Do not mix the three.
+id and toggles `.active`. Do not mix the two.
 
 ## The section, and why the twist is one line
 
@@ -33,8 +32,9 @@ PHP, and `tests/seam-logic.test.mjs` greps the PHP for it.
 
 ## The authority inversion
 
-The parlour's server guards state but never computes it, because a stroke is
-public and harmless. Spy's server owns the *deal*, because a role is a secret.
+A shared-canvas server can guard state without ever computing it, because a
+stroke is public and harmless. Spy's server owns the *deal*, because a role is
+a secret.
 **Here the server owns the whole board**, because the board is the game: a
 client that could send its own would forge a cave or claim a seam.
 

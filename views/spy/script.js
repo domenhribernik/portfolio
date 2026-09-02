@@ -3,8 +3,8 @@
    Two gamemodes share one set of screens:
      solo  ONE PHONE, passed round the table.
      room  a phone each, over an anonymous four-letter room code.
-   The room mode is built on the parlour's polling machinery
-   (views/parlour), with one inversion: a role is a secret, so the
+   The room mode rides the repo's polling machinery (rooms plus an
+   append-only event log), with one inversion: a role is a secret, so the
    server owns the deal and every phone learns only its own card.
    Everything decidable without a DOM lives in logic.js.
    ============================================================ */

@@ -20,8 +20,8 @@ require_once __DIR__ . '/../config/database.php';
 // only as a SHA-256 hash (same rule as the sessions table). Tokens travel in
 // JSON POST bodies, never in URLs, so they stay out of access logs.
 //
-// THE SECRECY RULE, which is what makes this game different from the parlour
-// it is built on: spy_rooms.location_key, spy_players.role and the spy_ballots
+// THE SECRECY RULE, which is what makes this game different from a plain
+// shared-room feature: spy_rooms.location_key, spy_players.role and the spy_ballots
 // rows are secrets. The event log is public to the room, so none of them may
 // ever be written into an event. They leave this file in exactly two places:
 // the `you` block of a poll response (the polling player's own role and own

@@ -1,5 +1,5 @@
 -- Spy (views/spy) room mode: anonymous multiplayer rooms for the phone-per-
--- player gamemode. Same shape as parlour-model.sql (rooms + players + an
+-- player gamemode. The repo's multiplayer base shape (rooms + players + an
 -- append-only event log whose id is the sync cursor), with one difference
 -- that drives the whole feature: a role is a SECRET, so it can never be an
 -- event. The server owns the deal and keeps it in spy_rooms.location_key and

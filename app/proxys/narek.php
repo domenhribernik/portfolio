@@ -1,8 +1,8 @@
 <?php
 //? Narek: the Gemini side of the Slovenian dictation sheet (views/narek).
 //?
-//? PRIVATE, single-owner tool. Every branch sits behind Auth::requireAdmin(),
-//? for the same reason views/compass does: this is one person's tool, and here
+//? PRIVATE, single-owner tool. Every branch sits behind Auth::requireAdmin():
+//? this is one person's tool, and here
 //? each request also spends real money on the owner's Gemini key. An anonymous
 //? caller is 401 and a signed-in non-admin is 403, both before the request body
 //? is read and long before anything reaches Google.

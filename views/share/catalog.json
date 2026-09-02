@@ -91,12 +91,6 @@
       "icon": "fas fa-utensils",
       "gradient": "linear-gradient(45deg, #e0731d 0%, #efe9dd 100%)"
     },
-    "views/parlour": {
-      "title": "The Drawing Room",
-      "description": "A little multiplayer parlour: open a room, hand friends the four letter code, and when the host rings the bell everyone draws on the same sheet, live. Real time sync over plain PHP and MySQL, no websockets needed.",
-      "icon": "fas fa-bell",
-      "gradient": "linear-gradient(45deg, #42101c 0%, #c9992e 100%)"
-    },
     "views/flowers": {
       "title": "Paper Flowers",
       "description": "Build a bouquet out of nothing but CSS: pick roses, sunflowers, poppies and more, and every petal is a flat div rotated into place. Then send someone a link to their arrangement.",
