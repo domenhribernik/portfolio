@@ -796,7 +796,6 @@ async function init() {
     state.index = indexCatalog(doc);
     state.progress = readProgress();
 
-    $('plateCount').textContent = state.index.total;
     renderGrid();   // replaces the prerendered fallback with the live grid
 
     document.addEventListener('click', (e) => {

@@ -51,28 +51,15 @@
 
     <main class="bsheet">
         <!-- Masthead: static and crawlable; script.js fills the live
-             dateline (volume, edition number, date, story count). -->
+             dateline (date, story count). Nothing decorative sits here, so the
+             phone gets the name and the two facts rather than four rules of
+             filler. -->
         <header class="bsheet__mast">
-            <div class="bsheet__mast-top font-mono">
-                <span data-ed="volume">Vol. &middot; No.</span>
-                <span>Domen Hribernik presents</span>
-                <span>Price: free</span>
-            </div>
             <div class="bsheet__name-row">
-                <aside class="bsheet__ear" aria-hidden="true">
-                    All of it in one edition: client work, passion builds, research.
-                </aside>
                 <h1 class="bsheet__name">Project Portfolio</h1>
-                <aside class="bsheet__ear" aria-hidden="true">
-                    Weather on every page: always sunny in the browser.
-                </aside>
             </div>
             <div class="bsheet__date font-mono">
                 <span data-ed="dateline">Fresh off the press</span>
-                <span class="bsheet__date-sep" aria-hidden="true">&middot;</span>
-                <span>Ljubljana, Slovenia</span>
-                <span class="bsheet__date-sep" aria-hidden="true">&middot;</span>
-                <span>Established 2021</span>
                 <span class="bsheet__date-sep" aria-hidden="true">&middot;</span>
                 <span><span data-ed="count">All</span> stories</span>
             </div>
@@ -134,13 +121,10 @@
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>Copyright &copy; Domen Hribernik <span id="currentYear"></span></p>
-        </div>
-    </footer>
+    <site-footer></site-footer>
 
     <script type="module" src="../../components/main-navbar.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
     <script type="module" src="script.js"></script>
     <script src="../../components/gtranslate.js"></script>
 </body>

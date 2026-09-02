@@ -217,39 +217,14 @@
 
     </div>
 
-    <!-- ============ Colophon ============ -->
-    <footer class="reveal reveal-4 mt-16 pt-4 border-t-2 border-ink">
-        <div class="border-t border-hairline pt-5 grid gap-x-10 gap-y-5 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-            <div>
-                <p class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-2.5">Kaj to pravzaprav je</p>
-                <p class="text-[0.95rem] text-stone leading-relaxed max-w-[70ch]">
-                    Preizkus koncepta. Zvok se v brskalniku nareže na stavke, vsak gre kot 16 kHz WAV
-                    prek strežnika v Gemini in se vrne kot besedilo. Posnetkov in prepisov nihče ne shrani, strežnik vodi le števec zahtevkov.
-                    Prepoznava je zanesljiva pri zbranem govoru v tihem prostoru; narečje, hrup in
-                    preskakovanje v angleščino jo opazno poslabšajo.
-                    Lektoriranje je ločen, namenoma ozek korak, ker je prav tam največje tveganje:
-                    jezikovni modeli radi „popravijo“ sklon ali dvojino in s tem tiho spremenijo pomen.
-                    Zato ga vidiš kot popravke in ne kot novo besedilo.
-                </p>
-            </div>
-            <div>
-                <p class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-2.5">Pod pokrovom</p>
-                <ul class="font-mono text-[0.72rem] text-stone/85 leading-[2] tabular-nums">
-                    <li>zajem &nbsp;<span class="text-ink">AudioWorklet, 16 kHz mono</span></li>
-                    <li>rez &nbsp;<span class="text-ink">prilagodljiv prag tišine</span></li>
-                    <li>prepis &nbsp;<span class="text-ink" id="modelLine">Gemini</span></li>
-                    <li>koda &nbsp;<a href="https://github.com/domenhribernik" class="text-ink underline underline-offset-2 hover:text-clay">github</a></li>
-                </ul>
-            </div>
-        </div>
-        <p class="mt-6 font-mono text-[0.72rem] text-stone/60">Zgradil Domen Hribernik</p>
-    </footer>
-
 </div>
+
+<site-footer></site-footer>
 
 <div id="toast" class="toast font-mono text-[0.72rem] tracking-[0.16em] uppercase" role="status" aria-live="polite"></div>
 
 <script src="../../components/back-link.js"></script>
+<script type="module" src="../../components/site-footer.js"></script>
 <script type="module" src="script.js"></script>
 <script src="../../components/gtranslate.js"></script>
 </body>

@@ -9,7 +9,8 @@ New registry entries appear here automatically. There is nothing to wire.
 
 ## Layout
 
-Masthead "Project Portfolio" with ears and a live dateline, then one section per category:
+Masthead "Project Portfolio" over a live dateline (date and story count, nothing else),
+then one section per category:
 **A** Professional, **B** Passion, **C** Academic. Each section opens on a photo lead (a
 halftone "press photo" built from the entry's registry `gradient` + `iconClass`) with the
 rest in ruled newspaper columns.
@@ -24,6 +25,12 @@ Type: headlines in Bricolage Grotesque (the site's display face), furniture in S
 The DOM-free edition builder (section order, the lead hoist, folios, dateline) is
 [logic.js](logic.js), tested by
 [tests/projects-edition-logic.test.mjs](../../tests/projects-edition-logic.test.mjs).
+
+`editionMeta()` still returns a `volume` and `number`. The masthead stopped printing them
+when the decorative furniture came out (see the eyebrow rule in
+[DESIGN.md](../../DESIGN.md)), so the `[data-ed="volume"]` slot no longer exists and
+`script.js` skips a missing slot rather than throwing. Deleting them from `logic.js` is
+fine; leaving them is not a bug.
 
 Link priority (visitSite > readMore > code > demo) is **not** reimplemented here: it
 comes from the shared helpers in

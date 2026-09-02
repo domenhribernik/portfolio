@@ -74,7 +74,8 @@
         "allDay": "all day",
         "belowAllDay": "below all day",
         "planetUp": "{alt}° up",
-        "belowHorizon": "below the horizon"
+        "belowHorizon": "below the horizon",
+        "credit": "Positions computed in-browser with Paul Schlyter's ephemerides, good to a few arcminutes. Star data: Hipparcos, via d3-celestial (BSD)."
     },
     "tooltip": {
         "unnamedStar": "Unnamed star",
@@ -111,9 +112,5 @@
         "noGeolocation": "Geolocation is not available in this browser.",
         "geolocationFailed": "Could not read your location; the chart stays over Ljubljana.",
         "catalog": "The star catalogue failed to load; only the Sun, Moon and planets are drawn."
-    },
-    "footer": {
-        "method": "Positions computed in-browser with Paul Schlyter's ephemerides, good to a few arcminutes. Nothing stored, nothing tracked across the sky.",
-        "credit": "Star data: Hipparcos, via d3-celestial (BSD)"
     }
 }

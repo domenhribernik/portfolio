@@ -44,9 +44,8 @@
 
     <!-- ============ Masthead ============ -->
     <header class="reveal reveal-1 border-b-2 border-ink pb-6 mb-8">
-        <div class="flex items-center justify-between gap-4 mb-6">
-            <a id="back-link" href="../../" class="shrink-0 text-stone no-underline hover:text-clay transition-colors font-mono text-sm">&larr; back</a>
-            <span class="hidden sm:inline font-mono text-[0.72rem] tracking-[0.24em] uppercase text-stone text-right">Slovenian &middot; free &middot; no account needed</span>
+        <div class="mb-6">
+            <a id="back-link" href="../../" class="inline-block text-stone no-underline hover:text-clay transition-colors font-mono text-sm">&larr; back</a>
         </div>
 
         <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
@@ -193,26 +192,24 @@
 
     </main>
 
-    <!-- ============ Colophon ============ -->
-    <footer class="reveal reveal-6 mt-16 pt-4 border-t-2 border-ink">
-        <div class="border-t border-hairline pt-4 flex flex-wrap gap-x-8 gap-y-2 justify-between">
-            <p class="font-mono text-[0.72rem] text-stone/80 max-w-[70ch]">
-                Words and glosses from
-                <a href="https://kaikki.org/dictionary/Slovene/" class="underline underline-offset-2 hover:text-clay">Wiktionary via kaikki.org</a>,
-                sentences from <a href="https://tatoeba.org" class="underline underline-offset-2 hover:text-clay">Tatoeba</a>,
-                frequency from <a href="https://github.com/hermitdave/FrequencyWords" class="underline underline-offset-2 hover:text-clay">FrequencyWords</a>.
-                All CC BY-SA / CC BY; this derived data is CC BY-SA 4.0.
-            </p>
-            <p class="font-mono text-[0.72rem] text-stone/60">Built by Domen Hribernik</p>
-        </div>
-    </footer>
+    <!-- ============ Sources ============ -->
+    <p class="reveal reveal-6 mt-16 pt-4 border-t border-hairline font-mono text-[0.72rem] leading-relaxed text-stone/70 max-w-[80ch]">
+        Words and glosses from
+        <a href="https://kaikki.org/dictionary/Slovene/" class="underline underline-offset-2 hover:text-clay">Wiktionary via kaikki.org</a>,
+        sentences from <a href="https://tatoeba.org" class="underline underline-offset-2 hover:text-clay">Tatoeba</a>,
+        frequency from <a href="https://github.com/hermitdave/FrequencyWords" class="underline underline-offset-2 hover:text-clay">FrequencyWords</a>.
+        All CC BY-SA / CC BY; this derived data is CC BY-SA 4.0.
+    </p>
 
 </div>
+
+<site-footer></site-footer>
 
 <!-- Shared gloss tooltip, positioned by script.js so it never clips off-screen -->
 <div id="tooltip" class="gloss-tip" role="tooltip" aria-hidden="true"></div>
 
 <script src="../../components/back-link.js"></script>
+<script type="module" src="../../components/site-footer.js"></script>
 <script type="module" src="script.js"></script>
 <script src="../../components/gtranslate.js"></script>
 </body>

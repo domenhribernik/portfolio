@@ -31,29 +31,8 @@ body {
 /* ============================================================
    MASTHEAD
    ============================================================ */
-.bsheet__mast-top {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-bottom: 0.45rem;
-    border-bottom: 1px solid var(--rule);
-    font-size: 0.62rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--stone);
-}
-
-.bsheet__mast-top span:nth-child(2) {
-    color: var(--ink);
-}
-
 .bsheet__name-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 1.4rem;
-    padding: 1.5rem 0 1.1rem;
+    padding: 0 0 1.1rem;
     animation: mastRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -67,23 +46,6 @@ body {
     text-transform: uppercase;
     text-align: center;
     text-wrap: balance;
-}
-
-/* Ears: the small boxed asides flanking a broadsheet's nameplate */
-.bsheet__ear {
-    max-width: 13rem;
-    border: 1px solid var(--rule);
-    padding: 0.5rem 0.65rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    line-height: 1.5;
-    letter-spacing: 0.02em;
-    color: var(--stone);
-}
-
-.bsheet__ear:last-child {
-    justify-self: end;
-    text-align: right;
 }
 
 /* Dateline: the thick-over-thin double rule with the edition line */
@@ -427,16 +389,7 @@ body.reveals-on {
     }
 
     .bsheet__name-row {
-        grid-template-columns: 1fr;
-        padding: 1.1rem 0 0.9rem;
-    }
-
-    .bsheet__ear {
-        display: none;
-    }
-
-    .bsheet__mast-top span:nth-child(2) {
-        display: none;
+        padding: 0 0 0.9rem;
     }
 }
 

@@ -21,6 +21,11 @@ the PHP suites with `C:\xampp\php\php.exe`. They spawn whatever interpreter runs
 - **Extract before you test.** When a view's script grows non-trivial decision logic, pull
   it into a DOM-free `logic.js` the page imports, and test that here, rather than leaving
   it tangled in DOM code.
+- **A classic script is testable too.** `back-link.test.mjs` cannot import
+  `components/back-link.js` (no exports, loaded with a bare `<script src>`), so it runs the
+  real file in a `node:vm` context against stub `document` / `history` / `location` globals
+  and drives the listeners it registered. Reach for this only when a file genuinely cannot
+  be a module; `logic.js` extraction is still the first answer.
 - **The prod-DB guard.** PHP suites that need a database boot a PHP built-in server with
   `DB_*` env overrides pointing at the LOCAL scratch DB (`127.0.0.1` / `portfolio`). Those
   overrides make `database.php` skip `app/.env`, which points at the **remote production

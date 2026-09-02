@@ -2,7 +2,7 @@
 // cached shell makes it work with no signal at all: the right tool under a
 // dark-site sky. HTML goes network-first (updates propagate), everything else
 // stale-while-revalidate.
-const CACHE = 'nebo-v3';
+const CACHE = 'nebo-v4';
 const SHELL = [
     './',
     'style.css',
@@ -19,6 +19,7 @@ const SHELL = [
     'constellations.json',
     'manifest.json',
     '../../components/back-link.js',
+    '../../components/site-footer.js',
 ];
 
 self.addEventListener('install', (event) => {

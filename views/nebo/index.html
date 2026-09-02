@@ -197,15 +197,17 @@
                 <dl id="planetRows"></dl>
 
                 <p class="mt-5 pt-3 border-t border-hairline font-display italic text-dim text-[0.92rem]" id="ledgerNote" data-i18n="ledger.note"></p>
+
+                <!-- The Hipparcos catalogue arrives via d3-celestial (BSD), so
+                     this credit is a licence term, not a colophon flourish. It
+                     sits with the readings rather than in the footer, which is
+                     the same on every page. -->
+                <p class="mt-4 font-mono text-[0.66rem] leading-relaxed text-dim/60" data-i18n="ledger.credit"></p>
             </aside>
         </div>
-
-        <!-- Colophon -->
-        <footer class="reveal reveal-4 mt-10 pt-4 border-t border-hairline flex flex-wrap gap-x-6 gap-y-1 justify-between">
-            <p class="font-mono text-[0.7rem] text-dim/90" data-i18n="footer.method"></p>
-            <p class="font-mono text-[0.7rem] text-dim/60" data-i18n="footer.credit"></p>
-        </footer>
     </div>
+
+    <site-footer theme="dark"></site-footer>
 
     <!-- Location picker: hidden until the location button opens it. Leaflet is
          mounted into #locMap on first open (lazy-loaded in location-map.js). -->
@@ -246,6 +248,7 @@
     </div>
 
     <script src="../../components/back-link.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js').catch(() => { /* offline shell is a bonus, not a requirement */ });

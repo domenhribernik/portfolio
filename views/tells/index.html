@@ -45,12 +45,7 @@
 <div class="mx-auto w-full max-w-[76rem] px-5 sm:px-8">
 
     <header class="pt-6 pb-3">
-        <div class="flex items-baseline justify-between gap-4">
-            <a id="back-link" href="../../" class="shrink-0 whitespace-nowrap text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Back">&larr; back</a>
-            <p class="font-mono text-[0.72rem] tracking-[0.24em] uppercase text-faint text-right">
-                Field guide &middot; <span id="plateCount">&mdash;</span> plates
-            </p>
-        </div>
+        <a id="back-link" href="../../" class="inline-block text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Back">&larr; back</a>
 
         <div class="mt-5 sm:mt-7 rule-double"></div>
 
@@ -212,21 +207,12 @@
 
     </main>
 
-    <footer class="border-t border-hairline py-8 font-mono text-[0.72rem] leading-relaxed text-faint">
-        <p>
-            Everything you answer stays in this browser. Nothing is sent anywhere, so clearing site data
-            clears your progress. There is an export button on the ledger.
-        </p>
-        <p class="mt-2">
-            Sources are named on each plate. The drill design follows Morewedge et al. (2015) on training
-            over reading, and the inoculation work of Roozenbeek and van der Linden on teaching the
-            technique rather than the topic.
-        </p>
-    </footer>
-
 </div>
 
+<site-footer></site-footer>
+
 <script src="../../components/back-link.js"></script>
+<script type="module" src="../../components/site-footer.js"></script>
 <script type="module" src="script.js"></script>
 <script src="../../components/gtranslate.js"></script>
 </body>

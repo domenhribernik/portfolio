@@ -74,7 +74,8 @@
         "allDay": "ves dan",
         "belowAllDay": "ves dan pod obzorjem",
         "planetUp": "{alt}° visoko",
-        "belowHorizon": "pod obzorjem"
+        "belowHorizon": "pod obzorjem",
+        "credit": "Položaje računa brskalnik po efemeridah Paula Schlyterja, natančne na nekaj ločnih minut. Podatki o zvezdah: Hipparcos, prek d3-celestial (BSD)."
     },
     "tooltip": {
         "unnamedStar": "Brezimna zvezda",
@@ -111,9 +112,5 @@
         "noGeolocation": "Ta brskalnik ne podpira geolokacije.",
         "geolocationFailed": "Tvoje lokacije ni bilo mogoče prebrati; karta ostaja nad Ljubljano.",
         "catalog": "Zvezdni katalog se ni naložil; narisani so samo Sonce, Luna in planeti."
-    },
-    "footer": {
-        "method": "Položaji so izračunani v brskalniku po efemeridah Paula Schlyterja, natančni na nekaj ločnih minut. Nič se ne shranjuje in nihče ti ne sledi, razen zvezd.",
-        "credit": "Podatki o zvezdah: Hipparcos, prek d3-celestial (BSD)"
     }
 }

@@ -114,11 +114,13 @@ document.getElementById('edition').innerHTML =
     edition.sections.map(sectionHtml).join('');
 
 for (const [key, value] of Object.entries({
-    volume: `${meta.volume} &middot; ${meta.number}`,
     dateline: meta.dateline,
     count: String(meta.count),
 })) {
-    document.querySelector(`[data-ed="${key}"]`).innerHTML = value;
+    //? editionMeta() still computes the volume and issue number; the masthead
+    //  stopped printing them, so a missing slot is expected, not a bug.
+    const slot = document.querySelector(`[data-ed="${key}"]`);
+    if (slot) slot.innerHTML = value;
 }
 
 /* Scroll reveal, gated on JS the same way the homepage does it. */
@@ -131,5 +133,3 @@ const observer = new IntersectionObserver((entries, obs) => {
     }
 }, { threshold: 0.08 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-document.getElementById('currentYear').textContent = new Date().getFullYear();

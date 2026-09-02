@@ -171,37 +171,14 @@
         </main>
     </div>
 
-    <!-- ============ Colophon ============ -->
-    <footer class="reveal reveal-4 mt-16 pt-4 border-t-2 border-ink">
-        <div class="border-t border-hairline pt-5 grid gap-x-10 gap-y-5 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-            <div>
-                <p class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-2.5">Kaj to pravzaprav je</p>
-                <p class="text-[0.95rem] text-stone leading-relaxed max-w-[70ch]">
-                    Druga polovica Nareka. Isti zajem in isti rez po tišini, samo da gre odsek
-                    v prevod namesto v prepis. Model sam pove, v katerem jeziku si govoril, zato
-                    ni stikala za smer: pogovor lahko preskakuje sem in tja, vrstica za vrstico.
-                    Vidiš oboje, slišano in prevedeno, ker je prevod brez izvirnika nekaj, čemur
-                    moraš samo verjeti.
-                </p>
-            </div>
-            <div>
-                <p class="font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-2.5">Pod pokrovom</p>
-                <ul class="font-mono text-[0.72rem] text-stone/85 leading-[2] tabular-nums">
-                    <li>zajem &nbsp;<span class="text-ink">AudioWorklet, 16 kHz mono</span></li>
-                    <li>smer &nbsp;<span class="text-ink">določi model, ne stikalo</span></li>
-                    <li>prevod &nbsp;<span class="text-ink" id="modelLine">Gemini</span></li>
-                    <li>koda &nbsp;<a href="https://github.com/domenhribernik" class="text-ink underline underline-offset-2 hover:text-clay">github</a></li>
-                </ul>
-            </div>
-        </div>
-        <p class="mt-6 font-mono text-[0.72rem] text-stone/60">Zgradil Domen Hribernik</p>
-    </footer>
-
 </div>
+
+<site-footer></site-footer>
 
 <div id="toast" class="toast font-mono text-[0.72rem] tracking-[0.16em] uppercase" role="status" aria-live="polite"></div>
 
 <script src="../../../components/back-link.js"></script>
+<script type="module" src="../../../components/site-footer.js"></script>
 <script type="module" src="script.js"></script>
 </body>
 </html>

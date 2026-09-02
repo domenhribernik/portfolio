@@ -96,11 +96,25 @@ Reusable web components live in [components/](components/), imported as ES modul
 - [projects-index/](components/projects-index/): `<projects-index>`, the homepage projects section. Deliberately does **not** print the whole registry: professional entries as a ruled band, then the hand-ranked `FEATURED` key list from `projects-index/logic.js`. Styles in [views/homepage/kinetic.css](views/homepage/kinetic.css)
 - [rocks/](components/rocks/): `rock-builder.js` (shared Three.js geometry builder) and `rocks-showcase.js`. The editor at `views/rocks` imports the builder so both stay in sync
 - [auth-gate.js](components/auth-gate.js): login-wall *behavior*, not markup. `gatedFetch()` classifies a gated endpoint's 401/403; `loginUrl()` builds the `../account/?redirect=...` link. Each view keeps its own gate markup and styling
-- [back-link.js](components/back-link.js): plain (non-module) script upgrading a view's back arrow (`<a id="back-link">`) to real history-back when the visitor arrived same-origin (e.g. from the Dashboard). Load it **before** the view's own script tag
+- [back-link.js](components/back-link.js): plain (non-module) script upgrading a view's back arrow (`<a id="back-link">`) to real history-back. It walks the view's **own screens** first (a hash route like tells' `#/t/x` or beseda's `#topic/x` is a screen), then the same-origin page the visitor arrived from, and only then falls through to the `href`. Load it **before** the view's own script tag
+- [site-footer.js](components/site-footer.js): `<site-footer>`, the one footer every page ends on. Self-styled, since most views never load `base-style.css`; `theme="dark"` on a dark ground
 
 `<projects-grid>` and `<project-card>` take the same `site` attribute as `main-navbar` (the about page passes `site="../../"`; the homepage omits it).
 
 **Third-party embeds.** Include [google-analytics.js](components/google-analytics.js) and [gtranslate.js](components/gtranslate.js) on new public views, as plain `<script>` tags before `</body>`. Do **NOT** add [tawk-chat.js](components/tawk-chat.js) to any new view; existing views keep it until asked. Gotcha: the navbar's language dropdown is **not** self-contained, `main-navbar.js` renders only the picker shell with an empty `.gtranslate_wrapper` and `gtranslate.js` injects the actual links. Omit it and the dropdown renders but does nothing.
+
+### Frontend: Page Chrome (applies to every view)
+
+Three habits that produced clutter often enough to be worth naming. Full reasoning and
+precedents are in [DESIGN.md](DESIGN.md); the short version:
+
+1. **No decorative micro-copy in a header.** An eyebrow, ear or kicker prints only if it
+   carries a count, date, state or section name. `Plate No. 4 · Network Cartography` and
+   `Price: free` inform nobody and cost the most on a phone. Never add one unasked.
+2. **End on `<site-footer>` and nothing else.** One line, the copyright. A licence credit
+   or privacy note goes in the content beside what it describes, not in a colophon.
+3. **The back arrow returns to the previous screen, not always the homepage.** Load
+   `back-link.js`, which makes the `href` a fallback rather than the behaviour.
 
 ### Frontend: Dates (applies to every view)
 

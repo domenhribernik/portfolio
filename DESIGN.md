@@ -179,6 +179,15 @@ A warm neutral ground with four saturated inks that are used as punctuation, nev
 
 **The Tight Display Rule.** Display and headline type is set tighter than it looks comfortable: line-height under 1.0, tracking negative to -0.035em. The size does the shouting, the spacing keeps it from sprawling.
 
+**The Eyebrow Earns Its Place Rule.** A mono eyebrow is broadsheet grammar, but it has to
+say something. `Field guide · 48 plates` and `Plate No. 4 · Network Cartography` and
+`Vol. II · No. 7 / Domen Hribernik presents / Price: free` are texture pretending to be a
+label: they set the tone and inform nobody, and on a phone they are the first thing between
+the reader and the page. Print an eyebrow when it carries a count, a date, a state or a
+section name that is not already on screen; otherwise print nothing. The same test kills the
+boxed asides flanking a nameplate. Precedent: the mastheads of `views/projects`,
+`views/tells`, `views/ip` and `views/beseda`, all of which lost one.
+
 **The Fraunces Migration Rule.** Bricolage Grotesque is the display face. Fraunces is the previous one and now survives only on the signed-in tools: `views/account`, `views/admin`, `views/stocks`, `views/compass`, `views/ip`, `views/download`, `views/masaza`, plus the costume views `views/recipes` and `views/nebo`, which own their palettes. `views/projects` was converted, and the `body.editorial` fallbacks in [base-style.css](base-style.css) now ask for Bricolage (they used to name a face those pages never loaded, so every project card title on `views/about` rendered in the browser's default serif). That is documented drift, not a second option. New surfaces use Bricolage; convert a Fraunces surface when you are already working in it, not as a separate errand.
 
 ## Layout
@@ -253,6 +262,16 @@ Fixed bar over a translucent paper wash (`rgba(246, 242, 234, 0.8)`, deepening t
 
 The wordmark is a square monogram tile (2.15rem, 3px radius, ink-on-paper inverted) beside the name in Space Mono 700 with a clay dot. On hover the tile shifts `-1px, -1px` onto a 3px hard shadow, cobalt on the homepage and clay elsewhere.
 
+### Footer
+Every page ends on `<site-footer>`, and it prints one line: the copyright and the year. [components/site-footer.js](components/site-footer.js) carries its own styles rather than putting them in `base-style.css`, because most views never load that file. A view whose ground is dark passes `theme="dark"`, which flips the two neutrals and changes nothing else. It is the same opt-in shape as `<main-navbar theme="dark">`.
+
+**The foot of a page is chrome, not content.** Views used to end on a bespoke colophon: method notes, a research bibliography, an explanation of what the tool actually is. It was a paragraph nobody reached, and it made every page end differently for no gain. Anything a reader genuinely needs lives in the content above instead. A licence credit sits with the data it covers, so `views/nebo` puts the Hipparcos and d3-celestial credit in the readings panel and `views/beseda` keeps its CC BY-SA line as the last line of the page. A privacy note sits on the screen it describes, which is why the tells ledger already said what the tells footer was repeating.
+
+### The Back Arrow
+A view's back arrow is `<a id="back-link">` plus [components/back-link.js](components/back-link.js), loaded before the view's own script. The `href` is only the last resort. The script tries, in order: a screen inside this view, then the same-origin page the visitor arrived from, then the href.
+
+"A screen inside this view" is the part that is easy to miss. `views/tells` is a grid, an index, a drill, a ledger and 48 plates in one document; `views/beseda` opens topic panels the same way. Opening one and pressing back used to throw the reader out to the homepage, skipping every screen they had walked through. Depth is stamped into `history.state`, not read off `history.length`, which counts the whole tab and says nothing about this document: someone who lands straight on a shared deep link is depth zero and must still leave the page on the first click. `tests/back-link.test.mjs` runs the real script against stub globals and holds that line.
+
 ### The Numbered Index Row
 The system's signature component. A three-column grid: a Space Mono ordinal in stone, the content block, and a mono arrow in clay, separated from its neighbours by a hairline. The headline sits flat with a transparent `text-shadow` declared; on hover, focus-within, or active it pops onto `0.08em 0.08em 0 var(--acc)` while the ordinal and arrow take the accent and the arrow nudges `4px, -4px`. The whole row is one stretched-link tap target (`.pindex__cover`), so nothing depends on hover being available. Precedent: `.pindex__row` in [views/homepage/kinetic.css](views/homepage/kinetic.css).
 
@@ -271,6 +290,8 @@ A label, a rule, and a count. The ordinal is set in outline (`-webkit-text-strok
 - **Do** append `transform: translateZ(0)` and `backface-visibility: hidden` to stacked gradient or `clip-path` layers to stop hairline seams on high-DPI displays. Append, never replace an existing transform, and skip `backface-visibility` on anything rotating past 90deg.
 - **Do** ship a `prefers-reduced-motion` override with any new animation. 32 stylesheets already carry one.
 - **Do** give every hover affordance a `:focus-visible` equivalent, and make row-level targets a stretched link rather than a hover-only region.
+- **Do** end every page on `<site-footer>`, and give it `theme="dark"` on a dark ground.
+- **Do** let the back arrow walk a view's own screens before it leaves the page, by loading `back-link.js` rather than trusting the `href`.
 
 ### Don't:
 - **Don't** reach for Fraunces on a new surface. Bricolage Grotesque is the display face; Fraunces is drift being migrated out.
@@ -281,6 +302,9 @@ A label, a rule, and a count. The ordinal is set in outline (`-webkit-text-strok
 - **Don't** exceed a 4px radius on any editorial surface. The 999px pill and 16px `--border-radius` in the `:root` block are legacy.
 - **Don't** use a pure grey, a pure black, or a pure white. Every neutral in this system is warm.
 - **Don't** ship a native `<input type="date">`.
+- **Don't** set an eyebrow, ear, kicker or price line in a header for texture. If it names no count, date, state or section, it is clutter, and it is worst on the screen with the least room.
+- **Don't** end a page on a bespoke colophon. Method notes, bibliographies and "what this actually is" prose either belong in the content or belong nowhere.
+- **Don't** point the back arrow at the homepage and stop thinking. On a view with more than one screen that is a trapdoor out of the page.
 - **Don't** apply the house palette to a showcase project that has committed to its own world.
 
 ### Where the system lives

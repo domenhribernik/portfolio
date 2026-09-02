@@ -32,9 +32,8 @@
 
         <!-- Masthead -->
         <header class="reveal reveal-1 relative border-b-2 border-ink pb-6 sm:pb-8 mb-6 sm:mb-8">
-            <div class="flex items-center justify-between mb-5">
-                <a id="back-link" href="../../" class="shrink-0 whitespace-nowrap text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Back">&larr; back</a>
-                <span class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone text-right">Plate No. 4 &middot; Network Cartography</span>
+            <div class="mb-5">
+                <a id="back-link" href="../../" class="inline-block text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Back">&larr; back</a>
             </div>
             <div class="flex items-end justify-between gap-6">
                 <div>
@@ -148,15 +147,13 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-4" id="compareGrid"></div>
         </section>
 
-        <!-- Colophon -->
-        <footer class="reveal reveal-6 mt-10 pt-4 border-t border-hairline flex flex-wrap gap-x-6 gap-y-1 justify-between">
-            <p class="font-mono text-[0.7rem] text-stone/80">All sources are free tiers, queried straight from your browser. No keys, nothing stored.</p>
-            <p class="font-mono text-[0.7rem] text-stone/60">Tiles &copy; CARTO &middot; Data &copy; OpenStreetMap</p>
-        </footer>
     </div>
+
+    <site-footer></site-footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../components/back-link.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
