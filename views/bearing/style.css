@@ -16,6 +16,8 @@
   --bone:#ece4d3;      /* the knockout: every committed mark and letterform */
   --signal:#ff6a2b;    /* second ink: provisional, and the den */
   --signal-dk:#e04f14;
+  --rule:rgba(122,115,155,.55);   /* --faint at 55%: the ruled edge of a well */
+  --bone-hi:#fff8ea;   /* bone lifted, the only state a bone fill takes */
 
   --cond:'Fira Sans Condensed',system-ui,sans-serif;
   --sans:'Fira Sans',system-ui,sans-serif;
@@ -107,7 +109,7 @@ input:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
 }
 .btn:hover{background:rgba(236,228,211,.12)}
 .btn--fill{background:var(--bone); color:var(--plate); border-color:var(--bone)}
-.btn--fill:hover{background:#fff8ea}
+.btn--fill:hover{background:var(--bone-hi)}
 .btn[disabled]{opacity:.4; cursor:default}
 .btn[disabled]:hover{background:transparent}
 .row{display:flex; gap:9px}
@@ -145,6 +147,8 @@ input:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
 .needle-head{fill:var(--signal)}
 .ray{stroke:var(--bone); stroke-width:1.2; fill:none}
 .ray.b{stroke-dasharray:5 4}
+/* last cycle's readings, on their way out */
+.ray.faded{stroke:var(--faint); stroke-opacity:.5; stroke-width:.9}
 .wedge{fill:var(--bone); fill-opacity:.07}
 .truth{stroke:var(--signal); stroke-width:1; stroke-dasharray:3 4; stroke-opacity:.85}
 .truth-ring{fill:none; stroke:var(--signal); stroke-width:1.8}
@@ -174,7 +178,11 @@ input:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
 .tab[aria-selected="true"]{color:var(--bone); border-bottom-color:var(--bone)}
 
 .chart{display:block; width:100%; height:84px; background:var(--plate);
-  border:1px solid rgba(122,115,155,.55)}
+  border:1px solid var(--rule)}
+/* display:block beats the hidden attribute's UA display:none, so the
+   crossing tab was drawing an empty recorder well with the last sweep's
+   gate still ruled across it. */
+.chart[hidden]{display:none}
 .trace{fill:none; stroke:var(--signal); stroke-width:1.5; stroke-linejoin:round; stroke-linecap:round}
 .chart-grid{stroke:var(--faint); stroke-opacity:.45; stroke-width:.6}
 .chart-num{fill:var(--mid); font-family:var(--mono); font-size:8px}
@@ -188,10 +196,13 @@ input:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
 .meta b{color:var(--bone); font-weight:500}
 .meta b.bad{color:var(--signal)}
 
-.bar{height:6px; background:var(--plate); border:1px solid rgba(122,115,155,.55);
-  margin-top:11px; position:relative}
-.bar i{position:absolute; inset:0 auto 0 0; background:var(--signal);
-  transition:width .25s var(--ease)}
+.bar{height:6px; background:var(--plate); border:1px solid var(--rule);
+  margin-top:11px; position:relative; overflow:hidden}
+/* scaleX, never width: animating width relayouts the block on every frame
+   of the fill, and this sits directly above the readout. */
+.bar i{position:absolute; inset:0; background:var(--signal);
+  transform-origin:left center; transform:scaleX(0);
+  transition:transform .25s var(--ease)}
 .hr{height:1px; background:var(--faint); opacity:.6; margin:11px 0 8px}
 .caption{font-family:var(--cond); font-size:11px; letter-spacing:.11em;
   text-transform:uppercase; color:var(--mid)}
@@ -247,15 +258,132 @@ input:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
 .collar:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
 
 .waiting{
-  font-family:var(--cond); font-weight:700; font-size:12px; letter-spacing:.14em;
-  text-transform:uppercase; color:var(--mid); padding:14px 0; text-align:center;
+  flex:1 1 auto; font-family:var(--cond); font-weight:700; font-size:12px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--mid);
+  padding:14px 0; text-align:center; line-height:1.5;
 }
+/* A whole sentence, so sentence case: .waiting is tracked uppercase and
+   built for two words of status, not for a rule that has to be read. */
+.rule-note{
+  flex:1 1 auto; align-self:center; font-size:12px; line-height:1.4;
+  color:var(--mid); max-width:34ch;
+}
+
 .pending{stroke:var(--signal); stroke-width:1.4; stroke-dasharray:3 3; fill:none}
 .pending-mark{fill:none; stroke:var(--signal); stroke-width:1.8}
-.fix-mark{fill:none; stroke:var(--bone); stroke-width:1.4}
-.fix-mark.tight{stroke:var(--bone); stroke-width:2.2}
-.fix-mark.miss{stroke:var(--faint)}
-.den-mark{fill:none; stroke:var(--signal); stroke-width:2.4}
 .partner{fill:var(--plate); stroke:var(--mid); stroke-width:1.4}
 .unwalked{fill:var(--faint); fill-opacity:.10}
 .reach{fill:var(--signal); fill-opacity:.22}
+
+/* ---- the track -----------------------------------------------------
+   Fixes joined in the order they were taken. The collar you are working
+   reads at full strength; the other recedes to the grid, because a plate
+   with two live tracks on it is a plate with none. */
+.track{fill:none; stroke:var(--bone); stroke-width:1.3; stroke-linejoin:round;
+  stroke-linecap:round; stroke-opacity:.85}
+.track.other{stroke:var(--mid); stroke-opacity:.4; stroke-dasharray:2 3}
+.fix-mark{fill:var(--bone)}
+.fix-mark.other{fill:var(--mid); fill-opacity:.45}
+.fix-mark.last{fill:var(--bone); stroke:var(--plate); stroke-width:1.2}
+.fix-label{fill:var(--bone); font-family:var(--cond); font-weight:700;
+  font-size:10px; letter-spacing:.08em}
+
+/* ---- a called intercept --------------------------------------------
+   Orange while it is one person's proposal, knocked out to bone the
+   moment the other agrees. Same rule as every other mark on the plate:
+   the second ink means you do not have it yet. */
+.call-ring{fill:none; stroke-width:1.2; stroke-dasharray:4 4}
+.call-ring.proposed{stroke:var(--signal); stroke-opacity:.9}
+.call-ring.agreed{stroke:var(--bone); stroke-opacity:.85; stroke-dasharray:none}
+.call-ring.contact{stroke:var(--bone); stroke-width:2; stroke-dasharray:none}
+.call-ring.near{stroke:var(--mid); stroke-dasharray:none}
+.call-ring.missed{stroke:var(--faint); stroke-opacity:.6}
+.call-dot.proposed{fill:var(--signal)}
+.call-dot.agreed,.call-dot.contact{fill:var(--bone)}
+.call-dot.near{fill:var(--mid)}
+.call-dot.missed{fill:var(--faint)}
+.call-label{font-family:var(--mono); font-size:8px; text-anchor:middle; fill:var(--mid)}
+.call-label.proposed{fill:var(--signal)}
+.call-label.agreed,.call-label.contact{fill:var(--bone)}
+
+/* ---- dawn ------------------------------------------------------------
+   Your reconstruction in bone, hers in the second ink. Orange has meant
+   "the thing you do not have" all night, and at dawn that is exactly what
+   her real track is. */
+.truth-track{fill:none; stroke:var(--signal); stroke-width:1.6;
+  stroke-linejoin:round; stroke-linecap:round}
+.truth-end{fill:var(--signal)}
+.truth-label{fill:var(--signal); font-family:var(--cond); font-weight:700;
+  font-size:11px; text-anchor:end}
+.den-mark{fill:none; stroke:var(--signal); stroke-width:1.2; stroke-dasharray:2 2}
+
+/* ---- the hunches ---------------------------------------------------- */
+.chips{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:9px}
+.chips__head{
+  flex:1 0 100%; font-family:var(--cond); font-weight:700; font-size:10px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--mid); margin-bottom:2px;
+}
+.chip{
+  flex:1 1 46%; min-height:44px; cursor:pointer; border-radius:2px; text-align:left;
+  background:transparent; border:1px dashed var(--faint); color:var(--mid);
+  padding:8px 9px; display:flex; flex-direction:column; gap:2px;
+}
+.chip b{
+  font-family:var(--cond); font-weight:700; font-size:11px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--bone);
+}
+.chip small{font-family:var(--sans); font-size:10.5px; line-height:1.3; color:var(--mid)}
+.chip[aria-pressed="true"]{border-style:solid; border-color:var(--signal)}
+.chip[aria-pressed="true"] b{color:var(--signal)}
+.chip:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
+.chips__note{
+  flex:1 0 100%; font-size:11px; line-height:1.35; color:var(--mid); margin-top:2px;
+}
+
+/* ---- the intercept strip -------------------------------------------- */
+.callbar{
+  border-left:2px solid var(--signal); padding:8px 0 8px 10px; margin-bottom:9px;
+  display:flex; flex-direction:column; gap:7px;
+}
+.callbar[hidden]{display:none}
+.callbar__row{
+  display:flex; align-items:center; gap:9px;
+  font-family:var(--mono); font-size:11.5px; color:var(--mid);
+}
+.callbar__row b{color:var(--bone); font-weight:500}
+.callbar__row.ok{color:var(--bone)}
+.callbar__row.bad{color:var(--signal)}
+.callcyc{font-family:var(--mono); font-weight:700; font-size:15px; color:var(--bone); min-width:52px; text-align:center}
+.step{
+  width:38px; height:38px; cursor:pointer; border-radius:2px;
+  background:transparent; border:1px solid var(--faint); color:var(--bone);
+  font-family:var(--mono); font-size:17px; line-height:1;
+}
+.step:hover{background:var(--tint)}
+.step:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
+.collar.got b{color:var(--bone)}
+.collar.got{border-color:var(--bone)}
+.brief .wx{color:var(--mid)}
+
+/* ---- the dawn caption block ----------------------------------------- */
+.legend{display:flex; gap:16px; margin-bottom:9px; flex-wrap:wrap}
+.key{
+  display:flex; align-items:center; gap:6px;
+  font-family:var(--cond); font-size:10.5px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--mid);
+}
+.key i{width:16px; height:0; border-top-width:2px; border-top-style:solid; display:block}
+.k-yours{border-top-color:var(--bone)}
+.k-truth{border-top-color:var(--signal)}
+.reveal{display:flex; flex-direction:column; gap:9px; margin-bottom:4px}
+.reveal__row{display:grid; grid-template-columns:1fr auto; gap:2px 10px; align-items:baseline}
+.reveal__row b{font-family:var(--cond); font-size:13.5px; font-weight:700; color:var(--bone)}
+.reveal__row small{
+  grid-column:1 / -1; font-size:11.5px; color:var(--mid); font-family:var(--sans);
+}
+.grade{
+  font-family:var(--cond); font-weight:700; font-size:10.5px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--mid);
+}
+.grade.contact{color:var(--bone)}
+.grade.missed,.grade.none{color:var(--signal)}

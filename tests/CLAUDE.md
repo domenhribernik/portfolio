@@ -79,12 +79,28 @@ suite: bracketing at half power must beat naive peak-reading by 2x, and a
 badly set gate must be worse than not bracketing at all. If either stops being
 true the instrument has stopped being a skill and is back to being a dice roll.
 Two more guard the SNR gate, without which the loudest noise sample counts as a
-lobe and the instrument reports a confident bearing off hiss. It also greps
-`bearing-controller.php` for the constants that exist in both files.
+lobe and the instrument reports a confident bearing off hiss. It also greps the
+PHP for the constants that exist twice, in two homes: the valley's own
+dimensions are in `app/controllers/bearing/valley.php`, everything else in
+`bearing-controller.php`.
 
-`bearing-controller.test.php` (port **8964**) holds the two room rules: AN
-ANIMAL’S POSITION IS A SECRET (the raw response bytes are searched for every
-collar’s true cell, during the night and after it) and A FORGED COMMIT CHANGES
-NOTHING. It also runs a whole night to dawn. Note the deliberate non-secret: a
-sweep returns the full 360-sample trace, because reading it is the game and
-there is no opponent to cheat against.
+`bearing-sim.test.php` is the balance suite, and it holds the chain the whole
+game rests on: bracket well, get a tight fix, see the animal's shape, predict
+where she goes. It runs the real movement model over hundreds of seeds and plays
+the intercept, measuring how far the call landed in metres. Two properties must
+hold: **a night of half-power brackets lands more intercepts than the same night
+of naive peak reads** (the instrument feeds the game), and **reading the shape
+beats extrapolating in a straight line** (the behaviour profiles earn their
+place). It also checks nothing walks off the plate, nothing freezes, and the
+generator still makes ridges worth having. **No database and no server**: it
+requires the two pure modules under `app/controllers/bearing/` and calls straight
+into them, which is why neither may gain a side effect on include.
+
+`bearing-controller.test.php` (port **8964**) holds the room rules: AN ANIMAL'S
+SECRETS (the raw response bytes are searched for every collar's true cell, its
+hidden profile, its den and its track, during the night and after it), A FORGED
+COMMIT CHANGES NOTHING, and AN INTERCEPT NEEDS TWO SEATS (a call one player makes
+and seconds alone must not be able to score, however good the guess). It also
+runs a whole night to dawn. Note the deliberate non-secret: a sweep returns the
+full 360-sample trace, because reading it is the game and there is no opponent to
+cheat against.

@@ -11,22 +11,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 require_once __DIR__ . '/../config/dev-mode.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/bearing/movement.php';   // pulls in bearing/valley.php
 
 // No auth include on purpose: rooms are anonymous and throwaway. A player is
 // a secret token minted at create/join/reclaim, stored only as a SHA-256 hash.
 //
-// THE AUTHORITY RULE. The server owns the valley: terrain, the animals and
-// their movement all derive from bearing_rooms.seed and are generated here.
-// A client posts an intent (sweep this collar, walk to this cell, log a fix
-// here) and everything else in the body is ignored.
+// THE AUTHORITY RULE. The server owns the valley: terrain, the animals,
+// their hidden behaviour profiles and their movement all derive from
+// bearing_rooms.seed and are generated here. A client posts an intent
+// (sweep this collar, walk to this cell, log a fix, call an intercept) and
+// everything else in the body is ignored.
 //
 // WHAT IS DELIBERATELY NOT SECRET. A sweep hands back the whole 360-sample
 // trace, and the true bearing is the peak of it. That IS the game: the skill
 // is reading it well. Reading it perfectly by script would only be cheating
 // if there were an opponent, and there is not: both seats want the same
 // outcome. So the trace goes over honestly. What never goes over is where
-// the animal actually IS, because distance is the thing the pair has to earn
-// by crossing two bearings from two different places.
+// the animal actually IS, what she DOES, and where she has BEEN, because
+// those are what the pair has to earn.
 
 register_shutdown_function(function () {
     global $DEV_MODE;
@@ -42,22 +44,23 @@ register_shutdown_function(function () {
 
 const CODE_ALPHABET = 'BCDFGHJKLMNPQRSTVWXZ';
 const ROOM_CAP = 2;
-const N = 32;                    // valley is N x N cells
-const CELL_M = 100;              // one cell is a hundred metres
-const CYCLES = 24;               // dusk to dawn
+// Ten, not twenty-four. A night is one sitting of fifteen to twenty minutes,
+// and the old length was mostly repetition of the same three actions.
+const CYCLES = 10;
 const EVENT_PAGE = 200;
 const IDLE_ROOM_HOURS = 6;
 const RECLAIM_IDLE_SECONDS = 20;
 const ONLINE_SECONDS = 25;
 const SWEEP_MINUTES = 15;
 const MOVE_MAX = 6;              // cells a station can walk in one cycle
-const FIX_TIGHT_M = 250;         // a fix this close to truth counts as tight
-const COLLARS = ['F2', 'M7', 'F9'];
-// Two questions a night can ask, both answerable from the fixes alone.
-// 'den': she stops moving and doubles her pulse. Find where.
-// 'silent': a collar fails partway through and is never heard again.
-//            Whatever you had on it by then is all you will ever have.
-const BRIEFS = ['den', 'silent'];
+// How near a station has to be standing for a called intercept to count as
+// attended at all. Mirrored in views/bearing/logic.js.
+const INTERCEPT_RADIUS = 3;
+const CONTACT_M = 300;           // a call this close to her is contact
+const NEAR_M = 650;              // this close is near, beyond it is a miss
+// Two collars, not three. Ten cycles buys about three fixes per animal and
+// three animals meant nobody ever learned enough about any of them.
+const COLLARS = ['F2', 'M7'];
 
 /* ---------------------------------------------------------------- plumbing */
 
@@ -95,139 +98,42 @@ function cleanName($raw): string {
 function mintToken(): string { return bin2hex(random_bytes(16)); }
 function hashToken(string $t): string { return hash('sha256', $t); }
 
-/* ---- deterministic noise, mirrored in views/bearing/logic.js -------------
-   Same integer hash on both sides so a trace generated here and a trace
-   generated in the practice trainer behave identically. */
-function hash32(int $x): float {
-    $x = ($x ^ 61) ^ (($x >> 16) & 0xFFFF);
-    $x = ($x + ($x << 3)) & 0xFFFFFFFF;
-    $x = $x ^ (($x >> 4) & 0x0FFFFFFF);
-    $x = ($x * 0x27d4eb2d) & 0xFFFFFFFF;
-    $x = $x ^ (($x >> 15) & 0x1FFFF);
-    return ($x & 0xFFFFFFFF) / 4294967296.0;
-}
-function valueNoise(float $pos, int $period, int $salt): float {
-    $s = $pos / $period; $i = (int)floor($s); $f = $s - $i;
-    $h0 = hash32($i * 7919 + $salt); $h1 = hash32(($i + 1) * 7919 + $salt);
-    $t = $f * $f * (3 - 2 * $f);
-    return $h0 + ($h1 - $h0) * $t;
-}
-
-/* ------------------------------------------------------------- the valley */
-
-/** Row-major elevation, one digit per cell. Ridges are what make a bearing
-    lie, so the generator has to produce real ones rather than gentle hills. */
-function generateTerrain(int $seed): string {
-    $out = '';
-    for ($y = 0; $y < N; $y++) {
-        for ($x = 0; $x < N; $x++) {
-            $v  = valueNoise($x + $y * 0.37, 9, $seed) * 0.55;
-            $v += valueNoise($y - $x * 0.29, 7, $seed + 991) * 0.45;
-            $v += valueNoise($x * 0.6 + $y * 0.6, 3, $seed + 5077) * 0.22;
-            // a valley floor: pull the middle band down so there is somewhere to walk
-            $v -= 0.30 * exp(-pow(($y - N / 2) / (N * 0.28), 2));
-            $d = (int)max(0, min(9, round($v * 11)));
-            $out .= (string)$d;
-        }
-    }
-    return $out;
-}
-function elevAt(string $terrain, int $x, int $y): int {
-    if ($x < 0 || $y < 0 || $x >= N || $y >= N) return 0;
-    return (int)$terrain[$y * N + $x];
-}
-function cellIndex(int $x, int $y): int { return $y * N + $x; }
-function cellXY(int $idx): array { return [$idx % N, intdiv($idx, N)]; }
-
-/** Does the ground get in the way? Walk the line and compare each cell's
-    height against the straight path between the two ends. */
-function lineOfSight(string $terrain, array $from, array $to): array {
-    [$x0, $y0] = $from; [$x1, $y1] = $to;
-    $steps = (int)max(1, ceil(max(abs($x1 - $x0), abs($y1 - $y0))));
-    $h0 = elevAt($terrain, $x0, $y0) + 2;   // an antenna is held up
-    $h1 = elevAt($terrain, $x1, $y1) + 1;   // a collar is on an animal
-    $worst = null; $worstBy = 0.0;
-    for ($i = 1; $i < $steps; $i++) {
-        $f = $i / $steps;
-        $x = (int)round($x0 + ($x1 - $x0) * $f);
-        $y = (int)round($y0 + ($y1 - $y0) * $f);
-        $line = $h0 + ($h1 - $h0) * $f;
-        $ground = elevAt($terrain, $x, $y);
-        if ($ground > $line && ($ground - $line) > $worstBy) {
-            $worstBy = $ground - $line; $worst = [$x, $y];
-        }
-    }
-    return ['clear' => $worst === null, 'ridge' => $worst, 'by' => $worstBy];
-}
-
-function bearingBetween(array $from, array $to): float {
-    $deg = atan2($to[0] - $from[0], -($to[1] - $from[1])) * 180 / M_PI;
-    return fmod($deg + 360, 360);
-}
-function angleDelta(float $a, float $b): float {
-    return fmod(fmod($a - $b, 360) + 540, 360) - 180;
-}
-
-/** The 360-sample trace a station hears when it sweeps a collar.
-    When a ridge blocks the path the signal does not vanish: it arrives off
-    the reflecting slope instead, so the trace shows a confident hump in
-    the wrong direction. That is the whole reason two opinions beat one. */
-function sweepTrace(string $terrain, array $station, array $animal, int $seed, int $cycle, string $collar): array {
-    $los = lineOfSight($terrain, $station, $animal);
-    $source = $los['clear'] ? $animal : $los['ridge'];
-    $true = bearingBetween($station, $source);
-    $dist = sqrt(pow($animal[0] - $station[0], 2) + pow($animal[1] - $station[1], 2));
-    $reach = 1 - min(0.5, $dist / 36);
-    if (!$los['clear']) $reach *= 0.55;      // a bounce is quieter and broader
-    $lobe = $los['clear'] ? 5 : 3;           // and its hump is fatter
-
-    $salt = $seed * 31 + $cycle * 7 + crc32($collar);
-    $out = [];
-    for ($a = 0; $a < 360; $a++) {
-        $d = abs(angleDelta((float)$a, $true));
-        $main = pow(max(0, cos($d * M_PI / 180)), $lobe);
-        $back = 0.13 * pow(max(0, cos((180 - $d) * M_PI / 180)), 8);
-        $noise = (valueNoise((float)$a, 9, $salt) * 0.62 + valueNoise((float)$a, 3, $salt + 17) * 0.38) - 0.5;
-        $v = ($main + $back) * $reach + 0.06 + $noise * (0.09 + 0.16 * (1 - $reach));
-        $out[] = (int)round(max(0, min(1, $v)) * 1000);
-    }
-    return ['trace' => $out, 'bounced' => !$los['clear']];
-}
-
 /* ------------------------------------------------------------- the animals */
 
 function seedAnimals(PDO $pdo, int $roomId, int $seed, string $terrain): void {
     $ins = $pdo->prepare(
-        'INSERT INTO bearing_animals (room_id, collar, at, duty, phase, pace) VALUES (?, ?, ?, ?, ?, ?)');
+        'INSERT INTO bearing_animals (room_id, collar, at, profile, den_cell, track, duty, phase)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $profiles = assignProfiles($seed, count(COLLARS));
     $i = 0;
     foreach (COLLARS as $collar) {
-        // spread them across the valley, away from the edges
-        $x = 3 + (int)floor(hash32($seed + $i * 733) * (N - 6));
-        $y = 3 + (int)floor(hash32($seed + $i * 977 + 41) * (N - 6));
-        $duty = [1, 2, 2][$i];                       // F2 every cycle, the others alternate
-        $phase = [0, 0, 1][$i];
-        $pace = [2, 3, 2][$i];
-        $ins->execute([$roomId, $collar, cellIndex($x, $y), $duty, $phase, $pace]);
+        $profile = $profiles[$i];
+        $at = bearingStart($terrain, $profile, $seed, $i);
+        // A den animal orbits where she started. Nothing else uses this.
+        $den = $profile === 'den' ? $at : null;
+        $duty = [1, 2][$i];                          // F2 every cycle, M7 alternate
+        $phase = [0, 0][$i];
+        $ins->execute([$roomId, $collar, $at, $profile, $den, (string)$at, $duty, $phase]);
         $i++;
     }
 }
 
-/** Everything moves once both seats have committed. A denned collar does not. */
-function moveAnimals(PDO $pdo, array $room): void {
+/** Everything moves once both seats have committed, along the shape it was
+    dealt. The track is appended as it goes, because dawn draws the real one
+    over the one the pair reconstructed and that comparison is the payoff. */
+function moveAnimals(PDO $pdo, array $room, array $players): void {
     $rows = $pdo->prepare('SELECT * FROM bearing_animals WHERE room_id = ?');
     $rows->execute([$room['id']]);
-    $upd = $pdo->prepare('UPDATE bearing_animals SET at = ?, denned = ? WHERE id = ?');
+    $upd = $pdo->prepare('UPDATE bearing_animals SET at = ?, track = ? WHERE id = ?');
     $cycle = (int)$room['cycle'];
+    $stations = array_map(fn($p) => (int)$p['pos'], $players);
     foreach ($rows->fetchAll(PDO::FETCH_ASSOC) as $a) {
-        $denned = (int)$a['denned'];
-        if ($a['collar'] === $room['brief_collar'] && $cycle >= (int)$room['den_cycle']) $denned = 1;
-        if ($denned) { $upd->execute([(int)$a['at'], 1, $a['id']]); continue; }
-        [$x, $y] = cellXY((int)$a['at']);
-        $dir = hash32((int)$room['seed'] + crc32($a['collar']) + $cycle * 131) * 2 * M_PI;
-        $step = (int)$a['pace'];
-        $nx = max(1, min(N - 2, $x + (int)round(cos($dir) * $step)));
-        $ny = max(1, min(N - 2, $y + (int)round(sin($dir) * $step)));
-        $upd->execute([cellIndex($nx, $ny), 0, $a['id']]);
+        $next = bearingStep(
+            $room['terrain'], $a['profile'], (int)$a['at'],
+            $a['den_cell'] === null ? null : (int)$a['den_cell'],
+            $cycle, (int)$room['seed'], $a['collar'], $stations
+        );
+        $upd->execute([$next, $a['track'] . ',' . $next, $a['id']]);
     }
 }
 
@@ -288,23 +194,23 @@ function roomSummary(array $room): array {
         'status'  => $room['status'],
         'cycle'   => (int)$room['cycle'],
         'cycles'  => (int)$room['cycles'],
-        'brief'   => $room['brief'],
-        'collar'  => $room['brief_collar'],
+        'weather' => $room['weather'],
         'collars' => COLLARS,
+        'profiles' => PROFILES,          // the four names, never which is which
         'n'       => N,
         'cellM'   => CELL_M,
+        'radius'  => INTERCEPT_RADIUS,
     ];
 }
 function collarSchedule(PDO $pdo, int $roomId): array {
-    $st = $pdo->prepare('SELECT collar, duty, phase, denned FROM bearing_animals WHERE room_id = ?');
+    $st = $pdo->prepare('SELECT collar, duty, phase FROM bearing_animals WHERE room_id = ? ORDER BY id');
     $st->execute([$roomId]);
     $out = [];
     foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $a) {
         // duty and phase are published: sweeping a silent collar should be a
-        // planning mistake, never a guess. `denned` is only ever true once the
-        // pair could already hear the doubled pulse for themselves.
-        $out[] = ['collar' => $a['collar'], 'duty' => (int)$a['duty'],
-                  'phase' => (int)$a['phase'], 'fast' => (int)$a['denned'] === 1];
+        // planning mistake, never a guess. profile and den_cell are NOT here,
+        // and that omission is the entire night.
+        $out[] = ['collar' => $a['collar'], 'duty' => (int)$a['duty'], 'phase' => (int)$a['phase']];
     }
     return $out;
 }
@@ -319,6 +225,25 @@ function seatPayload(array $p, bool $self): array {
     if ($self) $out['revealed'] = $p['revealed'];
     return $out;
 }
+/** Called intercepts. Safe to publish in full: the pair authored every field
+    except the grade, and a grade only exists once the cycle it names has
+    already been played out. */
+function interceptPayload(PDO $pdo, int $roomId): array {
+    $st = $pdo->prepare('SELECT * FROM bearing_intercepts WHERE room_id = ? ORDER BY id');
+    $st->execute([$roomId]);
+    $out = [];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $out[] = [
+            'id' => (int)$r['id'], 'collar' => $r['collar'], 'at' => (int)$r['at'],
+            'cycle' => (int)$r['target_cycle'],
+            'by' => (int)$r['proposed_by'],
+            'confirmed' => $r['confirmed_by'] === null ? null : (int)$r['confirmed_by'],
+            'grade' => $r['grade'],
+            'errorM' => $r['error_m'] === null ? null : (int)$r['error_m'],
+        ];
+    }
+    return $out;
+}
 
 /* ---------------------------------------------------------------- actions */
 
@@ -326,20 +251,26 @@ $action = $_GET['action'] ?? '';
 try {
     Database::init();
     switch ($action) {
-        case 'create':  createRoom();  break;
-        case 'join':    joinRoom();    break;
-        case 'seats':   listSeats();   break;
-        case 'reclaim': reclaimSeat(); break;
-        case 'poll':    pollRoom();    break;
-        case 'commit':  postCommit();  break;
-        case 'read':    postRead();    break;
-        case 'again':   postAgain();   break;
-        case 'leave':   leaveRoom();   break;
+        case 'create':    createRoom();     break;
+        case 'join':      joinRoom();       break;
+        case 'seats':     listSeats();      break;
+        case 'reclaim':   reclaimSeat();    break;
+        case 'poll':      pollRoom();       break;
+        case 'commit':    postCommit();     break;
+        case 'read':      postRead();       break;
+        case 'note':      postNote();       break;
+        case 'intercept': postIntercept();  break;
+        case 'again':     postAgain();      break;
+        case 'leave':     leaveRoom();      break;
         default: sendError('Unknown action', 404);
     }
 } catch (Throwable $e) {
     global $DEV_MODE;
     sendError(($DEV_MODE ?? false) ? $e->getMessage() : 'Internal server error', 500);
+}
+
+function newValley(int $seed): array {
+    return [generateTerrain($seed), WEATHERS[$seed % count(WEATHERS)]];
 }
 
 function createRoom(): void {
@@ -350,10 +281,7 @@ function createRoom(): void {
     $pdo = db();
     purgeIdleRooms($pdo);
     $seed = random_int(1, 2000000000);
-    $terrain = generateTerrain($seed);
-    $brief = BRIEFS[$seed % count(BRIEFS)];
-    $briefCollar = COLLARS[($seed >> 3) % count(COLLARS)];
-    $denCycle = 9 + ($seed % 8);
+    [$terrain, $weather] = newValley($seed);
 
     for ($attempt = 0; $attempt < 6; $attempt++) {
         $code = '';
@@ -361,9 +289,9 @@ function createRoom(): void {
         try {
             $pdo->beginTransaction();
             $st = $pdo->prepare(
-                'INSERT INTO bearing_rooms (code, status, seed, terrain, cycle, cycles, brief, brief_collar, den_cycle)
-                 VALUES (?, "lobby", ?, ?, 0, ?, ?, ?, ?)');
-            $st->execute([$code, $seed, $terrain, CYCLES, $brief, $briefCollar, $denCycle]);
+                'INSERT INTO bearing_rooms (code, status, seed, terrain, cycle, cycles, weather)
+                 VALUES (?, "lobby", ?, ?, 0, ?, ?)');
+            $st->execute([$code, $seed, $terrain, CYCLES, $weather]);
             $roomId = (int)$pdo->lastInsertId();
             seedAnimals($pdo, $roomId, $seed, $terrain);
 
@@ -559,6 +487,7 @@ function pollRoom(): void {
         'you' => $you,
         'partner' => $partner,
         'collars' => collarSchedule($pdo, (int)$room['id']),
+        'intercepts' => interceptPayload($pdo, (int)$room['id']),
         'terrain' => maskedTerrain($room['terrain'], $you['revealed'] ?? str_repeat('0', N * N)),
         'events' => $events,
         'last' => $last,
@@ -606,8 +535,7 @@ function postCommit(): void {
         } elseif ($kind === 'move') {
             $at = (int)($action['at'] ?? -1);
             if ($at < 0 || $at >= N * N) { $pdo->rollBack(); sendError('Off the plate', 422, ['reason' => 'badCell']); }
-            [$nx, $ny] = cellXY($at); [$ox, $oy] = cellXY((int)$me['pos']);
-            if (max(abs($nx - $ox), abs($ny - $oy)) > MOVE_MAX) { $pdo->rollBack(); sendError('Too far to walk', 422, ['reason' => 'tooFar']); }
+            if (chebyshev($at, (int)$me['pos']) > MOVE_MAX) { $pdo->rollBack(); sendError('Too far to walk', 422, ['reason' => 'tooFar']); }
             $clean['at'] = $at;
         } elseif ($kind === 'log') {
             $collar = (string)($action['collar'] ?? '');
@@ -652,10 +580,140 @@ function postRead(): void {
     if (!in_array($collar, COLLARS, true)) sendError('No such collar', 422, ['reason' => 'badCollar']);
     if ($deg < 0 || $deg >= 360) sendError('Not a bearing', 422, ['reason' => 'badBearing']);
     logEvent($pdo, (int)$room['id'], (int)$me['id'], 'bearing', [
-        'collar' => $collar, 'deg' => round($deg, 1),
+        'collar' => $collar, 'deg' => round($deg, 1), 'cycle' => (int)$room['cycle'],
         'sigma' => round(max(0.2, min(45, $sigma)), 2), 'from' => (int)$me['pos'], 'seat' => (int)$me['seat'],
     ]);
     sendJson(['ok' => true]);
+}
+
+/** A hypothesis chip. Free, non-binding, shared, and costing no cycle,
+    because its whole job is to give the pair something concrete to disagree
+    about out loud. The server stores no opinion of its own about it. */
+function postNote(): void {
+    $body = readBody();
+    $code = normalizeCode($body['code'] ?? '');
+    $token = (string)($body['token'] ?? '');
+    if (!isValidCode($code)) sendError('Bad code', 422, ['reason' => 'badCode']);
+    $pdo = db();
+    $st = $pdo->prepare('SELECT * FROM bearing_rooms WHERE code = ?');
+    $st->execute([$code]);
+    $room = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$room) sendError('No such room', 404, ['reason' => 'noRoom']);
+    $me = playerByToken($pdo, (int)$room['id'], $token);
+    if (!$me) sendError('Not seated', 401, ['reason' => 'seatTaken']);
+
+    $collar = (string)($body['collar'] ?? '');
+    $profile = (string)($body['profile'] ?? '');
+    if (!in_array($collar, COLLARS, true)) sendError('No such collar', 422, ['reason' => 'badCollar']);
+    if (!in_array($profile, PROFILES, true)) sendError('No such shape', 422, ['reason' => 'badProfile']);
+    logEvent($pdo, (int)$room['id'], (int)$me['id'], 'note', [
+        'collar' => $collar, 'profile' => $profile,
+        'on' => !empty($body['on']), 'seat' => (int)$me['seat'],
+    ]);
+    sendJson(['ok' => true]);
+}
+
+/* -------------------------------------------------------- the commitment */
+
+/** Propose, confirm or withdraw an intercept.
+ *
+ * TWO SEATS ARE REQUIRED, and that is the point of the whole mechanic: one
+ * player names a cell and a cycle, the other has to agree before it locks.
+ * Each of them has walked different ground, so each knows things about the
+ * proposed cell the other cannot see, and that disagreement is the only
+ * conversation in the game that needs two people who can talk freely.
+ *
+ * Deliberately NOT costing a cycle, which the design sketch had it do. The
+ * real price is already there and is far more legible: the call is only
+ * attended if a station is standing within INTERCEPT_RADIUS of the cell at
+ * the target cycle, and walking there costs cycles you wanted for sweeping.
+ * Taxing the proposal on top would have charged twice for one decision and
+ * would have forced the lockstep to carry a second kind of commit.
+ */
+function postIntercept(): void {
+    $body = readBody();
+    $code = normalizeCode($body['code'] ?? '');
+    $token = (string)($body['token'] ?? '');
+    if (!isValidCode($code)) sendError('Bad code', 422, ['reason' => 'badCode']);
+
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $room = lockRoomByCode($pdo, $code);
+        if (!$room) { $pdo->rollBack(); sendError('No such room', 404, ['reason' => 'noRoom']); }
+        if ($room['status'] !== 'night') { $pdo->rollBack(); sendError('Not tonight', 409, ['reason' => 'notNight']); }
+        $me = playerByToken($pdo, (int)$room['id'], $token);
+        if (!$me) { $pdo->rollBack(); sendError('Not seated', 401, ['reason' => 'seatTaken']); }
+        $roomId = (int)$room['id'];
+        $cycle = (int)$room['cycle'];
+        $mode = (string)($body['mode'] ?? 'propose');
+
+        if ($mode === 'propose') {
+            $collar = (string)($body['collar'] ?? '');
+            $at = (int)($body['at'] ?? -1);
+            $target = (int)($body['cycle'] ?? -1);
+            if (!in_array($collar, COLLARS, true)) { $pdo->rollBack(); sendError('No such collar', 422, ['reason' => 'badCollar']); }
+            if ($at < 0 || $at >= N * N) { $pdo->rollBack(); sendError('Off the plate', 422, ['reason' => 'badCell']); }
+            // Strictly ahead: calling a cycle already played would be calling
+            // a result, and calling the last one leaves no time to walk.
+            if ($target <= $cycle || $target >= (int)$room['cycles']) {
+                $pdo->rollBack(); sendError('Not a future cycle', 422, ['reason' => 'badCycle']);
+            }
+            $live = $pdo->prepare(
+                'SELECT COUNT(*) FROM bearing_intercepts WHERE room_id = ? AND collar = ? AND grade IS NULL');
+            $live->execute([$roomId, $collar]);
+            if ((int)$live->fetchColumn() > 0) {
+                $pdo->rollBack(); sendError('One call at a time', 409, ['reason' => 'callPending']);
+            }
+            $pdo->prepare(
+                'INSERT INTO bearing_intercepts (room_id, collar, proposed_by, at, target_cycle)
+                 VALUES (?, ?, ?, ?, ?)')->execute([$roomId, $collar, (int)$me['id'], $at, $target]);
+            logEvent($pdo, $roomId, (int)$me['id'], 'called', [
+                'collar' => $collar, 'at' => $at, 'cycle' => $target, 'seat' => (int)$me['seat']]);
+
+        } elseif ($mode === 'confirm') {
+            $id = (int)($body['id'] ?? 0);
+            $st = $pdo->prepare(
+                'SELECT * FROM bearing_intercepts WHERE id = ? AND room_id = ? AND grade IS NULL FOR UPDATE');
+            $st->execute([$id, $roomId]);
+            $row = $st->fetch(PDO::FETCH_ASSOC);
+            if (!$row) { $pdo->rollBack(); sendError('No such call', 404, ['reason' => 'noCall']); }
+            // The one rule that makes this a two-person mechanic rather than
+            // a button: you cannot second your own proposal.
+            if ((int)$row['proposed_by'] === (int)$me['id']) {
+                $pdo->rollBack(); sendError('Your partner has to agree', 409, ['reason' => 'needPartner']);
+            }
+            if ($row['confirmed_by'] !== null) {
+                $pdo->rollBack(); sendError('Already agreed', 409, ['reason' => 'alreadyAgreed']);
+            }
+            if ((int)$row['target_cycle'] <= $cycle) {
+                $pdo->rollBack(); sendError('Too late for that call', 409, ['reason' => 'callStale']);
+            }
+            $pdo->prepare('UPDATE bearing_intercepts SET confirmed_by = ? WHERE id = ?')
+                ->execute([(int)$me['id'], $id]);
+            logEvent($pdo, $roomId, (int)$me['id'], 'agreed', [
+                'id' => $id, 'collar' => $row['collar'], 'seat' => (int)$me['seat']]);
+
+        } elseif ($mode === 'withdraw') {
+            $id = (int)($body['id'] ?? 0);
+            // Only while it is still a proposal. Once both seats have agreed
+            // it is a commitment and the night has to answer it.
+            $st = $pdo->prepare(
+                'DELETE FROM bearing_intercepts
+                 WHERE id = ? AND room_id = ? AND grade IS NULL AND confirmed_by IS NULL');
+            $st->execute([$id, $roomId]);
+            if ($st->rowCount() === 0) { $pdo->rollBack(); sendError('Nothing to withdraw', 409, ['reason' => 'noCall']); }
+            logEvent($pdo, $roomId, (int)$me['id'], 'dropped', ['id' => $id, 'seat' => (int)$me['seat']]);
+
+        } else {
+            $pdo->rollBack(); sendError('Unknown action', 422, ['reason' => 'badAction']);
+        }
+        $pdo->commit();
+        sendJson(['ok' => true]);
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
 }
 
 /** Elected by rowCount(): two pollers arriving in the same second cannot
@@ -700,23 +758,6 @@ function applyCycle(PDO $pdo, array $room, array $players): void {
     $cycle = (int)$room['cycle'];
     $animals = animalsByCollar($pdo, $roomId);
 
-    // the night's turn: she dens, or a collar fails
-    if ($cycle === (int)$room['den_cycle']) {
-        $target = $animals[$room['brief_collar']] ?? null;
-        if ($target) {
-            if ($room['brief'] === 'den') {
-                $pdo->prepare('UPDATE bearing_animals SET denned = 1 WHERE id = ?')->execute([$target['id']]);
-                logEvent($pdo, $roomId, null, 'den', ['collar' => $room['brief_collar']]);
-            } else {
-                $pdo->prepare('UPDATE bearing_animals SET duty = 0 WHERE id = ?')->execute([$target['id']]);
-                logEvent($pdo, $roomId, null, 'silent', ['collar' => $room['brief_collar']]);
-            }
-            $pdo->prepare('UPDATE bearing_rooms SET den_at = ? WHERE id = ?')
-                ->execute([(int)$target['at'], $roomId]);
-        }
-    }
-    $animals = animalsByCollar($pdo, $roomId);
-
     foreach ($players as $p) {
         $act = json_decode((string)$p['committed_action'], true);
         if (!is_array($act)) continue;
@@ -735,34 +776,39 @@ function applyCycle(PDO $pdo, array $room, array $players): void {
                 logEvent($pdo, $roomId, (int)$p['id'], 'silence', ['collar' => $act['collar'], 'seat' => (int)$p['seat']]);
             } else {
                 $res = sweepTrace($room['terrain'], [$sx, $sy], cellXY((int)$a['at']),
-                                  (int)$room['seed'], $cycle, $act['collar']);
+                                  (int)$room['seed'], $cycle, $act['collar'], $room['weather']);
                 logEvent($pdo, $roomId, (int)$p['id'], 'trace', [
                     'collar' => $act['collar'], 'seat' => (int)$p['seat'], 'from' => (int)$p['pos'],
-                    'fast' => (int)$a['denned'] === 1, 'trace' => $res['trace'],
+                    'trace' => $res['trace'],
                 ]);
             }
 
         } elseif ($act['kind'] === 'log') {
-            $a = $animals[$act['collar']] ?? null;
-            if ($a) {
-                [$gx, $gy] = cellXY((int)$act['at']);
-                [$tx, $ty] = cellXY((int)$a['at']);
-                $errM = sqrt(pow($gx - $tx, 2) + pow($gy - $ty, 2)) * CELL_M;
-                $grade = $errM < FIX_TIGHT_M ? 'tight' : ($errM < 550 ? 'usable' : ($errM < 1100 ? 'loose' : 'miss'));
-                $pdo->prepare('UPDATE bearing_players SET fixes_logged = fixes_logged + 1 WHERE id = ?')
-                    ->execute([$p['id']]);
-                // The distance is graded, never the truth: telling the pair
-                // exactly how wrong they were would hand them the answer.
-                logEvent($pdo, $roomId, (int)$p['id'], 'fix', [
-                    'collar' => $act['collar'], 'at' => (int)$act['at'],
-                    'grade' => $grade, 'seat' => (int)$p['seat'],
-                ]);
-            }
+            // A fix is EVIDENCE, not an answer, so nothing here compares it
+            // to the truth. Grading it against her real position used to be
+            // the night's score, which made the game "reduce your
+            // measurement error" and gave three fixes in a row no meaning
+            // beyond three separate numbers. What the fix is worth now is
+            // whatever the pair can read off the shape it helps draw, and
+            // its confidence is the crossing angle of the two bearings that
+            // made it, which both seats can already see for themselves.
+            $pdo->prepare('UPDATE bearing_players SET fixes_logged = fixes_logged + 1 WHERE id = ?')
+                ->execute([$p['id']]);
+            logEvent($pdo, $roomId, (int)$p['id'], 'fix', [
+                'collar' => $act['collar'], 'at' => (int)$act['at'],
+                'cycle' => $cycle, 'seat' => (int)$p['seat'],
+            ]);
         }
     }
 
     $room['cycle'] = $cycle;
-    moveAnimals($pdo, $room);
+    // Everything walks, then anything called for the cycle we have just
+    // arrived at is answered against where she actually ended up.
+    $ps = $pdo->prepare('SELECT * FROM bearing_players WHERE room_id = ? AND left_at IS NULL');
+    $ps->execute([$roomId]);
+    $moved = $ps->fetchAll(PDO::FETCH_ASSOC);
+    moveAnimals($pdo, $room, $moved);
+    resolveIntercepts($pdo, $roomId, $cycle + 1, $moved);
     $pdo->prepare('UPDATE bearing_players SET committed_action = NULL WHERE room_id = ?')->execute([$roomId]);
 
     if ($cycle + 1 >= (int)$room['cycles']) {
@@ -773,46 +819,95 @@ function applyCycle(PDO $pdo, array $room, array $players): void {
     }
 }
 
+/** Answer every call standing for this cycle.
+ *
+ * Two conditions, and they are different questions. Was anybody THERE, which
+ * is about walking and is entirely in the pair's hands; and was the call
+ * RIGHT, which is about how well they read her. Missing either is a miss,
+ * and the report says which so a pair knows what to fix. */
+function resolveIntercepts(PDO $pdo, int $roomId, int $cycle, array $players): void {
+    $st = $pdo->prepare(
+        'SELECT * FROM bearing_intercepts
+         WHERE room_id = ? AND target_cycle = ? AND grade IS NULL FOR UPDATE');
+    $st->execute([$roomId, $cycle]);
+    $calls = $st->fetchAll(PDO::FETCH_ASSOC);
+    if (!$calls) return;
+    $animals = animalsByCollar($pdo, $roomId);
+    $upd = $pdo->prepare('UPDATE bearing_intercepts SET grade = ?, error_m = ? WHERE id = ?');
+
+    foreach ($calls as $c) {
+        $at = (int)$c['at'];
+        $attended = false;
+        foreach ($players as $p) if (chebyshev((int)$p['pos'], $at) <= INTERCEPT_RADIUS) $attended = true;
+        $a = $animals[$c['collar']] ?? null;
+        $errM = $a ? cellMetres($at, (int)$a['at']) : 9999.0;
+
+        // An unconfirmed call was never a commitment: one seat's opinion is
+        // not the pair's, so it resolves as a miss rather than a free roll.
+        if ($c['confirmed_by'] === null) $grade = 'missed';
+        elseif (!$attended)              $grade = 'missed';
+        elseif ($errM <= CONTACT_M)      $grade = 'contact';
+        elseif ($errM <= NEAR_M)         $grade = 'near';
+        else                             $grade = 'missed';
+
+        $upd->execute([$grade, (int)round($errM), (int)$c['id']]);
+        logEvent($pdo, $roomId, null, 'intercept', [
+            'id' => (int)$c['id'], 'collar' => $c['collar'], 'at' => $at, 'cycle' => $cycle,
+            'grade' => $grade, 'errorM' => (int)round($errM),
+            'attended' => $attended, 'agreed' => $c['confirmed_by'] !== null,
+        ]);
+    }
+}
+
 /** Dawn is the only moment the truth is published, because the night is
-    over and there is nothing left to earn. */
+    over and there is nothing left to earn. The real track goes over here so
+    the plate can draw it against the one the pair reconstructed, which is
+    the moment a night is supposed to be worth having played. */
 function dawnReport(PDO $pdo, int $roomId): array {
     $st = $pdo->prepare('SELECT * FROM bearing_rooms WHERE id = ?');
     $st->execute([$roomId]);
     $room = $st->fetch(PDO::FETCH_ASSOC);
 
-    $ev = $pdo->prepare("SELECT data FROM bearing_events WHERE room_id = ? AND type = 'fix' ORDER BY id");
-    $ev->execute([$roomId]);
-    $perCollar = [];
-    foreach (COLLARS as $c) $perCollar[$c] = ['fixes' => 0, 'tight' => 0];
-    $answered = false;
-    foreach ($ev->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $d = json_decode((string)$row['data'], true);
-        if (!is_array($d)) continue;
-        $c = $d['collar'] ?? '';
-        if (!isset($perCollar[$c])) continue;
-        $perCollar[$c]['fixes']++;
-        if (($d['grade'] ?? '') === 'tight') {
-            $perCollar[$c]['tight']++;
-            if ($c === $room['brief_collar']) $answered = true;
-        }
-    }
-
     $animals = animalsByCollar($pdo, $roomId);
     $truth = [];
-    foreach ($animals as $c => $a) $truth[$c] = (int)$a['at'];
+    foreach ($animals as $c => $a) {
+        $truth[$c] = [
+            'profile' => $a['profile'],
+            'at' => (int)$a['at'],
+            'den' => $a['den_cell'] === null ? null : (int)$a['den_cell'],
+            'track' => array_map('intval', explode(',', $a['track'])),
+        ];
+    }
 
-    $tight = array_sum(array_column($perCollar, 'tight'));
-    $total = array_sum(array_column($perCollar, 'fixes'));
+    $ic = $pdo->prepare('SELECT * FROM bearing_intercepts WHERE room_id = ? ORDER BY id');
+    $ic->execute([$roomId]);
+    $calls = []; $best = [];
+    foreach (COLLARS as $c) $best[$c] = 'none';
+    $rank = ['none' => 0, 'missed' => 1, 'near' => 2, 'contact' => 3];
+    foreach ($ic->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $g = $r['grade'] ?? 'missed';
+        $calls[] = ['collar' => $r['collar'], 'at' => (int)$r['at'], 'cycle' => (int)$r['target_cycle'],
+                    'grade' => $g, 'errorM' => $r['error_m'] === null ? null : (int)$r['error_m']];
+        if ($rank[$g] > $rank[$best[$r['collar']]]) $best[$r['collar']] = $g;
+    }
+
+    $contacts = count(array_filter($best, fn($g) => $g === 'contact'));
+    $nears = count(array_filter($best, fn($g) => $g === 'near'));
+    $grade = $contacts === count(COLLARS) ? 'triumph'
+           : ($contacts + $nears === 0 ? 'disaster'
+           : ($contacts >= 1 ? 'good' : 'partial'));
+
+    $fx = $pdo->prepare("SELECT COUNT(*) FROM bearing_events WHERE room_id = ? AND type = 'fix'");
+    $fx->execute([$roomId]);
+
     return [
-        'brief' => $room['brief'],
-        'collar' => $room['brief_collar'],
-        'answered' => $answered,
-        'answerAt' => $room['den_at'] === null ? null : (int)$room['den_at'],
-        'perCollar' => $perCollar,
-        'fixes' => $total,
-        'tight' => $tight,
+        'weather' => $room['weather'],
         'truth' => $truth,
-        'grade' => $answered && $tight >= 3 ? 'good' : ($answered || $tight >= 2 ? 'partial' : 'thin'),
+        'calls' => $calls,
+        'best' => $best,
+        'contacts' => $contacts,
+        'fixes' => (int)$fx->fetchColumn(),
+        'grade' => $grade,
     ];
 }
 
@@ -836,14 +931,13 @@ function postAgain(): void {
             // Both asked, so a fresh valley. Nobody has their report wiped
             // out from under them while they are still reading it.
             $seed = random_int(1, 2000000000);
-            $terrain = generateTerrain($seed);
-            $brief = BRIEFS[$seed % count(BRIEFS)];
-            $briefCollar = COLLARS[($seed >> 3) % count(COLLARS)];
+            [$terrain, $weather] = newValley($seed);
             $pdo->prepare(
                 'UPDATE bearing_rooms SET status = "night", seed = ?, terrain = ?, cycle = 0,
-                 brief = ?, brief_collar = ?, den_cycle = ?, den_at = NULL, last_active = NOW() WHERE id = ?')
-                ->execute([$seed, $terrain, $brief, $briefCollar, 9 + ($seed % 8), $room['id']]);
+                 weather = ?, last_active = NOW() WHERE id = ?')
+                ->execute([$seed, $terrain, $weather, $room['id']]);
             $pdo->prepare('DELETE FROM bearing_animals WHERE room_id = ?')->execute([$room['id']]);
+            $pdo->prepare('DELETE FROM bearing_intercepts WHERE room_id = ?')->execute([$room['id']]);
             seedAnimals($pdo, (int)$room['id'], $seed, $terrain);
             $ps = $pdo->prepare('SELECT id, seat FROM bearing_players WHERE room_id = ? AND left_at IS NULL');
             $ps->execute([$room['id']]);

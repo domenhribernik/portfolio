@@ -18,7 +18,8 @@ import {
   createTranslator, pollDelay, angleDelta, bearingBetween, crossingAngle,
   errorEllipse, fixGrade, formatMetres,
   antennaStrength, lobePeak, noiseFloor, bracketLobe, bracketSigma, readBearing,
-  antennaNoise, lobeSnr, LOBE_SNR_MIN, MOVE_MAX, walkCost, withinWalk
+  antennaNoise, lobeSnr, LOBE_SNR_MIN, MOVE_MAX, walkCost, withinWalk,
+  PROFILES, CYCLES, INTERCEPT_RADIUS, attendCost
 } from '../views/bearing/logic.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -194,25 +195,56 @@ test('fix grades follow the thresholds the report prints', () => {
 /* ---- the constants that exist twice ---- */
 
 test('the constants shared with the controller have not drifted', () => {
-  /* These live in both views/bearing/logic.js and
-     app/controllers/bearing-controller.php because the browser needs them to
-     draw and the controller needs them to decide. Reading the PHP as text is
-     what turns "change them in both" from a comment into a guarantee. */
+  /* These live in both views/bearing/logic.js and the PHP because the
+     browser needs them to draw and the server needs them to decide.
+     Reading the PHP as text is what turns "change them in both" from a
+     comment into a guarantee. Note the two homes: the valley's own
+     dimensions belong to app/controllers/bearing/valley.php, which is the
+     pure world module the simulation suite runs without a server. */
   const php = readFileSync(join(ROOT, 'app/controllers/bearing-controller.php'), 'utf8');
-  const constant = name => {
-    const m = php.match(new RegExp('^const\\s+' + name + '\\s*=\\s*(\\d+)\\s*;', 'm'));
-    assert.ok(m, 'the controller should declare ' + name);
+  const valley = readFileSync(join(ROOT, 'app/controllers/bearing/valley.php'), 'utf8');
+  const constant = (src, name, where) => {
+    const m = src.match(new RegExp('^const\\s+' + name + '\\s*=\\s*(\\d+)\\s*;', 'm'));
+    assert.ok(m, where + ' should declare ' + name);
     return Number(m[1]);
   };
-  assert.equal(constant('MOVE_MAX'), MOVE_MAX, 'MOVE_MAX drifted between JS and PHP');
-  assert.equal(constant('N'), 32, 'the valley size drifted');
-  assert.equal(constant('CELL_M'), 100, 'the cell size drifted');
+  assert.equal(constant(php, 'MOVE_MAX', 'the controller'), MOVE_MAX, 'MOVE_MAX drifted between JS and PHP');
+  assert.equal(constant(php, 'CYCLES', 'the controller'), CYCLES, 'the night length drifted');
+  assert.equal(constant(php, 'INTERCEPT_RADIUS', 'the controller'), INTERCEPT_RADIUS,
+    'the intercept radius drifted, so the ring drawn on the plate is a lie');
+  assert.equal(constant(valley, 'N', 'valley.php'), 32, 'the valley size drifted');
+  assert.equal(constant(valley, 'CELL_M', 'valley.php'), 100, 'the cell size drifted');
+
+  /* The four shapes are named in three places: the movement model that
+     runs them, the controller that validates a chip against them, and the
+     browser that labels them. */
+  const movement = readFileSync(join(ROOT, 'app/controllers/bearing/movement.php'), 'utf8');
+  const listed = movement.match(/^const PROFILES = \[([^\]]+)\]/m);
+  assert.ok(listed, 'movement.php should declare PROFILES');
+  const phpProfiles = [...listed[1].matchAll(/'(\w+)'/g)].map(m => m[1]);
+  assert.deepEqual(phpProfiles, PROFILES, 'the behaviour profiles drifted between JS and PHP');
+  for (const p of PROFILES) {
+    assert.ok(UI['profile.' + p], `ui.json has no name for the ${p} shape`);
+    assert.ok(UI['profile.' + p + '.hint'], `ui.json has no hint for the ${p} shape`);
+  }
 
   /* Every refusal reason the controller can send must exist as a string. */
   for (const m of php.matchAll(/'reason' => '(\w+)'/g)) {
     assert.ok(UI['refuse.' + m[1]], 'ui.json has no row for refuse.' + m[1]);
   }
 });
+
+test('a call you cannot walk to is knowable before you make it', () => {
+  /* The walking sum has to be answerable in the browser, or the only way
+     to learn a call was unreachable is to lose the night to it. */
+  const n = 32, here = 16 * n + 16;
+  assert.equal(attendCost([here], here, n), 0, 'standing on it costs nothing');
+  assert.equal(attendCost([here], here + INTERCEPT_RADIUS, n), 0, 'inside the radius is already there');
+  assert.equal(attendCost([here], here + INTERCEPT_RADIUS + MOVE_MAX, n), 1, 'one cycle of walking');
+  assert.equal(attendCost([here], here + INTERCEPT_RADIUS + MOVE_MAX + 1, n), 2, 'one cell more is two');
+  assert.equal(attendCost([here + 20, here + 1], here, n), 0, 'the nearer station answers');
+});
+
 
 test('walking is Chebyshev and capped', () => {
   assert.equal(walkCost(0, 0, 32), 0);

@@ -318,10 +318,13 @@ export function readBearing(readings, gate) {
 }
 
 /* ---- walking ----
-   MOVE_MAX is mirrored in bearing-controller.php. Change it in both;
-   tests/bearing-logic.test.mjs reads the PHP and fails if they drift. */
+   MOVE_MAX, CYCLES and INTERCEPT_RADIUS are mirrored in
+   bearing-controller.php. Change them in both; tests/bearing-logic.test.mjs
+   reads the PHP and fails if they drift. */
 
 export const MOVE_MAX = 6;
+export const CYCLES = 10;
+export const INTERCEPT_RADIUS = 3;
 
 /** Chebyshev, because a station walks diagonally as easily as straight. */
 export function walkCost(fromIdx, toIdx, n) {
@@ -332,3 +335,33 @@ export function walkCost(fromIdx, toIdx, n) {
 export function withinWalk(fromIdx, toIdx, n) {
   return walkCost(fromIdx, toIdx, n) <= MOVE_MAX;
 }
+
+/* ---- the intercept ----
+   A call is only attended if a station is standing within
+   INTERCEPT_RADIUS of the cell when the night reaches that cycle. Whether
+   that is even possible is a walking sum, and the pair should be able to
+   see the answer before they commit rather than discover it at dawn. */
+
+/** How many cycles of pure walking a call would cost the nearer station.
+    Zero means somebody is already standing close enough. */
+export function attendCost(stations, toIdx, n) {
+  let best = Infinity;
+  for (const from of stations) {
+    const slack = walkCost(from, toIdx, n) - INTERCEPT_RADIUS;
+    best = Math.min(best, slack <= 0 ? 0 : Math.ceil(slack / MOVE_MAX));
+  }
+  return best;
+}
+
+/* ---- the shapes ----
+   The four hidden behaviours a collar can be dealt. The names travel to
+   the browser so the hypothesis chips can be labelled; WHICH collar has
+   which is the one thing the night is spent working out, and it never
+   leaves the server before dawn. */
+
+export const PROFILES = ['ridge', 'den', 'water', 'flight'];
+
+/* No interceptGrade() here on purpose. The thresholds live only in the
+   controller, which writes the grade as a string the poll carries and the
+   stylesheet colours. Mirroring them into JS would create a second copy
+   with nothing to check it against, which is how drift starts. */

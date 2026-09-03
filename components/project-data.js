@@ -93,7 +93,7 @@ export const projects = {
     category: "passion",
     gradient: "linear-gradient(45deg, #272052 0%, #ff6a2b 100%)",
     title: "Bearing",
-    description: "A co-op game for two, because every other game here is one of you beating the other. You each sweep a radio antenna and learn which direction a collared animal is in, never how far. One bearing is a line, two bearings crossed from two different places are a spot on the map, so there is no version of this either of you can play alone.",
+    description: "A co-op game for two, because every other game here is one of you beating the other. You each sweep a radio antenna and learn which direction a collared animal is in, never how far, so one bearing is a line and only two crossed from different places are a spot on the map. Work out what she is doing from the track you build together, then agree where she will be next and have someone standing there when she arrives.",
     links: { visitSite: "views/bearing" },
     iconClass: "fas fa-satellite-dish",
   },

@@ -11,7 +11,8 @@ import {
   createTranslator, pollDelay,
   angleDelta, bearingBetween, alongBearing, crossingAngle,
   errorEllipse, fixGrade, formatMetres, antennaStrength,
-  readBearing, lobePeak, MOVE_MAX, withinWalk
+  readBearing, lobePeak, MOVE_MAX, withinWalk,
+  PROFILES, INTERCEPT_RADIUS, attendCost
 } from './logic.js';
 
 const API = '../../app/controllers/bearing-controller.php';
@@ -456,7 +457,8 @@ function render() {
       + `<div class="meta">${t('train.crossing').toUpperCase()}</div>`
       + metaBlock(t('train.major'), formatMetres(major), major > 600)
       + metaBlock(t('train.minor'), formatMetres(minor));
-    $('quality').style.width = Math.round(Math.max(0, Math.min(1, 1 - (major - 80) / 900)) * 100) + '%';
+    $('quality').style.transform =
+      'scaleX(' + Math.max(0, Math.min(1, 1 - (major - 80) / 900)).toFixed(3) + ')';
     const bad = grade === 'loose' || grade === 'worthless';
     $('caption').innerHTML = t('train.caption') + ' &middot; <b' + (bad ? ' class="bad"' : '') + '>'
       + t('train.' + grade).toUpperCase() + '</b>';
@@ -642,19 +644,48 @@ export { pollDelay };   /* referenced by Phase 3; kept exported so it is not dro
 
 const nsvg = $('nsvg'), nchart = $('nchart'), dsvg = $('dsvg');
 const SEAT_LETTER = { 1: 'A', 2: 'B' };
+/* how many cycles a posted bearing stays on the plate before it expires */
+const RAY_LIFE = 2;
 
 const room = {
   session: null,          // {code, token, id, seat}
   snap: null,             // the last poll's room/you/partner/collars/terrain
   cursor: 0, failures: 0, timer: null, busy: false,
-  mode: 'sweep',          // sweep | move | log
+  mode: 'sweep',          // sweep | move | log | call
   collar: 'F2',
   pendingCell: null,      // the cell tapped but not yet committed
+  callCycle: null,        // the cycle a proposed intercept names
   trace: null,            // {collar, seat, from, samples[]} the recorder is holding
   gateFrac: 0.5,
   posted: false,
-  rays: [], fixes: [], report: null, dawnTruth: null
+  rays: [], fixes: [],
+  notes: {},              // collar -> Set(profile), the shared hunches
+  report: null, dawnTruth: null
 };
+
+/* The hunches are a fold over events rather than a table: they are
+   non-binding by design, so there is nothing about them worth a row. */
+function noteSet(collar) {
+  if (!room.notes[collar]) room.notes[collar] = new Set();
+  return room.notes[collar];
+}
+function notesSignature() {
+  return Object.keys(room.notes).sort()
+    .map(c => c + ':' + [...room.notes[c]].sort().join(',')).join('|');
+}
+
+/** Every fix on one collar, oldest first. This is the track, and drawing it
+    is what turns three isolated crosses into a shape worth arguing about. */
+function trackFor(collar) {
+  return room.fixes.filter(f => f.collar === collar)
+    .slice()
+    .sort((a, b) => (a.cycle || 0) - (b.cycle || 0));
+}
+/** The call standing on a collar, if any. */
+function liveCall(collar) {
+  const all = (room.snap && room.snap.intercepts) || [];
+  return all.find(c => c.collar === collar && c.grade === null) || null;
+}
 
 function saveSession(s) {
   room.session = s;
@@ -709,6 +740,7 @@ function absorb(body) {
       case 'dusk':
         room.rays = []; room.fixes = []; room.report = null;
         room.trace = null; room.posted = false; room.pendingCell = null;
+        room.notes = {}; room.callCycle = null; room.dawnTruth = null;
         break;
       case 'trace':
         // only the station that swept holds the recorder tape
@@ -718,10 +750,20 @@ function absorb(body) {
         }
         break;
       case 'bearing':
-        room.rays.push({ collar: d.collar, deg: d.deg, sigma: d.sigma, from: d.from, seat: d.seat });
+        room.rays.push({ collar: d.collar, deg: d.deg, sigma: d.sigma,
+                         from: d.from, seat: d.seat, cycle: d.cycle || 0 });
         break;
       case 'fix':
-        room.fixes.push({ collar: d.collar, at: d.at, grade: d.grade, seat: d.seat });
+        room.fixes.push({ collar: d.collar, at: d.at, cycle: d.cycle, seat: d.seat });
+        break;
+      case 'note':
+        if (d.on) noteSet(d.collar).add(d.profile);
+        else noteSet(d.collar).delete(d.profile);
+        break;
+      case 'intercept':
+        // the moment a call is answered: worth saying out loud, because the
+        // pair may be looking at the other side of the plate
+        say(t('intercept.' + d.grade) + ' · ' + d.collar + ' · ' + formatMetres(d.errorM));
         break;
       case 'dawn':
         room.report = d; room.dawnTruth = d.truth || null;
@@ -775,22 +817,76 @@ function nightPlate(target, opts) {
       }
     }
   }
+  /* A BEARING IS WORKING MATERIAL, NOT A RECORD. Every ray ever taken,
+     drawn full strength with its uncertainty wedge, buried the plate in
+     white by the middle of the night and hid the one thing that matters,
+     which is the track. So a ray lives RAY_LIFE cycles and then goes: the
+     track it helped place is the permanent mark, and at dawn the plate is
+     the two tracks and nothing else. */
+  const now = s.room.cycle;
   const marks = el('g', { 'clip-path': 'url(#nclip)' });
-  for (const r of room.rays) {
-    const [fx, fy] = [cellX(r.from % N), cellX(Math.floor(r.from / N))];
-    const far = alongBearing({ x: fx, y: fy }, r.deg, VB * 1.6);
-    const half = Math.min(40, (r.sigma || 2) * 2);
-    const p1 = polar(fx, fy, r.deg - half, VB * 1.6), p2 = polar(fx, fy, r.deg + half, VB * 1.6);
-    marks.appendChild(el('polygon', { class: 'wedge', points: `${fx},${fy} ${p1.x},${p1.y} ${p2.x},${p2.y}` }));
-    marks.appendChild(el('line', { class: 'ray' + (r.seat === 2 ? ' b' : ''), x1: fx, y1: fy, x2: far.x, y2: far.y }));
+  if (!(opts && opts.quiet)) {
+    for (const r of room.rays) {
+      const age = now - (r.cycle || 0);
+      if (age > RAY_LIFE) continue;
+      const [fx, fy] = [cellX(r.from % N), cellX(Math.floor(r.from / N))];
+      const far = alongBearing({ x: fx, y: fy }, r.deg, VB * 1.6);
+      if (age === 0) {
+        // only this cycle's reading shows how wide it really is
+        const half = Math.min(40, (r.sigma || 2) * 2);
+        const p1 = polar(fx, fy, r.deg - half, VB * 1.6), p2 = polar(fx, fy, r.deg + half, VB * 1.6);
+        marks.appendChild(el('polygon', { class: 'wedge', points: `${fx},${fy} ${p1.x},${p1.y} ${p2.x},${p2.y}` }));
+      }
+      marks.appendChild(el('line', {
+        class: 'ray' + (r.seat === 2 ? ' b' : '') + (age > 0 ? ' faded' : ''),
+        x1: fx, y1: fy, x2: far.x, y2: far.y
+      }));
+    }
   }
   target.appendChild(marks);
 
-  for (const f of room.fixes) {
-    const [fx, fy] = [cellX(f.at % N), cellX(Math.floor(f.at / N))];
-    target.appendChild(el('circle', { class: 'fix-mark ' + f.grade, cx: fx, cy: fy, r: 4.5 }));
-    target.appendChild(el('line', { class: 'fix-mark ' + f.grade, x1: fx - 6.5, y1: fy, x2: fx + 6.5, y2: fy }));
-    target.appendChild(el('line', { class: 'fix-mark ' + f.grade, x1: fx, y1: fy - 6.5, x2: fx, y2: fy + 6.5 }));
+  /* THE TRACK. Fixes joined in the order they were taken, per collar. An
+     isolated cross says where she was once; a joined line says what she is
+     doing, and that is the only thing worth three cycles of work. The
+     collar under the cursor draws solid, the other recedes. */
+  for (const c of (s.room.collars || [])) {
+    const track = trackFor(c);
+    if (!track.length) continue;
+    const here = c === room.collar;
+    const pts = track.map(f => `${cellX(f.at % N)},${cellX(Math.floor(f.at / N))}`);
+    if (pts.length > 1) {
+      target.appendChild(el('polyline', {
+        class: 'track' + (here ? '' : ' other'), points: pts.join(' ')
+      }));
+    }
+    track.forEach((f, i) => {
+      const [fx, fy] = [cellX(f.at % N), cellX(Math.floor(f.at / N))];
+      const last = i === track.length - 1;
+      target.appendChild(el('circle', {
+        class: 'fix-mark' + (here ? '' : ' other') + (last ? ' last' : ''),
+        cx: fx, cy: fy, r: last ? 4.2 : 2.6
+      }));
+      if (here && last) {
+        const lab = el('text', { class: 'fix-label', x: fx + 7, y: fy - 5 });
+        lab.textContent = c;
+        target.appendChild(lab);
+      }
+    });
+  }
+
+  /* Called intercepts. The ring is the radius somebody has to be standing
+     inside when the night gets there, so the walking cost is visible while
+     the call is still being argued about rather than after it failed. */
+  for (const call of (s.intercepts || [])) {
+    const [cx2, cy2] = [cellX(call.at % N), cellX(Math.floor(call.at / N))];
+    const state = call.grade ? call.grade : (call.confirmed ? 'agreed' : 'proposed');
+    target.appendChild(el('circle', {
+      class: 'call-ring ' + state, cx: cx2, cy: cy2, r: INTERCEPT_RADIUS * STEP
+    }));
+    target.appendChild(el('circle', { class: 'call-dot ' + state, cx: cx2, cy: cy2, r: 3 }));
+    const lab = el('text', { class: 'call-label ' + state, x: cx2, y: cy2 - INTERCEPT_RADIUS * STEP - 4 });
+    lab.textContent = call.collar + ' · ' + (call.cycle + 1);
+    target.appendChild(lab);
   }
 
   if (opts && opts.pending !== null && opts.pending !== undefined) {
@@ -803,11 +899,28 @@ function nightPlate(target, opts) {
     }
   }
 
+  /* THE PAYOFF. Where she actually went, laid over where you thought she
+     went. Everything else in this view exists to make this one comparison
+     worth looking at. */
   if (room.dawnTruth) {
-    for (const [collar, at] of Object.entries(room.dawnTruth)) {
-      const [tx, ty] = [cellX(at % N), cellX(Math.floor(at / N))];
-      target.appendChild(el('circle', { class: 'den-mark', cx: tx, cy: ty, r: 7 }));
-      const lab = el('text', { class: 'stn-label', x: tx + 10, y: ty + 4 });
+    for (const [collar, info] of Object.entries(room.dawnTruth)) {
+      const cells = info.track || [];
+      if (cells.length > 1) {
+        target.appendChild(el('polyline', {
+          class: 'truth-track',
+          points: cells.map(c => `${cellX(c % N)},${cellX(Math.floor(c / N))}`).join(' ')
+        }));
+      }
+      if (info.den != null) {
+        target.appendChild(el('circle', {
+          class: 'den-mark', cx: cellX(info.den % N), cy: cellX(Math.floor(info.den / N)), r: 6
+        }));
+      }
+      const [tx, ty] = [cellX(info.at % N), cellX(Math.floor(info.at / N))];
+      target.appendChild(el('circle', { class: 'truth-end', cx: tx, cy: ty, r: 4.5 }));
+      // to the LEFT: station labels all sit to the right of their mark, so
+      // a truth end landing near a station collided with it every time
+      const lab = el('text', { class: 'truth-label', x: tx - 9, y: ty + 4 });
       lab.textContent = collar; target.appendChild(lab);
     }
   }
@@ -821,8 +934,6 @@ function nightPlate(target, opts) {
 /* ---- the title block ---- */
 
 function dutyLabel(c) {
-  if (c.duty === 0) return t('night.gone');
-  if (c.fast) return t('night.fast');
   return c.duty === 1 ? t('night.every') : t('night.alternate');
 }
 function transmitting(c, cycle) { return c.duty > 0 && (cycle % c.duty) === c.phase; }
@@ -838,7 +949,9 @@ function nightSignature() {
           s.partner ? s.partner.committed : -2, s.partner ? s.partner.pos : -2,
           room.mode, room.collar, room.pendingCell, room.gateFrac.toFixed(3),
           room.posted, room.trace ? room.trace.collar : '-', room.rays.length,
-          room.fixes.length].join('|');
+          room.fixes.length, room.callCycle, notesSignature(),
+          (s.intercepts || []).map(c => c.id + ':' + c.confirmed + ':' + c.grade).join(',')
+         ].join('|');
 }
 let lastNightSig = null;
 
@@ -855,7 +968,8 @@ function renderNightNow() {
   const cycle = s.room.cycle;
   const mine = s.you.committed === cycle;
 
-  $('brief').textContent = t('brief.' + s.room.brief, { collar: s.room.collar });
+  $('brief').innerHTML = t('night.objective')
+    + ' <span class="wx">' + t('weather.' + (s.room.weather || 'clear')) + '</span>';
   nightPlate(nsvg, { pending: room.pendingCell, reach: room.mode === 'move' && !mine });
 
   // the recorder holds whatever this station last swept
@@ -880,23 +994,59 @@ function renderNightNow() {
 
   $('roster').innerHTML = (s.collars || []).map(c => {
     const on = transmitting(c, cycle);
-    return `<button class="collar${on ? '' : ' silent'}${c.fast ? ' fast' : ''}" data-collar="${c.collar}"
+    const best = (s.intercepts || []).filter(i => i.collar === c.collar && i.grade);
+    const got = best.some(i => i.grade === 'contact');
+    return `<button class="collar${on ? '' : ' silent'}${got ? ' got' : ''}" data-collar="${c.collar}"
       aria-pressed="${room.collar === c.collar}">
-      <b>${c.collar}</b><small>${on ? dutyLabel(c) : t('night.silent')}</small></button>`;
+      <b>${c.collar}</b><small>${got ? t('intercept.contact') : (on ? dutyLabel(c) : t('night.silent'))}</small></button>`;
   }).join('');
   $('roster').querySelectorAll('.collar').forEach(b => {
     b.addEventListener('click', () => { room.collar = b.dataset.collar; renderNight(true); });
   });
 
-  $('ntabs').innerHTML = ['sweep', 'move', 'log'].map(m =>
+  /* THE HUNCHES. Free, shared, and binding on nothing. Their whole job is
+     to put the disagreement on screen: each of you has walked different
+     ground, so each of you has a different reason to believe a shape. */
+  const mySet = noteSet(room.collar);
+  // Each chip carries what the shape actually LOOKS like on a plate. A
+  // player who has never seen this game has no way to know what a "ridge
+  // runner" is, and a tooltip is not an answer on a phone.
+  $('chips').innerHTML = `<div class="chips__head">${t('night.shapes')}</div>`
+    + PROFILES.map(p =>
+        `<button class="chip" data-profile="${p}" aria-pressed="${mySet.has(p)}">
+          <b>${t('profile.' + p)}</b><small>${t('profile.' + p + '.hint')}</small>
+        </button>`).join('')
+    + `<p class="chips__note">${t('night.shapeHint')}</p>`;
+  $('chips').querySelectorAll('.chip').forEach(b => {
+    b.addEventListener('click', () => toggleNote(b.dataset.profile));
+  });
+
+  $('ntabs').innerHTML = ['sweep', 'move', 'log', 'call'].map(m =>
     `<button class="tab" role="tab" data-mode="${m}" aria-selected="${room.mode === m}">${t('night.' + m)}</button>`
   ).join('');
   $('ntabs').querySelectorAll('.tab').forEach(b => {
-    b.addEventListener('click', () => { room.mode = b.dataset.mode; room.pendingCell = null; renderNight(true); });
+    b.addEventListener('click', () => {
+      room.mode = b.dataset.mode; room.pendingCell = null;
+      if (room.mode === 'call' && room.callCycle === null) {
+        room.callCycle = Math.min(s.room.cycles - 1, cycle + 2);
+      }
+      renderNight(true);
+    });
   });
+
+  renderCallbar(s, cycle);
 
   if (mine) {
     $('nacts').innerHTML = `<div class="waiting">${t('night.waiting', { name: (s.partner && s.partner.name) || '...' })}</div>`;
+  } else if (room.mode === 'call') {
+    // A call is not a cycle action: it is paid for in walking, not in turns.
+    // Showing the commit button greyed out here read as a dead end, so say
+    // the rule instead of disabling a control and explaining nothing.
+    $('nacts').innerHTML = `<p class="rule-note">${t('night.callFree')}</p>`
+      + (read && read.bearing != null && !room.posted
+          ? `<button class="btn narrow" id="postRead">${t('night.post')}</button>` : '');
+    const pr0 = $('postRead');
+    if (pr0) pr0.addEventListener('click', postReading);
   } else {
     const ready = room.mode === 'sweep' ? true : room.pendingCell !== null;
     $('nacts').innerHTML =
@@ -909,10 +1059,75 @@ function renderNightNow() {
     if (pr) pr.addEventListener('click', postReading);
   }
 
-  $('nhelp').textContent = mine ? ''
+  $('nhelp').textContent =
+      room.mode === 'call' ? t('night.helpCall', { collar: room.collar, radius: INTERCEPT_RADIUS })
+    : mine ? ''
     : room.mode === 'move' ? t('night.helpMove')
     : room.mode === 'log' ? t('night.helpLog')
     : (room.trace ? t('night.traceFrom', { seat: SEAT_LETTER[s.you.seat] }) : t('night.pickSweep'));
+}
+
+/** The intercept controls: propose, second, or withdraw.
+    Kept in its own strip because it is the only thing on this screen that
+    needs the other person, and burying it among the cycle actions made it
+    look like a fourth way to spend a turn. */
+function renderCallbar(s, cycle) {
+  const bar = $('callbar');
+  if (room.mode !== 'call') { bar.innerHTML = ''; bar.hidden = true; return; }
+  bar.hidden = false;
+
+  const call = liveCall(room.collar);
+  const partner = (s.partner && s.partner.name) || '...';
+
+  if (call) {
+    const mineCall = call.by === s.you.id;
+    const head = `<div class="callbar__row"><b>${
+      mineCall ? t('night.calledYou', { collar: call.collar, cycle: call.cycle + 1 })
+               : t('night.calledBy', { name: partner, collar: call.collar, cycle: call.cycle + 1 })
+    }</b></div>`;
+    if (call.confirmed) {
+      bar.innerHTML = head + `<div class="callbar__row ok">${t('night.agreed', {
+        collar: call.collar, cycle: call.cycle + 1 })}</div>` + attendLine(s, call.at, call.cycle, cycle);
+      return;
+    }
+    bar.innerHTML = head + attendLine(s, call.at, call.cycle, cycle)
+      + (mineCall
+          ? `<div class="callbar__row">${t('night.awaitPartner', { name: partner })}</div>`
+            + `<button class="btn narrow" id="dropCall">${t('night.withdraw')}</button>`
+          : `<button class="btn btn--fill" id="okCall">${t('night.confirm', { name: partner })}</button>`);
+    const ok = $('okCall'); if (ok) ok.addEventListener('click', () => sendCall('confirm', { id: call.id }));
+    const drop = $('dropCall'); if (drop) drop.addEventListener('click', () => sendCall('withdraw', { id: call.id }));
+    return;
+  }
+
+  const max = s.room.cycles - 1;
+  const when = Math.max(cycle + 1, Math.min(max, room.callCycle == null ? cycle + 2 : room.callCycle));
+  room.callCycle = when;
+  bar.innerHTML =
+    `<div class="callbar__row"><span>${t('night.atCycle')}</span>`
+    + `<button class="step" id="cycDown" aria-label="Earlier">-</button>`
+    + `<b class="callcyc">${when + 1}/${s.room.cycles}</b>`
+    + `<button class="step" id="cycUp" aria-label="Later">+</button></div>`
+    + (room.pendingCell !== null ? attendLine(s, room.pendingCell, when, cycle) : '')
+    + `<button class="btn btn--fill" id="makeCall"${room.pendingCell === null ? ' disabled' : ''}>${t('night.propose')}</button>`;
+  $('cycDown').addEventListener('click', () => { room.callCycle = Math.max(cycle + 1, when - 1); renderNight(true); });
+  $('cycUp').addEventListener('click', () => { room.callCycle = Math.min(max, when + 1); renderNight(true); });
+  const mk = $('makeCall');
+  if (mk) mk.addEventListener('click', () => sendCall('propose', {
+    collar: room.collar, at: room.pendingCell, cycle: when
+  }));
+}
+
+/** Whether anybody can actually be standing there when it matters. The
+    walking sum belongs on screen while the call is still being argued
+    about, not in the dawn report as a surprise. */
+function attendLine(s, at, when, cycle) {
+  const stations = [s.you.pos].concat(s.partner ? [s.partner.pos] : []);
+  const need = attendCost(stations, at, N);
+  const have = when - cycle;
+  if (need === 0) return `<div class="callbar__row ok">${t('night.attendNow')}</div>`;
+  if (need <= have) return `<div class="callbar__row">${t('night.attendWalk', { cycles: need })}</div>`;
+  return `<div class="callbar__row bad">${t('night.attendNever')}</div>`;
 }
 
 /* the practice chart draws into #chart; the night needs the same picture in
@@ -932,6 +1147,28 @@ async function commitCycle() {
       ? { kind: 'move', at: room.pendingCell }
       : { kind: 'log', collar: room.collar, at: room.pendingCell };
   const res = await post('commit', { code: s.room.code, token: room.session.token, action });
+  if (!res.ok) return refuse('refuse.' + ((res.body && res.body.reason) || 'network'));
+  room.pendingCell = null;
+  schedulePoll(0);
+}
+
+async function toggleNote(profile) {
+  const on = !noteSet(room.collar).has(profile);
+  const res = await post('note', {
+    code: room.snap.room.code, token: room.session.token,
+    collar: room.collar, profile, on
+  });
+  if (!res.ok) return refuse('refuse.' + ((res.body && res.body.reason) || 'network'));
+  // optimistic, so a chip answers the finger rather than the poll
+  if (on) noteSet(room.collar).add(profile); else noteSet(room.collar).delete(profile);
+  renderNight(true);
+  schedulePoll(0);
+}
+
+async function sendCall(mode, extra) {
+  const res = await post('intercept', Object.assign({
+    code: room.snap.room.code, token: room.session.token, mode
+  }, extra));
   if (!res.ok) return refuse('refuse.' + ((res.body && res.body.reason) || 'network'));
   room.pendingCell = null;
   schedulePoll(0);
@@ -959,11 +1196,15 @@ function cellFromEvent(target, e) {
   return y * N + x;
 }
 nsvg.addEventListener('click', e => {
-  if (!room.snap || room.snap.you.committed === room.snap.room.cycle) return;
+  if (!room.snap) return;
   if (room.mode === 'sweep') return;
+  // Calling an intercept is not a cycle action, so it stays available after
+  // you have committed. Everything else is spent for the cycle.
+  if (room.mode !== 'call' && room.snap.you.committed === room.snap.room.cycle) return;
   const cell = cellFromEvent(nsvg, e);
   if (cell === null) return;
   if (room.mode === 'move' && !withinWalk(room.snap.you.pos, cell, N)) return refuse('refuse.tooFar');
+  if (room.mode === 'call' && liveCall(room.collar)) return;   // one call at a time
   room.pendingCell = cell;
   renderNight(true);
 });
@@ -990,13 +1231,33 @@ nchart.addEventListener('keydown', e => {
 
 function renderDawn() {
   const r = room.report;
-  nightPlate(dsvg, {});
+  nightPlate(dsvg, { quiet: true });
   if (!r) return;
-  $('dawnCap').textContent = t('dawn.title').toUpperCase() + ' · ' + t('brief.' + r.brief, { collar: r.collar });
+  const collars = Object.keys(r.truth || {});
+  $('dawnCap').textContent = t('dawn.title').toUpperCase() + ' · ' + t('weather.' + (r.weather || 'clear'));
   $('dreadout').innerHTML =
-    `<div class="big">${r.tight}<span class="deg">/${r.fixes}</span></div>`
-    + `<div class="meta">${t('dawn.tight').toUpperCase()}</div>`
-    + `<div class="meta"><b${r.answered ? '' : ' class="bad"'}>${r.answered ? t('dawn.answered') : t('dawn.missed')}</b></div>`;
+    `<div class="big">${r.contacts}<span class="deg">/${collars.length}</span></div>`
+    + `<div class="meta">${t('dawn.contacts').toUpperCase()}</div>`
+    + metaBlock(t('dawn.fixes'), r.fixes);
+
+  $('dlegend').innerHTML =
+    `<span class="key"><i class="k-yours"></i>${t('dawn.yourTrack')}</span>`
+    + `<span class="key"><i class="k-truth"></i>${t('dawn.trueTrack')}</span>`;
+
+  /* The reveal. This is the line that makes a pair want another night:
+     not the score, but finding out she was denning the whole time and
+     that the curve had been there on the plate since cycle four. */
+  $('dreveal').innerHTML = collars.map(c => {
+    const best = (r.best && r.best[c]) || 'none';
+    const call = (r.calls || []).filter(x => x.collar === c).pop();
+    return `<div class="reveal__row">
+      <b>${t('dawn.shapeWas', { collar: c, profile: t('profile.' + r.truth[c].profile) })}</b>
+      <span class="grade ${best}">${t('intercept.' + best)}${
+        call && call.errorM != null ? ' · ' + formatMetres(call.errorM) : ''}</span>
+      <small>${t('profile.' + r.truth[c].profile + '.hint')}</small>
+    </div>`;
+  }).join('');
+
   $('dhelp').textContent = t('dawn.' + r.grade);
   $('againBtn').textContent = t('dawn.again');
   $('leaveBtn').textContent = t('dawn.leave');

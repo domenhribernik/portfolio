@@ -104,24 +104,6 @@
   "train.tabFix": {
     "en": "The crossing"
   },
-  "refuse.badCode": {
-    "en": "That is not a room code."
-  },
-  "refuse.badName": {
-    "en": "Pick a name between one and twenty characters."
-  },
-  "refuse.noRoom": {
-    "en": "No room with that code."
-  },
-  "refuse.roomFull": {
-    "en": "That room already has two stations."
-  },
-  "refuse.started": {
-    "en": "That night is already under way."
-  },
-  "refuse.network": {
-    "en": "Could not reach the field station. Check your connection."
-  },
   "train.gate": {
     "en": "Gate"
   },
@@ -149,6 +131,9 @@
   "night.log": {
     "en": "Log a fix"
   },
+  "night.call": {
+    "en": "Call it"
+  },
   "night.commit": {
     "en": "Commit the cycle"
   },
@@ -171,7 +156,7 @@
     "en": "Tap where to walk, up to six cells. You reveal the ground you cross, and only you will know it."
   },
   "night.helpLog": {
-    "en": "Tap where you think the collar is. Cross your two bearings and log the crossing."
+    "en": "Tap where you think she is right now. A fix is not a score, it is one dot on the track you are drawing, and three of them show you her shape."
   },
   "night.silent": {
     "en": "Silent this cycle"
@@ -182,11 +167,8 @@
   "night.alternate": {
     "en": "Alternate cycles"
   },
-  "night.gone": {
-    "en": "Off the air"
-  },
-  "night.fast": {
-    "en": "Fast pulse"
+  "night.objective": {
+    "en": "Both collars, one clean intercept each, before dawn."
   },
   "night.traceFrom": {
     "en": "Trace from station {seat}. Bracket it, then post."
@@ -194,41 +176,149 @@
   "night.noTrace": {
     "en": "Sweep a collar to put a trace on the recorder."
   },
-  "brief.den": {
-    "en": "{collar} should have denned by now and has not. Find where she does."
+  "night.shapes": {
+    "en": "What is she doing?"
   },
-  "brief.silent": {
-    "en": "{collar}'s collar is failing. Whatever you have on her when it quits is all you will ever have."
+  "night.shapeHint": {
+    "en": "A hunch costs nothing and binds nothing. It is here so you two can disagree about it."
+  },
+  "night.helpCall": {
+    "en": "Tap where {collar} will be, and say when. Your partner has to agree before it counts, and one of you must be standing within {radius} cells of it by then."
+  },
+  "night.propose": {
+    "en": "Call the intercept"
+  },
+  "night.callFree": {
+    "en": "Calling costs no cycle. Pick Sweep, Walk or Log a fix to spend this one."
+  },
+  "night.confirm": {
+    "en": "Agree with {name}"
+  },
+  "night.withdraw": {
+    "en": "Withdraw"
+  },
+  "night.awaitPartner": {
+    "en": "Waiting for {name} to agree"
+  },
+  "night.calledBy": {
+    "en": "{name} calls {collar} at cycle {cycle}"
+  },
+  "night.calledYou": {
+    "en": "You called {collar} for cycle {cycle}"
+  },
+  "night.agreed": {
+    "en": "Agreed. {collar} at cycle {cycle}."
+  },
+  "night.attendNow": {
+    "en": "Someone is close enough already"
+  },
+  "night.attendWalk": {
+    "en": "{cycles} cycles of walking to be there"
+  },
+  "night.attendNever": {
+    "en": "Neither of you can reach it in time"
+  },
+  "night.atCycle": {
+    "en": "At cycle"
+  },
+  "profile.ridge": {
+    "en": "Ridge runner"
+  },
+  "profile.den": {
+    "en": "Denning"
+  },
+  "profile.water": {
+    "en": "Working water"
+  },
+  "profile.flight": {
+    "en": "Bolting"
+  },
+  "profile.ridge.hint": {
+    "en": "Holds a line, stays high."
+  },
+  "profile.den.hint": {
+    "en": "Circles one patch."
+  },
+  "profile.water.hint": {
+    "en": "Short moves, low ground."
+  },
+  "profile.flight.hint": {
+    "en": "Long straight steps, fast."
+  },
+  "weather.clear": {
+    "en": "Clear. The collars carry."
+  },
+  "weather.haze": {
+    "en": "Haze. Everything is a little quieter tonight."
+  },
+  "weather.storm": {
+    "en": "Storm. Loud hiss, and ridges throw a convincing echo."
+  },
+  "intercept.contact": {
+    "en": "Contact"
+  },
+  "intercept.near": {
+    "en": "Near"
+  },
+  "intercept.missed": {
+    "en": "Missed"
+  },
+  "intercept.none": {
+    "en": "Never called"
   },
   "dawn.title": {
     "en": "Dawn"
   },
+  "dawn.triumph": {
+    "en": "Both of them, in the dark, from a direction each. That is the whole job done."
+  },
   "dawn.good": {
-    "en": "A good night. You answered it and the plate will stand up."
+    "en": "One clean contact. You read one of them properly and ran out of night for the other."
   },
   "dawn.partial": {
-    "en": "Partly. There is enough here to argue from, not enough to be sure."
+    "en": "Close on one. Near enough to know you were reading her right, not near enough to touch."
   },
-  "dawn.thin": {
-    "en": "Thin. Too few tight fixes to say anything the data supports."
+  "dawn.disaster": {
+    "en": "Nothing landed. Either the fixes were too loose to show a shape, or nobody was standing there when it mattered."
   },
-  "dawn.answered": {
-    "en": "Answered"
-  },
-  "dawn.missed": {
-    "en": "Not answered"
+  "dawn.contacts": {
+    "en": "Contacts"
   },
   "dawn.fixes": {
     "en": "Fixes"
   },
-  "dawn.tight": {
-    "en": "Tight"
+  "dawn.shapeWas": {
+    "en": "{collar} was {profile}."
+  },
+  "dawn.yourTrack": {
+    "en": "Your track"
+  },
+  "dawn.trueTrack": {
+    "en": "Where she went"
   },
   "dawn.again": {
     "en": "Another night"
   },
   "dawn.leave": {
     "en": "Leave"
+  },
+  "refuse.badCode": {
+    "en": "That is not a room code."
+  },
+  "refuse.badName": {
+    "en": "Pick a name between one and twenty characters."
+  },
+  "refuse.noRoom": {
+    "en": "No room with that code."
+  },
+  "refuse.roomFull": {
+    "en": "That room already has two stations."
+  },
+  "refuse.started": {
+    "en": "That night is already under way."
+  },
+  "refuse.network": {
+    "en": "Could not reach the field station. Check your connection."
   },
   "refuse.notNight": {
     "en": "That night is over."
@@ -250,6 +340,27 @@
   },
   "refuse.badBearing": {
     "en": "That is not a bearing."
+  },
+  "refuse.badProfile": {
+    "en": "That is not one of the four shapes."
+  },
+  "refuse.badCycle": {
+    "en": "Call a cycle that is still ahead of you."
+  },
+  "refuse.callPending": {
+    "en": "You already have a call standing on that collar."
+  },
+  "refuse.noCall": {
+    "en": "That call is no longer on the table."
+  },
+  "refuse.needPartner": {
+    "en": "You cannot agree with yourself. Your partner has to second it."
+  },
+  "refuse.alreadyAgreed": {
+    "en": "That one is already agreed."
+  },
+  "refuse.callStale": {
+    "en": "That cycle has already gone past."
   },
   "refuse.seatTaken": {
     "en": "That seat was taken by another device."

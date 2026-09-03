@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Bearing | A Co-op Radio Tracking Game For Two</title>
-    <meta name="description" content="Two of you track radio-collared animals across a valley at night. You each hear which direction a collar is in, never how far. One bearing is a line, two bearings are a place, so neither of you can find anything alone.">
+    <meta name="description" content="Two of you track radio-collared animals across a valley at night. You each hear which direction a collar is in, never how far, so one bearing is a line and two crossed are a place. Read her track, work out what she is doing, and agree where to intercept her before dawn.">
     <link rel="canonical" href="https://domenhribernik.com/views/bearing/">
     <meta property="og:site_name" content="Domen Hribernik">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Bearing">
-    <meta property="og:description" content="Two of you track radio-collared animals across a valley at night. You each hear which direction a collar is in, never how far. One bearing is a line, two bearings are a place, so neither of you can find anything alone.">
+    <meta property="og:description" content="Two of you track radio-collared animals across a valley at night. You each hear which direction a collar is in, never how far, so one bearing is a line and two crossed are a place. Read her track, work out what she is doing, and agree where to intercept her before dawn.">
     <meta property="og:url" content="https://domenhribernik.com/views/bearing/">
     <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
     <meta property="og:image:width" content="1200">
@@ -30,7 +30,7 @@
       "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2 },
       "inLanguage": ["en"],
       "author": { "@type": "Person", "name": "Domen Hribernik", "url": "https://domenhribernik.com/" },
-      "description": "A cooperative radio-telemetry game for two. Each player sweeps a directional antenna and gets a bearing, which is a direction with no distance. Only two bearings crossed from two different places give a position, so the game cannot be played alone."
+      "description": "A cooperative radio-telemetry game for two. Each player sweeps a directional antenna and gets a bearing, which is a direction with no distance, so only two bearings crossed from two different places give a position and the game cannot be played alone. Each animal runs a hidden behaviour the pair deduces from the track they build, and an intercept only counts when both players agree on it."
     }
     </script>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico">
@@ -107,7 +107,7 @@
 
     <svg class="chart" id="chart" viewBox="0 0 360 84" preserveAspectRatio="none" role="slider" tabindex="0"
          aria-label="Gate level. Up and down arrows raise and lower it."></svg>
-    <div class="bar" id="qualityBar" hidden><i id="quality" style="width:0%"></i></div>
+    <div class="bar" id="qualityBar" hidden><i id="quality"></i></div>
 
     <div class="readout" id="readout"></div>
     <div class="hr"></div>
@@ -131,7 +131,9 @@
     <div class="readout" id="nreadout"></div>
     <div class="hr"></div>
     <div class="roster" id="roster"></div>
+    <div class="chips" id="chips"></div>
     <div class="tabs" id="ntabs" role="tablist"></div>
+    <div class="callbar" id="callbar"></div>
     <div class="acts" id="nacts"></div>
     <p class="help" id="nhelp"></p>
   </div>
@@ -140,12 +142,15 @@
 <!-- 4. DAWN -->
 <section class="screen" id="dawnScreen">
   <div class="plate">
-    <svg id="dsvg" viewBox="0 0 400 400" role="img" aria-label="The finished plate."></svg>
+    <svg id="dsvg" viewBox="0 0 400 400" role="img"
+         aria-label="The finished plate: the track you reconstructed, and the one she actually walked."></svg>
   </div>
   <div class="block">
     <p class="caption" id="dawnCap"></p>
     <div class="readout" id="dreadout"></div>
     <div class="hr"></div>
+    <div class="legend" id="dlegend"></div>
+    <div class="reveal" id="dreveal"></div>
     <p class="help" id="dhelp"></p>
     <div class="acts">
       <button class="btn btn--fill" id="againBtn"></button>

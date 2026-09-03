@@ -10,11 +10,15 @@ declare(strict_types=1);
 // the remote production database. Never run these against prod.
 //
 // THE LOAD-BEARING SECTIONS:
-//   4. AN ANIMAL'S POSITION IS A SECRET. The raw response bytes are searched
-//      for the true cell of every collar, during the night and after it.
+//   4. AN ANIMAL'S SECRETS. The raw response bytes are searched for the true
+//      cell of every collar, and for the hidden behaviour PROFILE and the
+//      track she has walked, during the night and after it.
 //   5. A FORGED COMMIT CHANGES NOTHING. A body carrying a bearing, a grade,
 //      a cycle number and an animal position must be ignored down to the
 //      intent, and only the intent.
+//   6. AN INTERCEPT NEEDS TWO SEATS. The one mechanic that makes this a
+//      two-person game rather than a solo one with a spectator: a call one
+//      player makes and seconds alone must not be able to score.
 //
 // Run: /opt/lampp/bin/php tests/bearing-controller.test.php
 
@@ -28,6 +32,7 @@ const HOST     = '127.0.0.1';
 const PORT     = 8964;
 const API      = 'http://' . HOST . ':' . PORT . '/app/controllers/bearing-controller.php';
 const N        = 32;
+const RADIUS   = 3;    // INTERCEPT_RADIUS in the controller
 
 define('NULL_DEV', PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null');
 
@@ -90,6 +95,21 @@ function roomRow(PDO $pdo, string $code): array {
     $st->execute([$code]);
     return $st->fetch(PDO::FETCH_ASSOC) ?: [];
 }
+/** The columns the whole night exists to work out. Read straight from the
+    database so the leak check compares against ground truth rather than
+    against whatever the controller felt like admitting. */
+function hiddenShapes(PDO $pdo, string $code): array {
+    $st = $pdo->prepare(
+        'SELECT a.collar, a.profile, a.den_cell FROM bearing_animals a
+         JOIN bearing_rooms r ON r.id = a.room_id WHERE r.code = ?');
+    $st->execute([$code]);
+    $out = [];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $out[$r['collar']] = ['profile' => $r['profile'],
+                              'den' => $r['den_cell'] === null ? null : (int)$r['den_cell']];
+    }
+    return $out;
+}
 function animalCells(PDO $pdo, string $code): array {
     $st = $pdo->prepare(
         'SELECT a.collar, a.at FROM bearing_animals a JOIN bearing_rooms r ON r.id = a.room_id WHERE r.code = ?');
@@ -148,9 +168,12 @@ $n = openNight();
 check('create returns a four letter code', preg_match('/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/', $n['code']) === 1, $n['code']);
 $p = poll($n['a']);
 check('the night starts the moment the second seat is filled', ($p['body']['room']['status'] ?? '') === 'night');
-check('the poll names the night\'s question', in_array($p['body']['room']['brief'] ?? '', ['den', 'silent'], true));
+check('the night has weather', in_array($p['body']['room']['weather'] ?? '', ['clear', 'haze', 'storm'], true));
+check('a night is ten cycles, not twenty-four', ($p['body']['room']['cycles'] ?? 0) === 10);
 check('the collar schedule is published, so silence is a mistake not a guess',
-      count($p['body']['collars'] ?? []) === 3 && isset($p['body']['collars'][0]['duty']));
+      count($p['body']['collars'] ?? []) === 2 && isset($p['body']['collars'][0]['duty']));
+check('the schedule never names a collar\'s hidden shape',
+      !isset($p['body']['collars'][0]['profile']));
 check('the two stations do not start on top of each other',
       ($p['body']['you']['pos'] ?? 0) !== ($p['body']['partner']['pos'] ?? 0));
 $third = api('join', ['name' => 'CIL', 'code' => $n['code']]);
@@ -177,7 +200,7 @@ foreach (($p['body']['events'] ?? []) as $e) {
     }
 }
 
-echo "\n4. AN ANIMAL'S POSITION IS A SECRET\n";
+echo "\n4. AN ANIMAL'S SECRETS\n";
 $truth = animalCells($pdo, $n['code']);
 $raw = poll($n['a'], 0)['raw'];
 $leaked = [];
@@ -187,6 +210,20 @@ foreach ($truth as $collar => $cell) {
 }
 check('no collar cell appears in a night poll', $leaked === [], implode(',', $leaked));
 check('the payload carries no animals block', !str_contains($raw, '"animals"'));
+// The profile is the single most secret column in the game: the whole night
+// is spent deducing it, so one careless join publishing it would end the
+// feature rather than dent it.
+$hidden = hiddenShapes($pdo, $n['code']);
+$shapeLeak = [];
+foreach ($hidden as $collar => $h) {
+    if (preg_match('/"profile"\s*:\s*"' . $h['profile'] . '"/', $raw)) $shapeLeak[] = $collar;
+    if ($h['den'] !== null && preg_match('/"den[^"]*"\s*:\s*' . $h['den'] . '\b/', $raw)) $shapeLeak[] = $collar . ' den';
+}
+check('no collar\'s hidden shape appears in a night poll', $shapeLeak === [], implode(',', $shapeLeak));
+check('the payload carries no track', !str_contains($raw, '"track"'));
+// The four names travel so the chips can be labelled; WHICH is which does not.
+check('the four shape names are published, since the chips have to say them',
+      str_contains($raw, '"profiles"') && str_contains($raw, 'ridge'));
 $vis = poll($n['a'])['body']['terrain'] ?? '';
 check('terrain is masked to the ground this seat has walked',
       strlen($vis) === N * N && substr_count($vis, '.') > (N * N) / 2,
@@ -205,10 +242,15 @@ check('the forged cycle number is ignored', (int)$row['cycle'] === $cycleBefore 
 check('the forged terrain never lands', !str_starts_with($row['terrain'], '99999999'));
 $fixEvent = null;
 foreach (poll($n['a'], 0)['body']['events'] as $e) if ($e['type'] === 'fix') $fixEvent = $e;
-check('a fix is graded by the server, not by the client',
-      $fixEvent !== null && in_array($fixEvent['data']['grade'], ['tight', 'usable', 'loose', 'miss'], true));
+// A fix is EVIDENCE now, not an answer. It carries no grade at all, because
+// grading it against her real position was what made the old game "reduce
+// your measurement error" instead of "work out what she is doing".
+check('a fix is recorded as evidence, carrying no grade',
+      $fixEvent !== null && !isset($fixEvent['data']['grade']));
 check('a fix never reports the true distance back',
       $fixEvent !== null && !isset($fixEvent['data']['errM']) && !isset($fixEvent['data']['truth']));
+check('a forged grade on a fix is dropped with everything else',
+      $fixEvent !== null && array_diff(array_keys($fixEvent['data']), ['collar','at','cycle','seat']) === []);
 
 echo "\n6. WALKING\n";
 $me = poll($n['a'])['body']['you'];
@@ -221,7 +263,75 @@ check('a cell off the plate is refused', $off['status'] === 422);
 $noCollar = commit($n['a'], ['kind' => 'sweep', 'collar' => 'ZZ9']);
 check('an unknown collar is refused', $noCollar['status'] === 422);
 
-echo "\n7. A NIGHT RUNS TO DAWN\n";
+echo "\n7. AN INTERCEPT NEEDS TWO SEATS\n";
+// THE MECHANIC THE REDESIGN TURNS ON. One player names a cell and a cycle,
+// the other has to agree. Each has walked different ground, so each knows
+// things about that cell the other cannot see, and that argument is the
+// only part of the game that genuinely needs two people.
+$ni = openNight();
+$cyc = (int)roomRow($pdo, $ni['code'])['cycle'];
+$aPos = poll($ni['a'])['body']['you']['pos'];
+$target = $aPos + 1;                       // right beside A, so it is attended
+$call = api('intercept', ['code' => $ni['code'], 'token' => $ni['a']['token'],
+                          'mode' => 'propose', 'collar' => 'F2', 'at' => $target, 'cycle' => $cyc + 1]);
+check('a seat can call an intercept', $call['status'] === 200, 'got ' . $call['status']);
+
+$self = api('intercept', ['code' => $ni['code'], 'token' => $ni['a']['token'], 'mode' => 'confirm', 'id' => 1]);
+$callId = (int)$pdo->query('SELECT id FROM bearing_intercepts ORDER BY id DESC LIMIT 1')->fetchColumn();
+$self = api('intercept', ['code' => $ni['code'], 'token' => $ni['a']['token'],
+                          'mode' => 'confirm', 'id' => $callId]);
+check('you cannot second your own call',
+      $self['status'] === 409 && ($self['body']['reason'] ?? '') === 'needPartner', 'got ' . $self['status']);
+
+$dup = api('intercept', ['code' => $ni['code'], 'token' => $ni['b']['token'],
+                         'mode' => 'propose', 'collar' => 'F2', 'at' => $target, 'cycle' => $cyc + 1]);
+check('only one call stands on a collar at a time',
+      $dup['status'] === 409 && ($dup['body']['reason'] ?? '') === 'callPending', 'got ' . $dup['status']);
+
+$past = api('intercept', ['code' => $ni['code'], 'token' => $ni['b']['token'],
+                          'mode' => 'propose', 'collar' => 'M7', 'at' => $target, 'cycle' => $cyc]);
+check('a call on a cycle already played is refused',
+      $past['status'] === 422 && ($past['body']['reason'] ?? '') === 'badCycle', 'got ' . $past['status']);
+
+$ok = api('intercept', ['code' => $ni['code'], 'token' => $ni['b']['token'],
+                        'mode' => 'confirm', 'id' => $callId]);
+check('the partner can second it', $ok['status'] === 200, 'got ' . $ok['status']);
+$drop = api('intercept', ['code' => $ni['code'], 'token' => $ni['a']['token'],
+                          'mode' => 'withdraw', 'id' => $callId]);
+check('an agreed call can no longer be withdrawn', $drop['status'] === 409, 'got ' . $drop['status']);
+
+// run the cycle it names, standing still so A stays beside the target
+commit($ni['a'], ['kind' => 'sweep', 'collar' => 'F2']);
+commit($ni['b'], ['kind' => 'sweep', 'collar' => 'F2']);
+$row = $pdo->query('SELECT * FROM bearing_intercepts WHERE id = ' . $callId)->fetch(PDO::FETCH_ASSOC);
+check('the night answers the call at the cycle it named', $row['grade'] !== null, 'grade is null');
+check('and records how far off it was', $row['error_m'] !== null);
+check('the grade is one the report can print',
+      in_array($row['grade'], ['contact', 'near', 'missed'], true), (string)$row['grade']);
+
+// A LONE SEAT MUST NOT BE ABLE TO SCORE. An unconfirmed call is one
+// person's opinion, so it resolves as a miss however good the guess was.
+$cyc2 = (int)roomRow($pdo, $ni['code'])['cycle'];
+$truthNow = animalCells($pdo, $ni['code'])['F2'];
+api('intercept', ['code' => $ni['code'], 'token' => $ni['a']['token'], 'mode' => 'propose',
+                  'collar' => 'F2', 'at' => $truthNow, 'cycle' => $cyc2 + 1]);
+$soloId = (int)$pdo->query('SELECT id FROM bearing_intercepts ORDER BY id DESC LIMIT 1')->fetchColumn();
+$pdo->prepare('UPDATE bearing_players SET pos = ? WHERE id = ?')->execute([$truthNow, $ni['a']['id']]);
+commit($ni['a'], ['kind' => 'sweep', 'collar' => 'F2']);
+commit($ni['b'], ['kind' => 'sweep', 'collar' => 'F2']);
+$solo = $pdo->query('SELECT * FROM bearing_intercepts WHERE id = ' . $soloId)->fetch(PDO::FETCH_ASSOC);
+check('a call nobody seconded cannot score, however good the guess',
+      $solo['grade'] === 'missed', (string)$solo['grade']);
+
+$note = api('note', ['code' => $ni['code'], 'token' => $ni['a']['token'],
+                     'collar' => 'F2', 'profile' => 'den', 'on' => true]);
+check('a hunch is free and shared', $note['status'] === 200);
+$badNote = api('note', ['code' => $ni['code'], 'token' => $ni['a']['token'],
+                        'collar' => 'F2', 'profile' => 'lurking', 'on' => true]);
+check('but only one of the four real shapes',
+      $badNote['status'] === 422 && ($badNote['body']['reason'] ?? '') === 'badProfile');
+
+echo "\n8. A NIGHT RUNS TO DAWN\n";
 $n2 = openNight();
 $cycles = (int)roomRow($pdo, $n2['code'])['cycles'];
 for ($i = 0; $i < $cycles + 2; $i++) {
@@ -235,11 +345,22 @@ check('the night ends at dawn and not before', $row['status'] === 'dawn', 'statu
 $dawn = null;
 foreach (poll($n2['a'], 0)['body']['events'] as $e) if ($e['type'] === 'dawn') $dawn = $e['data'];
 check('dawn publishes a report', is_array($dawn) && isset($dawn['grade']));
-check('the report answers the night\'s question', is_array($dawn) && array_key_exists('answered', $dawn));
-check('the truth is published only at dawn', is_array($dawn) && isset($dawn['truth']['F2']));
+check('the truth is published only at dawn', is_array($dawn) && isset($dawn['truth']['F2']['at']));
+// The reveal is the payoff of the whole redesign: at dawn you finally learn
+// what she was doing, and get to lay her real track over the one you drew.
+check('dawn names the shape each collar was running',
+      is_array($dawn) && in_array($dawn['truth']['F2']['profile'] ?? '',
+                                  ['ridge','den','water','flight'], true));
+// One more than the cycle count: where she started, plus where each cycle
+// put her. The plate needs both ends or the drawn track is a cycle short.
+check('dawn hands over the track she actually walked',
+      is_array($dawn) && count($dawn['truth']['F2']['track'] ?? []) === $cycles + 1,
+      'got ' . count($dawn['truth']['F2']['track'] ?? []) . ' of ' . ($cycles + 1));
 check('the report counts the fixes actually logged', is_array($dawn) && $dawn['fixes'] > 0);
+check('a night with no call landed is graded a disaster',
+      is_array($dawn) && $dawn['grade'] === 'disaster', $dawn['grade'] ?? '?');
 
-echo "\n8. LOSING AND RETAKING A SEAT\n";
+echo "\n9. LOSING AND RETAKING A SEAT\n";
 $n3 = openNight();
 $seats = api('seats', ['code' => $n3['code']]);
 check('seats is answerable without a token', $seats['status'] === 200 && count($seats['body']['players']) === 2);

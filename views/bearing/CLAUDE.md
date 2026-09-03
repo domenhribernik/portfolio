@@ -20,11 +20,37 @@ landing in the same second cannot both advance the night. `pollRoom()` re-checks
 the invariant every few seconds, because a commit that died after writing must
 not strand the pair.
 
+## The loop, and why it is shaped like this
+
+The first version of this game was **"reduce your measurement error"**: animals
+random-walked, fixes were graded against the truth, and the night's score was how
+many came out tight. It tested cleanly and nobody wanted to replay it. Nothing
+was anticipated, nothing pushed back, and three fixes in a row meant three
+separate numbers rather than one picture.
+
+The rework makes a fix **evidence rather than an answer**:
+
+1. Each collar is dealt a hidden **behaviour profile** (`ridge`, `den`, `water`,
+   `flight`) at seed time. It never leaves the server before dawn.
+2. Fixes joined in cycle order draw a **track**, and a profile is a legible
+   *shape* if and only if the fixes are tight. That is what buys bracketing its
+   place in the game.
+3. Read the shape, predict where she goes, and **call an intercept**: a cell and
+   a future cycle. It scores only when the partner seconds it and one of you is
+   standing within `INTERCEPT_RADIUS` when the night gets there.
+4. Dawn draws her real track over the one the pair reconstructed and names the
+   shape.
+
+Both players can talk freely, usually in the same room, so hidden information
+cannot be the engine: anything on one screen is read aloud in four seconds. The
+engine is a hidden *behaviour* they deduce together, plus a decision that stays
+hard with perfect communication (gather more, or start walking now).
+
 ## The authority line, and the one hole that is deliberate
 
 The server owns the valley, the animals and their movement, all derived from
-`bearing_rooms.seed`. **An animal's position is a secret** and is published only
-in the dawn report.
+`bearing_rooms.seed`. **An animal's position, profile, den cell and track are
+secrets** published only in the dawn report.
 
 A sweep, though, hands back the whole 360-sample trace, and the true bearing is
 the peak of it. That looks like a leak and is not. Reading the trace *is* the
@@ -43,27 +69,51 @@ around half power, which is the actual -3 dB point operators use.
 
 `tests/bearing-logic.test.mjs` holds the curve: bracketing at half power must beat
 naive peak-reading by 2x, and a badly set gate must be *worse* than not
-bracketing at all. If either stops being true the instrument has stopped being a
-skill and is back to being a dice roll, which is the whole reason those two tests
-exist.
+bracketing at all. `tests/bearing-sim.test.php` then holds the *consequence*: a
+night played with half-power brackets lands measurably more intercepts than the
+same night played by eyeballing the peak. If that second gap ever closes, the
+instrument has stopped feeding the game and bracketing is decoration.
 
 **A trace of pure hiss reports no bearing at all.** `lobePeak` will happily return
 the loudest noise sample, so without the SNR gate in `readBearing` the instrument
 sets its gate at half of a bump and reports a confident bearing off nothing. On
 screen that was an orange ray whipping around the plate. Two tests guard it.
 
+## Where the code lives
+
+| File | What |
+|---|---|
+| `app/controllers/bearing/valley.php` | Terrain, line of sight, the sweep trace, weather. Pure |
+| `app/controllers/bearing/movement.php` | The four profiles, the track features, the classifier. Pure |
+| `app/controllers/bearing-controller.php` | Rooms, the lockstep, the intercept. Everything with a database in it |
+
+The two modules under `bearing/` have **no side effects on include**, which is
+what lets `tests/bearing-sim.test.php` run the physics thousands of times with no
+server and no database. Keep it that way: a `header()` or a `Database::` call in
+either of them silently costs the balance suite.
+
+`N` and `CELL_M` live in `valley.php`, not the controller. `MOVE_MAX`, `CYCLES`,
+`INTERCEPT_RADIUS`, `CONTACT_M` and `NEAR_M` live in the controller. Both sets are
+mirrored in `logic.js` and greped by the JS suite.
+
 ## Things that will bite
 
-- **Constants are mirrored in the controller.** `N`, `CELL_M`, `CYCLES` and the
-  noise function exist in both `logic.js` and `bearing-controller.php`. Change
-  them in both.
+- **The profile prototypes are measured, not chosen.** `PROTOTYPE` in
+  `movement.php` holds class means and deviations taken off four hundred seeds.
+  Change how an animal moves and they are stale, which the sim suite will say so
+  in numbers. Re-measure rather than nudging them until it passes.
 - **`ui.json` is fetched `no-cache`, never `force-cache`.** A stale table is a
   page of key names. A new user-facing string is a row in that file, never a
   literal in the markup.
 - **The database getter is `Database::write()`**, not `getWriteConnection()`.
-- **Sweeping costs a cycle; bracketing is free.** `commit` takes the cycle
-  action, `read` posts a bracketed bearing so your partner's plate shows your
-  ray. Do not merge them: bracketing a trace you already hold is reading, not
-  sweeping.
-- The PHP suite pins **port 8964** and boots with `DB_*` overrides at the local
+- **Sweeping costs a cycle; bracketing, posting, hunches and calls do not.**
+  `commit` takes the cycle action; `read` posts a bracketed bearing, `note`
+  toggles a hypothesis chip, `intercept` proposes or seconds a call. Do not fold
+  the free ones into the lockstep: an intercept is paid for in *walking*, which
+  is legible on the plate, and taxing it a cycle as well charges twice for one
+  decision.
+- **A ray expires after `RAY_LIFE` cycles.** Every bearing ever posted, drawn at
+  full strength with its wedge, buried the plate in white by mid-night and hid
+  the track. The track is the permanent record; a bearing is working material.
+- The PHP suites pin **port 8964** and boot with `DB_*` overrides at the local
   scratch DB. Those overrides are what stop a test run writing to production.

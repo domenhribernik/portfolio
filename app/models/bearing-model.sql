@@ -3,10 +3,12 @@
 -- event log whose id is the sync cursor), with two differences that drive
 -- the whole feature.
 --
--- 1. THE SERVER OWNS THE VALLEY. Terrain, the animals and their movement
---    are generated here from bearing_rooms.seed and never leave except as
---    the things a station could actually observe.
--- 2. AN ANIMAL'S POSITION IS A SECRET until dawn. bearing_animals is never
+-- 1. THE SERVER OWNS THE VALLEY. Terrain, the animals, their hidden
+--    behaviour profiles and their movement are generated from
+--    bearing_rooms.seed and never leave except as the things a station
+--    could actually observe.
+-- 2. AN ANIMAL'S POSITION IS A SECRET until dawn, and so now are its
+--    PROFILE, its DEN CELL and its TRACK. bearing_animals is never
 --    serialised into any payload; tests/bearing-controller.test.php greps
 --    the raw response bytes to prove it.
 --
@@ -17,7 +19,8 @@
 -- opponent. This is co-op: both seats want the same outcome, so the trace
 -- can be handed over honestly and the skill stays where it belongs.
 --
--- Run manually in phpMyAdmin. Safe to re-run.
+-- Run manually in phpMyAdmin. Safe to re-run: the ALTERs at the foot
+-- migrate a database created before the intercept rework.
 
 INSERT INTO projects (project_key, name) VALUES ('bearing', 'Bearing')
 ON DUPLICATE KEY UPDATE active = 1;
@@ -34,15 +37,14 @@ CREATE TABLE IF NOT EXISTS bearing_rooms (
     -- INSERT that forgets one should fail rather than invent a flat one.
     terrain MEDIUMTEXT NOT NULL,
     -- Dusk to dawn. Nothing advances until BOTH seats have committed, so
-    -- there is no clock anywhere in this schema.
+    -- there is no clock anywhere in this schema. Ten, not twenty-four: a
+    -- night is one sitting, and twenty-four cycles of the same three
+    -- actions was the shape of the version nobody wanted to replay.
     cycle TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    cycles TINYINT UNSIGNED NOT NULL DEFAULT 24,
-    -- The night's question, and the collar it is about.
-    brief VARCHAR(32) NOT NULL,
-    brief_collar VARCHAR(8) NOT NULL,
-    -- When she dens and where. Both hidden until the night reaches it.
-    den_cycle TINYINT UNSIGNED NOT NULL,
-    den_at SMALLINT DEFAULT NULL,
+    cycles TINYINT UNSIGNED NOT NULL DEFAULT 10,
+    -- clear | haze | storm. Raises the noise floor and makes a ridge
+    -- bounce more convincing, which changes where you can afford to stand.
+    weather VARCHAR(8) NOT NULL DEFAULT 'clear',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_active DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_bearing_rooms_idle (last_active)
@@ -79,22 +81,51 @@ CREATE TABLE IF NOT EXISTS bearing_players (
 
 -- THE SECRET. No column in here is ever serialised into a payload before
 -- dawn. Everything a station may know is derived from it and sent as an
--- observation instead: a trace, or a graded fix.
+-- observation instead: a trace, or a fix the pair placed themselves.
 CREATE TABLE IF NOT EXISTS bearing_animals (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_id INT NOT NULL,
     collar VARCHAR(8) NOT NULL,
-    -- Row-major cell index. Moves every cycle until she dens.
+    -- Row-major cell index, moved every cycle by the profile below.
     at SMALLINT NOT NULL,
+    -- ridge | den | water | flight. The hidden behaviour the whole night is
+    -- spent deducing, so this is the single most secret column in the game.
+    profile VARCHAR(8) NOT NULL,
+    -- Only meaningful for the den profile: the point she orbits.
+    den_cell SMALLINT DEFAULT NULL,
+    -- Every cell she has stood in, comma separated, oldest first. Written
+    -- as the night runs and published only in the dawn report, where it is
+    -- drawn over the track the pair reconstructed.
+    track MEDIUMTEXT NOT NULL,
     -- Which cycles this collar transmits on: it pings when
     -- cycle % duty == phase, so sweeping a silent collar wastes the cycle.
     duty TINYINT NOT NULL DEFAULT 1,
     phase TINYINT NOT NULL DEFAULT 0,
-    -- How far it moves per cycle, and how much it wanders.
-    pace TINYINT NOT NULL DEFAULT 2,
-    denned TINYINT NOT NULL DEFAULT 0,
     INDEX idx_bearing_animals_room (room_id),
     CONSTRAINT fk_bearing_animals_room FOREIGN KEY (room_id)
+        REFERENCES bearing_rooms(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- THE COMMITMENT. One seat proposes a cell and a cycle, the other has to
+-- confirm it, and only then does it lock and cost the proposer's cycle.
+-- Two seats are required by the schema, not merely by the controller:
+-- confirmed_by is what makes a solo intercept unrepresentable.
+CREATE TABLE IF NOT EXISTS bearing_intercepts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    room_id INT NOT NULL,
+    collar VARCHAR(8) NOT NULL,
+    proposed_by INT NOT NULL,
+    confirmed_by INT DEFAULT NULL,
+    at SMALLINT NOT NULL,
+    target_cycle TINYINT UNSIGNED NOT NULL,
+    -- contact | near | missed, written when the night reaches target_cycle.
+    grade VARCHAR(8) DEFAULT NULL,
+    -- How far the call was from the animal, in metres. Only ever written at
+    -- resolution, which is the moment it stops being a secret.
+    error_m SMALLINT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_bearing_intercepts_room (room_id, collar),
+    CONSTRAINT fk_bearing_intercepts_room FOREIGN KEY (room_id)
         REFERENCES bearing_rooms(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -116,3 +147,27 @@ CREATE TABLE IF NOT EXISTS bearing_events (
     CONSTRAINT fk_bearing_events_player FOREIGN KEY (player_id)
         REFERENCES bearing_players(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- Migration from the pre-intercept schema. No-ops on a fresh install and
+-- on a database that has already had them applied.
+--
+-- The old night asked a scripted question ("she should have denned, find
+-- where") on a fixed hidden cycle. The intercept rework replaced it, so
+-- brief, brief_collar, den_cycle, den_at and denned are dropped rather
+-- than left behind to rot: a nullable column nothing writes is a trap for
+-- whoever reads this schema next.
+ALTER TABLE bearing_rooms
+    ADD COLUMN IF NOT EXISTS weather VARCHAR(8) NOT NULL DEFAULT 'clear',
+    DROP COLUMN IF EXISTS brief,
+    DROP COLUMN IF EXISTS brief_collar,
+    DROP COLUMN IF EXISTS den_cycle,
+    DROP COLUMN IF EXISTS den_at,
+    ALTER COLUMN cycles SET DEFAULT 10;
+
+ALTER TABLE bearing_animals
+    ADD COLUMN IF NOT EXISTS profile VARCHAR(8) NOT NULL DEFAULT 'ridge',
+    ADD COLUMN IF NOT EXISTS den_cell SMALLINT DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS track MEDIUMTEXT NOT NULL DEFAULT '',
+    DROP COLUMN IF EXISTS pace,
+    DROP COLUMN IF EXISTS denned;
