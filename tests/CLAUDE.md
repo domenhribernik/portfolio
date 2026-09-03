@@ -71,3 +71,20 @@ scrubbing (the report lands in the web root, so redaction is a **security proper
 binary choice (newest 8+ with `pdo_mysql` wins, 7.x never), and log trimming. Stdlib
 `unittest`, no dependencies, no network, no DB. Sync *behaviour* belongs to
 `stocks-sync.test.php` instead.
+
+### bearing
+
+`bearing-logic.test.mjs` holds the instrument. Two tests are the point of the
+suite: bracketing at half power must beat naive peak-reading by 2x, and a
+badly set gate must be worse than not bracketing at all. If either stops being
+true the instrument has stopped being a skill and is back to being a dice roll.
+Two more guard the SNR gate, without which the loudest noise sample counts as a
+lobe and the instrument reports a confident bearing off hiss. It also greps
+`bearing-controller.php` for the constants that exist in both files.
+
+`bearing-controller.test.php` (port **8964**) holds the two room rules: AN
+ANIMAL’S POSITION IS A SECRET (the raw response bytes are searched for every
+collar’s true cell, during the night and after it) and A FORGED COMMIT CHANGES
+NOTHING. It also runs a whole night to dawn. Note the deliberate non-secret: a
+sweep returns the full 360-sample trace, because reading it is the game and
+there is no opponent to cheat against.

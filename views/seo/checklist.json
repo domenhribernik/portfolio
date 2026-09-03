@@ -853,6 +853,28 @@
         "indexed": "na",
         "cwv": "na"
       }
+    },
+    {
+      "path": "views/bearing",
+      "name": "Bearing",
+      "tier": "flagship",
+      "status": {
+        "title": "done",
+        "description": "done",
+        "canonical": "done",
+        "og": "done",
+        "jsonld": "done",
+        "h1": "done",
+        "crawlable": "partial",
+        "robots": "done",
+        "sitemap": "done",
+        "indexed": "todo",
+        "cwv": "unknown"
+      },
+      "notes": {
+        "crawlable": "the plate is SVG built on device from a poll; the head, the h1 and the boot copy are static, so a crawler sees what the game is but not a night in progress",
+        "indexed": "co-op is the angle nobody else covers here: worth requesting indexing on the phrase rather than on radio telemetry"
+      }
     }
   ]
 }

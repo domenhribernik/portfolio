@@ -1,0 +1,260 @@
+{
+  "meta": {
+    "languages": [
+      "en"
+    ],
+    "note": "One row per string. The controller reads this file too, so a refuse.* code the controller can send must have a row here."
+  },
+  "chrome.exit": {
+    "en": "Exit"
+  },
+  "chrome.title": {
+    "en": "Bearing"
+  },
+  "boot.lede": {
+    "en": "Two of you, one valley, one night. You each hear which direction a radio collar is in. Neither of you can tell how far away it is."
+  },
+  "boot.rule": {
+    "en": "One bearing is a line. Two bearings are a place."
+  },
+  "boot.play": {
+    "en": "Play together"
+  },
+  "boot.practice": {
+    "en": "Practice the antenna"
+  },
+  "boot.nameLabel": {
+    "en": "Your name"
+  },
+  "boot.namePlaceholder": {
+    "en": "e.g. Domen"
+  },
+  "boot.codeLabel": {
+    "en": "Room code"
+  },
+  "boot.codePlaceholder": {
+    "en": "4 letters"
+  },
+  "boot.create": {
+    "en": "Open a room"
+  },
+  "boot.join": {
+    "en": "Join a room"
+  },
+  "boot.back": {
+    "en": "Back"
+  },
+  "boot.offline": {
+    "en": "The field station is not on the air yet. Practice works offline in the meantime."
+  },
+  "train.caption": {
+    "en": "Practice plate · one collar · station A"
+  },
+  "train.commit": {
+    "en": "Commit bearing"
+  },
+  "train.committed": {
+    "en": "Committed"
+  },
+  "train.again": {
+    "en": "New collar"
+  },
+  "train.chart": {
+    "en": "Signal / bearing"
+  },
+  "train.crossing": {
+    "en": "Crossing"
+  },
+  "train.major": {
+    "en": "Major"
+  },
+  "train.minor": {
+    "en": "Minor"
+  },
+  "train.swept": {
+    "en": "Swept"
+  },
+  "train.sig": {
+    "en": "Sig"
+  },
+  "train.help": {
+    "en": "Drag across the plate to swing the antenna, or tap a mark on the ring. Arrow keys step one degree, shift-arrow five."
+  },
+  "train.result": {
+    "en": "You said {said}. It was {truth}. Off by {err} degrees."
+  },
+  "train.geomHelp": {
+    "en": "Now both stations hear it, and both are off by the same few degrees. Drag either station. Nothing about the antennas changes, only where you stand."
+  },
+  "train.tight": {
+    "en": "Tight"
+  },
+  "train.usable": {
+    "en": "Usable"
+  },
+  "train.loose": {
+    "en": "Loose"
+  },
+  "train.worthless": {
+    "en": "Worthless"
+  },
+  "train.tabSweep": {
+    "en": "The antenna"
+  },
+  "train.tabFix": {
+    "en": "The crossing"
+  },
+  "refuse.badCode": {
+    "en": "That is not a room code."
+  },
+  "refuse.badName": {
+    "en": "Pick a name between one and twenty characters."
+  },
+  "refuse.noRoom": {
+    "en": "No room with that code."
+  },
+  "refuse.roomFull": {
+    "en": "That room already has two stations."
+  },
+  "refuse.started": {
+    "en": "That night is already under way."
+  },
+  "refuse.network": {
+    "en": "Could not reach the field station. Check your connection."
+  },
+  "train.gate": {
+    "en": "Gate"
+  },
+  "train.helpSweep": {
+    "en": "Drag across the plate to swing the antenna. The number follows your aim and SIG is what you can hear there. Sweep until a clear hump appears on the trace."
+  },
+  "train.helpGate": {
+    "en": "Now drag the gate line up and down the trace. The instrument brackets the hump where it crosses the gate and reads the midpoint, because the flanks are steep where the peak is flat. Watch the plus-or-minus: get it as small as you can, then commit."
+  },
+  "train.aim": {
+    "en": "Aim"
+  },
+  "night.cycle": {
+    "en": "Cycle"
+  },
+  "night.of": {
+    "en": "of"
+  },
+  "night.sweep": {
+    "en": "Sweep"
+  },
+  "night.move": {
+    "en": "Walk"
+  },
+  "night.log": {
+    "en": "Log a fix"
+  },
+  "night.commit": {
+    "en": "Commit the cycle"
+  },
+  "night.waiting": {
+    "en": "Waiting for {name}"
+  },
+  "night.post": {
+    "en": "Post this bearing"
+  },
+  "night.posted": {
+    "en": "Posted"
+  },
+  "night.pickCell": {
+    "en": "Tap a cell on the plate."
+  },
+  "night.pickSweep": {
+    "en": "Pick a collar to sweep. One that is silent this cycle wastes it."
+  },
+  "night.helpMove": {
+    "en": "Tap where to walk, up to six cells. You reveal the ground you cross, and only you will know it."
+  },
+  "night.helpLog": {
+    "en": "Tap where you think the collar is. Cross your two bearings and log the crossing."
+  },
+  "night.silent": {
+    "en": "Silent this cycle"
+  },
+  "night.every": {
+    "en": "Every cycle"
+  },
+  "night.alternate": {
+    "en": "Alternate cycles"
+  },
+  "night.gone": {
+    "en": "Off the air"
+  },
+  "night.fast": {
+    "en": "Fast pulse"
+  },
+  "night.traceFrom": {
+    "en": "Trace from station {seat}. Bracket it, then post."
+  },
+  "night.noTrace": {
+    "en": "Sweep a collar to put a trace on the recorder."
+  },
+  "brief.den": {
+    "en": "{collar} should have denned by now and has not. Find where she does."
+  },
+  "brief.silent": {
+    "en": "{collar}'s collar is failing. Whatever you have on her when it quits is all you will ever have."
+  },
+  "dawn.title": {
+    "en": "Dawn"
+  },
+  "dawn.good": {
+    "en": "A good night. You answered it and the plate will stand up."
+  },
+  "dawn.partial": {
+    "en": "Partly. There is enough here to argue from, not enough to be sure."
+  },
+  "dawn.thin": {
+    "en": "Thin. Too few tight fixes to say anything the data supports."
+  },
+  "dawn.answered": {
+    "en": "Answered"
+  },
+  "dawn.missed": {
+    "en": "Not answered"
+  },
+  "dawn.fixes": {
+    "en": "Fixes"
+  },
+  "dawn.tight": {
+    "en": "Tight"
+  },
+  "dawn.again": {
+    "en": "Another night"
+  },
+  "dawn.leave": {
+    "en": "Leave"
+  },
+  "refuse.notNight": {
+    "en": "That night is over."
+  },
+  "refuse.alreadyCommitted": {
+    "en": "You have already committed this cycle."
+  },
+  "refuse.badCollar": {
+    "en": "No collar by that name."
+  },
+  "refuse.badCell": {
+    "en": "That is off the plate."
+  },
+  "refuse.tooFar": {
+    "en": "Too far to walk in one cycle."
+  },
+  "refuse.badAction": {
+    "en": "That is not something a station can do."
+  },
+  "refuse.badBearing": {
+    "en": "That is not a bearing."
+  },
+  "refuse.seatTaken": {
+    "en": "That seat was taken by another device."
+  },
+  "refuse.seatBusy": {
+    "en": "That seat is still live."
+  }
+}

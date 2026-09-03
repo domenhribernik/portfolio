@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Bearing | A Co-op Radio Tracking Game For Two</title>
+    <meta name="description" content="Two of you track radio-collared animals across a valley at night. You each hear which direction a collar is in, never how far. One bearing is a line, two bearings are a place, so neither of you can find anything alone.">
+    <link rel="canonical" href="https://domenhribernik.com/views/bearing/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Bearing">
+    <meta property="og:description" content="Two of you track radio-collared animals across a valley at night. You each hear which direction a collar is in, never how far. One bearing is a line, two bearings are a place, so neither of you can find anything alone.">
+    <meta property="og:url" content="https://domenhribernik.com/views/bearing/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#272052">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Bearing",
+      "url": "https://domenhribernik.com/views/bearing/",
+      "genre": "Cooperative deduction",
+      "playMode": ["CoOp", "SinglePlayer"],
+      "gamePlatform": "Web browser",
+      "isAccessibleForFree": true,
+      "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2 },
+      "inLanguage": ["en"],
+      "author": { "@type": "Person", "name": "Domen Hribernik", "url": "https://domenhribernik.com/" },
+      "description": "A cooperative radio-telemetry game for two. Each player sweeps a directional antenna and gets a bearing, which is a direction with no distance. Only two bearings crossed from two different places give a position, so the game cannot be played alone."
+    }
+    </script>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Fira+Sans+Condensed:wght@400;500;700&family=Fira+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<!--
+  DIRECTION CONTRACT
+  THESIS  The night's record is the game. One atlas plate filling in until
+          dawn; refuses both the radar screen this category always ships and
+          the parchment chart that is its only alternative.
+  OWN-WORLD  Violet-indigo spot ink flooded ground-out, warm bone knocked out
+          of it for every mark, one signal orange meaning only "not yet
+          committed". Fira in three cuts, no second face. Rules and symbols,
+          never cards.
+  STORY   You take a bearing, it inks across the plate, and where it crosses
+          your partner's you learn something neither of you could learn alone.
+  FIRST VIEWPORT  Full-bleed tetrad grid with two station symbols; a ruled
+          title block along the bottom edge carrying cycle, collar roster and
+          the commit action.
+  FORM    Published atlas plate fused with a strip-chart recorder. Candidate 7
+          of seven, assigned by concept seed 8571ba34.
+-->
+<body>
+
+<a class="exit" id="back-link" href="../../" data-s="chrome.exit">Exit</a>
+
+<!-- 1. BOOT -->
+<section class="screen on" id="bootScreen">
+  <div class="boot">
+    <h1 class="wordmark">Bearing</h1>
+    <p class="lede" data-s="boot.lede"></p>
+    <p class="rule-line">One bearing is a line.<br><em>Two bearings are a place.</em></p>
+
+    <div class="paths" id="paths">
+      <button class="btn btn--fill" id="goPlay" data-s="boot.play"></button>
+      <button class="btn" id="goTrain" data-s="boot.practice"></button>
+    </div>
+
+    <div class="panel" id="roomPanel">
+      <div class="field">
+        <label for="name" data-s="boot.nameLabel"></label>
+        <input id="name" type="text" maxlength="20" autocomplete="nickname" spellcheck="false">
+      </div>
+      <button class="btn btn--fill" id="create" data-s="boot.create"></button>
+      <div class="field">
+        <label for="code" data-s="boot.codeLabel"></label>
+        <input id="code" type="text" maxlength="4" inputmode="latin" autocapitalize="characters"
+               autocomplete="off" spellcheck="false">
+      </div>
+      <button class="btn" id="join" data-s="boot.join"></button>
+      <p class="notice" id="notice" role="status"></p>
+      <button class="btn" id="backFromRoom" data-s="boot.back"></button>
+    </div>
+
+    <site-footer theme="dark"></site-footer>
+  </div>
+</section>
+
+<!-- 2. PRACTICE -->
+<section class="screen" id="trainScreen">
+  <div class="plate">
+    <svg id="svg" viewBox="0 0 400 400" role="application" tabindex="0"
+         aria-label="Practice plate. Drag to swing the antenna, or use arrow keys."></svg>
+  </div>
+
+  <div class="block">
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tabSweep" role="tab" aria-selected="true" data-s="train.tabSweep"></button>
+      <button class="tab" id="tabFix" role="tab" aria-selected="false" data-s="train.tabFix"></button>
+    </div>
+
+    <svg class="chart" id="chart" viewBox="0 0 360 84" preserveAspectRatio="none" role="slider" tabindex="0"
+         aria-label="Gate level. Up and down arrows raise and lower it."></svg>
+    <div class="bar" id="qualityBar" hidden><i id="quality" style="width:0%"></i></div>
+
+    <div class="readout" id="readout"></div>
+    <div class="hr"></div>
+    <p class="caption" id="caption"></p>
+
+    <div class="acts" id="acts"></div>
+    <p class="help" id="help"></p>
+  </div>
+</section>
+
+<!-- 3. THE NIGHT -->
+<section class="screen" id="nightScreen">
+  <div class="plate">
+    <svg id="nsvg" viewBox="0 0 400 400" role="application" tabindex="0"
+         aria-label="The plate. Your station, your partner's, and every bearing taken so far."></svg>
+  </div>
+  <div class="block">
+    <p class="brief" id="brief"></p>
+    <svg class="chart" id="nchart" viewBox="0 0 360 84" preserveAspectRatio="none" role="slider" tabindex="0"
+         aria-label="Gate level. Up and down arrows raise and lower it."></svg>
+    <div class="readout" id="nreadout"></div>
+    <div class="hr"></div>
+    <div class="roster" id="roster"></div>
+    <div class="tabs" id="ntabs" role="tablist"></div>
+    <div class="acts" id="nacts"></div>
+    <p class="help" id="nhelp"></p>
+  </div>
+</section>
+
+<!-- 4. DAWN -->
+<section class="screen" id="dawnScreen">
+  <div class="plate">
+    <svg id="dsvg" viewBox="0 0 400 400" role="img" aria-label="The finished plate."></svg>
+  </div>
+  <div class="block">
+    <p class="caption" id="dawnCap"></p>
+    <div class="readout" id="dreadout"></div>
+    <div class="hr"></div>
+    <p class="help" id="dhelp"></p>
+    <div class="acts">
+      <button class="btn btn--fill" id="againBtn"></button>
+      <button class="btn narrow" id="leaveBtn"></button>
+    </div>
+  </div>
+</section>
+
+<div aria-live="polite" class="sr-only" id="crier" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+
+<script src="../../components/back-link.js"></script>
+<script type="module" src="../../components/site-footer.js"></script>
+<script type="module" src="script.js"></script>
+</body>
+</html>

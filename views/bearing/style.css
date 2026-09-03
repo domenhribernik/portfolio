@@ -1,0 +1,261 @@
+/* BEARING
+   A two-colour biological atlas plate, printed ground-out: the spot ink
+   floods the sheet and every mark is knocked out of it in the stock
+   colour. Second ink, the signal orange, means exactly one thing and
+   never anything else: NOT YET COMMITTED.
+
+   Only what CSS is actually for lives here. The plate itself is SVG built
+   in script.js, because its marks are data. */
+
+:root{
+  --deep:#171233;      /* the margin the plate sits on, and recessed wells */
+  --plate:#272052;     /* the flooded ground */
+  --tint:#332a63;      /* raised fills and hover */
+  --faint:#7a739b;     /* grid and graticule. GRAPHICS ONLY, 3.36:1 on plate */
+  --mid:#9a93b4;       /* secondary lettering, 5.09:1 on plate */
+  --bone:#ece4d3;      /* the knockout: every committed mark and letterform */
+  --signal:#ff6a2b;    /* second ink: provisional, and the den */
+  --signal-dk:#e04f14;
+
+  --cond:'Fira Sans Condensed',system-ui,sans-serif;
+  --sans:'Fira Sans',system-ui,sans-serif;
+  --mono:'Fira Mono',ui-monospace,monospace;
+
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+/* Dragging the plate or the gate must never paint a text selection across
+   the readout. Inputs stay selectable, because a room code has to be. */
+body{-webkit-user-select:none; user-select:none}
+input,textarea{-webkit-user-select:text; user-select:text}
+.plate svg,.chart{-webkit-touch-callout:none}
+html,body{height:100%}
+body{
+  background:var(--plate); color:var(--bone);
+  font-family:var(--sans); font-size:15px; line-height:1.5;
+  overscroll-behavior:none; -webkit-text-size-adjust:100%;
+  display:flex; flex-direction:column;
+}
+
+/* one focus treatment, everywhere */
+:where(a,button,input,[tabindex]):focus-visible{
+  outline:2px solid var(--signal); outline-offset:2px;
+}
+
+.screen{display:none; flex:1 1 auto; min-height:0; flex-direction:column}
+.screen.on{display:flex}
+
+.exit{
+  position:fixed; top:10px; left:12px; z-index:5;
+  font-family:var(--cond); font-weight:700; font-size:12px;
+  letter-spacing:.16em; text-transform:uppercase;
+  color:var(--mid); text-decoration:none; padding:8px 10px;
+}
+.exit:hover{color:var(--bone)}
+
+/* ---- boot ---------------------------------------------------------- */
+.boot{
+  flex:1 1 auto; display:flex; flex-direction:column; justify-content:center;
+  gap:26px; padding:64px 22px 26px; max-width:640px; margin:0 auto; width:100%;
+}
+.wordmark{
+  font-family:var(--cond); font-weight:700; text-transform:uppercase;
+  font-size:clamp(3rem,17vw,5.5rem); line-height:.86; letter-spacing:-.02em;
+}
+.lede{color:var(--mid); max-width:46ch}
+.rule-line{
+  font-family:var(--cond); font-weight:700; text-transform:uppercase;
+  letter-spacing:.1em; font-size:clamp(1rem,4.4vw,1.35rem); line-height:1.25;
+  padding-top:16px; border-top:1px solid var(--faint);
+}
+.rule-line em{font-style:normal; color:var(--signal)}
+
+.paths{display:flex; flex-direction:column; gap:9px}
+.panel{display:none; flex-direction:column; gap:14px}
+.panel.on{display:flex}
+.field{display:flex; flex-direction:column; gap:6px}
+label{
+  font-family:var(--cond); font-weight:700; font-size:11px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--mid);
+}
+input{
+  font-family:var(--mono); font-size:16px; color:var(--bone);
+  background:var(--deep); border:1px solid var(--faint);
+  border-radius:2px; padding:12px; min-height:46px; width:100%;
+}
+input::placeholder{color:var(--faint)}
+input:focus{border-color:var(--bone); outline:none}
+input:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
+#code{text-transform:uppercase; letter-spacing:.4em; font-weight:700}
+
+.notice{
+  font-size:13px; color:var(--signal); border-left:2px solid var(--signal);
+  padding-left:10px; display:none;
+}
+.notice.on{display:block}
+
+/* ---- buttons: knocked out of the ink, like every other mark --------- */
+.btn{
+  display:block; width:100%; text-align:center; cursor:pointer;
+  font-family:var(--cond); font-weight:700; font-size:13.5px;
+  letter-spacing:.13em; text-transform:uppercase;
+  padding:13px 18px; min-height:48px; border-radius:2px;
+  border:1px solid var(--bone); background:transparent; color:var(--bone);
+  text-decoration:none; transition:background .12s var(--ease);
+}
+.btn:hover{background:rgba(236,228,211,.12)}
+.btn--fill{background:var(--bone); color:var(--plate); border-color:var(--bone)}
+.btn--fill:hover{background:#fff8ea}
+.btn[disabled]{opacity:.4; cursor:default}
+.btn[disabled]:hover{background:transparent}
+.row{display:flex; gap:9px}
+.row .btn{flex:1}
+
+/* ---- the plate ----------------------------------------------------- */
+.plate{flex:1 1 auto; min-height:0; display:grid; place-items:center; padding:10px}
+.plate svg{
+  width:auto; height:100%; max-width:100%; max-height:100%; aspect-ratio:1;
+  touch-action:none; display:block; border-radius:2px;
+}
+.plate svg:focus{outline:none}
+.plate svg:focus-visible{outline:2px solid var(--signal); outline-offset:3px}
+
+.cell{fill:var(--faint)}
+.grat{stroke:var(--faint); stroke-opacity:.32; stroke-width:.6}
+
+.rose-ring{fill:none; stroke:var(--faint); stroke-width:1; stroke-opacity:.75}
+.rose-swept{fill:none; stroke:var(--mid); stroke-width:3}
+.rose-tick{stroke:var(--mid); stroke-width:1}
+.rose-tick.major{stroke:var(--bone); stroke-width:1.4}
+.rose-hit{fill:transparent; cursor:pointer}
+.rose-hit:focus-visible{outline:none}
+.rose-hit:focus-visible+.rose-tick{stroke:var(--signal); stroke-width:2.6}
+.rose-num{fill:var(--mid); font-family:var(--mono); font-size:8.5px; text-anchor:middle}
+
+.stn-ring{fill:var(--plate); stroke:var(--bone); stroke-width:1.6}
+.stn-dot{fill:var(--bone); pointer-events:none}
+.stn-label{fill:var(--bone); font-family:var(--cond); font-weight:700; font-size:12px; pointer-events:none}
+.stn-hit{fill:transparent; cursor:grab}
+.stn-hit:focus-visible{outline:none}
+.stn-hit:focus-visible+.stn-ring{stroke:var(--signal); stroke-width:2.8}
+
+.needle{stroke:var(--signal); stroke-width:2; stroke-opacity:.9; stroke-linecap:round}
+.needle-head{fill:var(--signal)}
+.ray{stroke:var(--bone); stroke-width:1.2; fill:none}
+.ray.b{stroke-dasharray:5 4}
+.wedge{fill:var(--bone); fill-opacity:.07}
+.truth{stroke:var(--signal); stroke-width:1; stroke-dasharray:3 4; stroke-opacity:.85}
+.truth-ring{fill:none; stroke:var(--signal); stroke-width:1.8}
+.mark{fill:var(--bone)}
+.mark-ring{fill:none; stroke:var(--bone); stroke-width:1.2; stroke-opacity:.6}
+.ell{fill:var(--signal); fill-opacity:.16; stroke:var(--signal); stroke-width:1.6}
+.ell-ax{stroke:var(--signal); stroke-width:.9; stroke-opacity:.7; stroke-dasharray:2 3}
+
+/* the one motion in the whole view: a committed mark inks along its
+   length, arriving at full density last, the way a plate is printed. */
+.ray.inking{stroke-dasharray:var(--len); stroke-dashoffset:var(--len);
+  animation:ink .5s var(--ease) forwards}
+@keyframes ink{to{stroke-dashoffset:0}}
+
+/* ---- the title block: plate marginalia, recessed ------------------- */
+.block{
+  flex:0 0 auto; background:var(--deep);
+  border-top:1px solid var(--faint); padding:10px 14px 14px;
+}
+.tabs{display:flex; gap:0; margin-bottom:10px; border-bottom:1px solid var(--faint)}
+.tab{
+  flex:1; background:none; border:0; cursor:pointer; padding:10px 6px; min-height:44px;
+  font-family:var(--cond); font-weight:700; font-size:12px;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--mid);
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.tab[aria-selected="true"]{color:var(--bone); border-bottom-color:var(--bone)}
+
+.chart{display:block; width:100%; height:84px; background:var(--plate);
+  border:1px solid rgba(122,115,155,.55)}
+.trace{fill:none; stroke:var(--signal); stroke-width:1.5; stroke-linejoin:round; stroke-linecap:round}
+.chart-grid{stroke:var(--faint); stroke-opacity:.45; stroke-width:.6}
+.chart-num{fill:var(--mid); font-family:var(--mono); font-size:8px}
+.chart-cursor{stroke:var(--bone); stroke-width:1}
+.chart-cap{fill:var(--faint); font-family:var(--cond); font-size:8px; letter-spacing:.14em}
+
+.readout{display:flex; align-items:baseline; gap:16px; margin-top:9px; flex-wrap:wrap}
+.big{font-family:var(--mono); font-weight:700; font-size:31px; line-height:1; letter-spacing:-.01em}
+.big .deg{font-size:16px; color:var(--mid)}
+.meta{font-family:var(--mono); font-size:11px; color:var(--mid); letter-spacing:.04em}
+.meta b{color:var(--bone); font-weight:500}
+.meta b.bad{color:var(--signal)}
+
+.bar{height:6px; background:var(--plate); border:1px solid rgba(122,115,155,.55);
+  margin-top:11px; position:relative}
+.bar i{position:absolute; inset:0 auto 0 0; background:var(--signal);
+  transition:width .25s var(--ease)}
+.hr{height:1px; background:var(--faint); opacity:.6; margin:11px 0 8px}
+.caption{font-family:var(--cond); font-size:11px; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--mid)}
+.caption b{color:var(--bone); font-weight:700}
+.caption b.bad{color:var(--signal)}
+.acts{display:flex; gap:8px; margin-top:11px}
+.acts .btn{flex:2 1 auto; white-space:nowrap; padding-left:12px; padding-right:12px}
+.acts .btn.narrow{flex:1 1 auto}
+.help{font-size:12.5px; line-height:1.45; color:var(--mid); margin-top:9px; max-width:62ch}
+.help b{color:var(--bone); font-weight:500}
+
+@media (min-width:900px){
+  .block{max-width:920px; margin:0 auto; width:100%; border-top:0;
+    border-left:1px solid var(--faint); border-right:1px solid var(--faint)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important; transition-duration:.01ms !important}
+  .ray.inking{animation:none; stroke-dashoffset:0}
+}
+
+/* ---- the gate: the instrument's one setting -------------------------
+   Bone, because it is a tool you are holding rather than a mark you have
+   made. The bracket it produces is orange, because it is a reading you
+   have not committed. */
+.gate{stroke:var(--bone); stroke-width:1.2; stroke-dasharray:6 3}
+.gate-grip{fill:transparent; cursor:ns-resize}
+.chart{cursor:ns-resize}
+.chart:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
+.bracket-span{fill:var(--signal); fill-opacity:.14}
+.bracket-edge{stroke:var(--signal); stroke-width:1.2}
+.measured{stroke:var(--signal); stroke-width:1.6}
+.wedge-live{fill:var(--signal); fill-opacity:.13}
+
+/* ---- the night ------------------------------------------------------ */
+.brief{
+  font-family:var(--cond); font-size:13px; letter-spacing:.02em;
+  color:var(--bone); margin-bottom:9px; padding-left:9px;
+  border-left:2px solid var(--signal);
+}
+.roster{display:flex; gap:6px; margin-bottom:9px; flex-wrap:wrap}
+.collar{
+  flex:1 1 auto; min-height:44px; cursor:pointer; border-radius:2px;
+  background:transparent; border:1px solid var(--faint); color:var(--mid);
+  font-family:var(--mono); font-size:12px; font-weight:500; padding:8px 6px;
+  display:flex; flex-direction:column; gap:2px; align-items:center;
+}
+.collar b{font-size:14px; font-weight:700; letter-spacing:.04em}
+.collar small{font-family:var(--cond); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase}
+.collar[aria-pressed="true"]{border-color:var(--bone); color:var(--bone)}
+.collar.silent{opacity:.5}
+.collar.fast b{color:var(--signal)}
+.collar:focus-visible{outline:2px solid var(--signal); outline-offset:2px}
+
+.waiting{
+  font-family:var(--cond); font-weight:700; font-size:12px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--mid); padding:14px 0; text-align:center;
+}
+.pending{stroke:var(--signal); stroke-width:1.4; stroke-dasharray:3 3; fill:none}
+.pending-mark{fill:none; stroke:var(--signal); stroke-width:1.8}
+.fix-mark{fill:none; stroke:var(--bone); stroke-width:1.4}
+.fix-mark.tight{stroke:var(--bone); stroke-width:2.2}
+.fix-mark.miss{stroke:var(--faint)}
+.den-mark{fill:none; stroke:var(--signal); stroke-width:2.4}
+.partner{fill:var(--plate); stroke:var(--mid); stroke-width:1.4}
+.unwalked{fill:var(--faint); fill-opacity:.10}
+.reach{fill:var(--signal); fill-opacity:.22}

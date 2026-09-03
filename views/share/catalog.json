@@ -19,6 +19,12 @@
       "icon": "fas fa-music",
       "gradient": "linear-gradient(45deg, #667eea 0%, #56ccf2 100%)"
     },
+    "views/bearing": {
+      "title": "Bearing",
+      "description": "A co-op game for two, because every other game here is one of you beating the other. You each sweep a radio antenna and learn which direction a collared animal is in, never how far.",
+      "icon": "fas fa-satellite-dish",
+      "gradient": "linear-gradient(45deg, #272052 0%, #ff6a2b 100%)"
+    },
     "views/battleship": {
       "title": "Battleship",
       "description": "Battleship where falling behind pays out.",

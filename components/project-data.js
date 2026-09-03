@@ -89,6 +89,15 @@ export const projects = {
     },
     iconClass: "fas fa-music",
   },
+  bearing: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #272052 0%, #ff6a2b 100%)",
+    title: "Bearing",
+    description: "A co-op game for two, because every other game here is one of you beating the other. You each sweep a radio antenna and learn which direction a collared animal is in, never how far. One bearing is a line, two bearings crossed from two different places are a spot on the map, so there is no version of this either of you can play alone.",
+    links: { visitSite: "views/bearing" },
+    iconClass: "fas fa-satellite-dish",
+  },
+
   battleship: {
     category: "passion",
     gradient: "linear-gradient(45deg, #1156b8 0%, #d81e2c 100%)",
