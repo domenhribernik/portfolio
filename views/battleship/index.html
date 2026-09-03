@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Battleship | two-player naval deduction game</title>
+    <meta name="description"
+        content="Battleship where falling behind pays out. Every hull you lose salvages a heavier weapon, from sonar sweeps and decoy buoys to a depth charge that flattens a three by three. Play a friend over a four letter room code, or take on the bot.">
+    <link rel="canonical" href="https://domenhribernik.com/views/battleship/">
+    <meta name="theme-color" content="#15140f">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:title" content="Battleship | two-player naval deduction game">
+    <meta property="og:description"
+        content="Battleship where falling behind pays out. Every hull you lose salvages a heavier weapon, up to a depth charge that flattens a three by three.">
+    <meta property="og:url" content="https://domenhribernik.com/views/battleship/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Battleship | two-player naval deduction game">
+    <meta name="twitter:description"
+        content="Battleship where falling behind pays out. Every hull you lose salvages a heavier weapon, up to a depth charge that flattens a three by three.">
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "VideoGame",
+            "name": "Battleship",
+            "url": "https://domenhribernik.com/views/battleship/",
+            "description": "A two player battleship variant where losing hulls unlocks heavier weapons: sonar sweeps, decoy buoys, barrages, repositioning and a depth charge. Play over a four letter room code or against a bot.",
+            "genre": ["Strategy", "Board game"],
+            "gamePlatform": "Web browser",
+            "playMode": ["MultiPlayer", "SinglePlayer"],
+            "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2 },
+            "inLanguage": ["en", "sl"],
+            "isAccessibleForFree": true,
+            "author": { "@type": "Person", "name": "Domen Hribernik" }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Saira+Condensed:wght@400;600;800&family=Saira:wght@400;500&family=Chivo+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // THE PLOT TABLE. A costume view: it owns its palette rather than
+        // loading components/editorial/theme.js, which is what DESIGN.md
+        // licenses a showcase project to do. See views/battleship/CLAUDE.md.
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blackout: '#15140f',
+                        drab: '#23271b',
+                        table: '#2f3524',
+                        'table-lit': '#3a4129',
+                        chalk: '#ece7d6',
+                        stone: '#9aa088',
+                        red: '#d81e2c',
+                        'red-lt': '#ff6b60',
+                        yellow: '#f2c00e',
+                        blue: '#1156b8',
+                        'flag-black': '#0d0e08',
+                    },
+                    fontFamily: {
+                        stencil: ['"Saira Stencil One"', 'sans-serif'],
+                        cond: ['"Saira Condensed"', 'sans-serif'],
+                        body: ['Saira', 'sans-serif'],
+                        mono: ['"Chivo Mono"', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="lamp" aria-hidden="true"></div>
+    <div class="dust" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <a id="back-link" href="../../" class="exit" aria-label="Leave the room">&larr; <span data-i18n="chrome.exit">EXIT</span></a>
+    <div class="room-tag" id="roomTag" hidden><span data-i18n="chrome.room">ROOM</span> <b id="roomTagCode">----</b></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <p class="sr-only" id="crier" role="status" aria-live="polite"></p>
+
+    <main class="stage">
+
+        <!-- 1. THE BOOT SCREEN -->
+        <section class="screen" id="bootScreen">
+            <h1 class="wordmark">BATTLE<span>SHIP</span></h1>
+            <p class="deck" data-i18n="boot.deck">
+                Two rooms, two tables, neither able to see the other. Every hull you lose
+                salvages a heavier weapon, so the fleet that is burning is the one with options.
+            </p>
+            <div class="doors">
+                <button class="btn btn-primary" id="doorRoom" data-i18n="boot.open">OPEN A ROOM</button>
+                <button class="btn" id="doorJoin" data-i18n="boot.join">JOIN A ROOM</button>
+                <button class="btn" id="doorSolo" data-i18n="boot.solo">PLAY THE BOT</button>
+                <button class="btn btn-quiet" id="doorRules" data-i18n="boot.rules">HOW IT WORKS</button>
+            </div>
+
+            <section class="card record" id="recordCard" hidden>
+                <h2 class="card-head" data-i18n="record.head">YOUR RECORD</h2>
+                <div class="record-tally" id="recordTally"></div>
+                <ul class="record-list" id="recordList"></ul>
+            </section>
+            <p class="record-signin" id="recordSignin" hidden>
+                <a id="recordSigninLink" href="../account/" data-i18n="record.signin">Sign in to keep a record</a>
+            </p>
+
+            <site-footer theme="dark"></site-footer>
+        </section>
+
+        <!-- 2. HOW IT WORKS -->
+        <section class="screen" id="rulesScreen">
+            <h2 class="screen-title" data-i18n="rules.title">HOW IT WORKS</h2>
+            <div class="prose" id="rulesProse"></div>
+            <button class="btn" id="rulesBack" data-i18n="common.back">BACK</button>
+        </section>
+
+        <!-- 3. THE GATE -->
+        <section class="screen" id="gateScreen">
+            <h2 class="screen-title" id="gateTitle" data-i18n="gate.open">OPEN A ROOM</h2>
+            <label class="field">
+                <span class="field-label" data-i18n="gate.name">YOUR NAME</span>
+                <input id="gateName" maxlength="20" autocomplete="nickname" spellcheck="false">
+            </label>
+            <label class="field" id="gateCodeField" hidden>
+                <span class="field-label" data-i18n="gate.code">ROOM CODE</span>
+                <input id="gateCode" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false"
+                    class="code-input">
+            </label>
+            <p class="field-error" id="gateError" hidden></p>
+            <button class="btn btn-primary" id="gateGo" data-i18n="common.go">GO</button>
+            <button class="btn btn-quiet" id="gateBack" data-i18n="common.back">BACK</button>
+        </section>
+
+        <!-- 4. THE LOBBY -->
+        <section class="screen" id="lobbyScreen">
+            <h2 class="screen-title" data-i18n="lobby.title">WAITING FOR A SECOND FLEET</h2>
+            <p class="deck" data-i18n="lobby.deck">Send this code. The match starts the moment they sit down.</p>
+            <p class="code-plate" id="lobbyCode">----</p>
+            <button class="btn" id="lobbyShare" data-i18n="lobby.share">COPY THE LINK</button>
+            <p class="wait-line" data-i18n="lobby.waiting">STANDING BY</p>
+            <button class="btn btn-quiet" id="lobbyLeave" data-i18n="common.leave">LEAVE</button>
+        </section>
+
+        <!-- 5. SEAT RECLAIM -->
+        <section class="screen" id="seatsScreen">
+            <h2 class="screen-title" data-i18n="seats.title">THAT ROOM IS AT SEA</h2>
+            <p class="deck" data-i18n="seats.deck">If one of these was you, take the seat back.</p>
+            <ul class="seat-list" id="seatList"></ul>
+            <button class="btn btn-quiet" id="seatsBack" data-i18n="common.back">BACK</button>
+        </section>
+
+        <!-- 6. LAYING THE FLEET -->
+        <section class="screen" id="placeScreen">
+            <h2 class="screen-title" data-i18n="place.title">LAY YOUR FLEET</h2>
+            <p class="deck" id="placeHint" data-i18n="place.hint">
+                Pick a hull, then tap the plot to berth it. Tap a berthed hull to lift it again.
+            </p>
+            <div class="plot-wrap">
+                <div class="plot plot-own" id="placePlot" role="grid" aria-label="Your plot"></div>
+            </div>
+            <ul class="hull-rail" id="hullRail"></ul>
+            <div class="place-actions">
+                <button class="btn" id="placeRotate" data-i18n="place.rotate">TURN</button>
+                <button class="btn" id="placeAuto" data-i18n="place.auto">LAY THEM FOR ME</button>
+                <button class="btn btn-primary" id="placeReady" data-i18n="place.ready" disabled>READY</button>
+            </div>
+            <p class="wait-line" id="placeWait" hidden data-i18n="place.waiting">WAITING FOR THE OTHER FLEET</p>
+        </section>
+
+        <!-- 7. THE BATTLE -->
+        <section class="screen screen-wide" id="battleScreen">
+            <div class="turn-bar">
+                <span class="turn-flag" id="turnFlag"></span>
+                <span class="turn-text" id="turnText"></span>
+            </div>
+
+            <div class="switcher" id="switcher" role="tablist">
+                <button class="switch is-on" id="switchEnemy" role="tab" aria-selected="true"
+                    data-i18n="battle.enemy">ENEMY WATERS</button>
+                <button class="switch" id="switchOwn" role="tab" aria-selected="false"
+                    data-i18n="battle.own">YOUR FLEET</button>
+            </div>
+
+            <div class="tables">
+                <section class="table-side" id="enemySide">
+                    <header class="table-head">
+                        <h2 data-i18n="battle.enemy">ENEMY WATERS</h2>
+                        <span class="who" id="enemyName"></span>
+                    </header>
+                    <div class="plot-wrap">
+                        <div class="plot plot-enemy" id="enemyPlot" role="grid" aria-label="Enemy waters"></div>
+                    </div>
+                    <div class="tote tote-enemy">
+                        <span class="tote-label" data-i18n="battle.theirSalvage">THEIR SALVAGE</span>
+                        <span class="lamps" id="enemyLamps"></span>
+                        <span class="tote-count" id="enemyCount">0</span>
+                    </div>
+                </section>
+
+                <section class="table-side" id="ownSide">
+                    <header class="table-head">
+                        <h2 data-i18n="battle.own">YOUR FLEET</h2>
+                        <span class="who" id="ownName"></span>
+                    </header>
+                    <div class="plot-wrap">
+                        <div class="plot plot-own" id="ownPlot" role="grid" aria-label="Your fleet"></div>
+                    </div>
+                    <ul class="fleet-status" id="fleetStatus"></ul>
+                </section>
+            </div>
+
+            <div class="tote tote-mine">
+                <span class="tote-label" data-i18n="battle.salvage">SALVAGE</span>
+                <span class="lamps" id="ownLamps"></span>
+                <span class="tote-count" id="ownCount">0</span>
+            </div>
+
+            <div class="rail" id="rail"></div>
+            <p class="rail-hint" id="railHint"></p>
+
+            <ol class="log" id="log" aria-live="off"></ol>
+        </section>
+
+        <!-- 8. THE VERDICT -->
+        <section class="screen" id="overScreen">
+            <p class="stamp" id="verdictStamp">SUNK</p>
+            <h2 class="screen-title" id="verdictTitle"></h2>
+            <p class="deck" id="verdictLine"></p>
+            <dl class="tally" id="verdictTally"></dl>
+            <button class="btn btn-primary" id="againBtn" data-i18n="over.again">ANOTHER</button>
+            <p class="wait-line" id="againWait" hidden data-i18n="over.waiting">WAITING FOR THE OTHER SIDE</p>
+            <button class="btn btn-quiet" id="overLeave" data-i18n="common.leave">LEAVE</button>
+        </section>
+
+    </main>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>

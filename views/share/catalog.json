@@ -19,6 +19,12 @@
       "icon": "fas fa-music",
       "gradient": "linear-gradient(45deg, #667eea 0%, #56ccf2 100%)"
     },
+    "views/battleship": {
+      "title": "Battleship",
+      "description": "Battleship where falling behind pays out.",
+      "icon": "fas fa-ship",
+      "gradient": "linear-gradient(45deg, #1156b8 0%, #d81e2c 100%)"
+    },
     "views/seam": {
       "title": "Seam",
       "description": "Connect four, except the ground keeps disappearing. Play into a column that is already full and the deepest row of the whole board is cut away, so every piece drops a row and the line you were building may be gone.",

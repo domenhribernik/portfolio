@@ -89,6 +89,16 @@ export const projects = {
     },
     iconClass: "fas fa-music",
   },
+  battleship: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #1156b8 0%, #d81e2c 100%)",
+    title: "Battleship",
+    description: "Battleship where falling behind pays out. Every hull you lose salvages a heavier weapon, from sonar sweeps and decoy buoys up to a depth charge that flattens a three by three, so the fleet that is burning is the one with options. Play a friend over a four letter room code, or take on the bot.",
+    links: {
+      visitSite: "views/battleship",
+    },
+    iconClass: "fas fa-ship",
+  },
   seam: {
     category: "passion",
     gradient: "linear-gradient(45deg, #1f8a86 0%, #e0a11c 100%)",

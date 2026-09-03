@@ -9,6 +9,7 @@ export const SITE_ORIGIN = 'https://domenhribernik.com';
 //? demote a project; everything else public stays crawlable at priority 0.4.
 export const FLAGSHIP = [
     'views/tells',
+    'views/battleship',
     'views/seam',
     'views/trails',
     'views/nebo',

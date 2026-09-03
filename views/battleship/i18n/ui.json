@@ -1,0 +1,542 @@
+{
+  "chrome.exit": {
+    "en": "EXIT",
+    "sl": "IZHOD"
+  },
+  "chrome.room": {
+    "en": "ROOM",
+    "sl": "SOBA"
+  },
+  "common.back": {
+    "en": "BACK",
+    "sl": "NAZAJ"
+  },
+  "common.go": {
+    "en": "GO",
+    "sl": "NAPREJ"
+  },
+  "common.leave": {
+    "en": "LEAVE",
+    "sl": "ZAPUSTI"
+  },
+  "boot.deck": {
+    "en": "Two rooms, two tables, neither able to see the other. Every hull you lose salvages a heavier weapon, so the fleet that is burning is the one with options.",
+    "sl": "Dve sobi, dve mizi, nobena ne vidi druge. Vsaka potopljena ladja ti prinese težje orožje, zato ima gorečo floto tisti, ki ima na voljo več možnosti."
+  },
+  "boot.open": {
+    "en": "OPEN A ROOM",
+    "sl": "ODPRI SOBO"
+  },
+  "boot.join": {
+    "en": "JOIN A ROOM",
+    "sl": "PRIDRUŽI SE"
+  },
+  "boot.solo": {
+    "en": "PLAY THE BOT",
+    "sl": "IGRAJ PROTI BOTU"
+  },
+  "boot.rules": {
+    "en": "HOW IT WORKS",
+    "sl": "KAKO SE IGRA"
+  },
+  "gate.open": {
+    "en": "OPEN A ROOM",
+    "sl": "ODPRI SOBO"
+  },
+  "gate.join": {
+    "en": "JOIN A ROOM",
+    "sl": "PRIDRUŽI SE SOBI"
+  },
+  "gate.name": {
+    "en": "YOUR NAME",
+    "sl": "TVOJE IME"
+  },
+  "gate.code": {
+    "en": "ROOM CODE",
+    "sl": "KODA SOBE"
+  },
+  "lobby.title": {
+    "en": "WAITING FOR A SECOND FLEET",
+    "sl": "ČAKAM NA DRUGO FLOTO"
+  },
+  "lobby.deck": {
+    "en": "Send this code. The match starts the moment they sit down.",
+    "sl": "Pošlji to kodo. Igra se začne takoj, ko nasprotnik sede."
+  },
+  "lobby.share": {
+    "en": "COPY THE LINK",
+    "sl": "KOPIRAJ POVEZAVO"
+  },
+  "lobby.waiting": {
+    "en": "STANDING BY",
+    "sl": "V PRIPRAVLJENOSTI"
+  },
+  "seats.title": {
+    "en": "THAT ROOM IS AT SEA",
+    "sl": "TA SOBA JE ŽE NA MORJU"
+  },
+  "seats.deck": {
+    "en": "If one of these was you, take the seat back.",
+    "sl": "Če je eden od teh tvoj, prevzemi svoj sedež nazaj."
+  },
+  "seats.take": {
+    "en": "TAKE BACK {who}",
+    "sl": "PREVZEMI {who}"
+  },
+  "seats.busy": {
+    "en": "{who} IS STILL THERE",
+    "sl": "{who} JE ŠE VEDNO TU"
+  },
+  "place.title": {
+    "en": "LAY YOUR FLEET",
+    "sl": "RAZPOSTAVI FLOTO"
+  },
+  "place.hint": {
+    "en": "Pick a hull, then tap the plot to berth it. Tap a berthed hull to lift it again.",
+    "sl": "Izberi ladjo in se dotakni mreže, da jo zasidraš. Dotakni se zasidrane ladje, da jo spet dvigneš."
+  },
+  "place.rotate": {
+    "en": "TURN",
+    "sl": "OBRNI"
+  },
+  "place.auto": {
+    "en": "LAY THEM FOR ME",
+    "sl": "RAZPOSTAVI ZAME"
+  },
+  "place.ready": {
+    "en": "READY",
+    "sl": "PRIPRAVLJEN"
+  },
+  "place.waiting": {
+    "en": "WAITING FOR THE OTHER FLEET",
+    "sl": "ČAKAM NA NASPROTNIKOVO FLOTO"
+  },
+  "place.berthed": {
+    "en": "BERTHED",
+    "sl": "ZASIDRANA"
+  },
+  "place.move": {
+    "en": "MOVE",
+    "sl": "PREMAKNI"
+  },
+  "battle.enemy": {
+    "en": "ENEMY WATERS",
+    "sl": "SOVRAŽNE VODE"
+  },
+  "battle.own": {
+    "en": "YOUR FLEET",
+    "sl": "TVOJA FLOTA"
+  },
+  "battle.salvage": {
+    "en": "SALVAGE",
+    "sl": "PLEN"
+  },
+  "battle.theirSalvage": {
+    "en": "THEIR SALVAGE",
+    "sl": "NJIHOV PLEN"
+  },
+  "battle.yourTurn": {
+    "en": "YOUR MOVE",
+    "sl": "TI SI NA VRSTI"
+  },
+  "battle.theirTurn": {
+    "en": "{who} IS THINKING",
+    "sl": "{who} RAZMIŠLJA"
+  },
+  "ship.carrier": {
+    "en": "Carrier",
+    "sl": "Letalonosilka"
+  },
+  "ship.battleship": {
+    "en": "Battleship",
+    "sl": "Bojna ladja"
+  },
+  "ship.cruiser": {
+    "en": "Cruiser",
+    "sl": "Križarka"
+  },
+  "ship.submarine": {
+    "en": "Submarine",
+    "sl": "Podmornica"
+  },
+  "ship.destroyer": {
+    "en": "Destroyer",
+    "sl": "Rušilec"
+  },
+  "tool.fire": {
+    "en": "FIRE",
+    "sl": "STRELJAJ"
+  },
+  "tool.sonar": {
+    "en": "SONAR",
+    "sl": "SONAR"
+  },
+  "tool.decoy": {
+    "en": "BUOY",
+    "sl": "BOJA"
+  },
+  "tool.barrage": {
+    "en": "BARRAGE",
+    "sl": "SALVA"
+  },
+  "tool.reposition": {
+    "en": "REBERTH",
+    "sl": "PRESTAVI"
+  },
+  "tool.depthCharge": {
+    "en": "CHARGE",
+    "sl": "BOMBA"
+  },
+  "tool.free": {
+    "en": "FREE",
+    "sl": "ZASTONJ"
+  },
+  "tool.locked": {
+    "en": "NEEDS {n}",
+    "sl": "POTREBUJE {n}"
+  },
+  "hint.fire": {
+    "en": "One cell. Pick well.",
+    "sl": "Eno polje. Dobro premisli."
+  },
+  "hint.sonar": {
+    "en": "Pick a centre. You learn how many hulls are in the block, never which.",
+    "sl": "Izberi središče. Izvedel boš, koliko ladij je v bloku, nikoli katerih."
+  },
+  "hint.decoy": {
+    "en": "Drop it on your own open water. It reads as a hit.",
+    "sl": "Postavi jo na svoje prazno morje. Zdi se kot zadetek."
+  },
+  "hint.barrage": {
+    "en": "Three shells in a line. Press R to turn it.",
+    "sl": "Tri granate v vrsti. Pritisni R za obrat."
+  },
+  "hint.reposition": {
+    "en": "Pick an undamaged hull, then a fresh berth. Press R to turn it.",
+    "sl": "Izberi nepoškodovano ladjo in novo mesto. Pritisni R za obrat."
+  },
+  "hint.depthCharge": {
+    "en": "Nine cells at once. It damages, it does not survey.",
+    "sl": "Devet polj naenkrat. Poškoduje, a ne razišče."
+  },
+  "log.you": {
+    "en": "YOU",
+    "sl": "TI"
+  },
+  "log.them": {
+    "en": "THEM",
+    "sl": "ONI"
+  },
+  "log.fire": {
+    "en": "fired at",
+    "sl": "je streljal na"
+  },
+  "log.barrage": {
+    "en": "raked",
+    "sl": "je obstreljeval"
+  },
+  "log.depthCharge": {
+    "en": "dropped a charge on",
+    "sl": "je odvrgel bombo na"
+  },
+  "log.hits": {
+    "en": "{n} struck",
+    "sl": "{n} zadetkov"
+  },
+  "log.swept": {
+    "en": "swept a block",
+    "sl": "je preiskal blok"
+  },
+  "log.sweptYou": {
+    "en": "swept the water around {at}",
+    "sl": "je preiskal vodo okoli {at}"
+  },
+  "log.buoy": {
+    "en": "dropped a buoy",
+    "sl": "je spustil bojo"
+  },
+  "log.moved": {
+    "en": "moved a hull",
+    "sl": "je prestavil ladjo"
+  },
+  "log.down": {
+    "en": "is down",
+    "sl": "je potopljena"
+  },
+  "res.hit": {
+    "en": "hit",
+    "sl": "zadetek"
+  },
+  "res.sunk": {
+    "en": "sunk",
+    "sl": "potopljena"
+  },
+  "res.miss": {
+    "en": "miss",
+    "sl": "zgrešeno"
+  },
+  "res.blast": {
+    "en": "nothing there",
+    "sl": "nič"
+  },
+  "over.won": {
+    "en": "WON",
+    "sl": "ZMAGA"
+  },
+  "over.lost": {
+    "en": "SUNK",
+    "sl": "POTOP"
+  },
+  "over.wonTitle": {
+    "en": "THEIR FLEET IS DOWN",
+    "sl": "NJIHOVA FLOTA JE POTOPLJENA"
+  },
+  "over.lostTitle": {
+    "en": "YOUR FLEET IS DOWN",
+    "sl": "TVOJA FLOTA JE POTOPLJENA"
+  },
+  "over.wonLine": {
+    "en": "{who} has nothing left afloat.",
+    "sl": "{who} nima več nobene ladje na površju."
+  },
+  "over.lostLine": {
+    "en": "{who} found every one of them.",
+    "sl": "{who} je našel čisto vse."
+  },
+  "over.again": {
+    "en": "ANOTHER",
+    "sl": "ŠE ENA"
+  },
+  "over.waiting": {
+    "en": "WAITING FOR THE OTHER SIDE",
+    "sl": "ČAKAM NA NASPROTNIKA"
+  },
+  "tally.turns": {
+    "en": "Turns",
+    "sl": "Potez"
+  },
+  "tally.shots": {
+    "en": "Shells fired",
+    "sl": "Izstreljenih granat"
+  },
+  "tally.hits": {
+    "en": "Struck",
+    "sl": "Zadetkov"
+  },
+  "tally.spent": {
+    "en": "Salvage spent",
+    "sl": "Porabljenega plena"
+  },
+  "tally.series": {
+    "en": "Series",
+    "sl": "Serija"
+  },
+  "record.head": {
+    "en": "YOUR RECORD",
+    "sl": "TVOJ IZKUPIČEK"
+  },
+  "record.won": {
+    "en": "won",
+    "sl": "zmag"
+  },
+  "record.lost": {
+    "en": "lost",
+    "sl": "porazov"
+  },
+  "record.win": {
+    "en": "WON",
+    "sl": "ZMAGA"
+  },
+  "record.loss": {
+    "en": "LOST",
+    "sl": "PORAZ"
+  },
+  "record.practice": {
+    "en": "practice",
+    "sl": "vaja"
+  },
+  "record.signin": {
+    "en": "Sign in to keep a record",
+    "sl": "Prijavi se za shranjevanje rezultatov"
+  },
+  "level.ensign": {
+    "en": "Ensign",
+    "sl": "Praporščak"
+  },
+  "level.admiral": {
+    "en": "Admiral",
+    "sl": "Admiral"
+  },
+  "toast.copied": {
+    "en": "LINK COPIED",
+    "sl": "POVEZAVA KOPIRANA"
+  },
+  "toast.turned": {
+    "en": "TURNED",
+    "sl": "OBRNJENO"
+  },
+  "toast.roomClosed": {
+    "en": "That room is gone",
+    "sl": "Ta soba ne obstaja več"
+  },
+  "toast.seatTaken": {
+    "en": "Somebody else took that seat",
+    "sl": "Nekdo drug je prevzel ta sedež"
+  },
+  "toast.abandoned": {
+    "en": "The other fleet left. The match is void.",
+    "sl": "Nasprotna flota je odšla. Igra je razveljavljena."
+  },
+  "refuse.over": {
+    "en": "That match is over",
+    "sl": "Ta igra je končana"
+  },
+  "refuse.notYourTurn": {
+    "en": "It is not your move",
+    "sl": "Nisi na vrsti"
+  },
+  "refuse.offPlot": {
+    "en": "That is not on the plot",
+    "sl": "To ni na mreži"
+  },
+  "refuse.spent": {
+    "en": "You have already fired there",
+    "sl": "Tja si že streljal"
+  },
+  "refuse.badAction": {
+    "en": "That is not a move",
+    "sl": "To ni poteza"
+  },
+  "refuse.locked": {
+    "en": "Lose a hull of your own first",
+    "sl": "Najprej izgubi svojo ladjo"
+  },
+  "refuse.broke": {
+    "en": "Not enough salvage",
+    "sl": "Premalo plena"
+  },
+  "refuse.tooManyDecoys": {
+    "en": "You already have two buoys out",
+    "sl": "Na vodi imaš že dve boji"
+  },
+  "refuse.occupied": {
+    "en": "Something is already there",
+    "sl": "Tam je že nekaj"
+  },
+  "refuse.badShip": {
+    "en": "No such ship",
+    "sl": "Take ladje ni"
+  },
+  "refuse.damaged": {
+    "en": "A damaged hull cannot run",
+    "sl": "Poškodovana ladja ne more pobegniti"
+  },
+  "refuse.searched": {
+    "en": "They have already searched there",
+    "sl": "Tam so že iskali"
+  },
+  "refuse.overlap": {
+    "en": "Two hulls cannot share a cell",
+    "sl": "Dve ladji ne moreta deliti polja"
+  },
+  "refuse.badFleet": {
+    "en": "That is not a whole fleet",
+    "sl": "To ni cela flota"
+  },
+  "refuse.noOpponent": {
+    "en": "The other seat is empty",
+    "sl": "Drugi sedež je prazen"
+  },
+  "refuse.notPlacing": {
+    "en": "Fleets are not being laid right now",
+    "sl": "Trenutno se flote ne razpostavljajo"
+  },
+  "refuse.notOver": {
+    "en": "That match is still running",
+    "sl": "Igra še teče"
+  },
+  "refuse.nameTaken": {
+    "en": "That name is taken in this room",
+    "sl": "To ime je v tej sobi že zasedeno"
+  },
+  "refuse.seatBusy": {
+    "en": "Somebody is still sitting there",
+    "sl": "Nekdo še vedno sedi tam"
+  },
+  "refuse.badName": {
+    "en": "A name is 1 to 20 characters",
+    "sl": "Ime naj ima od 1 do 20 znakov"
+  },
+  "refuse.badCode": {
+    "en": "A room code is four letters",
+    "sl": "Koda sobe so štiri črke"
+  },
+  "refuse.network": {
+    "en": "Could not reach the server",
+    "sl": "Strežnik ni dosegljiv"
+  },
+  "rules.title": {
+    "en": "HOW IT WORKS",
+    "sl": "KAKO SE IGRA"
+  },
+  "rules.intro": {
+    "en": "Classic battleship has one problem: once someone finds a hull they sink it on known squares, and the player who found one first usually just wins. All the skill sits in the ten seconds of placement at the start. This version moves it into every turn.",
+    "sl": "Klasične potapljanje ladjic ima eno težavo: ko nekdo najde ladjo, jo potopi na znanih poljih, in tisti, ki jo najde prvi, običajno preprosto zmaga. Vsa spretnost je v desetih sekundah razpostavljanja na začetku. Ta različica jo prestavi v vsako potezo."
+  },
+  "rules.turnHead": {
+    "en": "THE TURN",
+    "sl": "POTEZA"
+  },
+  "rules.turn": {
+    "en": "One action each, strictly alternating. A hit does <b>not</b> buy you another shot: that rule is the snowball, and it is gone. An action is either a free shell or one tool, paid for with salvage. Spending a tool <b>uses your turn</b>, and that trade is where the game lives.",
+    "sl": "Vsak po eno dejanje, izmenično. Zadetek ti <b>ne</b> prinese še enega strela: prav to pravilo je snežna kepa in tu ga ni. Dejanje je bodisi brezplačna granata bodisi eno orodje, plačano s plenom. Uporaba orodja <b>porabi tvojo potezo</b>, in prav ta kompromis je bistvo igre."
+  },
+  "rules.salvageHead": {
+    "en": "SALVAGE",
+    "sl": "PLEN"
+  },
+  "rules.salvage": {
+    "en": "You earn a salvage for every shell you land, and one for every shell that lands on you. A wreck pays its owner two per cell it was long, so a carrier going down funds a real reply. Area fire pays the gunner nothing: a barrage or a charge feeds the fleet it lands on, and never itself.",
+    "sl": "Za vsak zadetek dobiš plen, in enega za vsak zadetek, ki ga prejmeš. Razbitina svojemu lastniku prinese dva na polje njene dolžine, zato potopljena letalonosilka financira pravi odgovor. Ploskovni ogenj strelcu ne prinese ničesar: salva ali bomba nahrani floto, na katero pade, nikoli sebe."
+  },
+  "rules.ladderHead": {
+    "en": "THE LADDER",
+    "sl": "LESTVICA"
+  },
+  "rules.ladder": {
+    "en": "The heavy tools are not bought with a lead, they are salvaged out of <b>your own</b> wrecks. A fleet that is winning fights with a sweep and a buoy. Lose one hull and the barrage and the reberth open; lose two and you get the depth charge. Losing hulls on purpose is a real line, and a losing one: the ladder buys access, not salvage and not turns.",
+    "sl": "Težkih orodij ne kupiš s prednostjo, temveč jih rešiš iz <b>lastnih</b> razbitin. Flota, ki zmaguje, se bori s sonarjem in bojo. Izgubi eno ladjo in odpreta se salva in prestavljanje; izgubi dve in dobiš globinsko bombo. Namerno izgubljanje ladij je resnična taktika, a poražena: lestvica ti da dostop, ne plena in ne potez."
+  },
+  "rules.toolsHead": {
+    "en": "THE TOOLS",
+    "sl": "ORODJA"
+  },
+  "rules.open": {
+    "en": "open from the start",
+    "sl": "na voljo od začetka"
+  },
+  "rules.rung": {
+    "en": "after {n} of your own hulls go down",
+    "sl": "ko potoneta {n} tvoji ladji"
+  },
+  "rules.sonar": {
+    "en": "Names a three by three and tells you how many hulls are inside it, never which. It costs you something too: the fleet under it is told where you looked.",
+    "sl": "Označi polje tri krat tri in ti pove, koliko ladij je v njem, nikoli katerih. Nekaj te tudi stane: flota pod njim izve, kam si pogledal."
+  },
+  "rules.decoy": {
+    "en": "A buoy on your own open water. The next shell that finds it reports a hit and pays out exactly like a hull, so the tote board does not give it away. It owns up one turn later.",
+    "sl": "Boja na tvojem praznem morju. Naslednja granata, ki jo najde, javi zadetek in izplača enako kot prava ladja, da je semafor ne izda. Prizna šele naslednjo potezo."
+  },
+  "rules.barrage": {
+    "en": "Three shells in a straight line, in one turn.",
+    "sl": "Tri granate v ravni vrsti, v eni potezi."
+  },
+  "rules.reposition": {
+    "en": "Move an undamaged hull to fresh water. A hull they have already touched is pinned, and the new berth cannot use a cell they have searched. They are told a hull moved, never which or where.",
+    "sl": "Prestavi nepoškodovano ladjo na svežo vodo. Ladja, ki so se je že dotaknili, je priklenjena, novo mesto pa ne sme uporabiti polja, ki so ga že preiskali. Izvedo, da se je ladja premaknila, nikoli katera ali kam."
+  },
+  "rules.depthCharge": {
+    "en": "Nine cells at once. It damages what it touches but does <b>not</b> survey the water it churns, so a charge dropped without a sweep behind it is mostly a very expensive splash.",
+    "sl": "Devet polj naenkrat. Poškoduje, kar zadene, a <b>ne</b> razišče vode, ki jo razburka. Bomba brez predhodnega sonarja je večinoma zelo drag pljusk."
+  }
+}

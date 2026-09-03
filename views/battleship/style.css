@@ -1,0 +1,1344 @@
+/* ============================================================
+   BATTLESHIP // THE PLOT TABLE
+
+   THESIS. Two rooms, two tables, neither able to see the other. This is a
+   filter room, not a sonar screen: the category default is a green CRT sweep
+   on black and the predictable opposite is flat pastel geometry. Both refused.
+
+   OWN-WORLD. A blacked out room in olive drab with one pool of lamplight on a
+   plot table, counters that slide and settle, and the International Code of
+   Signals supplying flat saturated colour. Chalk for type and rules, signal
+   red for damage, signal yellow for the tote board, signal blue for enemy
+   water. Corner registration brackets instead of boxes. Zero radius.
+
+   STORY. You plot what you know, you spend what you have left, and you find
+   them before they find you.
+
+   FIRST VIEWPORT. The enemy plot fills the lit centre at the largest scale on
+   the page, the tote board of salvage lamps runs beneath it, the tool rail
+   sits under the thumb, and your own fleet is a smaller status board beside it.
+
+   FORM. The wartime operations room, ranked first of seven derived worlds.
+
+   Tokens are declared once in the inline tailwind.config in index.html and
+   mirrored here. This file owns the atmosphere, the counters, the motion and
+   the state toggles.
+   ============================================================ */
+
+:root {
+    --blackout: #15140f;
+    --drab: #23271b;
+    --table: #2f3524;
+    --table-lit: #3a4129;
+    --chalk: #ece7d6;
+    --stone: #9aa088;
+    --red: #d81e2c;
+    /* Small red TYPE only. Signal red on drab measures about 4.0:1, under the
+       4.5:1 bar, so anything below 18.66px uses this instead. The flat red
+       keeps the fills, the counters and the rules, where the bar is 3:1. */
+    --red-lt: #ff6b60;
+    --yellow: #f2c00e;
+    --blue: #1156b8;
+    --flag-black: #0d0e08;
+
+    --hair: rgba(236, 231, 214, 0.14);
+    --hair-firm: rgba(236, 231, 214, 0.28);
+    /* Depth here is lamplight and cast shadow. Not a glow, and not the house
+       hard offset: a counter is a wooden disc on a table under one lamp. */
+    --cast: 0 2px 0 rgba(0, 0, 0, 0.55);
+    --cast-lift: 0 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* base-style.css paints body with a navy GRADIENT via the background
+   shorthand, and a gradient is a background-image, so it beats any bg-*
+   utility. Reassert the ground here. */
+body {
+    margin: 0;
+    background: var(--blackout);
+    color: var(--chalk);
+    font-family: 'Saira', sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ============================================================
+   THE ROOM: three fixed layers over the whole page
+   ============================================================ */
+
+.lamp,
+.dust,
+.vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    /* Stacked gradient layers land on fractional device pixels and draw
+       hairline seams on high DPI displays unless each gets its own layer. */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* The pool of light over the table. Note the far stop is a transparent OLIVE
+   rather than the `transparent` keyword, which is transparent black and greys
+   the whole ramp on the way out. */
+.lamp {
+    z-index: 0;
+    background-image:
+        radial-gradient(ellipse 74% 50% at 50% 24%, rgba(226, 214, 168, 0.2), rgba(226, 214, 168, 0) 72%),
+        radial-gradient(ellipse 120% 72% at 50% 106%, rgba(120, 132, 84, 0.13), rgba(120, 132, 84, 0) 70%);
+}
+
+/* The air in a blacked out room. Slow, almost nothing, and it must not read
+   as film grain: this world has no CRT in it. */
+.dust {
+    z-index: 48;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: drift 9s linear infinite alternate;
+}
+
+.vignette {
+    z-index: 49;
+    box-shadow: inset 0 0 200px 40px rgba(0, 0, 0, 0.88);
+}
+
+@keyframes drift {
+    from { transform: translate(0, 0) translateZ(0); }
+    to { transform: translate(-3%, 2%) translateZ(0); }
+}
+
+/* ============================================================
+   Chrome
+   ============================================================ */
+
+.exit,
+.room-tag {
+    position: fixed;
+    top: max(0.85rem, env(safe-area-inset-top));
+    z-index: 60;
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.exit {
+    left: 1rem;
+    color: var(--stone);
+    text-decoration: none;
+    transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.exit:hover,
+.exit:focus-visible {
+    color: var(--yellow);
+    transform: translateX(-3px);
+}
+
+.room-tag {
+    right: 1rem;
+    color: var(--stone);
+}
+
+.room-tag b {
+    font-family: 'Chivo Mono', monospace;
+    font-weight: 700;
+    color: var(--yellow);
+    letter-spacing: 0.24em;
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: max(1.1rem, env(safe-area-inset-bottom));
+    transform: translate(-50%, calc(100% + 3rem));
+    opacity: 0;
+    pointer-events: none;
+    z-index: 70;
+    max-width: min(30rem, calc(100vw - 2rem));
+    padding: 0.7rem 1.1rem;
+    background: var(--drab);
+    border: 1px solid var(--hair-firm);
+    border-left: 3px solid var(--yellow);
+    box-shadow: var(--cast-lift);
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 0.92rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.05), opacity 0.2s ease;
+}
+
+.toast.is-up {
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+
+/* ============================================================
+   Stage and screens
+   ============================================================ */
+
+.stage {
+    position: relative;
+    z-index: 10;
+    min-height: 100svh;
+    width: 100%;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 4.4rem 1.1rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stage.is-wide {
+    max-width: 74rem;
+    justify-content: flex-start;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+}
+
+.screen.is-on {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    animation: arrive 0.4s ease both;
+}
+
+@keyframes arrive {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* ============================================================
+   Type
+   ============================================================ */
+
+.wordmark {
+    margin: 0;
+    font-family: 'Saira Stencil One', sans-serif;
+    font-size: clamp(3rem, 17vw, 6rem);
+    line-height: 0.86;
+    letter-spacing: 0.01em;
+    text-align: center;
+    color: var(--chalk);
+}
+
+.wordmark span {
+    display: block;
+    color: var(--red);
+}
+
+.screen-title {
+    margin: 0;
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.deck {
+    margin: 0 auto;
+    max-width: 34rem;
+    color: var(--stone);
+    font-size: 0.95rem;
+    text-align: center;
+    text-wrap: pretty;
+}
+
+.wait-line {
+    margin: 0;
+    text-align: center;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.76rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--stone);
+    animation: breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+}
+
+.prose {
+    color: var(--chalk);
+    font-size: 0.95rem;
+}
+
+.prose h3 {
+    margin: 1.6rem 0 0.4rem;
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--yellow);
+}
+
+.prose p {
+    margin: 0 0 0.7rem;
+    color: var(--stone);
+}
+
+.prose b {
+    color: var(--chalk);
+    font-weight: 500;
+}
+
+.prose .cost {
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--yellow);
+}
+
+/* ============================================================
+   Controls
+   ============================================================ */
+
+.doors {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+}
+
+.btn {
+    appearance: none;
+    display: block;
+    width: 100%;
+    padding: 0.82rem 1.1rem;
+    background: var(--drab);
+    color: var(--chalk);
+    border: 1px solid var(--hair-firm);
+    border-radius: 0;
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.94rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: var(--cast);
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease,
+        transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+    background: var(--table);
+    border-color: var(--yellow);
+}
+
+/* The press is a real press: the counter goes down onto the table. */
+.btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.55);
+}
+
+.btn:disabled {
+    opacity: 0.42;
+    cursor: default;
+    transform: none;
+}
+
+.btn:disabled:hover {
+    background: var(--drab);
+    border-color: var(--hair-firm);
+}
+
+.btn-primary {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+    background: #ec2b39;
+    border-color: var(--yellow);
+}
+
+.btn-quiet {
+    background: none;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--stone);
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    padding: 0.5rem;
+}
+
+.btn-quiet:hover,
+.btn-quiet:focus-visible {
+    background: none;
+    color: var(--yellow);
+}
+
+:where(button, a, input):focus-visible {
+    outline: 2px solid var(--yellow);
+    outline-offset: 2px;
+}
+
+.field {
+    display: block;
+}
+
+.field-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--stone);
+}
+
+.field input {
+    width: 100%;
+    padding: 0.72rem 0.8rem;
+    background: var(--blackout);
+    border: 1px solid var(--hair-firm);
+    border-radius: 0;
+    color: var(--chalk);
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+}
+
+.field input:focus {
+    outline: none;
+    border-color: var(--yellow);
+    background: var(--drab);
+}
+
+.field input::placeholder {
+    color: rgba(236, 231, 214, 0.3);
+}
+
+.code-input {
+    font-family: 'Chivo Mono', monospace !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5em !important;
+    text-align: center;
+}
+
+.field-error {
+    margin: 0;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    color: var(--red-lt);
+}
+
+.code-plate {
+    margin: 0;
+    padding: 0.7rem 0;
+    text-align: center;
+    font-family: 'Saira Stencil One', sans-serif;
+    font-size: clamp(2.6rem, 15vw, 4rem);
+    letter-spacing: 0.3em;
+    /* The tracking is applied to the right of each glyph, so the run sits
+       off-centre without a matching pad on the left. */
+    padding-left: 0.3em;
+    color: var(--yellow);
+    border-top: 2px solid var(--hair-firm);
+    border-bottom: 2px solid var(--hair-firm);
+}
+
+/* ============================================================
+   Panels: corner registration brackets, never a box
+   ============================================================ */
+
+.card {
+    position: relative;
+    padding: 1rem 1.1rem;
+    background: rgba(35, 39, 27, 0.5);
+}
+
+.card::before,
+.card::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--hair-firm);
+    pointer-events: none;
+}
+
+.card::before {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+}
+
+.card::after {
+    right: 0;
+    bottom: 0;
+    border-left: 0;
+    border-top: 0;
+}
+
+.card-head {
+    margin: 0 0 0.6rem;
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--yellow);
+}
+
+/* ============================================================
+   THE PLOT
+
+   Ten by ten of counters on a lit table. The enemy plot is the hero of the
+   page and is always the larger of the two.
+   ============================================================ */
+
+.plot-wrap {
+    /* The lamp lands here rather than on the grid, so the light sits under
+       the counters instead of washing them out. */
+    padding: 0.55rem;
+    background:
+        radial-gradient(ellipse 82% 82% at 50% 34%, #454d33, var(--table) 78%);
+    border: 1px solid var(--hair-firm);
+    box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4);
+}
+
+.plot {
+    display: grid;
+    --ruler: 1.35rem;
+    /* The plain fallback: square cells via aspect-ratio, auto rows so a row
+       track cannot hand its leftover pixels out unevenly. @supports below
+       replaces both with pixel-snapped tracks where it can. */
+    grid-template-columns: var(--ruler) repeat(10, 1fr);
+    grid-template-rows: 1.15rem repeat(10, auto);
+    gap: 2px;
+}
+
+.plot-enemy {
+    --water: #16233a;
+    --water-edge: rgba(17, 86, 184, 0.42);
+}
+
+.plot-own {
+    /* Your own plot is the table itself, not a chart of somewhere else, so
+       the water sits close to the surface and the hulls read as counters
+       resting on it. */
+    --water: #262b1c;
+    --water-edge: rgba(236, 231, 214, 0.13);
+}
+
+.ruler {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Chivo Mono', monospace;
+    font-size: clamp(0.5rem, 1.6vw, 0.66rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--stone);
+    user-select: none;
+}
+
+.cell {
+    appearance: none;
+    position: relative;
+    aspect-ratio: 1;
+    padding: 0;
+    background: var(--water);
+    border: 1px solid var(--water-edge);
+    border-radius: 0;
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.14s ease, border-color 0.14s ease, transform 0.06s ease;
+}
+
+.plot-own .cell,
+.cell:disabled {
+    cursor: default;
+}
+
+.plot-enemy .cell:not(:disabled):hover,
+.plot-enemy .cell:not(:disabled):focus-visible {
+    background: #22355a;
+    border-color: var(--yellow);
+}
+
+/* The aiming footprint: every cell the selected tool would touch. */
+.cell.is-aimed {
+    background: #2a4271;
+    border-color: var(--yellow);
+}
+
+.plot-own .cell.is-aimed {
+    background: #3d452c;
+    border-color: var(--yellow);
+}
+
+.cell.is-bad {
+    border-color: var(--red);
+    background: #3a1d1d;
+}
+
+/* Both tracks want to be the SAME pixel-snapped length, so the plot is square
+   and every seam lands on the device pixel grid: a fractional track hands its
+   leftover pixels out unevenly and draws a heavier rule under some rows than
+   others, which on a ten by ten grid reads as a warped table.
+   It has to be a container unit rather than a percentage. A percentage in a
+   ROW track resolves against the grid's height, not its width, so the same
+   expression that sizes the columns correctly collapses the rows. cqw is a
+   length and means the same thing in both axes. */
+@supports (width: 1cqw) {
+    .plot-wrap {
+        container-type: inline-size;
+    }
+
+    .plot {
+        /* The wrap's own 0.55rem padding is on both sides, hence 1.1rem. */
+        --cell: calc((100cqw - var(--ruler) - 22px - 1.1rem) / 10);
+        --cell: round(down, (100cqw - var(--ruler) - 22px - 1.1rem) / 10, 1px);
+        grid-template-columns: var(--ruler) repeat(10, var(--cell));
+        grid-template-rows: 1.15rem repeat(10, var(--cell));
+        justify-content: center;
+    }
+}
+
+/* --- the counters -------------------------------------------------- */
+
+/* A plotted counter is a disc that arrives from above the table and settles.
+   That is the whole motion vocabulary of this world: a hand pushing wood. */
+.cell::after {
+    content: '';
+    position: absolute;
+    inset: 14%;
+    pointer-events: none;
+}
+
+.cell.mark-miss::after {
+    /* A miss is a chalk ring, not a filled disc: nothing was found here. */
+    border: 2px solid rgba(236, 231, 214, 0.6);
+    border-radius: 50%;
+    animation: counterSet 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.05) both;
+}
+
+.cell.mark-hit {
+    background: var(--red);
+    border-color: #8d101b;
+}
+
+.cell.mark-hit::after {
+    /* An X in chalk over the red counter, so a hit is never colour alone. */
+    background:
+        linear-gradient(45deg, transparent 43%, var(--chalk) 43% 57%, transparent 57%),
+        linear-gradient(-45deg, transparent 43%, var(--chalk) 43% 57%, transparent 57%);
+    box-shadow: var(--cast);
+    animation: counterSet 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.05) both;
+}
+
+.cell.mark-sunk {
+    background: var(--flag-black);
+    border-color: var(--red);
+}
+
+.cell.mark-sunk::after {
+    inset: 22%;
+    background: var(--red);
+    animation: counterSet 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.05) both;
+}
+
+.cell.mark-decoy {
+    background: var(--yellow);
+    border-color: #8a6d05;
+}
+
+.cell.mark-decoy::after {
+    /* A hollow diamond: the buoy owning up. */
+    inset: 22%;
+    background: var(--drab);
+    transform: rotate(45deg);
+    animation: counterSet 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.05) both;
+}
+
+/* Your own plot carries hulls and buoys nobody else can see. */
+.cell.is-hull {
+    background: #6d6a4e;
+    border-color: #8e8a66;
+    box-shadow: var(--cast);
+}
+
+.cell.is-hull.mark-hit {
+    background: var(--red);
+}
+
+.cell.is-hull.mark-sunk {
+    background: var(--flag-black);
+}
+
+.cell.is-buoy {
+    background: #4a4520;
+    border-color: var(--yellow);
+}
+
+.cell.is-lit {
+    /* A block the enemy has swept. They told you where they looked. */
+    box-shadow: inset 0 0 0 2px rgba(17, 86, 184, 0.75);
+}
+
+@keyframes counterSet {
+    from { opacity: 0; transform: translateY(-14px) scale(1.12); }
+    to { opacity: 1; transform: none; }
+}
+
+/* --- the depth charge, the one authored moment --------------------- */
+
+.plot.is-blasting {
+    animation: tableShake 0.34s steps(3) 1;
+}
+
+@keyframes tableShake {
+    0% { transform: translate(0, 0); }
+    33% { transform: translate(2px, -1px); }
+    66% { transform: translate(-2px, 1px); }
+    100% { transform: translate(0, 0); }
+}
+
+.lamp.is-flare {
+    animation: lampFlare 0.5s ease-out 1;
+}
+
+@keyframes lampFlare {
+    0% { opacity: 1; }
+    12% { opacity: 3.4; }
+    100% { opacity: 1; }
+}
+
+/* ============================================================
+   The tote board
+   ============================================================ */
+
+.tote {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.7rem;
+    background: var(--drab);
+    border: 1px solid var(--hair);
+}
+
+.tote-label {
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--stone);
+    white-space: nowrap;
+}
+
+.lamps {
+    display: flex;
+    gap: 3px;
+    flex: 1;
+}
+
+.lamp-pip {
+    flex: 1;
+    max-width: 1.1rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #2c3122;
+    border: 1px solid rgba(236, 231, 214, 0.16);
+}
+
+.lamp-pip.is-lit {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    animation: lampLight 0.2s ease-out both;
+}
+
+.tote-enemy .lamp-pip.is-lit {
+    background: var(--blue);
+    border-color: #3f7de0;
+}
+
+.tote-count {
+    font-family: 'Chivo Mono', monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--yellow);
+    min-width: 1.6ch;
+    text-align: right;
+}
+
+.tote-enemy .tote-count {
+    color: #6f9de8;
+}
+
+@keyframes lampLight {
+    from { transform: scale(0.5); filter: brightness(2.4); }
+    to { transform: none; filter: none; }
+}
+
+/* ============================================================
+   The tool rail
+   ============================================================ */
+
+.rail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6.4rem, 1fr));
+    gap: 0.4rem;
+}
+
+.tool {
+    appearance: none;
+    position: relative;
+    padding: 0.55rem 0.4rem 0.7rem;
+    background: var(--drab);
+    border: 1px solid var(--hair-firm);
+    border-top: 3px solid var(--stone);
+    border-radius: 0;
+    color: var(--chalk);
+    cursor: pointer;
+    text-align: center;
+    box-shadow: var(--cast);
+    transition: background 0.14s ease, border-color 0.14s ease, transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+.tool-name {
+    display: block;
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.76rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.15;
+}
+
+.tool-cost {
+    display: block;
+    margin-top: 0.15rem;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    color: var(--yellow);
+}
+
+.tool-key {
+    display: none;
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.56rem;
+    color: var(--stone);
+}
+
+.tool:hover:not(:disabled),
+.tool:focus-visible:not(:disabled) {
+    background: var(--table);
+    border-color: var(--yellow);
+}
+
+.tool:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+.tool.is-on {
+    background: var(--table-lit);
+    border-top-color: var(--yellow);
+    border-color: var(--yellow);
+}
+
+.tool:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* Locked reads differently from unaffordable: one is a price, the other is a
+   rung you have not reached, and confusing them makes the ladder invisible. */
+.tool.is-locked {
+    opacity: 0.55;
+    border-top-color: var(--red);
+}
+
+.tool.is-locked .tool-cost {
+    color: var(--red-lt);
+}
+
+.tool[data-kind="fire"] {
+    border-top-color: var(--red);
+}
+
+.rail-hint {
+    margin: 0;
+    min-height: 1.2rem;
+    text-align: center;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--stone);
+}
+
+/* ============================================================
+   The battle screen
+   ============================================================ */
+
+.turn-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.45rem;
+    border-top: 1px solid var(--hair);
+    border-bottom: 1px solid var(--hair);
+}
+
+.turn-flag {
+    width: 1.5rem;
+    height: 1rem;
+    background: var(--stone);
+    flex: none;
+}
+
+.turn-bar.is-yours .turn-flag {
+    background: var(--yellow);
+}
+
+.turn-bar.is-theirs .turn-flag {
+    background: var(--blue);
+    animation: breathe 2.4s ease-in-out infinite;
+}
+
+.turn-text {
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.switcher {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+}
+
+.switch {
+    appearance: none;
+    padding: 0.5rem;
+    background: var(--drab);
+    border: 1px solid var(--hair);
+    border-radius: 0;
+    color: var(--stone);
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.switch.is-on {
+    background: var(--table);
+    color: var(--chalk);
+    border-color: var(--yellow);
+}
+
+.tables {
+    display: grid;
+    gap: 1rem;
+}
+
+.table-side.is-off {
+    display: none;
+}
+
+.table-head h2 {
+    display: none;
+}
+
+.table-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.45rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid var(--hair-firm);
+}
+
+.table-head h2 {
+    margin: 0;
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.86rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.who {
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--stone);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fleet-status {
+    list-style: none;
+    margin: 0.55rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.hull-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.22rem 0.4rem;
+    background: rgba(35, 39, 27, 0.6);
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hull-row .pips {
+    display: flex;
+    gap: 2px;
+    margin-left: auto;
+}
+
+.hull-row .pip {
+    width: 0.55rem;
+    height: 0.55rem;
+    background: #6d6a4e;
+}
+
+.hull-row .pip.is-hit {
+    background: var(--red);
+}
+
+.hull-row.is-down {
+    color: var(--stone);
+    text-decoration: line-through;
+}
+
+.hull-row.is-down .pip {
+    background: var(--flag-black);
+    box-shadow: inset 0 0 0 1px var(--red);
+}
+
+.log {
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem 0.6rem;
+    max-height: 7.5rem;
+    overflow-y: auto;
+    background: rgba(13, 14, 8, 0.55);
+    border: 1px solid var(--hair);
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    color: var(--stone);
+}
+
+.log li.is-mine {
+    color: var(--chalk);
+}
+
+.log li b {
+    color: var(--yellow);
+    font-weight: 700;
+}
+
+/* ============================================================
+   Laying the fleet
+   ============================================================ */
+
+.hull-rail {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(5.2rem, 1fr));
+    gap: 0.35rem;
+}
+
+.hull-pick {
+    appearance: none;
+    width: 100%;
+    padding: 0.45rem 0.3rem;
+    background: var(--drab);
+    border: 1px solid var(--hair-firm);
+    border-radius: 0;
+    color: var(--chalk);
+    font-family: 'Saira Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.hull-pick.is-on {
+    background: var(--table-lit);
+    border-color: var(--yellow);
+}
+
+.hull-pick.is-set {
+    color: var(--stone);
+    border-color: var(--hair);
+}
+
+.hull-pick .len {
+    display: block;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--yellow);
+}
+
+.place-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+}
+
+.place-actions .btn-primary {
+    grid-column: 1 / -1;
+}
+
+/* ============================================================
+   The verdict
+   ============================================================ */
+
+.stamp {
+    margin: 0 auto;
+    padding: 0.3rem 1.4rem;
+    font-family: 'Saira Stencil One', sans-serif;
+    font-size: clamp(2.2rem, 12vw, 3.6rem);
+    letter-spacing: 0.06em;
+    color: var(--red);
+    border: 4px solid var(--red);
+    transform: rotate(-3deg);
+    animation: stampSlam 0.5s cubic-bezier(0.2, 0.85, 0.3, 1.05) both;
+}
+
+.stamp.is-win {
+    color: var(--yellow);
+    border-color: var(--yellow);
+}
+
+@keyframes stampSlam {
+    from { opacity: 0; transform: scale(1.4) rotate(-9deg); filter: blur(5px); }
+    to { opacity: 1; transform: rotate(-3deg); filter: none; }
+}
+
+.tally {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.15rem 1rem;
+    margin: 0;
+    padding: 0.7rem 0.9rem;
+    background: rgba(35, 39, 27, 0.55);
+    border: 1px solid var(--hair);
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.78rem;
+}
+
+.tally dt {
+    color: var(--stone);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tally dd {
+    margin: 0;
+    text-align: right;
+    color: var(--chalk);
+    font-variant-numeric: tabular-nums;
+}
+
+.record-tally {
+    display: flex;
+    gap: 1.2rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--stone);
+}
+
+.record-tally b {
+    color: var(--yellow);
+}
+
+.record-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 9rem;
+    overflow-y: auto;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--stone);
+}
+
+.record-list li {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.2rem 0;
+    border-top: 1px solid var(--hair);
+}
+
+.record-list .res-win {
+    color: var(--yellow);
+}
+
+.record-list .res-loss {
+    color: var(--red-lt);
+}
+
+.record-list .who {
+    flex: 1;
+}
+
+.record-signin {
+    margin: 0;
+    text-align: center;
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+}
+
+.record-signin a {
+    color: var(--stone);
+    text-decoration: none;
+    border-bottom: 1px solid var(--hair-firm);
+}
+
+.record-signin a:hover {
+    color: var(--yellow);
+}
+
+.seat-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+/* site-footer is self styled, and its dark skin belongs to the retired navy
+   theme. This world has no indigo in it, so recolour it from the outside
+   rather than forking the component. */
+site-footer {
+    display: block;
+    margin-top: 1.6rem;
+    color: var(--stone);
+    font-family: 'Chivo Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+}
+
+/* ============================================================
+   Wide
+   ============================================================ */
+
+@media (min-width: 62rem) {
+    .switcher {
+        display: none;
+    }
+
+    .tool-key {
+        display: block;
+    }
+
+    .table-head h2 {
+        display: block;
+    }
+
+    .table-head {
+        justify-content: space-between;
+    }
+
+    .tables {
+        grid-template-columns: 1.35fr 1fr;
+        align-items: start;
+    }
+
+    .table-side.is-off {
+        display: block;
+    }
+
+    .rail {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .stage {
+        padding-top: 4rem;
+    }
+}
+
+/* ============================================================
+   Reduced motion. Every state change survives; only the theatre goes.
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .dust,
+    .screen.is-on,
+    .cell::after,
+    .plot.is-blasting,
+    .lamp.is-flare,
+    .stamp,
+    .wait-line,
+    .turn-bar.is-theirs .turn-flag,
+    .lamp-pip.is-lit {
+        animation: none !important;
+    }
+
+    .stamp {
+        transform: rotate(-3deg);
+    }
+
+    * {
+        transition-duration: 0.01ms !important;
+    }
+}

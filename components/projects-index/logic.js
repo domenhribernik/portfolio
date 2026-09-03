@@ -11,6 +11,7 @@
    live registry so a renamed or deleted entry fails the build. */
 export const FEATURED = [
   'tells',
+  'battleship',
   'seam',
   'trails',
   'nebo',
