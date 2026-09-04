@@ -54,12 +54,13 @@ function say(msg) { $('crier').textContent = msg; }
 
 /* ---- screens ------------------------------------------------------- */
 
-const SCREENS = { '': 'bootScreen', '#/practice': 'trainScreen',
+const SCREENS = { '': 'bootScreen', '#/lobby': 'lobbyScreen', '#/practice': 'trainScreen',
                   '#/night': 'nightScreen', '#/dawn': 'dawnScreen' };
 function route() {
   const id = SCREENS[location.hash] || 'bootScreen';
   document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
   if (id === 'trainScreen') { if (!state.dealt || state.borrowed) deal(); render(); }
+  if (id === 'lobbyScreen') renderLobby();
   if (id === 'nightScreen') renderNight(true);
   if (id === 'dawnScreen') renderDawn();
 }
@@ -605,7 +606,11 @@ function seat(body) {
   saveSession({ code: body.code, token: body.token, id: body.you.id, seat: body.you.seat });
   $('notice').classList.remove('on');
   room.cursor = 0; room.failures = 0;
-  location.hash = '#/night';
+  // Opening a room does not start a night: the second seat does. Sending the
+  // host straight to #/night left them on a plate with one station, no
+  // partner and no cycle able to resolve, which read as a broken game rather
+  // than as waiting.
+  location.hash = body.room && body.room.status === 'lobby' ? '#/lobby' : '#/night';
   schedulePoll(0);
 }
 
@@ -772,12 +777,74 @@ function absorb(body) {
          so an older client never desyncs against a newer server */
     }
   }
-  if (body.room.status === 'dawn') {
-    if (location.hash !== '#/dawn') location.hash = '#/dawn'; else renderDawn();
-  } else {
-    if (location.hash !== '#/night') location.hash = '#/night'; else renderNight();
-  }
+  const want = body.room.status === 'dawn' ? '#/dawn'
+             : body.room.status === 'lobby' ? '#/lobby' : '#/night';
+  if (location.hash !== want) location.hash = want;
+  else if (want === '#/dawn') renderDawn();
+  else if (want === '#/lobby') renderLobby();
+  else renderNight();
 }
+
+/* ---- the lobby ------------------------------------------------------
+   The gap between opening a room and the night starting. It is short, so
+   it does one job well: hand over the code, and say what tonight is,
+   because that is the only quiet moment either of you gets to read the
+   objective before the plate needs your attention. */
+
+function renderLobby() {
+  const s = room.snap;
+  const code = (room.session && room.session.code) || '----';
+  $('codeValue').textContent = code;
+
+  // The first poll has not landed yet right after `create`, so the roster
+  // falls back to what create already told us: you are seat one, alone.
+  const seats = s
+    ? [s.you, s.partner].filter(Boolean)
+    : [{ seat: (room.session && room.session.seat) || 1, name: t('lobby.you'), online: true }];
+
+  $('lobbyRoster').innerHTML = [1, 2].map(n => {
+    const p = seats.find(x => x && x.seat === n);
+    const me = p && room.session && p.id === room.session.id;
+    return `<li class="roster-row${p ? '' : ' empty'}">
+      <span class="roster-row__mark">${SEAT_LETTER[n]}</span>
+      <span class="roster-row__name">${p ? escapeText(p.name) : t('lobby.emptySeat')}</span>
+      <span class="roster-row__tag">${me ? t('lobby.you') : ''}</span>
+    </li>`;
+  }).join('');
+
+  $('lobbyTonight').innerHTML = s
+    ? `<p class="tonight__head">${t('lobby.tonight')}</p>
+       <p class="tonight__line">${t('night.objective')}</p>
+       <p class="tonight__wx">${t('weather.' + (s.room.weather || 'clear'))}</p>`
+    : '';
+}
+
+/* A name is player-supplied and lands in innerHTML, so it goes through
+   here first. Everything else on this screen is ours. */
+function escapeText(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str == null ? '' : str);
+  return d.innerHTML;
+}
+
+async function copyLink() {
+  const url = `${location.origin}${location.pathname}?room=${room.session.code}`;
+  const hint = $('codeHint');
+  try {
+    await navigator.clipboard.writeText(url);
+    hint.textContent = t('lobby.linkCopied');
+  } catch {
+    // Clipboard blocked. Repeating the code here would say nothing: it is
+    // already set at 3.4rem directly above. Say what went wrong instead.
+    hint.textContent = t('lobby.copyBlocked');
+  }
+  setTimeout(() => { hint.textContent = t('lobby.tapToCopy'); }, 2600);
+}
+$('codePlate').addEventListener('click', copyLink);
+$('lobbyLeave').addEventListener('click', async () => {
+  await post('leave', { code: room.session.code, token: room.session.token });
+  dropSession(null);
+});
 
 /* ---- drawing the plate ---- */
 

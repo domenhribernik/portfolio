@@ -92,7 +92,28 @@
   </div>
 </section>
 
-<!-- 2. PRACTICE -->
+<!-- 2. THE LOBBY -->
+<section class="screen" id="lobbyScreen">
+  <div class="boot">
+    <p class="standby" data-s="lobby.title"></p>
+
+    <button class="codeplate" type="button" id="codePlate">
+      <span class="codeplate__label" data-s="lobby.codeLabel"></span>
+      <span class="codeplate__code" id="codeValue">----</span>
+      <span class="codeplate__hint" id="codeHint" data-s="lobby.tapToCopy"></span>
+    </button>
+
+    <p class="lede" data-s="lobby.hint"></p>
+
+    <ul class="roster-list" id="lobbyRoster"></ul>
+
+    <div class="tonight" id="lobbyTonight"></div>
+
+    <button class="btn" id="lobbyLeave" data-s="lobby.leave"></button>
+  </div>
+</section>
+
+<!-- 3. PRACTICE -->
 <section class="screen" id="trainScreen">
   <div class="plate">
     <svg id="svg" viewBox="0 0 400 400" role="application" tabindex="0"
@@ -118,7 +139,7 @@
   </div>
 </section>
 
-<!-- 3. THE NIGHT -->
+<!-- 4. THE NIGHT -->
 <section class="screen" id="nightScreen">
   <div class="plate">
     <svg id="nsvg" viewBox="0 0 400 400" role="application" tabindex="0"
@@ -139,7 +160,7 @@
   </div>
 </section>
 
-<!-- 4. DAWN -->
+<!-- 5. DAWN -->
 <section class="screen" id="dawnScreen">
   <div class="plate">
     <svg id="dsvg" viewBox="0 0 400 400" role="img"

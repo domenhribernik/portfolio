@@ -164,6 +164,28 @@ $r = api('join', ['name' => 'X', 'code' => 'AEIO']);
 check('a vowel code is not a code', $r['status'] === 422 && ($r['body']['reason'] ?? '') === 'badCode');
 
 echo "\n2. OPENING A ROOM\n";
+// THE LOBBY. Opening a room does not start a night, and the host has to be
+// able to sit in it: poll, see itself, see no partner, and wait. The view
+// used to send the host straight to the night screen, where a plate with
+// one station and no resolvable cycle read as a broken game.
+$solo = api('create', ['name' => 'ANA']);
+trackRoom($solo['body']);
+check('a new room opens in the lobby, not in a night',
+      ($solo['body']['room']['status'] ?? '') === 'lobby', $solo['body']['room']['status'] ?? '?');
+$soloSeat = ['code' => $solo['body']['code'], 'token' => $solo['body']['token']];
+$lp = poll($soloSeat);
+check('the host can poll a room nobody has joined yet', $lp['status'] === 200, 'got ' . $lp['status']);
+check('and sees itself seated', ($lp['body']['you']['seat'] ?? 0) === 1);
+// ?? would report a present-but-null partner as absent, which is the whole
+// thing under test here, so ask the array directly.
+check('with the second station still empty',
+      array_key_exists('partner', $lp['body']) && $lp['body']['partner'] === null);
+check('the lobby already knows the weather, so it can be read while waiting',
+      in_array($lp['body']['room']['weather'] ?? '', ['clear', 'haze', 'storm'], true));
+$sj = api('join', ['name' => 'BOR', 'code' => $solo['body']['code']]);
+check('the second seat starts the night with nothing to press',
+      ($sj['body']['room']['status'] ?? '') === 'night', $sj['body']['room']['status'] ?? '?');
+
 $n = openNight();
 check('create returns a four letter code', preg_match('/^[BCDFGHJKLMNPQRSTVWXZ]{4}$/', $n['code']) === 1, $n['code']);
 $p = poll($n['a']);

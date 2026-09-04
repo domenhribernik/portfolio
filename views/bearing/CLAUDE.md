@@ -102,6 +102,14 @@ mirrored in `logic.js` and greped by the JS suite.
   `movement.php` holds class means and deviations taken off four hundred seeds.
   Change how an animal moves and they are stale, which the sim suite will say so
   in numbers. Re-measure rather than nudging them until it passes.
+- **A room opens in `lobby`, not in a night.** `create` seats one player and
+  stops; the second seat is what flips the room to `night`, with nothing to
+  press. The view has a `#/lobby` screen for that gap, and **two** places route
+  by room status: `seat()` reads the status out of the create/join response
+  (there is no poll yet at that moment) and `absorb()` reads it out of every
+  poll. A new status has to be handled in both. Sending the host straight to
+  `#/night` on create, which is what the first build did, left them on a plate
+  with one station and a cycle that could never resolve.
 - **`ui.json` is fetched `no-cache`, never `force-cache`.** A stale table is a
   page of key names. A new user-facing string is a row in that file, never a
   literal in the markup.

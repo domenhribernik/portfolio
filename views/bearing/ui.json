@@ -47,6 +47,36 @@
   "boot.offline": {
     "en": "The field station is not on the air yet. Practice works offline in the meantime."
   },
+  "lobby.title": {
+    "en": "Waiting for the second station"
+  },
+  "lobby.codeLabel": {
+    "en": "Room code"
+  },
+  "lobby.tapToCopy": {
+    "en": "Tap to copy the link"
+  },
+  "lobby.linkCopied": {
+    "en": "Link copied"
+  },
+  "lobby.copyBlocked": {
+    "en": "Could not copy. Read the code out instead."
+  },
+  "lobby.hint": {
+    "en": "Send it to whoever you are playing with. The night starts the moment they arrive, with nothing to press."
+  },
+  "lobby.emptySeat": {
+    "en": "Nobody yet"
+  },
+  "lobby.you": {
+    "en": "You"
+  },
+  "lobby.tonight": {
+    "en": "Tonight"
+  },
+  "lobby.leave": {
+    "en": "Close the room"
+  },
   "train.caption": {
     "en": "Practice plate · one collar · station A"
   },
