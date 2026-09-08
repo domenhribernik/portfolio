@@ -1,0 +1,277 @@
+/* Medication (views/medication): only what Tailwind can't cleanly express.
+   State panels toggled by a body class, the notch counter, the day wall,
+   and the one authored motion moment (stamping a dose).
+
+   base-style.css is deliberately NOT linked: it paints body with a navy
+   gradient via the `background` shorthand, and a gradient is a background-image,
+   so it would sit over the paper ground no matter what bg-* utility is set. */
+
+/* --- Page states: exactly one panel visible, driven by a body class --- */
+
+/* !important on both sides: the Tailwind CDN injects its utility rules
+   (.grid, .min-h-[100dvh]...) after this sheet, and the panels carry those
+   classes, so plain specificity would leave every panel visible. */
+.state-panel { display: none !important; }
+body.loading  #loader,
+body.signin   #signin,
+body.noaccess #noaccess,
+body.error    #error { display: grid !important; }
+body.ready    #app { display: block !important; }
+
+@keyframes loaderPulse {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 1; }
+}
+.loader-pulse { animation: loaderPulse 1.6s ease-in-out infinite; }
+
+/* --- Shared control states -------------------------------------------------
+   Focus is never an outline: the border inks and a soft clay ring appears,
+   matching the house tool surfaces. */
+
+:where(button, a, input, [tabindex]):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.22);
+    border-radius: 3px;
+}
+
+/* The tool-surface press: lifts onto a hard ink offset, then puts itself down
+   properly on :active so the tap reads as a real press. */
+.press {
+    border: none;
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+.press:hover:not(:disabled)  { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 rgba(28, 26, 23, 0.85); }
+.press:active:not(:disabled) { transform: translate(0, 0);       box-shadow: 1px 1px 0 rgba(28, 26, 23, 0.85); }
+.press:disabled { opacity: 0.5; cursor: default; }
+.press.is-busy  { opacity: 0.6; cursor: progress; }
+
+.ghost {
+    background: transparent;
+    color: #6b6256;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.ghost:hover:not(:disabled) { color: #d4451f; border-color: #d4451f; }
+.ghost-danger:hover:not(:disabled) { color: #b3261e; border-color: #b3261e; }
+.ghost:disabled { opacity: 0.5; cursor: default; }
+
+.step {
+    background: #fffdf8;
+    color: #1c1a17;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.step:hover:not(:disabled)  { border-color: rgba(28, 26, 23, 0.4); background: #efe9dd; }
+.step:active:not(:disabled) { background: #e4dccc; }
+.step:disabled { opacity: 0.3; cursor: default; }
+
+/* --- Tabs --- */
+
+.tab {
+    color: #6b6256;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.tab:hover { color: #1c1a17; }
+.tab[aria-selected="true"] { color: #1c1a17; border-bottom-color: #1c1a17; font-weight: 700; }
+.tabpanel { display: none; }
+.tabpanel.active { display: block; }
+
+/* --- Fields --- */
+
+.field {
+    background: #f6f2ea;
+    color: #1c1a17;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    border-radius: 3px;
+    padding: 0.7rem 0.75rem;
+    font-size: 1rem; /* 16px keeps iOS from zooming the page on focus */
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.field::placeholder { color: #a49a8a; }
+.field:focus {
+    outline: none;
+    background: #fffdf8;
+    border-color: #d4451f;
+    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.18);
+}
+.field[aria-invalid="true"] { border-color: #b3261e; }
+
+.err {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.66rem;
+    color: #b3261e;
+    margin-top: 0.35rem;
+}
+
+/* Form chips (medication form). A radiogroup of labels, not a <select>: on a
+   phone a row of tappable chips is both faster and scannable. */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: #fffdf8;
+    color: #6b6256;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    border-radius: 3px;
+    padding: 0.55rem 0.8rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.chip:hover { border-color: rgba(28, 26, 23, 0.4); color: #1c1a17; }
+.chip[aria-checked="true"] { background: #1c1a17; border-color: #1c1a17; color: #f6f2ea; font-weight: 700; }
+
+/* --- The dose row ---------------------------------------------------------
+   Rows are separated by hairlines rather than boxed: structure here is drawn
+   with rules, not containers. */
+
+.dose-row {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr;
+    gap: 0.75rem;
+    align-items: start;
+    padding: 1.1rem 0;
+    border-top: 1px solid rgba(28, 26, 23, 0.12);
+}
+.dose-row .glyph { color: #a49a8a; font-size: 1rem; padding-top: 0.15rem; transition: color 0.2s ease; }
+.dose-row.done .glyph { color: #2f5b53; }
+.dose-row.done .dose-name { color: #24463f; }
+
+/* --- The notch counter ----------------------------------------------------
+   Slots are interchangeable, so a row is a counter with N notches rather than
+   N labelled checkboxes. Square at 3px, never a circle: the radius scale on
+   this site tops out at 4px. 52px keeps every notch a comfortable thumb
+   target, whatever the count. */
+
+.notches { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+
+.notch {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    background: #fffdf8;
+    border: 1px solid rgba(28, 26, 23, 0.18);
+    border-radius: 3px;
+    color: rgba(28, 26, 23, 0.16);
+    font-size: 0.95rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.1s ease;
+}
+.notch:hover:not(:disabled) { border-color: rgba(47, 91, 83, 0.55); color: rgba(47, 91, 83, 0.45); }
+.notch:active:not(:disabled) { transform: scale(0.95); }
+.notch.on {
+    background: #2f5b53;
+    border-color: #2f5b53;
+    color: #f6f2ea;
+}
+.notch.on:hover { background: #24463f; border-color: #24463f; }
+.notch:disabled { opacity: 0.55; cursor: default; }
+
+/* The one authored moment: a dose stamping down. Fires on the notch that was
+   just taken, not on every notch that happens to be lit. */
+@keyframes stamp {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.88); }
+    100% { transform: scale(1); }
+}
+.notch.stamp { animation: stamp 0.26s cubic-bezier(0.2, 0, 0, 1); }
+
+/* Optimistic writes flip the notch immediately; this marks one still in
+   flight so a failure has something visible to roll back. */
+.notch.pending { opacity: 0.72; }
+
+/* --- Progress rule --- */
+
+.bar-track {
+    background: #efe9dd;
+    border-radius: 2px;
+    height: 4px;
+    overflow: hidden;
+}
+.bar-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--acc, #2f5b53);
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* --- The day wall --- */
+
+.wall { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; }
+.wall-cell {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: #efe9dd;
+    border: 1px solid transparent;
+}
+.wall-cell.part { background: #a9c0b8; }
+.wall-cell.full { background: #2f5b53; }
+.wall-cell.none { background: transparent; border-color: rgba(28, 26, 23, 0.12); }
+.wall-cell.today { outline: 2px solid #1c1a17; outline-offset: 1px; }
+
+.wall-key {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+    background: #efe9dd;
+}
+.wall-key.wall-none { background: transparent; border: 1px solid rgba(28, 26, 23, 0.2); }
+.wall-key.wall-part { background: #a9c0b8; }
+.wall-key.wall-full { background: #2f5b53; }
+
+/* --- Shelf rows --- */
+
+.shelf-row {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-top: 1px solid rgba(28, 26, 23, 0.12);
+    padding: 1rem 0;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+.shelf-row .glyph { color: #a49a8a; font-size: 1rem; }
+.shelf-row .caret { color: #a49a8a; transition: color 0.15s ease, transform 0.15s ease; }
+.shelf-row:hover .caret { color: #d4451f; transform: translateX(3px); }
+.shelf-row.ended .shelf-name { color: #6b6256; }
+
+/* --- Status line --- */
+
+.status {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(140%);
+    max-width: min(30rem, calc(100vw - 2rem));
+    background: #1c1a17;
+    color: #f6f2ea;
+    border-radius: 3px;
+    padding: 0.7rem 1rem;
+    z-index: 40;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), opacity 0.2s ease, visibility 0.2s;
+}
+.status.show { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
+.status.bad { background: #b3261e; }
+
+@media (prefers-reduced-motion: reduce) {
+    .loader-pulse, .notch.stamp { animation: none; }
+    .bar-fill, .status, .press, .notch, .shelf-row .caret { transition: none; }
+    .press:hover:not(:disabled) { transform: none; }
+}

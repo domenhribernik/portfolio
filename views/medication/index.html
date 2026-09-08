@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Medication</title>
+
+    <meta name="theme-color" content="#f6f2ea">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Medication">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#f6f2ea',
+                        'paper-2': '#efe9dd',
+                        card: '#fffdf8',
+                        ink: '#1c1a17',
+                        stone: '#6b6256',
+                        faint: '#a49a8a',
+                        clay: '#d4451f',
+                        'clay-dk': '#b8371a',
+                        pine: '#2f5b53',
+                        'pine-dk': '#24463f',
+                        danger: '#b3261e',
+                    },
+                    fontFamily: {
+                        display: ['"Bricolage Grotesque"', 'sans-serif'],
+                        sans: ['"IBM Plex Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                    borderColor: {
+                        hairline: 'rgba(28, 26, 23, 0.12)',
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="font-sans bg-paper text-ink min-h-[100dvh] antialiased loading"
+    style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);">
+
+    <!-- ============ Loading ============ -->
+    <div id="loader" class="state-panel min-h-[100dvh] place-items-center px-6">
+        <p class="font-mono text-[0.68rem] tracking-[0.25em] uppercase text-stone loader-pulse">Opening the cabinet…</p>
+    </div>
+
+    <!-- ============ Signed out ============ -->
+    <div id="signin" class="state-panel min-h-[100dvh] place-items-center px-6">
+        <div class="max-w-sm w-full text-center">
+            <p class="font-mono text-[0.62rem] tracking-[0.3em] uppercase text-stone">Private · one cabinet</p>
+            <h1 class="font-display font-extrabold uppercase tracking-tight text-4xl mt-2">Medication<span class="text-clay">.</span></h1>
+            <p class="text-sm text-stone mt-3">This one is locked. Sign in to open it.</p>
+            <a id="signinLink" href="../account/"
+                class="press inline-block mt-7 font-mono font-bold text-[0.72rem] uppercase tracking-[0.14em] bg-ink text-paper rounded-[3px] px-7 py-3.5 no-underline">Sign in</a>
+        </div>
+    </div>
+
+    <!-- ============ Signed in, not the owner ============ -->
+    <div id="noaccess" class="state-panel min-h-[100dvh] place-items-center px-6">
+        <div class="max-w-sm w-full text-center">
+            <p class="font-mono text-[0.62rem] tracking-[0.3em] uppercase text-stone">Private · one cabinet</p>
+            <h1 class="font-display font-extrabold uppercase tracking-tight text-4xl mt-2">Not yours<span class="text-clay">.</span></h1>
+            <p class="text-sm text-stone mt-3">This is one person's medicine cabinet. It only opens for him.</p>
+            <a href="../../" class="inline-block mt-7 font-mono text-[0.72rem] uppercase tracking-[0.14em] text-stone hover:text-ink transition-colors">&larr; back to the site</a>
+        </div>
+    </div>
+
+    <!-- ============ Hard error ============ -->
+    <div id="error" class="state-panel min-h-[100dvh] place-items-center px-6">
+        <div class="max-w-sm w-full text-center">
+            <h1 class="font-display font-extrabold uppercase tracking-tight text-3xl">Couldn't open it<span class="text-clay">.</span></h1>
+            <p id="errorMsg" class="text-sm text-stone mt-3">Something went wrong.</p>
+            <button id="retryBtn" type="button"
+                class="press mt-7 font-mono font-bold text-[0.72rem] uppercase tracking-[0.14em] bg-ink text-paper rounded-[3px] px-7 py-3.5">Try again</button>
+        </div>
+    </div>
+
+    <!-- ============ The cabinet ============ -->
+    <div id="app" class="state-panel">
+        <div class="max-w-[640px] mx-auto px-5 sm:px-7 pb-28">
+
+            <!-- Masthead -->
+            <header class="pt-7">
+                <div class="flex items-baseline justify-between gap-3 font-mono text-[0.66rem] tracking-[0.2em] uppercase text-stone border-b border-hairline pb-3">
+                    <a id="back-link" href="../../"
+                        class="no-underline text-stone hover:text-clay focus-visible:text-clay transition-colors">&larr;&nbsp;&nbsp;DH // MEDICATION</a>
+                    <span id="todayStamp"></span>
+                </div>
+                <div class="flex items-end justify-between gap-4 mt-5">
+                    <h1 class="font-display font-extrabold uppercase tracking-tight text-[2.6rem] sm:text-5xl leading-[0.9]">
+                        Medication<span class="text-clay">.</span>
+                    </h1>
+                    <div id="streakBlock" class="text-right shrink-0">
+                        <div id="streakNum" class="font-display font-extrabold text-[2.4rem] sm:text-[2.8rem] leading-none tabular-nums text-pine">0</div>
+                        <div id="streakLabel" class="font-mono text-[0.58rem] tracking-[0.2em] uppercase text-stone mt-1">day streak</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Tabs -->
+            <nav class="sticky top-0 z-20 bg-paper/95 backdrop-blur-sm mt-6 -mx-5 px-5 sm:-mx-7 sm:px-7 border-b border-hairline" aria-label="Sections">
+                <div class="flex gap-1" role="tablist">
+                    <button type="button" role="tab" data-tab="today" aria-selected="true" aria-controls="tab-today" id="tabbtn-today"
+                        class="tab font-mono text-[0.7rem] uppercase tracking-[0.16em] px-3 py-3.5">Today</button>
+                    <button type="button" role="tab" data-tab="shelf" aria-selected="false" aria-controls="tab-shelf" id="tabbtn-shelf"
+                        class="tab font-mono text-[0.7rem] uppercase tracking-[0.16em] px-3 py-3.5">Medications</button>
+                </div>
+            </nav>
+
+            <!-- ---------------- TODAY ---------------- -->
+            <section id="tab-today" class="tabpanel active mt-6" role="tabpanel" aria-labelledby="tabbtn-today" style="--acc: #2f5b53;">
+
+                <div id="dayBlock">
+                <!-- Day stepper -->
+                <div class="flex items-center gap-2">
+                    <button type="button" id="dayPrev" aria-label="Previous day"
+                        class="step font-mono text-sm w-10 h-10 shrink-0 grid place-items-center border border-hairline rounded-[3px]">&lsaquo;</button>
+                    <div class="flex-1 min-w-0 text-center">
+                        <div id="dayLabel" class="font-mono text-[0.72rem] tracking-[0.18em] uppercase truncate">Today</div>
+                        <div id="dayDate" class="font-mono text-[0.62rem] text-stone mt-0.5"></div>
+                    </div>
+                    <button type="button" id="dayNext" aria-label="Next day"
+                        class="step font-mono text-sm w-10 h-10 shrink-0 grid place-items-center border border-hairline rounded-[3px]">&rsaquo;</button>
+                </div>
+
+                <!-- Progress -->
+                <div class="mt-4 flex items-baseline justify-between gap-3">
+                    <span id="progressText" class="font-mono text-[0.66rem] tracking-[0.18em] uppercase text-stone">No doses scheduled</span>
+                    <span id="progressCount" class="font-mono text-[0.78rem] font-bold tabular-nums"></span>
+                </div>
+                <div class="bar-track mt-2" role="progressbar" aria-labelledby="progressText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
+                    <div id="progressFill" class="bar-fill"></div>
+                </div>
+                </div>
+
+                <!-- The doses -->
+                <div id="doseList" class="mt-2"></div>
+
+                <!-- Empty shelf -->
+                <div id="todayEmpty" class="hidden text-center py-16">
+                    <p class="font-display font-extrabold uppercase tracking-tight text-2xl">Nothing to take yet<span class="text-clay">.</span></p>
+                    <p class="text-sm text-stone mt-3 max-w-[36ch] mx-auto">Add what you are on and how many times a day you take it. It shows up here every morning, and you tap it off as you go.</p>
+                    <button type="button" data-goto="shelf"
+                        class="press inline-block mt-6 font-mono font-bold text-[0.72rem] uppercase tracking-[0.14em] bg-ink text-paper rounded-[3px] px-6 py-3.5">Add the first one</button>
+                </div>
+
+                <!-- Nothing scheduled on this particular day -->
+                <div id="todayNone" class="hidden text-center py-12 border-t border-hairline mt-2">
+                    <p class="font-mono text-[0.68rem] tracking-[0.2em] uppercase text-stone">Nothing was scheduled on this day</p>
+                </div>
+
+                <!-- The wall -->
+                <div id="wallBlock" class="mt-12">
+                    <div class="flex items-center gap-3">
+                        <span class="font-mono text-[0.62rem] tracking-[0.24em] uppercase text-stone shrink-0">Last 14 days</span>
+                        <span class="h-px flex-1 bg-ink/15"></span>
+                    </div>
+                    <div id="wall" class="wall mt-4"></div>
+                    <div class="flex items-center gap-4 mt-3 font-mono text-[0.58rem] tracking-[0.14em] uppercase text-faint">
+                        <span class="inline-flex items-center gap-1.5"><i class="wall-key wall-none"></i> missed</span>
+                        <span class="inline-flex items-center gap-1.5"><i class="wall-key wall-part"></i> partly</span>
+                        <span class="inline-flex items-center gap-1.5"><i class="wall-key wall-full"></i> all taken</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------------- MEDICATIONS ---------------- -->
+            <section id="tab-shelf" class="tabpanel mt-6" role="tabpanel" aria-labelledby="tabbtn-shelf" style="--acc: #d4451f;">
+
+                <div class="flex items-center gap-3">
+                    <span class="font-mono text-[0.62rem] tracking-[0.24em] uppercase text-clay shrink-0">The shelf</span>
+                    <span class="h-px flex-1 bg-ink/15"></span>
+                    <span id="shelfCount" class="font-mono text-[0.62rem] tracking-[0.14em] uppercase text-stone tabular-nums shrink-0"></span>
+                </div>
+
+                <div id="shelfList" class="mt-1"></div>
+
+                <div id="shelfEmpty" class="hidden text-center py-12">
+                    <p class="text-sm text-stone max-w-[38ch] mx-auto">The shelf is empty. Add the first medication below.</p>
+                </div>
+
+                <button type="button" id="addBtn"
+                    class="press w-full mt-6 font-mono font-bold text-[0.72rem] uppercase tracking-[0.14em] bg-ink text-paper rounded-[3px] px-6 py-4">
+                    <i class="fa-solid fa-plus mr-2" aria-hidden="true"></i>Add medication
+                </button>
+
+                <!-- Add / edit form. Inline rather than a modal: it is the only
+                     thing on this tab, so there is nothing to protect focus from. -->
+                <form id="medForm" class="hidden mt-6 pt-6 border-t-2 border-ink" novalidate>
+                    <h2 id="formTitle" class="font-display font-extrabold uppercase tracking-tight text-2xl">New medication</h2>
+
+                    <label for="fName" class="block font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mt-6 mb-2">Name</label>
+                    <input id="fName" name="name" type="text" maxlength="100" autocomplete="off" enterkeyhint="done"
+                        placeholder="Magnesium" aria-describedby="eName" class="field w-full">
+                    <p id="eName" class="err" hidden></p>
+
+                    <span class="block font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mt-5 mb-2" id="lForm">Form</span>
+                    <div id="fForm" class="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="lForm"></div>
+                    <p id="eForm" class="err" hidden></p>
+
+                    <span class="block font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mt-5 mb-2" id="lDoses">Times a day</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" id="dosesDown" aria-label="One fewer dose a day"
+                            class="step w-12 h-12 grid place-items-center border border-hairline rounded-[3px] text-lg">&minus;</button>
+                        <output id="dosesOut" for="dosesDown dosesUp" aria-live="polite"
+                            class="font-display font-extrabold text-3xl tabular-nums w-12 text-center">1</output>
+                        <button type="button" id="dosesUp" aria-label="One more dose a day"
+                            class="step w-12 h-12 grid place-items-center border border-hairline rounded-[3px] text-lg">+</button>
+                        <span id="dosesHint" class="font-mono text-[0.66rem] text-stone">Once a day</span>
+                    </div>
+                    <p id="eDoses" class="err" hidden></p>
+
+                    <div class="grid grid-cols-2 gap-3 mt-5">
+                        <div>
+                            <label for="fStart" class="block font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-2">Starts</label>
+                            <input id="fStart" name="starts_on" type="text" inputmode="numeric" maxlength="10"
+                                autocomplete="off" placeholder="dd.mm.yyyy" aria-describedby="eStart" class="field w-full">
+                            <p id="eStart" class="err" hidden></p>
+                        </div>
+                        <div>
+                            <label for="fEnd" class="block font-mono text-[0.62rem] tracking-[0.2em] uppercase text-stone mb-2">Ends</label>
+                            <input id="fEnd" name="ends_on" type="text" inputmode="numeric" maxlength="10"
+                                autocomplete="off" placeholder="dd.mm.yyyy" aria-describedby="eEnd" class="field w-full">
+                            <p id="eEnd" class="err" hidden></p>
+                        </div>
+                    </div>
+                    <p class="font-mono text-[0.62rem] text-faint mt-2">Both optional. An end date takes it off the list on its own.</p>
+
+                    <div class="flex flex-wrap gap-2 mt-7">
+                        <button type="submit" id="saveBtn"
+                            class="press font-mono font-bold text-[0.72rem] uppercase tracking-[0.14em] bg-clay text-paper rounded-[3px] px-7 py-3.5">Save</button>
+                        <button type="button" id="cancelBtn"
+                            class="ghost font-mono font-bold text-[0.68rem] uppercase tracking-[0.14em] rounded-[3px] px-5 py-3.5">Cancel</button>
+                        <button type="button" id="endBtn" hidden
+                            class="ghost ml-auto font-mono font-bold text-[0.68rem] uppercase tracking-[0.14em] rounded-[3px] px-5 py-3.5">End today</button>
+                        <button type="button" id="deleteBtn" hidden
+                            class="ghost ghost-danger font-mono font-bold text-[0.68rem] uppercase tracking-[0.14em] rounded-[3px] px-5 py-3.5">Delete</button>
+                    </div>
+                </form>
+            </section>
+
+        </div>
+
+        <!-- Status line. Not a toast: it sits at the foot, out of the way of
+             the notches, and says what went wrong and what to do about it. -->
+        <p id="status" class="status font-mono text-[0.68rem]" role="status" aria-live="polite"></p>
+    </div>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
