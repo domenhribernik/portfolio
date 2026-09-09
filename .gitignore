@@ -20,3 +20,8 @@ __pycache__/
 # Server-side binaries uploaded by hand (a static ffmpeg for the vrata
 # snapshot); far too big to version, and host specific
 /app/bin/
+
+# Vendored Claude Code skills and agent definitions. Kept on disk, out of git:
+# they are ~6MB across three drifted copies and every Grep/Glob swept them.
+/.agents/
+/.claude/

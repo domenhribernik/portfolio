@@ -16,7 +16,12 @@ test('todayIso reads the local day, not the UTC one', () => {
     // streak every morning, so the local getters are load-bearing.
     const earlyMorning = new Date(2026, 8, 9, 1, 30, 0);
     assert.equal(todayIso(earlyMorning), '2026-09-09');
-    assert.notEqual(todayIso(earlyMorning), earlyMorning.toISOString().slice(0, 10));
+    // The UTC-slicing bug can only be *seen* where the two days differ, and on a
+    // UTC runner (which is what CI is) they never do. Asserting it unguarded made
+    // this test pass on a CET laptop and fail the deploy.
+    if (earlyMorning.getTimezoneOffset() !== 0) {
+        assert.notEqual(todayIso(earlyMorning), earlyMorning.toISOString().slice(0, 10));
+    }
 });
 
 test('todayIso pads single-digit months and days', () => {

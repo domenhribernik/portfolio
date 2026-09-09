@@ -85,23 +85,15 @@ Views written before this convention (e.g. `homepage`, `about`, `tarok`) still u
 
 ### Frontend: Component System
 
-Reusable web components live in [components/](components/), imported as ES modules via `<script type="module">`. When a feature needs several files, group them under `components/<feature>/` rather than flat at the root.
+Reusable web components live in [components/](components/), imported as ES modules via
+`<script type="module">`. When a feature needs several files, group them under
+`components/<feature>/` rather than flat at the root.
+[components/project-data.js](components/project-data.js) is the **central data registry**
+for all portfolio projects; add new projects there.
 
-- [gallery.js](components/gallery.js): image gallery/carousel
-- [main-navbar.js](components/main-navbar.js): site-wide navigation bar
-- [project-card.js](components/project-card.js): project display card
-- [project-data.js](components/project-data.js): **central data registry** for all portfolio projects; add new projects here. Same-site links in `links` are written relative to the **site root** (e.g. `views/music`), so a page rendering them from a subdirectory must pass its site prefix
-- [project-links.js](components/project-links.js): DOM-free link helpers. `resolveLink(href, site)` applies that prefix and leaves external URLs alone; `primaryLink()` / `secondaryLinks()` / `opensNewTab()` encode the shared **visitSite > readMore > code > demo** priority
-- [projects-grid.js](components/projects-grid.js): `<projects-grid category="...">`, one `<project-card>` per matching registry entry, newest first. Used by `views/about`
-- [projects-index/](components/projects-index/): `<projects-index>`, the homepage projects section. Deliberately does **not** print the whole registry: professional entries as a ruled band, then the hand-ranked `FEATURED` key list from `projects-index/logic.js`. Styles in [views/homepage/kinetic.css](views/homepage/kinetic.css)
-- [rocks/](components/rocks/): `rock-builder.js` (shared Three.js geometry builder) and `rocks-showcase.js`. The editor at `views/rocks` imports the builder so both stay in sync
-- [auth-gate.js](components/auth-gate.js): login-wall *behavior*, not markup. `gatedFetch()` classifies a gated endpoint's 401/403; `loginUrl()` builds the `../account/?redirect=...` link. Each view keeps its own gate markup and styling
-- [back-link.js](components/back-link.js): plain (non-module) script upgrading a view's back arrow (`<a id="back-link">`) to real history-back. It walks the view's **own screens** first (a hash route like tells' `#/t/x` or beseda's `#topic/x` is a screen), then the same-origin page the visitor arrived from, and only then falls through to the `href`. Load it **before** the view's own script tag
-- [site-footer.js](components/site-footer.js): `<site-footer>`, the one footer every page ends on. Self-styled, since most views never load `base-style.css`; `theme="dark"` on a dark ground
-
-`<projects-grid>` and `<project-card>` take the same `site` attribute as `main-navbar` (the about page passes `site="../../"`; the homepage omits it).
-
-**Third-party embeds.** Include [google-analytics.js](components/google-analytics.js) and [gtranslate.js](components/gtranslate.js) on new public views, as plain `<script>` tags before `</body>`. Do **NOT** add [tawk-chat.js](components/tawk-chat.js) to any new view; existing views keep it until asked. Gotcha: the navbar's language dropdown is **not** self-contained, `main-navbar.js` renders only the picker shell with an empty `.gtranslate_wrapper` and `gtranslate.js` injects the actual links. Omit it and the dropdown renders but does nothing.
+What each component is for, the `site` prefix convention, and the third-party embed
+gotchas (including the navbar language dropdown that silently does nothing without
+`gtranslate.js`) are in [components/CLAUDE.md](components/CLAUDE.md).
 
 ### Frontend: Page Chrome (applies to every view)
 
@@ -131,53 +123,26 @@ Views written before this convention still use native date fields (`views/iliana
 
 ### Backend (PHP and Python)
 
-- [app/config/](app/config/): database access and other configuration (`database.php`, `dev-mode.php`, `auth.php`)
-- [app/models/](app/models/): SQL / data storage definitions, one `<name>-model.sql` per feature. Run-once data scripts (backfills, tile seeds, one-off migrations) go in [app/models/seeds/](app/models/seeds/) instead, so the schema files stay easy to scan
-- [app/controllers/](app/controllers/): CRUD operations for the database
-- [app/services/](app/services/): higher-level functions composing controllers
-- [app/proxys/](app/proxys/): external API proxies (hiding API keys) and small endpoints
-- [app/cache/](app/cache/): cached proxy and script responses
-- [app/data/](app/data/): static JSON. **Gitignored** (server-side data only), so any JSON a feature needs in version control must live in its view folder instead (e.g. `views/nebo/stars.json`)
-- [app/admin/](app/admin/): internal HTML admin tools; not linked from the public site
-- [app/scripts/](app/scripts/): standalone cron/CLI scripts
-- [app/vendor/](app/vendor/): Composer dependencies (phpdotenv)
+PHP for API proxying and database CRUD, plus a few standalone Python scripts (scheduled
+data jobs and Telegram alerts). The directory map, the XAMPP `exec()` gotcha, and the
+full auth model are in [app/CLAUDE.md](app/CLAUDE.md).
 
-All media and data files live in [assets/](assets/).
-
-When developing locally without XAMPP running, requests through PHP proxies/services will fail.
-
-**XAMPP `exec()` gotcha:** XAMPP's Apache exports `LD_LIBRARY_PATH=/opt/lampp/lib`, whose bundled (ancient) libstdc++ breaks system binaries launched from PHP (`ffmpeg` fails with `CXXABI` / `GLIBCXX` errors). Any `exec()` of a system tool must strip it: `exec('env -u LD_LIBRARY_PATH ...')`. Precedent: `music-controller.php`.
+All media and data files live in [assets/](assets/). `app/data/` is **gitignored**
+(server-side only), so any JSON a feature needs in version control must live in its view
+folder instead (e.g. `views/nebo/stars.json`). When developing locally without XAMPP
+running, requests through PHP proxies/services will fail.
 
 ### Authentication and Permissions
 
-Global user accounts with Google Sign-In as the primary login (GSI ID token verified server-side in [app/services/google-auth-service.php](app/services/google-auth-service.php)) plus an optional backup username/password set after the first Google login. Sessions are DB-backed: an opaque token in an httpOnly `portfolio_sid` cookie, stored only as a SHA-256 hash in `sessions` (30 days, sliding). Schema: [app/models/auth-model.sql](app/models/auth-model.sql) (`users`, `sessions`, `projects`, `user_project_roles`, `password_resets`, `login_attempts`). The admin account self-bootstraps: a Google login matching `ADMIN_EMAIL` in `.env` gets `is_admin = 1`.
+Global user accounts with Google Sign-In as the primary login, plus DB-backed sessions in
+an httpOnly `portfolio_sid` cookie. [app/config/auth.php](app/config/auth.php) is the
+**single shared auth include**, exposing `Auth::requireLogin()`, `Auth::requireAdmin()`
+and `Auth::requireProjectRole($key, $role)`. Do NOT copy-paste auth checks the way other
+controller helpers are copied, a drifted copy is a security bug.
 
-[app/config/auth.php](app/config/auth.php) is the **single shared auth include**. Do NOT copy-paste auth checks the way other controller helpers are copied, a drifted copy is a security bug. Gates, each denying with a JSON 401/403 and exiting:
-
-```php
-Auth::requireLogin();
-Auth::requireAdmin();
-Auth::requireProjectRole($key, $role);   // site admins implicitly pass all project checks
-```
-
-**Wiring a view in:** register the project (from the admin dashboard, or a seed `INSERT` into `projects`), then gate the controller with two lines, `require_once __DIR__ . '/../config/auth.php';` and the gate call. Role names are free-form per project (`editor`, `viewer`, `player`).
-
-**Four backend shapes**, pick by audience:
-
-| Shape | Reads | Writes | Reference |
-|---|---|---|---|
-| Public catalog, role-gated writes | public | `requireProjectRole` | `images-controller.php` |
-| Read-only demo + per-user rows | public (viewer's own, else the owner's as a demo) | `requireLogin()` scoped `AND user_id = ?` | `plants-controller.php` ([views/botaniq](views/botaniq/)) |
-| Public catalog + login-gated own rows | public, listing everyone's rows | `requireLogin()` scoped `AND user_id = ?` | `recipes-controller.php` |
-| Private audience | `requireProjectRole` | `requireProjectRole` | `stocks-controller.php` |
-
-The demo shape's helpers are duplicated per controller (`showcaseUserId()` = first active admin, `shelfUserId()` = viewer or showcase); every write query carries `AND user_id = ?`. Other users of it: `sourdough-controller.php`, `jeger-controller.php`, `workout-controller.php`. When a feature needs per-user visibility of *individual rows*, layer a `<feature>_<resource>_access` ACL table on top of the project gate; that pattern is documented in [views/admin/CLAUDE.md](views/admin/CLAUDE.md).
-
-**Soft delete** (`deleted_at DATETIME NULL`, every read filtering `deleted_at IS NULL`) is the convention where analytics history must survive deletion. Precedent: `workout-controller.php`.
-
-On the frontend, a whole-page-gated view turns a 401/403 into a "please sign in" / "no access yet" state via `gatedFetch()`. A demo-shaped view instead loads data for everyone, shows a sign-in button plus a read-only banner when the payload says `demo: true`, and greys its action controls.
-
-**Gotchas:** cookie-authed controllers must NOT send `Access-Control-Allow-Origin: *` (invalid with credentials and dangerous; all consumers are same-origin). Auth/admin responses send `Cache-Control: no-store`. The session cookie's `Secure` flag comes from `!$DEV_MODE`, so prod must be https. Password resets are admin-driven only (the dashboard generates a one-time link, delivered manually); there is no email sending anywhere.
+Which gate a controller gets depends on its audience. The four backend shapes, how to
+wire a new view in, the soft-delete convention and the cookie/CORS gotchas are all in
+[app/CLAUDE.md](app/CLAUDE.md).
 
 ### SEO and Discoverability
 
