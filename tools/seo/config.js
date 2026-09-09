@@ -33,6 +33,10 @@ export const EXTRA_PUBLIC_PAGES = [
     'views/dnd',
     'views/jeger',
     'views/on-this-day',
+    //? The legal pair. Crawlable on purpose: a privacy policy nobody can find
+    //? is not a privacy policy.
+    'views/privacy',
+    'views/terms',
 ];
 
 //? Views excluded from the production upload in .github/workflows/deploy.yml.

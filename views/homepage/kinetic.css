@@ -883,6 +883,24 @@
     color: var(--clay-dk);
 }
 
+/* What happens to a message after you send it, said where you send it. */
+.colophon__fine {
+    margin-top: 0.9rem;
+    max-width: 46ch;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--faint);
+}
+
+.colophon__fine a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.colophon__fine a:hover {
+    color: var(--clay);
+}
+
 /* Ruled index line: location, education, socials */
 .colophon__index {
     position: relative;

@@ -232,6 +232,43 @@ document.getElementById('cred-form').addEventListener('submit', async (e) => {
 });
 
 // ------------------------------------------------------------------
+//  Data rights
+// ------------------------------------------------------------------
+
+document.getElementById('delete-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setMsg('delete-msg', '');
+
+    const confirmField = document.getElementById('delete-confirm');
+    const typed = confirmField.value.trim();
+
+    //? Checked here as well as on the server, so a typo costs a message rather
+    //? than a round trip that reads like the account survived on a technicality.
+    if (!typed) {
+        setMsg('delete-msg', 'Type your email address to confirm.');
+        return;
+    }
+
+    //? The last stop before something irreversible. The typed address is
+    //? already the deliberate act; this is just the moment to notice.
+    if (!window.confirm('Delete your account and everything in it? This cannot be undone.')) {
+        return;
+    }
+
+    try {
+        await apiFetch({ action: 'delete-account' }, {
+            method: 'POST',
+            body: { confirm: typed },
+        });
+        //? The account no longer exists, so there is nothing to render. Send
+        //? them to the homepage rather than to a signed-out account screen.
+        window.location.href = '../../';
+    } catch (err) {
+        setMsg('delete-msg', err.message);
+    }
+});
+
+// ------------------------------------------------------------------
 //  Sessions
 // ------------------------------------------------------------------
 

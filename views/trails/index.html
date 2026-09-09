@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="../../components/consent/consent.js"></script>
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -135,6 +136,14 @@
         <p class="empty is-hidden" id="historyEmpty">
             <span class="empty__mark" aria-hidden="true">∅</span>
             No flights recorded yet. Open <a href="#record">Record</a> before takeoff, press start, and leave the screen awake.
+        </p>
+        <!-- A flight track is location history, the most personal thing this
+             site holds. The cockpit header has no room for a legal link, so it
+             says so here, where the tracks themselves are listed. -->
+        <p class="sheet__fine">
+            Flights stay on this device unless you are signed in, in which case they sync
+            to your account and nobody else can read them.
+            <a href="../privacy/">What is stored</a>.
         </p>
     </div>
 </section>

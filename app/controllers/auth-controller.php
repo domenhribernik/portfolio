@@ -18,6 +18,56 @@ const RATE_WINDOW_MINUTES = 15;
 // Verified against on unknown identifiers so response timing does not reveal whether an account exists.
 const DUMMY_HASH = '$2y$10$rcXYOPqsXA82.LrT87b55OepL5d3VweQgkBZUE37rHaseG20KQOJC';
 
+/**
+ * Every table holding rows that belong to one account, and the column that
+ * says so. This is the GDPR Article 15 and 20 answer: `?action=export` walks
+ * exactly this list.
+ *
+ * Deletion does NOT walk it. Each of these tables declares
+ * `REFERENCES users(id) ON DELETE CASCADE` (or SET NULL, for rows that are
+ * shared content and only need un-linking), so removing the users row removes
+ * the rest atomically and cannot miss a table this list forgot. Keeping
+ * deletion on the foreign keys rather than on a hand-written list is what
+ * stops the two drifting apart.
+ *
+ * ADDING A FEATURE with a per-user table: add it here so the export stays
+ * complete, and give it the cascading foreign key so deletion stays complete.
+ * tests/auth-privacy.test.php checks both halves against the live schema.
+ *
+ * Names here are literals and never come from a request, which is what makes
+ * them safe to interpolate into the queries below.
+ */
+const USER_DATA_TABLES = [
+    'beseda_activity'      => 'user_id',
+    'battleship_players'   => 'user_id',
+    'battleship_records'   => 'user_id',
+    'dashboard_folders'    => 'user_id',
+    'dashboard_user_apps'  => 'user_id',
+    'jeger_checklists'     => 'user_id',
+    'list_collection_access' => 'user_id',
+    'plants'               => 'user_id',
+    'recipes'              => 'user_id',
+    'recipe_ratings'       => 'user_id',
+    'sourdough_breads'     => 'user_id',
+    'sourdough_starter'    => 'user_id',
+    'stocks_alerts'        => 'user_id',
+    'stocks_transactions'  => 'user_id',
+    'trails_flights'       => 'user_id',
+    'trails_shares'        => 'user_id',
+    'user_project_roles'   => 'user_id',
+    'workouts'             => 'user_id',
+    'workout_exercises'    => 'user_id',
+    'workout_sessions'     => 'user_id',
+    'workout_session_sets' => 'user_id',
+];
+
+/**
+ * Columns never included in an export. These are credentials, not personal
+ * data: handing someone a copy of their own session token hashes tells them
+ * nothing about themselves and puts secrets in a file they will email around.
+ */
+const EXPORT_HIDDEN_COLUMNS = ['token_hash', 'password_hash'];
+
 $method   = $_SERVER['REQUEST_METHOD'];
 $action   = $_GET['action'] ?? null;
 $resource = $_GET['resource'] ?? null;
@@ -73,6 +123,13 @@ try {
         case 'reset-password':
             requirePost($method);
             resetPassword();
+            break;
+        case 'export':
+            exportOwnData();
+            break;
+        case 'delete-account':
+            requirePost($method);
+            deleteOwnAccount();
             break;
         default:
             sendError('Unknown action', 400);
@@ -346,6 +403,94 @@ function revokeOwnSession(int $id): void
 // ------------------------------------------------------------------
 //  Rate limiting
 // ------------------------------------------------------------------
+
+/**
+ * GDPR Article 15 and 20: everything held against this account, as JSON.
+ *
+ * Served as a download rather than an API response because the point is to
+ * hand the person a file, not to feed a UI.
+ */
+function exportOwnData(): void
+{
+    $user = Auth::requireLogin();
+    $userId = (int) $user['id'];
+    $read = Database::read();
+
+    $export = [
+        'exported_at' => gmdate('c'),
+        'account'     => $user,
+        'sessions'    => [],
+        'data'        => [],
+    ];
+
+    //? Sessions are shown so a person can see where they are signed in, minus
+    //? the hashes that would let someone reuse them.
+    $stmt = $read->prepare(
+        'SELECT id, ip_address, user_agent, created_at, last_seen_at, expires_at, revoked_at
+           FROM sessions WHERE user_id = ? ORDER BY created_at'
+    );
+    $stmt->execute([$userId]);
+    $export['sessions'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach (USER_DATA_TABLES as $table => $column) {
+        try {
+            //? Literals from the const above, never request input.
+            $stmt = $read->prepare("SELECT * FROM `$table` WHERE `$column` = ?");
+            $stmt->execute([$userId]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            //? A table this deployment never installed. Skip it rather than
+            //? failing the whole export over a feature the user never used.
+            continue;
+        }
+        if (!$rows) {
+            continue;
+        }
+        foreach ($rows as $i => $row) {
+            foreach (EXPORT_HIDDEN_COLUMNS as $hidden) {
+                unset($rows[$i][$hidden]);
+            }
+        }
+        $export['data'][$table] = $rows;
+    }
+
+    header('Content-Type: application/json; charset=utf-8');
+    header('Content-Disposition: attachment; filename="my-data-' . gmdate('Y-m-d') . '.json"');
+    echo json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+/**
+ * GDPR Article 17: delete the account and everything hanging off it.
+ *
+ * Real deletion, not a flag. The foreign keys do the work (see
+ * USER_DATA_TABLES), which is why this is one statement: a soft delete would
+ * leave workout and flight rows sitting in the table with the person's data
+ * still in them, and `deleted_at` is not erasure.
+ *
+ * The caller must post their own email address as confirmation, so a stray
+ * request or a CSRF attempt cannot wipe an account by accident.
+ */
+function deleteOwnAccount(): void
+{
+    $user = Auth::requireLogin();
+    Auth::assertSameOrigin();
+
+    $body = jsonBody();
+    $confirm = trim((string) ($body['confirm'] ?? ''));
+    if (strcasecmp($confirm, (string) $user['email']) !== 0) {
+        sendError('Type your email address to confirm deletion', 400);
+    }
+
+    $userId = (int) $user['id'];
+
+    //? Sessions cascade with the row, but the cookie in the browser does not.
+    Auth::logout();
+
+    Database::write()->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);
+
+    sendJson(['message' => 'Account and all of its data deleted']);
+}
 
 function isRateLimited(string $identifier, string $ip): bool
 {

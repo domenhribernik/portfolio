@@ -80,6 +80,16 @@ export const SHARE_EXTRAS = {
         icon: 'fas fa-calendar-day',
         gradient: 'linear-gradient(45deg, #1c1a17 0%, #2f5b53 100%)',
     },
+    //? The legal pair earns a card for the same reason it is in the sitemap:
+    //? it has to be findable. Both share the quietest gradient on the list.
+    'views/privacy': {
+        icon: 'fas fa-shield-halved',
+        gradient: 'linear-gradient(45deg, #6b6256 0%, #a49a8a 100%)',
+    },
+    'views/terms': {
+        icon: 'fas fa-scale-balanced',
+        gradient: 'linear-gradient(45deg, #6b6256 0%, #a49a8a 100%)',
+    },
 };
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };

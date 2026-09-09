@@ -546,6 +546,29 @@ h1 i, h2 i { color: var(--rose); }
   color: var(--sage);
 }
 
+/* Default link blue is unreadable on the night ground. */
+.form-fine a {
+  color: var(--cream);
+  text-decoration: underline;
+}
+
+.form-fine a:hover { color: var(--rose); }
+
+/* Sits directly above the price tiers. Ruled rather than boxed: it has to be
+   read before the numbers, not skipped as a banner. */
+.demo-note {
+  max-width: 46rem;
+  margin: 0 0 2rem;
+  padding: 0.9rem 0 0 1rem;
+  border-left: 2px solid var(--gold);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--sage);
+}
+
+.demo-note strong { color: var(--cream); }
+.demo-note a { color: inherit; text-decoration: underline; }
+
 .form-status {
   margin: 0.9rem 0 0;
   font-size: 0.9rem;
@@ -581,22 +604,15 @@ h1 i, h2 i { color: var(--rose); }
    Footer
    ========================================================================== */
 
-.foot {
-  margin-top: clamp(3rem, 9vh, 5.5rem);
-  padding: 1.4rem clamp(1.25rem, 4vw, 2.5rem) calc(1.6rem + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--hairline);
-  font-family: 'Fragment Mono', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  color: var(--sage);
-}
+/* The page ends on <site-footer theme="dark"> like every other, so the
+   bespoke .foot colophon that used to live here is gone. Its one useful link
+   (the free flower stall) already appears ten times in the page above. The
+   component brings its own spacing; only the notch inset is added back. */
 
-.foot a {
-  color: var(--cream);
-  text-decoration: none;
+site-footer {
+  display: block;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-
-.foot a:hover { color: var(--rose); }
 
 /* ==========================================================================
    Phones

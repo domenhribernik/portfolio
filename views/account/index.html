@@ -7,11 +7,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Account · Domen Hribernik</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../components/editorial/theme.js"></script>
     <script>editorialTheme({ fonts: { display: ['Fraunces', 'serif'] } });</script>
@@ -133,6 +129,46 @@
                 <h2 class="section-title">Active sessions</h2>
                 <p class="text-stone text-sm mb-6">Every device currently signed in with your account.</p>
                 <ul id="session-list" class="space-y-3"></ul>
+            </div>
+
+            <!-- GDPR articles 15, 17 and 20 as buttons rather than as an email
+                 address. The policy points here. -->
+            <div class="card p-8">
+                <h2 class="section-title">Your data</h2>
+                <p class="text-stone text-sm mb-6">
+                    Everything this site holds about you, in your hands. What each tool stores and
+                    why is set out in the <a href="../privacy/" class="underline">privacy policy</a>.
+                </p>
+
+                <div class="mb-8">
+                    <h3 class="font-semibold mb-1">Download a copy</h3>
+                    <p class="text-stone text-sm mb-4">
+                        A JSON file with your account details and every row saved against it: workouts,
+                        flights, plants, recipes, practice history, the lot.
+                    </p>
+                    <a href="../../app/controllers/auth-controller.php?action=export" class="btn-clay inline-block"
+                        download>Download my data</a>
+                </div>
+
+                <div class="pt-6 border-t border-hairline">
+                    <h3 class="font-semibold mb-1">Delete this account</h3>
+                    <p class="text-stone text-sm mb-4">
+                        This erases the account and everything listed above, permanently and
+                        immediately. It is not a hidden flag and there is no undo, so download your
+                        data first if you want to keep it.
+                    </p>
+                    <form id="delete-form" class="space-y-4">
+                        <div>
+                            <label for="delete-confirm" class="field-label">
+                                Type your email address to confirm
+                            </label>
+                            <input type="email" id="delete-confirm" autocomplete="off" class="field-input"
+                                placeholder="you@example.com">
+                        </div>
+                        <p id="delete-msg" class="hidden font-mono text-xs"></p>
+                        <button type="submit" class="btn-danger">Delete my account for good</button>
+                    </form>
+                </div>
             </div>
         </section>
 

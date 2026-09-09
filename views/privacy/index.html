@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="../../components/consent/consent.js"></script>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy and Cookies | Domen Hribernik</title>
+    <meta name="description"
+        content="What this site stores, why, for how long, and how to get it back or have it deleted. Plain English, written for a site that mostly stores nothing.">
+    <link rel="canonical" href="https://domenhribernik.com/views/privacy/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Privacy and Cookies">
+    <meta property="og:description"
+        content="What this site stores, why, for how long, and how to get it back or have it deleted.">
+    <meta property="og:url" content="https://domenhribernik.com/views/privacy/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../components/editorial/theme.js"></script>
+    <link rel="stylesheet" href="../../base-style.css">
+    <link rel="stylesheet" href="../../components/editorial/theme.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="editorial bg-paper text-ink font-sans antialiased" id="top">
+    <main-navbar site="../../"></main-navbar>
+
+    <main class="legal">
+        <header class="legal__head">
+            <h1 class="font-display text-4xl md:text-5xl font-bold tracking-tight">Privacy and cookies</h1>
+            <p class="legal__dateline font-mono">Version 1 &middot; 9 September 2026</p>
+            <p class="legal__lede">
+                This is a personal site. Most of it stores nothing about you at all: the games, the
+                maps and the toys run entirely in your browser. Where something is stored, this page
+                says what, why, for how long, and how to get rid of it.
+            </p>
+        </header>
+
+        <nav class="legal__toc" aria-label="On this page">
+            <a href="#who">Who is responsible</a>
+            <a href="#what">What is collected</a>
+            <a href="#cookies">Cookies</a>
+            <a href="#others">Who else sees it</a>
+            <a href="#rights">Your rights</a>
+            <a href="#contact">Contact</a>
+        </nav>
+
+        <section id="who" class="legal__section">
+            <h2>Who is responsible</h2>
+            <p>
+                This site is run by Domen Hribernik as a private individual in Slovenia, not as a
+                registered business. For the purposes of the GDPR I am the data controller. There is
+                no data protection officer, because a site this size is nowhere near needing one.
+            </p>
+            <p>
+                Written questions, requests and complaints all go to
+                <a href="mailto:contact@domenhribernik.com">contact@domenhribernik.com</a>.
+            </p>
+        </section>
+
+        <section id="what" class="legal__section">
+            <h2>What is collected, and why</h2>
+            <p>
+                One entry per thing the site actually does. If a feature is not listed here, it does
+                not send anything to the server.
+            </p>
+
+            <h3>An account, if you make one</h3>
+            <p>
+                Signing in is optional and only needed for the tools that save your own work.
+                Sign-in goes through Google, which tells me your Google account identifier, your
+                email address, your display name and the URL of your profile picture. I store those
+                so the account exists and so your saved work comes back to you.
+            </p>
+            <p>
+                <strong>Legal basis:</strong> performance of a contract, in the sense that you asked
+                for an account and this is what an account is made of.
+                <strong>Kept:</strong> until you delete the account, which you can do yourself from
+                the <a href="../account/">account page</a>.
+            </p>
+
+            <h3>Sign-in sessions and failed sign-ins</h3>
+            <p>
+                While you are signed in, the server keeps a session row holding your IP address and
+                browser user agent. Failed sign-in attempts are recorded the same way. This is how
+                the site tells your session apart from someone else's, and how it slows down anyone
+                trying passwords in bulk.
+            </p>
+            <p>
+                <strong>Legal basis:</strong> legitimate interest in keeping accounts from being
+                broken into. <strong>Kept:</strong> 30 days, then deleted automatically.
+            </p>
+
+            <h3>The contact form</h3>
+            <p>
+                Sending me a message stores the name, email address and message you typed. It also
+                stores your browser user agent and a one way hash of your IP address, salted and
+                rotated daily, which lets me spot a flood of spam without keeping anyone's actual
+                IP address. The message is pushed to me over Telegram so I see it, and it stays in
+                the site's database so I can find it again.
+            </p>
+            <p>
+                <strong>Legal basis:</strong> legitimate interest in answering people who write to
+                me. <strong>Kept:</strong> 12 months.
+            </p>
+
+            <h3>The Everbloom waitlist and the quote form</h3>
+            <p>
+                The Everbloom shop is a design exercise, not a real shop, and nothing on it is for
+                sale. If you join its waitlist it stores your email address, which option you picked
+                and any note you left, so I can send you one message if the idea ever becomes real.
+                The pricing page's quote form stores the contact details and project notes you enter
+                so I can reply with a quote. Both also store a hashed IP and user agent, and both
+                notify me over Telegram.
+            </p>
+            <p>
+                <strong>Legal basis:</strong> your consent, given by submitting the form.
+                <strong>Kept:</strong> waitlist entries until the idea is abandoned or you ask to be
+                removed, quote requests for 12 months.
+            </p>
+
+            <h3>Things you save in the signed-in tools</h3>
+            <p>
+                The workout log, the flight tracker, the plant and recipe tools and the vocabulary
+                trainer save what you put into them against your account. The flight tracker in
+                particular holds GPS traces, which are location data about you. Nobody else can read
+                any of it, and it is included in the export and the deletion described below.
+            </p>
+            <p>
+                <strong>Legal basis:</strong> performance of a contract.
+                <strong>Kept:</strong> until you delete the item or the account.
+            </p>
+
+            <h3>Files you upload</h3>
+            <p>
+                Photos and audio you upload are stored on the server. Photos have their EXIF
+                metadata stripped on upload, so the camera details and any GPS coordinates baked
+                into the file are discarded before it is saved.
+            </p>
+
+            <h3>Bouquets you share</h3>
+            <p>
+                Sharing a bouquet from the flowers page writes the bouquet and your note to a file
+                with a random link. Anyone holding the link can read it, which is the point, so do
+                not put anything private in the note. These are deleted automatically after seven
+                days.
+            </p>
+
+            <h3>Server logs</h3>
+            <p>
+                The web server keeps ordinary access logs containing IP addresses, timestamps and
+                requested URLs, as essentially every web server does. They are used for debugging
+                and for spotting attacks.
+                <strong>Legal basis:</strong> legitimate interest in keeping the site running.
+            </p>
+
+            <h3>Analytics, only if you agree</h3>
+            <p>
+                If you accept analytics, Google Analytics records which pages you visit and roughly
+                where in the world you are. It does not run at all unless you say yes, and you can
+                change your mind at any time in the box below.
+                <strong>Legal basis:</strong> your consent.
+            </p>
+        </section>
+
+        <section id="cookies" class="legal__section">
+            <h2>Cookies and local storage</h2>
+            <p>
+                One cookie is necessary and is set whether you like it or not, because without it
+                signing in cannot work. Everything else waits for you to agree.
+            </p>
+
+            <div class="legal__tablewrap">
+                <table class="legal__table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Set by</th>
+                            <th scope="col">Purpose</th>
+                            <th scope="col">Lifetime</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-mono">portfolio_sid</td>
+                            <td>This site</td>
+                            <td>Keeps you signed in. Strictly necessary, so it needs no consent. It
+                                is only set once you sign in, and it cannot be read by JavaScript.</td>
+                            <td>30 days</td>
+                        </tr>
+                        <tr>
+                            <td class="font-mono">_ga, _ga_*</td>
+                            <td>Google Analytics</td>
+                            <td>Counts visits and tells repeat visits apart. Only set if you accept
+                                analytics.</td>
+                            <td>Up to 2 years</td>
+                        </tr>
+                        <tr>
+                            <td class="font-mono">googtrans</td>
+                            <td>GTranslate</td>
+                            <td>Remembers the language you picked. Only set once you actually use
+                                the language menu, and the widget is not loaded before that.</td>
+                            <td>Session</td>
+                        </tr>
+                        <tr>
+                            <td class="font-mono">__tawkuuid and similar</td>
+                            <td>Tawk.to</td>
+                            <td>Runs the chat bubble on a few pages. Only loaded if you accept chat.</td>
+                            <td>Up to 6 months</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Local storage is not the same thing</h3>
+            <p>
+                Most of the games and tools keep their state in your browser's local storage: the
+                puzzle you are halfway through, a draft, which tab you had open. That never leaves
+                your device and I cannot see it. Clearing your browser data clears it. The one
+                exception is the vocabulary trainer, which merges your local practice history into
+                your account when you sign in, so it survives a new device.
+            </p>
+
+            <h3 id="settings">Your current choices</h3>
+            <div class="legal__consent" data-consent-panel>
+                <p class="legal__consent-state" data-consent-state>Checking your choices.</p>
+                <button type="button" class="legal__btn" data-consent-open>Change cookie settings</button>
+            </div>
+        </section>
+
+        <section id="others" class="legal__section">
+            <h2>Who else sees your data</h2>
+            <p>
+                I do not sell anything to anyone, and there is no advertising on this site. These
+                are the only third parties involved:
+            </p>
+            <ul class="legal__list">
+                <li>
+                    <strong>Hetzner</strong>, in Germany, hosts the site and its database. Everything
+                    described above physically sits on their servers, inside the EU.
+                </li>
+                <li>
+                    <strong>Telegram</strong> delivers the alert that tells me a contact message or
+                    waitlist signup has arrived. The content of that alert includes what you typed
+                    into the form, so Telegram handles it in transit.
+                </li>
+                <li>
+                    <strong>Google</strong> verifies your identity when you sign in with a Google
+                    account, and runs Analytics if you have accepted it.
+                </li>
+                <li>
+                    <strong>Tawk.to</strong> runs the chat widget on the home, about and thesis
+                    pages, if you have accepted chat. What you type into the chat goes to them.
+                </li>
+            </ul>
+            <h3>Content delivery networks</h3>
+            <p>
+                Some pages load code libraries from public CDNs (Cloudflare's cdnjs, jsDelivr,
+                unpkg and the Tailwind CDN). Loading a file from those exposes your IP address to
+                them, as loading any file from any server does. Webfonts used to work this way too
+                and no longer do: every font on this site is served from this domain, so your
+                browser never contacts Google to draw the text.
+            </p>
+            <h3>The IP Atlas page</h3>
+            <p>
+                <a href="../ip/">One page on this site</a> is a tool for looking up IP addresses.
+                When you press the button to look up your own, your browser queries a set of public
+                geolocation services directly, so those services see your address. Nothing is sent
+                until you press it and nothing is stored here. The map tiles on that page come from
+                CARTO.
+            </p>
+            <h3>Transfers outside the EU</h3>
+            <p>
+                Google and Tawk.to are United States companies and Telegram operates outside the
+                EU. Where data reaches them it leaves the EEA. Google is certified under the
+                EU to US Data Privacy Framework. The amount of data involved is small and, for
+                analytics and chat, only happens if you agreed to it.
+            </p>
+        </section>
+
+        <section id="rights" class="legal__section">
+            <h2>Your rights</h2>
+            <p>Under the GDPR you can ask me to:</p>
+            <ul class="legal__list">
+                <li>tell you what I hold about you, and give you a copy of it,</li>
+                <li>correct anything that is wrong,</li>
+                <li>delete it,</li>
+                <li>hand it over in a machine readable file, or send it somewhere else,</li>
+                <li>stop or limit a particular use of it,</li>
+                <li>and withdraw a consent you gave earlier, which is as easy as giving it.</li>
+            </ul>
+            <p>
+                For an account, the first, fourth and third of those are buttons rather than
+                letters: the <a href="../account/">account page</a> will export everything held
+                against your account as a JSON file, and will delete the account and its contents
+                for good. Deletion there is real deletion, not a hidden flag.
+            </p>
+            <p>
+                For anything else, write to
+                <a href="mailto:contact@domenhribernik.com">contact@domenhribernik.com</a> and I
+                will deal with it within a month. There is no charge.
+            </p>
+            <p>
+                If you think I have handled your data badly, you can complain to the Slovenian
+                supervisory authority, the Information Commissioner
+                (<span lang="sl">Informacijski pooblaščenec</span>),
+                <a href="https://www.ip-rs.si/" rel="noopener" target="_blank">www.ip-rs.si</a>.
+                You are welcome to raise it with me first, but you do not have to.
+            </p>
+        </section>
+
+        <section id="contact" class="legal__section">
+            <h2>Changes and contact</h2>
+            <p>
+                If this policy changes in a way that affects what you agreed to, the version number
+                at the top goes up and the cookie question is asked again. Small corrections happen
+                without ceremony.
+            </p>
+            <p>
+                Domen Hribernik, Slovenia.
+                <a href="mailto:contact@domenhribernik.com">contact@domenhribernik.com</a>.
+                See also the <a href="../terms/">terms of use</a>.
+            </p>
+        </section>
+    </main>
+
+    <site-footer></site-footer>
+
+    <script type="module" src="../../components/main-navbar.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="../../components/gtranslate.js"></script>
+</body>
+
+</html>

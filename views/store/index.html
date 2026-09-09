@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="../../components/consent/consent.js"></script>
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,10 +28,8 @@
     }
     </script>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Same font URL as the flowers builder, so the two share one cache entry. -->
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Albert+Sans:wght@300;400;500;600&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
     <!-- No Tailwind CDN here, same reasoning as views/flowers/share: this page
          must open fast cold, and the flowers stylesheets already ARE the
          design system (skins, scene atmosphere, grain, reveal keyframes). -->
@@ -135,6 +134,15 @@
         <section class="band" id="pricing">
             <p class="kicker">the price list</p>
             <h2>Cheaper than a vase. <i>Outlives the garden.</i></h2>
+            <!-- Prices with no checkout behind them are an invitation to treat at
+                 best and a misleading offer at worst. Say plainly which it is,
+                 next to the numbers rather than in the terms page. -->
+            <p class="demo-note">
+                <strong>Nothing here is for sale yet.</strong> Everbloom is a design
+                exercise built on top of <a href="../flowers/">the free flower stall</a>.
+                There is no checkout, no payment is ever taken, and these prices show what
+                it might cost if it is ever built for real.
+            </p>
             <div class="tiers">
                 <article class="tier">
                     <h3>The Stall</h3>
@@ -246,7 +254,9 @@
                     <input id="jf-website" name="website" type="text" tabindex="-1" autocomplete="off">
                 </div>
                 <button class="btn btn-solid" type="submit" id="jf-submit">Reserve my spot</button>
-                <p class="form-fine">One email when the shop opens. No newsletter, no drip, no nonsense.</p>
+                <p class="form-fine">One email when the shop opens. No newsletter, no drip, no nonsense.
+                Your address is stored until then, or until you ask me to drop it.
+                <a href="../privacy/">What happens to it</a>.</p>
                 <p class="form-status" id="jf-status" hidden></p>
             </form>
             <div class="joined" id="joined" hidden>
@@ -258,11 +268,9 @@
 
     </main>
 
-    <footer class="foot">
-        <p>Grown in the same garden as <a href="../flowers/">Paper Flowers</a>.
-        Tended by <a href="../../">Domen Hribernik</a>.</p>
-    </footer>
+    <site-footer theme="dark"></site-footer>
 
     <script type="module" src="script.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
 </body>
 </html>

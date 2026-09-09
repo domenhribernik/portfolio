@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="../../components/consent/consent.js"></script>
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,9 +35,7 @@
     <link rel="stylesheet" href="../../base-style.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Big+Shoulders+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
     tailwind.config = {
@@ -165,6 +164,8 @@
         </section>
     </main>
 
+    <site-footer theme="dark"></site-footer>
+
     <!-- WORKOUT EDITOR MODAL -->
     <div id="workout-modal" class="modal fixed inset-0 z-50 items-start justify-center overflow-y-auto bg-iron/80 backdrop-blur-sm p-4 md:p-8">
         <div class="w-full max-w-2xl bg-plate border border-seam my-4">
@@ -253,5 +254,6 @@
 
     <script src="../../components/back-link.js"></script>
     <script type="module" src="script.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
 </body>
 </html>

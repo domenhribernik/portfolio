@@ -498,6 +498,37 @@ body.editorial .gtranslate_wrapper .nturl.is-active {
     padding: 2rem 0;
 }
 
+/* The homepage's footer rides inside the book's contact leaf, so it cannot
+   use <site-footer>. This is that component's legal line, restated. */
+.footer__legal {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.9rem;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+}
+
+.footer__legal a,
+.footer__legal button {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    opacity: 0.85;
+}
+
+.footer__legal button {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.footer__legal a:hover,
+.footer__legal button:hover { opacity: 1; }
+
 /* Responsive Design */
 
 @media (max-width: 768px) {

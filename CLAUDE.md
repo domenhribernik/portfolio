@@ -103,8 +103,12 @@ precedents are in [DESIGN.md](DESIGN.md); the short version:
 1. **No decorative micro-copy in a header.** An eyebrow, ear or kicker prints only if it
    carries a count, date, state or section name. `Plate No. 4 · Network Cartography` and
    `Price: free` inform nobody and cost the most on a phone. Never add one unasked.
-2. **End on `<site-footer>` and nothing else.** One line, the copyright. A licence credit
-   or privacy note goes in the content beside what it describes, not in a colophon.
+2. **End on `<site-footer>` and nothing else.** The copyright, plus the legal line
+   (Privacy / Terms / Cookie settings) the component renders for you. That line is the one
+   deliberate exception, because GDPR requires the policy to be reachable from every page;
+   it is not licence to add anything else. A licence credit or a method note still goes in
+   the content beside what it describes, not in a colophon. `tests/legal.test.mjs` fails if
+   a crawlable page has no route to the policy.
 3. **The back arrow returns to the previous screen, not always the homepage.** Load
    `back-link.js`, which makes the `href` a fallback rather than the behaviour.
 
@@ -189,8 +193,28 @@ Per-suite detail and the remaining conventions are in [tests/CLAUDE.md](tests/CL
 
 Loaded via CDN, no local install needed:
 - FontAwesome (icons)
-- Google Fonts
 - Devicons (tech stack icons)
+
+**Webfonts are self-hosted, never hot-linked.** Link `assets/fonts/fonts.css` (site-root
+relative to the page's depth); do not add a `fonts.googleapis.com` `<link>` or `@import`.
+Hot-linking hands every visitor's IP to Google before they have consented to anything,
+which is the arrangement LG München I ruled against in 2022. To add a face, put its
+Google Fonts URL in `SOURCES` in [tools/fonts/fetch.mjs](tools/fonts/fetch.mjs) and re-run
+it; `fonts.css` is generated, so never hand-edit it. `tests/legal.test.mjs` fails on a
+hot-link.
+
+## Legal and Consent
+
+Two public pages carry the legal text: [views/privacy](views/privacy/) (privacy and the
+cookie table) and [views/terms](views/terms/) (terms plus the provider notice). Both are
+hand-written prose, both are linked from `<site-footer>`, and both are in the sitemap.
+
+**Analytics and chat must never load unconsented.** `components/consent/consent.js` owns
+the decision and the banner; `google-analytics.js` and `tawk-chat.js` register against it
+and do nothing if it is absent, so a page that forgets the consent tag fails closed. On a
+new public view, load consent.js as a classic script **immediately before**
+google-analytics.js. When a view starts storing something new about a person, add it to
+the privacy page's list rather than leaving it undocumented.
 
 ## Writing Style
 

@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="../../components/consent/consent.js"></script>
     <script src="https://domenhribernik.com/components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,9 +24,7 @@
          nothing. Same reason there is no navbar and no shared component here. -->
     <link rel="icon" type="image/x-icon" href="https://domenhribernik.com/assets/favicon.ico" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- No Tailwind CDN. A share link is opened cold, on a phone, on whatever
@@ -91,13 +90,10 @@
         </section>
     </main>
 
-    <footer class="foot">
-        <p class="foot__rule" aria-hidden="true"></p>
-        <p class="foot__line">Put share. in front of any url on this site</p>
-        <p class="foot__addr" id="foot-addr"></p>
-    </footer>
+    <site-footer></site-footer>
 
     <script type="module" src="script.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
 </body>
 
 </html>

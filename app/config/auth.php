@@ -191,6 +191,8 @@ class Auth
             ->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?')
             ->execute([$userId]);
 
+        self::pruneDeadSessions();
+
         self::setSessionCookie($token, time() + self::SESSION_LIFETIME_DAYS * 86400);
         // Make the fresh session visible to currentUser() within this same
         // request (the Set-Cookie header only reaches $_COOKIE next request).
@@ -220,6 +222,25 @@ class Auth
         Database::write()
             ->prepare('UPDATE sessions SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL')
             ->execute([$userId]);
+    }
+
+    /**
+     * Drops session rows that can no longer authenticate anyone.
+     *
+     * A session row holds a raw IP address and user agent, so an expired one
+     * is personal data being kept for no reason. resolve() already refuses to
+     * honour them; this is what stops them accumulating. Called on login,
+     * which is the only moment a new row appears, so the table cannot grow
+     * without also being swept. login_attempts prunes itself the same way in
+     * auth-controller.php.
+     */
+    private static function pruneDeadSessions(): void
+    {
+        Database::write()->exec(
+            'DELETE FROM sessions
+              WHERE expires_at < NOW() - INTERVAL 1 DAY
+                 OR revoked_at < NOW() - INTERVAL 1 DAY'
+        );
     }
 
     // ------------------------------------------------------------------

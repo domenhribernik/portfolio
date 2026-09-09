@@ -37,7 +37,12 @@ Only the ones carrying a rule you could not guess from the file itself:
   same-origin page the visitor arrived from, and only then falls through to the `href`.
   Load it **before** the view's own script tag
 - [site-footer.js](site-footer.js): `<site-footer>`, the one footer every page ends on.
-  Self-styled, since most views never load `base-style.css`; `theme="dark"` on a dark ground
+  Self-styled, since most views never load `base-style.css`; `theme="dark"` on a dark
+  ground. Renders the copyright **and** the legal line (Privacy / Terms / Cookie
+  settings), whose hrefs resolve against `import.meta.url` so the same element works at
+  any page depth
+- [consent/consent.js](consent/consent.js): the cookie banner and `window.portfolioConsent`.
+  Classic script, loaded before the trackers it gates. See "Third-party embeds" below
 
 [gallery.js](gallery.js), [main-navbar.js](main-navbar.js) and
 [project-card.js](project-card.js) do what their names say.
@@ -45,12 +50,32 @@ Only the ones carrying a rule you could not guess from the file itself:
 ## Third-party embeds
 
 Include [google-analytics.js](google-analytics.js) and [gtranslate.js](gtranslate.js) on
-new public views, as plain `<script>` tags before `</body>`. Do **NOT** add
-[tawk-chat.js](tawk-chat.js) to any new view; existing views keep it until asked.
+new public views. Do **NOT** add [tawk-chat.js](tawk-chat.js) to any new view; existing
+views keep it until asked.
+
+**Analytics and chat are consent-gated.** [consent/consent.js](consent/consent.js) holds
+the decision, renders the banner and exposes `window.portfolioConsent`. Both trackers
+register a purpose against it and load nothing until it is granted, so:
+
+```html
+<script src="../../components/consent/consent.js"></script>   <!-- must come first -->
+<script src="../../components/google-analytics.js"></script>
+```
+
+Both are classic scripts, so document order is execution order. A tracker with no
+consent.js in front of it **silently does nothing** rather than tracking unconsented,
+which is the safe failure but an easy one to miss; `tests/legal.test.mjs` asserts the
+pairing and the order. The banner only appears where a purpose was actually declared, so
+a page with neither tracker shows nothing.
 
 **Gotcha:** the navbar's language dropdown is **not** self-contained.
 `main-navbar.js` renders only the picker shell with an empty `.gtranslate_wrapper`, and
 `gtranslate.js` injects the actual links. Omit it and the dropdown renders but does nothing.
+Since translation is a service the visitor asks for, `gtranslate.js` needs no consent
+toggle, but it now fetches the widget on **first interaction** with the picker (or
+immediately if a `googtrans` cookie shows a language was already chosen) rather than on
+page load. The navbar's MutationObserver picks the links up whenever they arrive, so
+arriving late is fine.
 
 ## Editorial theme
 

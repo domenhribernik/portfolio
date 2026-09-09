@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="../../components/consent/consent.js"></script>
     <script src="../../components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,9 +32,7 @@
     }
     </script>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Albert+Sans:wght@300;400;500;600&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -134,7 +133,7 @@
                     class="font-mono text-[0.68rem] tracking-[0.25em] uppercase px-6 py-2.5 rounded-full bg-rose text-night border border-rose hover:bg-cream hover:border-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                     <span>copy link</span>
                 </button>
-                <span class="font-mono text-[0.6rem] tracking-[0.18em] uppercase text-sage/60">the link blooms for 7 days</span>
+                <span class="font-mono text-[0.6rem] tracking-[0.18em] uppercase text-sage/60">anyone with the link can read the note &middot; it blooms for 7 days</span>
             </div>
         </div>
     </section>
@@ -366,5 +365,7 @@ ring(12, (i, angle) =&gt; {
     <script src="../../components/back-link.js"></script>
     <script type="module" src="script.js"></script>
     <script src="../../components/gtranslate.js"></script>
+    <site-footer theme="dark"></site-footer>
+    <script type="module" src="../../components/site-footer.js"></script>
 </body>
 </html>

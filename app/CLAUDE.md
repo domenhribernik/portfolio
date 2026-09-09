@@ -73,7 +73,25 @@ is documented in [views/admin/CLAUDE.md](../views/admin/CLAUDE.md).
 
 **Soft delete** (`deleted_at DATETIME NULL`, every read filtering `deleted_at IS NULL`) is
 the convention where analytics history must survive deletion. Precedent:
-`workout-controller.php`.
+`workout-controller.php`. Note it is **not** erasure: `?action=delete-account` below has to
+remove the row itself.
+
+**Data rights (GDPR articles 15, 17, 20).** `auth-controller.php` serves
+`?action=export` (GET, the signed-in user's rows as a JSON download) and
+`?action=delete-account` (POST, confirmed by typing your own email address).
+
+Two halves that must both be kept up to date when a feature gains a per-user table:
+
+- add the table to `USER_DATA_TABLES` in `auth-controller.php`, or the **export** silently
+  omits it;
+- give it `REFERENCES users(id) ON DELETE CASCADE`, or **deletion** silently leaves it
+  behind. Deletion is one `DELETE FROM users`, riding the foreign keys rather than a
+  hand-written table list, precisely so it cannot forget a table the list forgot. Use
+  `ON DELETE SET NULL` instead where the row is shared content that should survive
+  un-linked (`iliana_photos.added_by`, `list_items.added_by`).
+
+Session rows carry a raw IP and user agent, so `Auth::login()` sweeps expired and revoked
+ones (`pruneDeadSessions()`); `login_attempts` prunes itself the same way on write.
 
 On the frontend, a whole-page-gated view turns a 401/403 into a "please sign in" / "no
 access yet" state via `gatedFetch()`. A demo-shaped view instead loads data for everyone,

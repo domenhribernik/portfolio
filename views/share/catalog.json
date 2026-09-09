@@ -169,6 +169,18 @@
       "icon": "fas fa-calendar-day",
       "gradient": "linear-gradient(45deg, #1c1a17 0%, #2f5b53 100%)"
     },
+    "views/privacy": {
+      "title": "Privacy and Cookies",
+      "description": "What this site stores, why, for how long, and how to get it back or have it deleted. Plain English, written for a site that mostly stores nothing.",
+      "icon": "fas fa-shield-halved",
+      "gradient": "linear-gradient(45deg, #6b6256 0%, #a49a8a 100%)"
+    },
+    "views/terms": {
+      "title": "Terms and Legal Notice",
+      "description": "Who runs this site, what the tools and games are and are not, and the short list of rules that come with an account.",
+      "icon": "fas fa-scale-balanced",
+      "gradient": "linear-gradient(45deg, #6b6256 0%, #a49a8a 100%)"
+    },
     "views/blog/building-this-blog": {
       "title": "Building a Blog With No Build Step",
       "description": "The whole site is hand written static files, so the blog had to be too. Here is how it reads Markdown straight from a folder with no framework, no bundler, and no database.",

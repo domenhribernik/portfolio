@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="components/consent/consent.js"></script>
     <script src="components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,9 +49,7 @@
     }
     </script>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/fonts/fonts.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="components/editorial/theme.js"></script>
@@ -373,6 +372,11 @@
                                 </button>
                                 <p class="colophon__status" role="status" aria-live="polite"></p>
                             </div>
+                            <p class="colophon__fine">
+                                Your message reaches me as a Telegram alert and is kept for a year so I
+                                can find it again. Nothing else happens to it.
+                                <a href="views/privacy/">More</a>.
+                            </p>
                         </form>
 
                         <div class="reveal colophon__index" style="transition-delay:.16s">
@@ -408,6 +412,14 @@
                     <footer class="footer mt-auto">
                         <div class="container">
                             <p>Copyright &copy; Domen Hribernik <span id="currentYear"></span></p>
+                            <!-- The homepage cannot use <site-footer>: this footer rides inside
+                                 the contact leaf of the book, not at the end of the document. The
+                                 legal links are the same ones that component renders. -->
+                            <p class="footer__legal">
+                                <a href="views/privacy/">Privacy</a>
+                                <a href="views/terms/">Terms</a>
+                                <button type="button" id="cookieSettings">Cookie settings</button>
+                            </p>
                         </div>
                     </footer>
                 </div>

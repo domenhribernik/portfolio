@@ -1,6 +1,13 @@
 window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
+    //? The footer's cookie link. <site-footer> wires its own; this page hand
+    //? rolls the legal line, so it wires this one too.
+    document.getElementById('cookieSettings')?.addEventListener('click', () => {
+        if (window.portfolioConsent) window.portfolioConsent.open();
+        else window.location.href = 'views/privacy/#cookies';
+    });
+
     //? Scroll reveal (gate hidden state on JS so content stays visible if this script never runs)
     document.body.classList.add('reveals-on');
 
