@@ -19,6 +19,7 @@ import path from 'node:path';
 //? Every css2 URL the site used before the fonts were brought in-house.
 const SOURCES = [
     "https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Martian+Mono:wght@400..700&display=swap",
+    "https://fonts.googleapis.com/css2?family=Bevan&family=Barlow+Condensed:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;700&display=swap",
     "https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Big+Shoulders+Text:wght@400;500;600;700&display=swap",
     "https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&family=Special+Elite&display=swap",
     "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Sans:ital,wght@0,300..600;1,400&family=Space+Mono:wght@400;700&display=swap",

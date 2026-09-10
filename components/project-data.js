@@ -89,6 +89,15 @@ export const projects = {
     },
     iconClass: "fas fa-music",
   },
+  peal: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #223c35 0%, #ff6a1f 100%)",
+    title: "Peal",
+    description: "A nine character string of place notation generates sixty rows of six bells, none of them repeated, and lands back exactly where it started. Hear it rung on bells built from the partials a founder actually tunes, watch one bell's line cut through the rows, then take a rope and find out that a bell is three hundred milliseconds wide and you are eighty of them late.",
+    links: { visitSite: "views/peal" },
+    iconClass: "fas fa-bell",
+  },
+
   bearing: {
     category: "passion",
     gradient: "linear-gradient(45deg, #272052 0%, #ff6a2b 100%)",

@@ -19,6 +19,12 @@
       "icon": "fas fa-music",
       "gradient": "linear-gradient(45deg, #667eea 0%, #56ccf2 100%)"
     },
+    "views/peal": {
+      "title": "Peal",
+      "description": "A nine character string of place notation generates sixty rows of six bells, none of them repeated, and lands back exactly where it started.",
+      "icon": "fas fa-bell",
+      "gradient": "linear-gradient(45deg, #223c35 0%, #ff6a1f 100%)"
+    },
     "views/bearing": {
       "title": "Bearing",
       "description": "A co-op game for two, because every other game here is one of you beating the other.",

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/consent/consent.js"></script>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Peal | A Tower Of Bells You Can Ring</title>
+    <meta name="description" content="English change ringing in the browser. A short string of place notation generates hundreds of rows that come home exactly to rounds, the bells are built from the partials a tuner actually cuts, and you can take a rope and be scored on your striking in milliseconds.">
+    <link rel="canonical" href="https://domenhribernik.com/views/peal/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Peal">
+    <meta property="og:description" content="English change ringing in the browser. A short string of place notation generates hundreds of rows that come home exactly to rounds, the bells are built from the partials a tuner actually cuts, and you can take a rope and be scored on your striking in milliseconds.">
+    <meta property="og:url" content="https://domenhribernik.com/views/peal/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#2f5148">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Peal",
+      "url": "https://domenhribernik.com/views/peal/",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web browser",
+      "isAccessibleForFree": true,
+      "inLanguage": ["en"],
+      "author": { "@type": "Person", "name": "Domen Hribernik", "url": "https://domenhribernik.com/" },
+      "description": "A working ring of bells in the browser. Place notation is parsed into changes and ground out into a plain course, each bell is synthesised from the hum, prime, tierce, quint and nominal partials that a bell founder tunes, and a visitor can take one rope and have their striking measured in milliseconds against where each blow belonged."
+    }
+    </script>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico">
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="exit" id="back-link" href="../../">
+    <span class="exit__arrow" aria-hidden="true">&#8592;</span>
+    <span class="exit__word">Exit</span>
+</a>
+
+<main class="sheet">
+    <div class="sheet__rule" aria-hidden="true"></div>
+
+    <!-- The bell in section. Redraws to whichever bell just struck. -->
+    <section class="plate plate--bell">
+        <div class="plate__head">
+            <span class="plate__no">1</span>
+            <h2 class="plate__title" id="bellTitle">Treble</h2>
+            <span class="plate__meta">section &#183; five tuned partials</span>
+        </div>
+
+        <div class="bell" id="bellStage">
+            <svg class="bell__draw" id="bellSvg" viewBox="0 0 262 380" role="img" aria-labelledby="bellSvgTitle">
+                <title id="bellSvgTitle">A tower bell drawn in half section, hung on its headstock with the wheel behind it, its five tuned partials leadered off to the right</title>
+
+                <defs>
+                    <!-- A cut face on a drawing is hatched, never filled. -->
+                    <pattern id="cutFace" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                        <line class="bell__hatchline" x1="0" y1="0" x2="0" y2="6" />
+                    </pattern>
+                    <clipPath id="cutHalf"><rect x="0" y="0" width="100" height="380" /></clipPath>
+                </defs>
+
+                <!-- Only the quadrant of the wheel that clears the bell is drawn. -->
+                <g class="bell__wheel">
+                    <path d="M4,53 A96,96 0 0 0 100,149" />
+                    <path d="M12,53 A88,88 0 0 0 100,141" />
+                    <path class="bell__spoke" d="M100,53 L4,53 M100,53 L32,121 M100,53 L100,149" />
+                </g>
+
+                <!-- The rope leaves the wheel groove and drops out of the plate. -->
+                <path class="bell__rope" d="M8,53 L8,380" />
+                <path class="bell__sally" d="M8,248 L8,312" />
+
+                <g class="bell__stock">
+                    <rect x="50" y="46" width="100" height="14" />
+                    <circle class="bell__gudgeon" cx="44" cy="53" r="6" />
+                    <circle class="bell__gudgeon" cx="156" cy="53" r="6" />
+                </g>
+
+                <g class="bell__body" id="bellBody">
+                    <path class="bell__mask" id="bellMask" d="" />
+                    <path class="bell__hatch" id="bellHatch" clip-path="url(#cutHalf)" fill-rule="evenodd" d="" />
+                    <path class="bell__outline" id="bellOutline" d="" />
+                    <path class="bell__inner" id="bellInner" d="" />
+                    <path class="bell__axis" d="M100,64 L100,326" />
+                    <g class="bell__clapper" id="bellClapper">
+                        <path d="M100,98 L100,284" />
+                        <circle cx="100" cy="295" r="13" />
+                    </g>
+                </g>
+
+                <!-- The mouth, dimensioned the way a founder's sheet dimensions it. -->
+                <g class="bell__dim" id="bellDim"></g>
+
+                <g class="bell__leaders" id="bellLeaders"></g>
+            </svg>
+
+            <ul class="partials" id="partials"></ul>
+        </div>
+
+        <!-- The bell schedule: every bell in the ring, its note and its nominal. -->
+        <table class="schedule" id="schedule">
+            <caption>The ring</caption>
+            <thead>
+                <tr><th scope="col">Bell</th><th scope="col">Note</th><th scope="col">Nominal</th></tr>
+            </thead>
+            <tbody id="scheduleBody"></tbody>
+        </table>
+
+        <p class="plate__note">A bell is not a string. It rings seven partials at once, and the strike note you think you hear is not the loudest of them. A tuner lowers each one by cutting metal from the inside at a different height.</p>
+    </section>
+
+    <!-- The rows: a scribed column of digits with the traced lines cut through. -->
+    <section class="plate plate--rows">
+        <div class="plate__head">
+            <span class="plate__no">2</span>
+            <h2 class="plate__title">The rows</h2>
+            <span class="plate__meta" id="rowsMeta"></span>
+        </div>
+
+        <div class="rows" id="rows">
+            <div class="rows__lens" aria-hidden="true"></div>
+            <div class="rows__zero" id="rowsZero" aria-hidden="true" hidden></div>
+            <div class="rows__scroll" id="rowsScroll">
+                <svg class="rows__lines" id="rowsLines" aria-hidden="true"></svg>
+                <div class="rows__grid" id="rowsGrid"></div>
+            </div>
+            <div class="rows__rule" aria-hidden="true"></div>
+            <div class="rows__scale" id="rowsScale" aria-hidden="true" hidden></div>
+            <p class="rows__hint" id="rowsHint">The heavy line is the bell being traced and the light one is the treble. Take a rope and yours turns hot. No order of the bells comes twice until the course comes home.</p>
+        </div>
+    </section>
+
+    <!-- The tower plan: the ropes as they hang in the chamber, seen from above. -->
+    <section class="plate plate--plan">
+        <div class="plate__head">
+            <span class="plate__no">3</span>
+            <h2 class="plate__title">The chamber</h2>
+            <span class="plate__meta">plan</span>
+        </div>
+
+        <div class="plan" id="plan">
+            <svg class="plan__draw" id="planSvg" viewBox="0 0 300 300" role="group" aria-label="The ropes in the ringing chamber, seen from above"></svg>
+        </div>
+
+        <p class="plate__note" id="planNote">Take a rope and the tower stops ringing that bell. Strike it yourself, on the beat, and your blows are measured against where they belonged.</p>
+    </section>
+
+    <!-- The title block along the foot of the sheet. -->
+    <footer class="block" id="block">
+        <div class="block__fields">
+            <div class="block__cell block__cell--mark">
+                <h1 class="block__mark">Peal</h1>
+                <span class="block__sub">A tower of bells</span>
+            </div>
+
+            <div class="block__cell block__cell--method">
+                <label class="block__label" for="methodPick">Method</label>
+                <select class="pick" id="methodPick"></select>
+                <span class="block__sub" id="methodClass"></span>
+            </div>
+
+            <div class="block__cell">
+                <span class="block__label">Place notation</span>
+                <span class="block__fig block__fig--note" id="figNotation"></span>
+                <span class="block__sub" id="figStage"></span>
+            </div>
+
+            <div class="block__cell block__cell--figs">
+                <div><span class="block__label">Changes</span><span class="block__fig" id="figChanges"></span></div>
+                <div><span class="block__label">Leads</span><span class="block__fig" id="figLeads"></span></div>
+                <div><span class="block__label">Rope</span><span class="block__fig" id="figRope">tower</span></div>
+            </div>
+
+            <div class="block__cell block__cell--speed">
+                <label class="block__label" for="speed">Speed</label>
+                <input class="slide" id="speed" type="range" min="200" max="480" step="10" value="300">
+                <span class="block__sub" id="speedNote"></span>
+            </div>
+        </div>
+
+        <div class="block__cell block__cell--act">
+            <button class="cmd" id="goBtn" type="button">Look to</button>
+            <button class="ghost" id="muteBtn" type="button" aria-pressed="false">Sound on</button>
+        </div>
+
+        <!-- Fills in blow by blow once a rope has been taken. -->
+        <!-- The rope in hand. It sits in the block so it never covers a figure. -->
+        <button class="pull" id="pullBtn" type="button" hidden>
+            <span class="pull__sally" aria-hidden="true"></span>
+            <span class="pull__word">Pull</span>
+            <span class="pull__cue" id="pullCue"></span>
+        </button>
+
+        <aside class="tally" id="tally" hidden>
+            <span class="tally__label">Your striking</span>
+            <span class="tally__fig"><b id="tallyBlows">0</b><i>blows</i></span>
+            <span class="tally__fig"><b id="tallyTrue">0</b><i>true</i></span>
+            <span class="tally__fig"><b id="tallyClose">0</b><i>close</i></span>
+            <span class="tally__fig"><b id="tallyLoose">0</b><i>loose</i></span>
+            <span class="tally__fig"><b id="tallyOut">0</b><i>out</i></span>
+            <span class="tally__fig"><b id="tallyMissed">0</b><i>missed</i></span>
+            <span class="tally__fig tally__fig--drift"><b id="tallyDrift">0</b><i>ms drift</i></span>
+        </aside>
+    </footer>
+
+</main>
+
+
+<!-- What just happened, in the world's own grammar. -->
+<div class="verdict" id="verdict" hidden>
+    <div class="verdict__sheet">
+        <div class="plate__head">
+            <span class="plate__no">&#215;</span>
+            <h2 class="plate__title" id="verdictTitle">Stood</h2>
+        </div>
+        <p class="verdict__line" id="verdictLine"></p>
+        <dl class="verdict__figs" id="verdictFigs"></dl>
+        <div class="verdict__acts">
+            <button class="cmd" id="againBtn" type="button">Ring it again</button>
+            <button class="ghost" id="closeVerdict" type="button">Close</button>
+        </div>
+    </div>
+</div>
+
+<article class="reading">
+
+    <section class="read read--notation">
+        <div class="plate__head">
+            <span class="plate__no">4</span>
+            <h2 class="plate__title">How nine characters ring sixty rows</h2>
+        </div>
+
+        <div class="read__body">
+            <p>Ringing does not have a score. It has <b>place notation</b>: a string that says, for each row, which bells stand still. Everything that does not stand still swaps with the bell beside it. That is the entire rule set, and it is enough.</p>
+
+            <div class="worked" id="worked">
+                <div class="worked__step">
+                    <span class="worked__label">The string</span>
+                    <code class="worked__code">&amp;x16x16x16,12</code>
+                    <p>Plain Bob Minor, written the way a ringer writes it.</p>
+                </div>
+                <div class="worked__step">
+                    <span class="worked__label">Read it</span>
+                    <code class="worked__code">x &#183; 16 &#183; x &#183; 16 &#183; x &#183; 16</code>
+                    <p><b>x</b> is the change where nobody stands and every bell swaps. <b>16</b> means the bells in first and sixth place hold while the middle four cross.</p>
+                </div>
+                <div class="worked__step">
+                    <span class="worked__label">The ampersand</span>
+                    <code class="worked__code">x 16 x 16 x <b>16</b> x 16 x 16 x</code>
+                    <p>It means the block is a palindrome: run it out and back again without repeating the middle change. Six written changes become eleven.</p>
+                </div>
+                <div class="worked__step">
+                    <span class="worked__label">After the comma</span>
+                    <code class="worked__code">&#8230; x &#183; <b>12</b></code>
+                    <p>The lead end. One bell is held back where plain hunt would have sent it home, and that single held bell is what stops the whole thing repeating after twelve rows.</p>
+                </div>
+            </div>
+
+            <p class="read__aside">Twelve changes make a lead, five leads make a course, and the course closes on rounds with none of its sixty rows repeated. Nothing was composed. It fell out of the string.</p>
+
+            <figure class="swap" id="swapFig">
+                <figcaption>One change, applied</figcaption>
+                <div class="swap__stage" id="swapStage"></div>
+                <p class="swap__note" id="swapNote"></p>
+            </figure>
+        </div>
+    </section>
+
+    <section class="read read--library">
+        <div class="plate__head">
+            <span class="plate__no">5</span>
+            <h2 class="plate__title">The library</h2>
+            <span class="plate__meta" id="libraryMeta"></span>
+        </div>
+        <p class="read__lede">Every notation here is the real one. The test suite rings each method from rounds and refuses the file if a course does not come home true at the length it claims, so a typo fails the build rather than ringing something else under a famous name.</p>
+        <ol class="library" id="library"></ol>
+    </section>
+
+    <section class="read read--close">
+        <p class="read__close">Built with no audio files. Every note on this page is seven sine partials in the ratios a bell founder tunes to, decaying at different rates, beating against themselves because a cast bell is never quite round.</p>
+    </section>
+
+    <site-footer theme="dark"></site-footer>
+</article>
+
+<div aria-live="polite" class="sr-only" id="crier"></div>
+
+<script src="../../components/back-link.js"></script>
+<script type="module" src="../../components/site-footer.js"></script>
+<script type="module" src="script.js"></script>
+</body>
+</html>

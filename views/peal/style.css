@@ -1,0 +1,1239 @@
+/* ============================================================================
+   PEAL
+
+   A bell founder's measured drawing, scribed into the metal it describes.
+
+   Three inks and nothing else. Patina floods the sheet; every line, letterform
+   and figure is knocked out of it in warm bone; pour orange is the only hot ink
+   and it means exactly one thing, sound. A treble is told apart from a working
+   bell by line weight, the way a draughtsman does it, never by a second colour.
+
+   Nothing eases. Ringing is metrical, so every step in here is quantised to the
+   width of one bell, and the only continuous motion on the page is a rope.
+   ========================================================================== */
+
+:root {
+    /* Ink */
+    --patina: #2f5148;
+    --patina-deep: #223c35;
+    --patina-well: #1b2f2a;
+    --patina-raise: #3a6055;
+    --bone: #efe7d6;
+    --bone-2: rgba(239, 231, 214, 0.82);   /* 5.3:1 on patina */
+    --bone-3: rgba(239, 231, 214, 0.72);   /* 4.6:1 on patina, the small-label floor */
+    --bone-faint: rgba(239, 231, 214, 0.4); /* construction lines only, never type */
+    --line: rgba(239, 231, 214, 0.22);
+    --line-2: rgba(239, 231, 214, 0.13);
+    --pour: #ff6a1f;
+    --pour-lit: #ffab72;        /* the same ink lightened for small type */
+    --pour-deep: #d2440a;
+    --pour-wash: rgba(255, 106, 31, 0.14);
+    --on-pour: #1b2f2a;         /* the only ink dark enough to sit on pour */
+
+    /* Draughting weights. Everything on the sheet is one of these three. */
+    --w-hair: 0.75px;
+    --w-thin: 1px;
+    --w-thick: 2px;
+
+    --face-cast: 'Bevan', Georgia, serif;
+    --face-label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    --face-fig: 'Azeret Mono', ui-monospace, monospace;
+
+    --gap: 300ms;               /* one bell width, kept in step with the clock */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+    -webkit-text-size-adjust: 100%;
+    accent-color: var(--pour);
+    scrollbar-color: var(--patina-raise) var(--patina-deep);
+}
+
+::selection { background: var(--pour); color: var(--on-pour); }
+
+/* Azeret Mono's contextual alternates turn the x between two digits into a
+   multiplication sign, and x is a change in place notation, not arithmetic. */
+code, .block__fig, .worked__code, .method__facts code,
+.partials li, .row, .rows__lines, .lead-fig, .lead-name {
+    font-variant-ligatures: none;
+    font-feature-settings: "calt" 0;
+}
+
+body {
+    margin: 0;
+    background: var(--patina);
+    color: var(--bone);
+    font-family: var(--face-label);
+    font-size: 16px;
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+
+.sr-only {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+:focus-visible {
+    outline: var(--w-thick) solid var(--pour);
+    outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Shared drawing grammar
+   -------------------------------------------------------------------------- */
+
+.plate__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding-bottom: 0.4rem;
+    border-bottom: var(--w-thin) solid var(--line);
+}
+
+.plate__no {
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.28rem 0.42rem;
+    border: var(--w-thin) solid var(--line);
+    color: var(--bone-2);
+    flex: 0 0 auto;
+}
+
+.plate__title {
+    margin: 0;
+    font-family: var(--face-label);
+    font-weight: 600;
+    font-size: 0.94rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--bone);
+}
+
+.plate__meta {
+    margin-left: auto;
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    text-align: right;
+}
+
+/* A drawing sheet carries its schedules in the space beside the elevation. */
+.schedule {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--face-fig);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+}
+
+.schedule caption {
+    text-align: left;
+    padding-bottom: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+}
+
+.schedule th, .schedule td {
+    padding: 0.28rem 0.4rem;
+    border-top: var(--w-thin) solid var(--line);
+    font-weight: 500;
+}
+
+.schedule thead th {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    border-top-width: var(--w-thick);
+    border-top-color: var(--bone-3);
+}
+
+.schedule tbody th { color: var(--bone-2); font-weight: 500; }
+.schedule td { color: var(--bone-2); }
+.schedule td:last-child { text-align: right; }
+
+.schedule tbody tr { cursor: pointer; }
+.schedule tbody tr:hover th, .schedule tbody tr:hover td { color: var(--bone); }
+.schedule tbody tr:focus-visible { outline: var(--w-thick) solid var(--pour); outline-offset: -2px; }
+
+.schedule tr.is-traced th, .schedule tr.is-traced td { color: var(--bone); }
+.schedule tr.is-traced th { border-left: var(--w-thick) solid var(--bone); }
+.schedule tr.is-mine th, .schedule tr.is-mine td { color: var(--pour-lit); }
+.schedule tr.is-mine th { border-left: var(--w-thick) solid var(--pour); }
+
+.plate__note {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--bone-2);
+    max-width: 44ch;
+}
+
+/* --------------------------------------------------------------------------
+   The sheet
+   -------------------------------------------------------------------------- */
+
+.exit {
+    position: fixed;
+    top: 0.9rem;
+    left: 1rem;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.36rem 0.7rem;
+    border: var(--w-thin) solid var(--line);
+    background: var(--patina-deep);
+    color: var(--bone-2);
+    text-decoration: none;
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.exit:hover, .exit:focus-visible { color: var(--pour-lit); border-color: var(--pour); }
+.exit__arrow { font-size: 0.8rem; line-height: 1; }
+
+.sheet {
+    position: relative;
+    height: 100dvh;
+    min-height: 620px;
+    display: grid;
+    grid-template-columns: minmax(230px, 23%) minmax(0, 1fr) minmax(250px, 26%);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0;
+    padding: 3.5rem 1.1rem 0;
+}
+
+/* The drawing border: a ruled frame inset from the sheet edge. */
+.sheet__rule {
+    position: absolute;
+    inset: 0.55rem;
+    border: var(--w-thin) solid var(--line-2);
+    pointer-events: none;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.plate {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0 1.15rem 1.1rem;
+    min-width: 0;
+    min-height: 0;
+}
+
+.plate--bell { border-right: var(--w-thin) solid var(--line-2); }
+.plate--plan { border-left: var(--w-thin) solid var(--line-2); }
+
+/* --------------------------------------------------------------------------
+   Plate 1: the bell in section
+   -------------------------------------------------------------------------- */
+
+.bell {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bell__draw {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: 68vh;
+    overflow: visible;
+}
+
+.bell__draw path, .bell__draw circle, .bell__draw rect, .bell__draw line {
+    fill: none;
+    stroke: var(--bone);
+    vector-effect: non-scaling-stroke;
+}
+
+.bell__wheel path { stroke: var(--line); stroke-width: var(--w-hair); }
+.bell__spoke { stroke: var(--line-2); stroke-width: var(--w-hair); }
+.bell__rope { stroke: var(--bone-faint); stroke-width: var(--w-thin); }
+.bell__sally { stroke: var(--bone-2); stroke-width: 5; stroke-linecap: butt; }
+
+/* The bell is in front of its wheel, so it knocks the wheel out behind it. */
+.bell__mask { fill: var(--patina); stroke: none; }
+.bell__stock rect { stroke: var(--bone-2); stroke-width: var(--w-thin); }
+.bell__gudgeon { stroke: var(--bone-2); stroke-width: var(--w-thin); }
+.bell__outline { stroke: var(--bone); stroke-width: var(--w-thick); stroke-linejoin: round; }
+.bell__inner { stroke: var(--bone-2); stroke-width: var(--w-thin); }
+.bell__axis { stroke: var(--bone-faint); stroke-width: var(--w-hair); stroke-dasharray: 9 3 2 3; }
+.bell__clapper path { stroke: var(--bone-2); stroke-width: var(--w-thin); }
+.bell__clapper circle { stroke: var(--bone-2); stroke-width: var(--w-thin); fill: var(--patina-deep); }
+
+/* The cut face of a section drawing is hatched, never filled. */
+.bell__hatch { fill: url(#cutFace); stroke: none; }
+.bell__hatchline { stroke: var(--bone-faint); stroke-width: 0.9; }
+
+.bell__dim line { stroke: var(--bone-3); stroke-width: var(--w-hair); }
+.bell__dim path { stroke: none; fill: var(--bone-3); }
+.bell__dim text {
+    font-family: var(--face-fig);
+    font-weight: 500;
+    text-anchor: middle;
+    dominant-baseline: central;
+    stroke: none;
+}
+
+.dim-label { fill: var(--bone-3); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+.dim-fig { fill: var(--bone); font-size: 15px; }
+
+.bell__leaders path { fill: none; stroke: var(--bone-faint); stroke-width: var(--w-hair); }
+.bell__leaders circle { fill: var(--bone-2); stroke: none; }
+
+.bell__leaders text {
+    font-family: var(--face-fig);
+    font-size: 12px;
+    font-weight: 500;
+    dominant-baseline: central;
+    stroke: none;
+}
+
+.lead-name { fill: var(--bone-3); text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+.lead-fig { fill: var(--bone-2); }
+.lead-fig.is-loud { fill: var(--bone); font-weight: 700; }
+
+/* Sounding. The metal goes hot, and it cools over the bell's own hum time. */
+.bell.is-struck .bell__outline { stroke: var(--pour); }
+.bell.is-struck .bell__clapper path,
+.bell.is-struck .bell__clapper circle { stroke: var(--pour); }
+.bell.is-struck .bell__inner { stroke: var(--pour-lit); }
+
+.bell__outline, .bell__inner,
+.bell__clapper path, .bell__clapper circle {
+    transition: stroke var(--cool, 900ms) linear;
+}
+
+.bell.is-struck .bell__outline,
+.bell.is-struck .bell__inner,
+.bell.is-struck .bell__clapper path,
+.bell.is-struck .bell__clapper circle { transition-duration: 0ms; }
+
+/* One set of figures at a time: leadered onto the drawing where there is room,
+   and as a plain run of labels where there is not. */
+.partials {
+    display: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.9rem;
+}
+
+.partials li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0.22rem 0 0;
+    border-top: var(--w-thin) solid var(--line);
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    color: var(--bone-2);
+}
+
+.partials li i {
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--bone-3);
+    font-size: 0.7rem;
+}
+
+.partials li b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.partials li.is-loud { color: var(--bone); border-left-color: var(--bone-2); }
+.partials li.is-loud b { color: var(--bone); font-weight: 700; }
+
+/* --------------------------------------------------------------------------
+   Plate 2: the rows
+   -------------------------------------------------------------------------- */
+
+.rows {
+    position: relative;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    min-height: 0;
+    background: var(--patina-deep);
+    border: var(--w-thin) solid var(--line-2);
+    overflow: hidden;
+}
+
+/* The sheet is read through a lens: the sounding row sits on the rule and the
+   rest falls away above and below it. */
+.rows__lens {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom,
+        var(--patina-deep) 0%,
+        rgba(34, 60, 53, 0) 26%,
+        rgba(34, 60, 53, 0) 74%,
+        var(--patina-deep) 100%
+    );
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.rows__rule {
+    opacity: 0;
+    transition: opacity 160ms linear;
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    z-index: 4;
+    height: 0;
+    border-top: var(--w-thin) solid var(--bone-2);
+    pointer-events: none;
+    transform: translateZ(0);
+}
+
+.rows__rule::before, .rows__rule::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    width: 0; height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+}
+
+.rows__rule::before { left: 0; border-left: 6px solid var(--bone-2); }
+.rows__rule::after { right: 0; border-right: 6px solid var(--bone-2); }
+
+.rows.is-ringing .rows__rule { opacity: 1; }
+
+/* At rest the course is a printed page read from the top. Once it is ringing
+   the plate becomes a strip chart and the sounding row sits on the rule. */
+.rows:not(.is-ringing) .rows__lens {
+    background: linear-gradient(to bottom, rgba(34, 60, 53, 0) 0 62%, var(--patina-deep) 100%);
+}
+
+.rows__scroll {
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    will-change: transform;
+}
+
+.rows__grid { position: relative; }
+
+.row {
+    position: absolute;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: var(--face-fig);
+    font-weight: 500;
+    color: var(--bone-3);
+    white-space: nowrap;
+}
+
+.row b {
+    display: inline-block;
+    text-align: center;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+.row.is-lead { color: var(--bone-2); }
+.row.is-now { color: var(--bone); }
+.row b.is-traced { color: var(--bone); font-weight: 700; }
+.row b.is-mine { color: var(--pour-lit); font-weight: 700; }
+.row.is-now b.is-mine { color: var(--pour); }
+
+/* A lead end gets a hairline across the sheet, the way a printed line does. */
+.row.is-lead::after {
+    content: '';
+    position: absolute;
+    left: 8%; right: 8%;
+    bottom: -1px;
+    border-bottom: var(--w-hair) dashed var(--line-2);
+}
+
+/* Striking is measured from this rule: left of it is quick, right of it slow. */
+.rows__zero {
+    position: absolute;
+    top: 0; bottom: 0;
+    z-index: 2;
+    width: 0;
+    border-left: var(--w-hair) dashed var(--line);
+    pointer-events: none;
+}
+
+.rows__zero[hidden] { display: none; }
+
+/* The deviation tick: how far a struck blow landed from where it belonged. */
+.row .tick {
+    position: absolute;
+    top: 50%;
+    height: var(--w-thick);
+    background: var(--pour);
+    transform: translateY(-50%);
+}
+
+.row .tick--missed {
+    width: 9px !important;
+    height: 9px;
+    background: none;
+    border: var(--w-thin) solid var(--bone-2);
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.rows__lines {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.rows__lines path { fill: none; vector-effect: non-scaling-stroke; }
+.line--treble { stroke: var(--bone-3); stroke-width: var(--w-thick); }
+.line--traced { stroke: var(--bone); stroke-width: 3px; }
+.line--mine { stroke: var(--pour); stroke-width: 3px; }
+
+/* The scale the deviation bars are read against: one bell wide either side of
+   the blow, so a bar is a measurement rather than a mood. */
+.rows__scale {
+    position: absolute;
+    left: 0;
+    bottom: 2.9rem;
+    z-index: 5;
+    height: 22px;
+    border-top: var(--w-thin) solid var(--bone-3);
+}
+
+.rows__scale[hidden] { display: none; }
+
+.rows__scale span {
+    position: absolute;
+    top: 0;
+    width: 0;
+    height: 6px;
+    border-left: var(--w-thin) solid var(--bone-3);
+}
+
+.rows__scale span.is-zero { height: 11px; border-left-color: var(--bone); }
+
+.rows__scale b {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--bone-3);
+    white-space: nowrap;
+}
+
+.rows__hint {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    z-index: 5;
+    margin: 0;
+    padding: 0.55rem 0.9rem;
+    background: linear-gradient(to top, var(--patina-deep) 62%, rgba(34, 60, 53, 0));
+    font-size: 0.82rem;
+    line-height: 1.35;
+    text-align: center;
+    color: var(--bone-3);
+    transition: opacity 200ms linear;
+}
+
+.rows.is-ringing .rows__hint { opacity: 0; }
+
+/* --------------------------------------------------------------------------
+   Plate 3: the chamber
+   -------------------------------------------------------------------------- */
+
+.plan { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.plan__draw { width: 100%; height: 100%; min-height: 0; max-height: 46vh; overflow: visible; }
+
+.plan__floor { fill: none; stroke: var(--line-2); stroke-width: var(--w-hair); }
+.plan__circle { fill: none; stroke: var(--line); stroke-width: var(--w-hair); stroke-dasharray: 3 4; }
+
+.rope { cursor: pointer; }
+.rope__hit { fill: transparent; stroke: none; }
+.rope__coil { fill: none; stroke: var(--bone-2); stroke-width: var(--w-thin); }
+.rope__tail { fill: none; stroke: var(--bone-faint); stroke-width: var(--w-thin); }
+.rope__wool { fill: none; stroke: var(--bone-2); stroke-width: var(--w-thin); }
+.rope__sally { fill: var(--patina-deep); stroke: var(--bone); stroke-width: var(--w-thick); }
+.rope__err {
+    fill: var(--pour-lit);
+    font-family: var(--face-fig);
+    font-size: 12px;
+    font-weight: 500;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+}
+.rope__label {
+    fill: var(--bone-2);
+    font-family: var(--face-fig);
+    font-size: 13px;
+    font-weight: 500;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+}
+
+.rope:hover .rope__coil, .rope:focus-visible .rope__coil { stroke: var(--bone); stroke-dasharray: 3 3; }
+.rope:hover .rope__wool, .rope:focus-visible .rope__wool { stroke: var(--bone); }
+.rope:hover .rope__label, .rope:focus-visible .rope__label { fill: var(--bone); }
+.rope:focus-visible { outline: none; }
+.rope:focus-visible .rope__coil { stroke: var(--pour); }
+
+/* Sounding: the sally floods. */
+.rope.is-struck .rope__sally { fill: var(--pour); stroke: var(--pour); }
+.rope.is-struck .rope__wool { stroke: var(--on-pour); }
+.rope.is-struck .rope__label { fill: var(--on-pour); }
+.rope__sally, .rope__label { transition: fill var(--cool, 700ms) linear, stroke var(--cool, 700ms) linear; }
+.rope.is-struck .rope__sally, .rope.is-struck .rope__label { transition-duration: 0ms; }
+
+/* Taken: outline only, because a person has this rope and the tower does not. */
+.rope.is-mine .rope__sally { fill: none; stroke: var(--pour); stroke-width: var(--w-thick); }
+.rope.is-mine .rope__wool { stroke: var(--pour); }
+.rope.is-mine .rope__label { fill: var(--pour-lit); }
+.rope.is-mine .rope__coil { stroke: var(--pour); }
+.rope.is-mine.is-struck .rope__sally { fill: var(--pour); }
+.rope.is-mine.is-struck .rope__label { fill: var(--on-pour); }
+
+/* Every place this bell holds, lit at once, when its rope is picked up. */
+.rope.is-traced .rope__coil { stroke: var(--bone); stroke-width: var(--w-thick); }
+.rope.is-traced .rope__label { fill: var(--bone); }
+
+/* --------------------------------------------------------------------------
+   The title block
+   -------------------------------------------------------------------------- */
+
+.block {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    border-top: var(--w-thick) solid var(--bone-2);
+    background: var(--patina-deep);
+}
+
+/* Every field stays on the sheet at every width. Where the strip runs out of
+   room it slides sideways, the way a long title block does on a drawing board,
+   rather than dropping the figures nobody can then read. */
+.block__fields {
+    display: grid;
+    grid-template-columns: auto minmax(170px, 1.05fr) minmax(180px, 1.2fr) auto minmax(140px, 0.75fr);
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.block__cell {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.14rem;
+    padding: 0.62rem 1rem;
+    border-right: var(--w-thin) solid var(--line-2);
+    min-width: 0;
+}
+
+.block__cell:last-child { border-right: 0; }
+.block__fields > .block__cell:last-child { border-right: var(--w-thin) solid var(--line-2); }
+
+.block__label {
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+}
+
+.block__mark {
+    margin: 0;
+    font-weight: 400;
+    font-family: var(--face-cast);
+    font-size: 1.6rem;
+    line-height: 0.9;
+    letter-spacing: 0.01em;
+    color: var(--bone);
+}
+
+.block__sub {
+    font-size: 0.72rem;
+    line-height: 1.2;
+    color: var(--bone-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.block__fig {
+    font-family: var(--face-fig);
+    font-size: 1rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--bone);
+    line-height: 1.15;
+}
+
+.block__fig--note {
+    font-size: 0.84rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.block__fig.is-mine { color: var(--pour-lit); }
+.block__cell--figs { flex-direction: row; gap: 1.5rem; align-items: center; }
+.block__cell--figs > div { display: flex; flex-direction: column; gap: 0.1rem; }
+.block__cell--act { flex-direction: row; align-items: center; gap: 0.55rem; }
+
+/* Controls, rebuilt in the drawing's own vocabulary. */
+.pick {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    padding: 0.24rem 1.5rem 0.24rem 0.4rem;
+    border: var(--w-thin) solid var(--line);
+    border-radius: 0;
+    background: var(--patina) url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1 L5 5 L9 1' fill='none' stroke='%23efe7d6' stroke-width='1.2'/%3E%3C/svg%3E") no-repeat right 0.45rem center / 10px 6px;
+    color: var(--bone);
+    font-family: var(--face-label);
+    font-size: 0.98rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+}
+
+.pick:hover { border-color: var(--bone-2); }
+.pick option { background: var(--patina-deep); color: var(--bone); }
+
+.slide {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 18px;
+    background: none;
+    cursor: pointer;
+}
+
+.slide::-webkit-slider-runnable-track { height: var(--w-thick); background: var(--line); }
+.slide::-moz-range-track { height: var(--w-thick); background: var(--line); }
+
+.slide::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 4px; height: 18px;
+    margin-top: -8px;
+    border: 0; border-radius: 0;
+    background: var(--bone);
+}
+
+.slide::-moz-range-thumb {
+    width: 4px; height: 18px;
+    border: 0; border-radius: 0;
+    background: var(--bone);
+}
+
+.slide:hover::-webkit-slider-thumb { background: var(--pour); }
+.slide:hover::-moz-range-thumb { background: var(--pour); }
+
+.cmd {
+    padding: 0.6rem 1.3rem;
+    border: var(--w-thick) solid var(--bone);
+    border-radius: 0;
+    background: var(--bone);
+    color: var(--on-pour);
+    font-family: var(--face-fig);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.cmd:hover, .cmd:focus-visible { background: var(--pour); border-color: var(--pour); color: var(--on-pour); }
+.cmd[data-state="ringing"] { background: none; color: var(--bone); }
+.cmd[data-state="ringing"]:hover { background: none; border-color: var(--pour); color: var(--pour-lit); }
+
+.ghost {
+    padding: 0.52rem 0.85rem;
+    border: var(--w-thin) solid var(--line);
+    border-radius: 0;
+    background: none;
+    color: var(--bone-2);
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ghost:hover, .ghost:focus-visible { color: var(--pour-lit); border-color: var(--pour); }
+
+/* Struck through with the founder's cancel line when it cannot be used. */
+.is-cancelled { position: relative; color: var(--bone-3); pointer-events: none; }
+.is-cancelled::after {
+    content: '';
+    position: absolute;
+    left: 4%; right: 4%; top: 50%;
+    border-top: var(--w-thin) solid var(--bone-2);
+    transform: rotate(-9deg);
+}
+
+/* --------------------------------------------------------------------------
+   The striking tally, pinned to the sheet edge
+   -------------------------------------------------------------------------- */
+
+/* Once a rope is taken the title block becomes a striking readout. */
+.tally {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+    padding: 0.45rem 1rem;
+    border-top: var(--w-thin) solid var(--line);
+    background: var(--patina-well);
+}
+
+.tally[hidden] { display: none; }
+
+.tally__label {
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+}
+
+.tally__fig { display: flex; align-items: baseline; gap: 0.25rem; }
+.tally__fig b { font-family: var(--face-fig); font-size: 0.86rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tally__fig i {
+    font-style: normal;
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+}
+
+.tally__fig--drift b { color: var(--pour-lit); }
+
+/* --------------------------------------------------------------------------
+   The rope in hand
+   -------------------------------------------------------------------------- */
+
+.pull {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 0;
+    border-top: var(--w-thin) solid var(--pour);
+    border-radius: 0;
+    background: var(--patina-well);
+    color: var(--bone);
+    font-family: var(--face-fig);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.pull[hidden] { display: none; }
+
+/* The sally rises after your blow and comes back down to nothing exactly when
+   the next one is due. It is the one thing on the page that moves freely. */
+.pull__sally {
+    width: 13px;
+    height: 30px;
+    border: var(--w-thin) solid var(--pour);
+    background: linear-gradient(to bottom, var(--pour) 0 34%, transparent 34% 66%, var(--pour) 66% 100%);
+    transform: translateY(var(--sally, 0px)) translateZ(0);
+    backface-visibility: hidden;
+}
+
+.pull__cue {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--bone-3);
+    min-width: 13ch;
+    text-align: left;
+}
+
+.pull:hover, .pull:focus-visible { background: var(--patina-deep); }
+.pull.is-true .pull__cue { color: var(--bone); }
+.pull.is-out .pull__cue { color: var(--pour-lit); }
+
+/* --------------------------------------------------------------------------
+   The verdict
+   -------------------------------------------------------------------------- */
+
+.verdict {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 1.2rem;
+    background: rgba(27, 47, 42, 0.86);
+}
+
+.verdict[hidden] { display: none; }
+
+.verdict__sheet {
+    width: min(520px, 100%);
+    padding: 1.4rem 1.5rem 1.5rem;
+    border: var(--w-thin) solid var(--line);
+    background: var(--patina);
+}
+
+.verdict__line {
+    margin: 1rem 0 0;
+    font-size: 1rem;
+    line-height: 1.45;
+    color: var(--bone-2);
+}
+
+.verdict__figs {
+    margin: 1.2rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 0;
+    border-top: var(--w-thin) solid var(--line);
+    border-left: var(--w-thin) solid var(--line);
+}
+
+.verdict__figs > div {
+    padding: 0.6rem 0.7rem;
+    border-right: var(--w-thin) solid var(--line);
+    border-bottom: var(--w-thin) solid var(--line);
+}
+
+.verdict__figs dt {
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+}
+
+.verdict__figs dd {
+    margin: 0.2rem 0 0;
+    font-family: var(--face-fig);
+    font-size: 1.15rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--bone);
+}
+
+.verdict__figs dd.is-hot { color: var(--pour-lit); }
+.verdict__acts { margin-top: 1.3rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+/* --------------------------------------------------------------------------
+   The reading below the sheet
+   -------------------------------------------------------------------------- */
+
+.reading {
+    display: block;
+    border-top: var(--w-thick) solid var(--bone-2);
+    background: var(--patina);
+}
+
+.read {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 3.6rem 1.5rem 0;
+}
+
+.read__body { margin-top: 1.6rem; }
+
+.read__body > p, .read__aside, .read__lede, .read__close {
+    max-width: 62ch;
+    font-size: 1rem;
+    line-height: 1.62;
+    color: var(--bone-2);
+}
+
+.read__body b, .read__lede b { color: var(--bone); font-weight: 600; }
+.read__aside { margin-top: 2.2rem; padding-left: 1rem; border-left: var(--w-thick) solid var(--pour); }
+.read__lede { margin-top: 1.4rem; }
+
+.worked {
+    margin: 2rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    border-top: var(--w-thin) solid var(--line);
+    border-left: var(--w-thin) solid var(--line);
+}
+
+.worked__step {
+    padding: 1rem 1.05rem 1.15rem;
+    border-right: var(--w-thin) solid var(--line);
+    border-bottom: var(--w-thin) solid var(--line);
+}
+
+.worked__label {
+    display: block;
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+}
+
+.worked__code {
+    display: block;
+    margin: 0.5rem 0 0.65rem;
+    font-family: var(--face-fig);
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--bone);
+    word-break: break-all;
+}
+
+.worked__code b { color: var(--pour-lit); font-weight: 700; }
+.worked__step p { margin: 0; font-size: 0.85rem; line-height: 1.5; color: var(--bone-2); }
+.worked__step p b { color: var(--bone); font-weight: 600; }
+
+.swap { margin: 2.6rem 0 0; padding: 0; }
+
+.swap figcaption {
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+}
+
+.swap__stage {
+    margin: 0.8rem 0 0;
+    padding: 1.4rem 1rem;
+    border: var(--w-thin) solid var(--line);
+    background: var(--patina-deep);
+    overflow-x: auto;
+}
+
+.swap__note { margin: 0.8rem 0 0; font-size: 0.85rem; color: var(--bone-2); max-width: 58ch; }
+
+.swap__svg { display: block; margin: 0 auto; overflow: visible; }
+.swap__svg text {
+    font-family: var(--face-fig);
+    font-size: 15px;
+    font-weight: 500;
+    text-anchor: middle;
+    dominant-baseline: central;
+    fill: var(--bone);
+}
+
+.swap__svg .swap-hold { fill: var(--pour-lit); }
+.swap__svg .swap-arc { fill: none; stroke: var(--bone-faint); stroke-width: var(--w-thin); }
+.swap__svg .swap-stand { fill: none; stroke: var(--pour); stroke-width: var(--w-thin); stroke-dasharray: 2 3; }
+.swap__svg .swap-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    fill: var(--bone-3);
+}
+
+/* The library index */
+
+.library {
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: var(--w-thin) solid var(--line);
+}
+
+.method {
+    border-bottom: var(--w-thin) solid var(--line);
+}
+
+.method__btn {
+    display: grid;
+    grid-template-columns: 3.1rem minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.9rem;
+    width: 100%;
+    padding: 1.05rem 0.4rem 1.1rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.method__no {
+    font-family: var(--face-fig);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--bone-3);
+    padding-top: 0.18rem;
+}
+
+.method__name {
+    font-family: var(--face-cast);
+    font-size: clamp(1.15rem, 2.4vw, 1.7rem);
+    line-height: 1.05;
+    letter-spacing: 0.005em;
+    color: var(--bone);
+    display: block;
+}
+
+.method__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.1rem;
+    margin-top: 0.45rem;
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+}
+
+.method__facts code { font-family: var(--face-fig); text-transform: none; letter-spacing: 0; color: var(--bone-2); }
+.method__note { margin: 0.7rem 0 0; max-width: 66ch; font-size: 0.88rem; line-height: 1.55; color: var(--bone-2); }
+
+.method__ring {
+    align-self: center;
+    font-family: var(--face-fig);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    padding: 0.4rem 0.7rem;
+    border: var(--w-thin) solid var(--line);
+    white-space: nowrap;
+}
+
+.method__btn:hover .method__name,
+.method__btn:focus-visible .method__name { color: var(--pour-lit); }
+.method__btn:hover .method__ring,
+.method__btn:focus-visible .method__ring { color: var(--pour-lit); border-color: var(--pour); }
+.method__btn:focus-visible { outline-offset: -3px; }
+
+.method.is-loaded .method__no { color: var(--pour); }
+.method.is-loaded .method__ring { color: var(--on-pour); background: var(--pour); border-color: var(--pour); }
+
+.read--close { padding-top: 3.4rem; padding-bottom: 3.4rem; }
+.read__close { border-top: var(--w-thin) solid var(--line); padding-top: 1.4rem; font-size: 0.9rem; }
+
+/* --------------------------------------------------------------------------
+   Narrower sheets
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+    /* The strip slides instead of shedding fields. */
+    .block__fields { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: max-content; }
+    .block__cell { padding: 0.55rem 0.85rem; }
+    .block__cell--method { min-width: 170px; }
+    .block__cell--speed { min-width: 140px; }
+}
+
+@media (max-width: 900px) {
+    .sheet {
+        height: auto;
+        min-height: auto;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+        padding: 3.5rem 0.7rem 0;
+    }
+
+    .plate { padding: 1.2rem 0.9rem; }
+    .plate--rows { order: 1; border-bottom: var(--w-thin) solid var(--line-2); }
+    .plate--plan { border-left: 0; order: 2; border-bottom: var(--w-thin) solid var(--line-2); }
+    .plate--bell { border-right: 0; order: 3; }
+
+    .bell__leaders { display: none; }
+    .bell { flex-direction: column; align-items: stretch; gap: 0.8rem; flex: 0 0 auto; }
+    .bell__draw { width: 100%; height: auto; max-height: 38vh; flex: 0 0 auto; }
+    .partials { display: flex; width: 100%; flex: 0 0 auto; }
+    .plan__draw { max-height: 33vh; }
+    .rows { height: 46vh; }
+
+    .block {
+        position: sticky;
+        bottom: 0;
+        z-index: 30;
+        order: 4;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .block__cell--act { padding: 0.55rem 0.8rem; }
+    .block__cell--act .cmd { flex: 1 1 auto; text-align: center; }
+    .block__mark { font-size: 1.25rem; }
+    .read { padding-top: 2.6rem; }
+    .method__btn { grid-template-columns: 2.3rem minmax(0, 1fr); }
+    .method__ring { grid-column: 2; justify-self: start; margin-top: 0.7rem; }
+}
+
+@media (max-width: 640px) {
+    .block { grid-template-columns: minmax(0, 1fr); }
+    .block__cell--act { border-top: var(--w-thin) solid var(--line-2); }
+    .block__fields > .block__cell:last-child { border-right: 0; }
+}
+
+@media (max-width: 560px) {
+    .exit { top: 0.6rem; left: 0.6rem; }
+    .sheet { padding-top: 3rem; }
+    .rows { height: 52vh; }
+    .plan__draw { max-height: 30vh; }
+    .bell__draw { max-height: 34vh; }
+    .read { padding-left: 1.1rem; padding-right: 1.1rem; }
+    .worked { grid-template-columns: minmax(0, 1fr); }
+    .pull { left: 0.7rem; right: 0.7rem; bottom: calc(env(safe-area-inset-bottom, 0px) + 0.7rem); transform: none; justify-content: center; }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .rows__scroll { transition: none !important; }
+    .pull__sally { transform: none !important; }
+    .bell__outline, .bell__inner, .bell__clapper path, .bell__clapper circle,
+    .rope__sally, .rope__label { transition-duration: 60ms !important; }
+    .rows__hint { transition: none; }
+}

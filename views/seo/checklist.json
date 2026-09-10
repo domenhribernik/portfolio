@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-03",
+  "updated": "2026-09-10",
   "requirements": [
     {
       "id": "title",
@@ -78,6 +78,28 @@
       "notes": {
         "crawlable": "the 48 plates are fetched from data/catalog.json and drawn on device; head, h1 and the shell are static, so a crawler sees the framing but not the entries",
         "indexed": "'logical fallacies list' and 'cognitive bias list' are high volume with a lot of thin competition: worth requesting indexing early"
+      }
+    },
+    {
+      "path": "views/peal",
+      "name": "Peal",
+      "tier": "flagship",
+      "status": {
+        "title": "done",
+        "description": "done",
+        "canonical": "done",
+        "og": "done",
+        "jsonld": "done",
+        "h1": "done",
+        "crawlable": "partial",
+        "robots": "done",
+        "sitemap": "done",
+        "indexed": "todo",
+        "cwv": "unknown"
+      },
+      "notes": {
+        "crawlable": "the method library and every row are drawn on device from views/peal/methods.js, so a crawler sees the head, the h1 and the prose on place notation but not the fifteen method entries",
+        "indexed": "'change ringing' and 'place notation' are low volume and almost entirely served by club sites; a working ring in the browser has no competition on that query"
       }
     },
     {
