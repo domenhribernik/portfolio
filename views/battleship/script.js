@@ -16,6 +16,17 @@
    drive the preview, the greying out and the whole solo game, and in a room
    game battleship-controller.php recomputes every one of those answers from
    the stored row and its answer is the only one that counts.
+
+   Two things this file does own:
+
+   THE ORDER. A tap on the plot only aims. The shot leaves when the order
+   button under the rail is pressed, so a brushed thumb never fires and a
+   phone never has to guess whether a tap was a hover.
+
+   THE STAGE. The poll hands over a plot that has already changed. Every
+   report is queued and played as a sequence (reticle, wait, counter, wreck),
+   and while it plays the painted plot is held a second behind the truth.
+   choreo.js decides how far behind; this file only paints what it says.
    ============================================================ */
 
 import {
@@ -27,6 +38,10 @@ import {
     createRoomModel, applyEvents, pollDelay,
 } from './logic.js';
 import { LEVELS, chooseAction } from './bot.js';
+import {
+    tempo, landingPlan, heldCells, projectGrid, landingCells,
+    buoyReveals, readingAt, restingSide, isStaleRoom,
+} from './choreo.js';
 
 const API = '../../app/controllers/battleship-controller.php';
 const SESSION_KEY = 'battleship:session';
@@ -35,6 +50,9 @@ const LANG_KEY = 'battleship:lang';
 
 const $ = (id) => document.getElementById(id);
 const show = (el, on) => { (typeof el === 'string' ? $(el) : el).hidden = !on; };
+const wait = (ms) => (ms > 0 ? new Promise((r) => setTimeout(r, ms)) : Promise.resolve());
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const finePointer = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 // ------------------------------------------------------------------
 //  Language
@@ -163,14 +181,27 @@ let snapshot = null;        // { room, you, enemy } as the poll hands it over
 let solo = null;            // { match, seat, level, name }
 let tool = 'fire';
 let pendingDir = 'h';
+let movingKey = null;       // the hull a reberth is moving
+let aimed = null;           // the cell tapped, waiting for the order
+let firedCells = [];        // cells of an order still in the air
+let userSide = null;        // a plot tab the player chose this turn
+let lastTurnOwner = null;
+let intelStaleFrom = 0;     // readings before this index predate an enemy move
+let mySweeps = 0;
 let logLines = [];
+let logRendered = 0;
 
 // The outbox: writes leave in order, and the result is learned by polling.
 const outbox = [];
 let pumping = false;
 let pollTimer = null;
 let pollBusy = false;
+let pollWanted = false;
 let failures = 0;
+// After a move leaves, the next poll has to show a room at least this many
+// turns along, or it left the server before the move arrived. See choreo.js.
+let expectTurns = null;
+let staleSkips = 0;
 
 function saveSession() {
     if (session) localStorage.setItem(SESSION_KEY, JSON.stringify(session));
@@ -184,7 +215,7 @@ function saveSession() {
 const LETTERS = 'ABCDEFGHIJ';
 
 /** Build a 10x10 of buttons with a lettered and numbered ruler around it. */
-function buildPlot(el, onPick, onHover) {
+function buildPlot(el, onPick, onPeek) {
     el.replaceChildren();
     const corner = document.createElement('span');
     corner.className = 'ruler';
@@ -208,72 +239,165 @@ function buildPlot(el, onPick, onHover) {
             b.type = 'button';
             b.className = 'cell';
             b.dataset.cell = String(i);
-            b.addEventListener('click', () => onPick(i));
-            if (onHover) {
-                b.addEventListener('pointerenter', () => onHover(i));
-                b.addEventListener('focus', () => onHover(i));
+            b.addEventListener('click', (e) => onPick(i, e));
+            if (onPeek) {
+                // A hover preview only where there is a hover. On a touch
+                // screen a mouseover handler that changes the page is what
+                // makes the first tap a hover and the second the click.
+                b.addEventListener('mouseenter', () => { if (finePointer()) onPeek(i); });
+                b.addEventListener('focus', () => onPeek(i));
             }
             el.append(b);
         }
     }
-    if (onHover) el.addEventListener('pointerleave', () => onHover(null));
+    if (onPeek) {
+        el.addEventListener('mouseleave', () => onPeek(null));
+        el.addEventListener('focusout', (e) => { if (!el.contains(e.relatedTarget)) onPeek(null); });
+    }
+    // A counter's landing animation is one shot: strip the class when it
+    // ends so the next mark on the same cell can play it again.
+    el.addEventListener('animationend', (e) => {
+        if (e.animationName === 'splash') e.target.classList.remove('is-splash');
+        else if (e.animationName.startsWith('counter')) e.target.classList.remove('is-new');
+    });
 }
 
-const cellsOf = (el) => el.querySelectorAll('.cell');
+const cellsOf = (el) => [...el.querySelectorAll('.cell')];
+
+/** The cell buttons of each plot, cached once built. */
+const nodes = { enemy: [], own: [] };
+const plotEl = (which) => (which === 'enemy' ? $('enemyPlot') : $('ownPlot'));
 
 const MARK_CLASS = {
-    o: 'mark-miss', x: 'mark-hit', s: 'mark-sunk', d: 'mark-decoy',
+    o: 'mark-miss', x: 'mark-hit', s: 'mark-sunk', d: 'mark-decoy', D: 'mark-hit',
 };
 
 const MARK_WORD = {
-    '.': 'unfired', o: 'miss', x: 'hit', s: 'sunk', d: 'decoy',
+    '.': 'unfired', o: 'miss', x: 'hit', s: 'sunk', d: 'decoy', D: 'hit',
 };
 
-/** Paint the enemy plot from the shot record the poll handed over. */
-function paintEnemy(grid) {
-    const nodes = cellsOf($('enemyPlot'));
-    for (let i = 0; i < CELLS; i++) {
-        const b = nodes[i];
-        const mark = grid[i];
-        b.className = 'cell' + (MARK_CLASS[mark] ? ' ' + MARK_CLASS[mark] : '');
-        b.disabled = mark !== '.';
-        b.setAttribute('aria-label', `${coordName(i)}, ${MARK_WORD[mark] ?? 'unfired'}`);
+// What each plot currently shows. `shown` is the grid string as painted,
+// null until the first paint, so a plot drawn from a refresh sets nothing
+// in motion. `base` is the class string applied to each cell, so a poll that
+// changes nothing touches nothing, and the transient classes the stage adds
+// (aim, reticle, splash) survive a repaint.
+const shown = { enemy: null, own: null };
+const base = { enemy: [], own: [] };
+
+function setBase(which, i, cls, markChanged) {
+    const node = nodes[which][i];
+    const old = base[which][i];
+    if (old !== cls) {
+        if (old) node.classList.remove(...old.split(' '));
+        node.classList.add(...cls.split(' '));
+        base[which][i] = cls;
+    }
+    if (markChanged && shown[which] !== null) {
+        node.classList.remove('is-new');
+        void node.offsetWidth;
+        node.classList.add('is-new');
     }
 }
+
+const latestGrid = (which, v) => (which === 'enemy' ? v.enemy.grid : v.you.grid);
 
 /**
- * Paint your own plot: hulls, buoys, damage, and the blocks they swept.
- * `live` is true only while a tool that aims at your OWN water is selected;
- * the rest of the time these cells are a status board, not a control.
+ * Paint one plot from the view, holding back the cells in `hold` at what
+ * they already show. `live` is true only while a tool that aims at your OWN
+ * water is selected; the rest of the time your plot is a status board.
  */
-function paintOwn(el, you, live = false) {
-    const nodes = cellsOf(el);
-    const hull = new Set((you.fleet ?? []).flatMap((s) => shipCells(s)));
-    const buoys = new Set(you.decoys ?? []);
-    const lit = new Set((you.swept ?? []).flatMap((at) => blockCells(at)));
+function paintBoard(which, v, hold = new Set(), live = false) {
+    const next = latestGrid(which, v);
+    const prev = shown[which] ?? next;
+    const grid = projectGrid(prev, next, hold);
+    const you = v.you;
+    const own = which === 'own';
+
+    const hull = own ? new Set((you.fleet ?? []).flatMap((s) => shipCells(s))) : null;
+    const buoys = own ? new Set(you.decoys ?? []) : null;
+    const lit = own ? new Set((you.swept ?? []).flatMap((at) => blockCells(at))) : null;
+    const swept = new Set();
+    const readings = new Map();
+    if (!own) {
+        (you.intel ?? []).forEach((r, k) => {
+            for (const c of blockCells(r.at)) swept.add(c);
+            readings.set(r.at, { count: r.count, stale: k < intelStaleFrom });
+        });
+    }
+
     for (let i = 0; i < CELLS; i++) {
-        const b = nodes[i];
-        const mark = you.grid[i];
+        const node = nodes[which][i];
+        const mark = grid[i];
         const bits = ['cell'];
-        if (hull.has(i)) bits.push('is-hull');
-        if (buoys.has(i)) bits.push('is-buoy');
-        if (lit.has(i)) bits.push('is-lit');
+        if (own) {
+            if (hull.has(i)) bits.push('is-hull');
+            if (buoys.has(i)) bits.push('is-buoy');
+            if (lit.has(i)) bits.push('is-lit');
+        } else if (swept.has(i)) {
+            bits.push('is-swept');
+            if (readings.get(i)?.stale) bits.push('is-stale');
+        }
         if (MARK_CLASS[mark]) bits.push(MARK_CLASS[mark]);
-        if (mark === 'D') bits.push('mark-hit');
-        b.className = bits.join(' ');
-        b.disabled = !live;
-        const what = hull.has(i) ? 'your hull' : buoys.has(i) ? 'your buoy' : 'open water';
-        b.setAttribute('aria-label', `${coordName(i)}, ${what}, ${MARK_WORD[mark] ?? 'unfired'}`);
+        setBase(which, i, bits.join(' '), prev[i] !== mark && shown[which] !== null);
+
+        const reading = readings.get(i);
+        if (reading) node.dataset.reading = String(reading.count);
+        else delete node.dataset.reading;
+
+        node.disabled = own ? !live : mark !== '.';
+        const what = own ? (hull.has(i) ? 'your hull' : buoys.has(i) ? 'your buoy' : 'open water') : null;
+        node.setAttribute('aria-label', [
+            coordName(i), what, MARK_WORD[mark] ?? 'unfired',
+            reading ? `sonar ${reading.count}` : null,
+        ].filter(Boolean).join(', '));
+    }
+    shown[which] = grid;
+}
+
+/** Everything a plot remembers, forgotten. Runs when a battle screen opens. */
+function resetBoards() {
+    for (const which of ['enemy', 'own']) {
+        shown[which] = null;
+        base[which] = [];
+        for (const n of nodes[which]) {
+            n.className = 'cell';
+            delete n.dataset.reading;
+        }
+        for (const el of [$('ownLamps'), $('enemyLamps')]) delete el.dataset.painted;
+    }
+    for (const el of [$('enemyCallout'), $('ownCallout')]) el.classList.remove('is-up');
+    aimed = null;
+    firedCells = [];
+    userSide = null;
+    lastTurnOwner = null;
+    intelStaleFrom = 0;
+    mySweeps = 0;
+    tool = 'fire';
+    pendingDir = 'h';
+    movingKey = null;
+}
+
+// --- the tote board ---------------------------------------------------
+
+function buildLamps(el) {
+    el.replaceChildren();
+    for (let i = 0; i < SALVAGE_CAP; i++) {
+        const pip = document.createElement('span');
+        pip.className = 'lamp-pip';
+        pip.addEventListener('animationend', () => pip.classList.remove('is-new'));
+        el.append(pip);
     }
 }
 
-function paintLamps(el, count, cap = SALVAGE_CAP) {
-    el.replaceChildren();
-    for (let i = 0; i < cap; i++) {
-        const pip = document.createElement('span');
-        pip.className = 'lamp-pip' + (i < count ? ' is-lit' : '');
-        el.append(pip);
-    }
+/** Light the first `count` lamps. Only a lamp that changes moves. */
+function setLamps(el, count) {
+    const painted = el.dataset.painted === '1';
+    [...el.children].forEach((pip, i) => {
+        const on = i < count;
+        if (on && !pip.classList.contains('is-lit') && painted) pip.classList.add('is-new');
+        pip.classList.toggle('is-lit', on);
+    });
+    el.dataset.painted = '1';
 }
 
 // ------------------------------------------------------------------
@@ -284,6 +408,9 @@ const TOOLS = ['fire', 'sonar', 'decoy', 'barrage', 'reposition', 'depthCharge']
 
 /** Where a tool is aimed: the enemy plot, or your own. */
 const AIMS_AT_SELF = new Set(['decoy', 'reposition']);
+
+/** Tools with a direction, which the TURN button swings. */
+const DIRECTIONAL = new Set(['barrage', 'reposition']);
 
 function buildRail() {
     const rail = $('rail');
@@ -302,9 +429,13 @@ function buildRail() {
 
 function pickTool(kind) {
     const v = currentView();
-    if (!v || !isMyTurn(v)) return;
+    if (!v || !isMyTurn(v) || stage.running) return;
+    // An aimed cell survives a change of tool only if the new tool aims at
+    // the same plot; the order re-reads itself either way.
+    if (AIMS_AT_SELF.has(kind) !== AIMS_AT_SELF.has(tool)) aimed = null;
     tool = kind;
     pendingDir = 'h';
+    userSide = null;
     // Repositioning needs a hull chosen before a berth. Start on the biggest
     // one that can still run, so the tool is usable in one tap.
     if (kind === 'reposition') {
@@ -314,13 +445,12 @@ function pickTool(kind) {
         }
     }
     renderBattle();
-    renderAim(null);
-    if (window.innerWidth < 992) showSide(AIMS_AT_SELF.has(kind) ? 'own' : 'enemy');
 }
 
 function renderRail(v) {
     const mine = v.you;
     const wrecks = (mine.sunk ?? []).length;
+    const live = isMyTurn(v) && !stage.running;
     for (const b of $('rail').children) {
         const kind = b.dataset.kind;
         const cost = COST[kind] ?? 0;
@@ -332,12 +462,13 @@ function renderRail(v) {
             : locked ? t('tool.locked', { n: UNLOCK[kind] }) : String(cost);
         b.classList.toggle('is-on', tool === kind);
         b.classList.toggle('is-locked', locked);
-        b.disabled = !isMyTurn(v) || locked || broke;
+        b.setAttribute('aria-pressed', String(tool === kind));
+        b.disabled = !live || locked || broke;
     }
 }
 
-/** The footprint the selected tool would touch, previewed under the cursor. */
-function footprint(at, v) {
+/** The footprint the selected tool would touch from `at`. */
+function footprint(at) {
     if (!onPlot(at)) return [];
     switch (tool) {
         case 'fire':
@@ -348,36 +479,136 @@ function footprint(at, v) {
             return blockCells(at);
         case 'barrage':
             return barrageCells(at, pendingDir) ?? [];
-        case 'reposition': {
-            const hull = movingKey;
-            return hull ? shipCells({ key: hull, at, dir: pendingDir }) : [];
-        }
+        case 'reposition':
+            return movingKey ? shipCells({ key: movingKey, at, dir: pendingDir }) : [];
         default:
             return [];
     }
 }
 
-let movingKey = null;
-
-function renderAim(at) {
-    const v = currentView();
-    for (const el of [$('enemyPlot'), $('ownPlot')]) {
-        for (const c of cellsOf(el)) c.classList.remove('is-aimed', 'is-bad');
-    }
-    if (at === null || !v || !isMyTurn(v)) return;
-    const el = AIMS_AT_SELF.has(tool) ? $('ownPlot') : $('enemyPlot');
-    const cells = footprint(at, v);
-    const bad = cells.length === 0 || actionError(asMatch(v), mySeat(), actionFor(at, v)) !== null;
-    const nodes = cellsOf(el);
-    for (const c of cells) nodes[c]?.classList.add(bad ? 'is-bad' : 'is-aimed');
-}
-
-function actionFor(at, v) {
+function actionFor(at) {
     switch (tool) {
         case 'barrage': return { kind: 'barrage', at, dir: pendingDir };
         case 'reposition': return { kind: 'reposition', ship: movingKey, at, dir: pendingDir };
         default: return { kind: tool, at };
     }
+}
+
+// ------------------------------------------------------------------
+//  Aiming and the order
+// ------------------------------------------------------------------
+
+let peekAt = null;
+
+/** The footprint under the aim, or under the pointer while nothing is aimed. */
+function renderAim() {
+    const v = currentView();
+    for (const which of ['enemy', 'own']) {
+        for (const c of nodes[which]) c.classList.remove('is-aimed', 'is-bad', 'is-target');
+    }
+    if (!v || !isMyTurn(v) || stage.running) return;
+    const which = AIMS_AT_SELF.has(tool) ? 'own' : 'enemy';
+    if (aimed !== null) nodes[which][aimed]?.classList.add('is-target');
+    const at = peekAt ?? aimed;
+    if (at === null) return;
+    const cells = footprint(at);
+    const bad = cells.length === 0 || actionError(asMatch(v), mySeat(), actionFor(at)) !== null;
+    for (const c of cells) nodes[which][c]?.classList.add(bad ? 'is-bad' : 'is-aimed');
+}
+
+function peek(at) {
+    peekAt = at;
+    renderAim();
+}
+
+/** A tap on the plot. It aims; only the order fires. */
+function pickCell(at, e) {
+    const v = currentView();
+    if (!v || !isMyTurn(v) || stage.running) return;
+    if (at === aimed && e?.detail === 0) {
+        // Enter on the cell already aimed at. A keyboard cannot brush a
+        // button by accident, so the second press is the order.
+        commit();
+        return;
+    }
+    aimed = at;
+    renderAim();
+    renderOrder(v);
+}
+
+/** The order button reads the move back, or the reason it cannot be given. */
+function renderOrder(v) {
+    const goBtn = $('cmdGo');
+    const verb = $('cmdVerb');
+    const cost = $('cmdCost');
+    const turnBtn = $('cmdTurn');
+    const mine = isMyTurn(v);
+    const state = turnState(v);
+    goBtn.classList.remove('is-bad', 'is-theirs', 'is-incoming', 'is-inair');
+    turnBtn.hidden = !(mine && state === 'yours' && DIRECTIONAL.has(tool));
+    cost.textContent = '';
+    goBtn.disabled = true;
+
+    if (state !== 'yours') {
+        goBtn.classList.add(`is-${state}`);
+        verb.textContent = turnText(v, state);
+        return;
+    }
+    if (tool === 'reposition' && !movingKey) {
+        verb.textContent = t('battle.pickHull');
+        return;
+    }
+    if (tool !== 'fire') cost.textContent = t('battle.cost', { n: COST[tool] });
+    if (aimed === null) {
+        verb.textContent = t(AIMS_AT_SELF.has(tool) ? 'battle.pickWater' : 'battle.pickTarget');
+        return;
+    }
+    const err = actionError(asMatch(v), mySeat(), actionFor(aimed));
+    if (err !== null) {
+        goBtn.classList.add('is-bad');
+        verb.textContent = t('battle.badTarget');
+        $('railHint').textContent = t(`refuse.${err}`);
+        return;
+    }
+    verb.textContent = t(`commit.${tool}`, { at: coordName(aimed) });
+    if (tool === 'fire') cost.textContent = t('battle.free');
+    goBtn.disabled = false;
+}
+
+/** The order is given. */
+function commit() {
+    const v = currentView();
+    if (!v || !isMyTurn(v) || stage.running || aimed === null) return;
+    const action = actionFor(aimed);
+    const err = actionError(asMatch(v), mySeat(), action);
+    if (err !== null) { toast(t(`refuse.${err}`)); return; }
+    const at = aimed;
+    aimed = null;
+    peekAt = null;
+    if (AIMS_AT_SELF.has(tool)) {
+        // Nothing lands on your own water: say what was done, and where.
+        note(`<b>${t('log.you')}</b> ${t(tool === 'decoy' ? 'log.buoy' : 'log.moved')}`, true);
+    } else {
+        firedCells = footprint(at);
+        for (const c of firedCells) nodes.enemy[c].classList.add('is-fired');
+    }
+    if (tool !== 'fire') tool = 'fire';
+    if (mode === 'solo') soloAct(action);
+    else queue(action);
+    renderAim();
+}
+
+function clearFired() {
+    for (const c of firedCells) nodes.enemy[c]?.classList.remove('is-fired');
+    firedCells = [];
+}
+
+function swing() {
+    if (!DIRECTIONAL.has(tool)) return;
+    pendingDir = pendingDir === 'h' ? 'v' : 'h';
+    renderAim();
+    const v = currentView();
+    if (v) renderOrder(v);
 }
 
 // ------------------------------------------------------------------
@@ -426,35 +657,128 @@ function currentView() {
 //  Rendering a turn
 // ------------------------------------------------------------------
 
-function renderBattle() {
-    const v = currentView();
-    if (!v) return;
-    paintEnemy(v.enemy.grid);
-    paintOwn($('ownPlot'), v.you, isMyTurn(v) && AIMS_AT_SELF.has(tool));
-    paintLamps($('ownLamps'), v.you.salvage);
-    paintLamps($('enemyLamps'), v.enemy.salvage);
+/** yours | theirs | incoming | inair: what the room is doing right now. */
+function turnState(v) {
+    if (stage.state) return stage.state;
+    if (firedCells.length) return 'inair';
+    return isMyTurn(v) ? 'yours' : 'theirs';
+}
+
+function turnText(v, state) {
+    switch (state) {
+        case 'yours': return t('battle.yourTurn');
+        case 'incoming': return t('battle.incoming');
+        case 'inair': return t('battle.inAir');
+        default: return t('battle.theirTurn', { who: v.enemy.name ?? '' });
+    }
+}
+
+function renderTurn(v) {
+    const state = turnState(v);
+    $('turnBar').className = `turn-bar is-${state}`;
+    $('turnText').textContent = turnText(v, state);
+}
+
+/** The cells each plot must keep showing as they were, per queued report. */
+function holds(v) {
+    const out = { enemy: new Set(), own: new Set() };
+    if (!stage.running) return out;
+    for (const which of ['enemy', 'own']) {
+        const mine = which === 'enemy';
+        const queue = stage.queue.filter((op) => (op.seat === mySeat()) === mine);
+        const next = latestGrid(which, v);
+        out[which] = heldCells(queue, shown[which] ?? next, next, stage.landed);
+    }
+    return out;
+}
+
+function paintBoards(v) {
+    const hold = holds(v);
+    const live = isMyTurn(v) && !stage.running && AIMS_AT_SELF.has(tool);
+    // A buoy owning up is not an event, it is a mark changing under you.
+    const prevEnemy = shown.enemy ?? v.enemy.grid;
+    const reveals = buoyReveals(prevEnemy, projectGrid(prevEnemy, v.enemy.grid, hold.enemy));
+    paintBoard('enemy', v, hold.enemy);
+    paintBoard('own', v, hold.own, live);
+    for (const c of reveals) {
+        note(`<b>${t('log.them')}</b> ${t('log.buoyWas', { at: coordName(c) })}`, false);
+    }
+}
+
+/** The salvage board. Called as counters land, so the pay reads as earned. */
+function renderTote(v) {
+    setLamps($('ownLamps'), v.you.salvage);
+    setLamps($('enemyLamps'), v.enemy.salvage);
     $('ownCount').textContent = String(v.you.salvage);
     $('enemyCount').textContent = String(v.enemy.salvage);
+}
+
+function renderBattle({ keepSide = false } = {}) {
+    const v = currentView();
+    if (!v) return;
+    paintBoards(v);
+    renderTote(v);
     $('ownName').textContent = v.you.name ?? '';
     $('enemyName').textContent = v.enemy.name ?? '';
 
-    const bar = document.querySelector('.turn-bar');
-    const mine = isMyTurn(v);
-    bar.classList.toggle('is-yours', mine);
-    bar.classList.toggle('is-theirs', !mine);
-    $('turnText').textContent = mine ? t('battle.yourTurn') : t('battle.theirTurn', { who: v.enemy.name ?? '' });
-
+    renderTurn(v);
     renderRail(v);
-    renderFleetStatus(v, tool === 'reposition');
-    $('railHint').textContent = mine ? t(`hint.${tool}`) : '';
+    renderRoster(v);
+    renderFleetStatus(v, tool === 'reposition' && isMyTurn(v));
+    $('railHint').textContent = isMyTurn(v) && !stage.running ? t(`hint.${tool}`) : '';
+    renderOrder(v);
+    renderAim();
     renderLog();
+
+    if (v.room.turn !== lastTurnOwner) {
+        // A new turn, a new choice of plot: the tab the player tapped last
+        // turn no longer applies.
+        userSide = null;
+        lastTurnOwner = v.room.turn;
+    }
+    if (!keepSide && !stage.running) settleSide(v);
+}
+
+/** The plot under the lamp when nothing is playing. */
+function settleSide(v = currentView()) {
+    if (!v) return;
+    if (userSide) { showSide(userSide); return; }
+    if (firedCells.length) { showSide('enemy'); return; }
+    showSide(restingSide({ mine: isMyTurn(v), aimsAtSelf: AIMS_AT_SELF.has(tool) }));
+}
+
+function renderRoster(v) {
+    const list = $('enemyFleet');
+    const down = new Set(v.enemy.sunk ?? []);
+    if (list.children.length !== FLEET.length) {
+        list.replaceChildren();
+        for (const { key, len } of FLEET) {
+            const li = document.createElement('li');
+            li.className = 'hull-row';
+            li.dataset.key = key;
+            const name = document.createElement('span');
+            const pips = document.createElement('span');
+            pips.className = 'pips';
+            for (let i = 0; i < len; i++) {
+                const p = document.createElement('span');
+                p.className = 'pip';
+                pips.append(p);
+            }
+            li.append(name, pips);
+            list.append(li);
+        }
+    }
+    for (const li of list.children) {
+        li.firstChild.textContent = t(`ship.${li.dataset.key}`);
+        li.classList.toggle('is-down', down.has(li.dataset.key));
+    }
 }
 
 function renderFleetStatus(v, pickable) {
     const list = $('fleetStatus');
     list.replaceChildren();
     const grid = v.you.grid;
-    for (const { key, len } of FLEET) {
+    for (const { key } of FLEET) {
         const hull = (v.you.fleet ?? []).find((s) => s.key === key);
         const cells = hull ? shipCells(hull) : [];
         const down = cells.length > 0 && cells.every((c) => grid[c] === 's');
@@ -477,23 +801,37 @@ function renderFleetStatus(v, pickable) {
             b.type = 'button';
             b.className = 'hull-pick' + (movingKey === key ? ' is-on' : '');
             b.textContent = t('place.move');
-            b.addEventListener('click', () => { movingKey = key; renderFleetStatus(v, true); });
+            b.addEventListener('click', () => {
+                movingKey = key;
+                aimed = null;
+                renderFleetStatus(v, true);
+                renderAim();
+                renderOrder(v);
+            });
             li.append(b);
         }
         list.append(li);
     }
 }
 
+/** Append what is new. The reader's scroll position is theirs. */
 function renderLog() {
     const el = $('log');
-    el.replaceChildren();
-    for (const line of logLines.slice(-40)) {
+    if (logRendered > logLines.length) {
+        el.replaceChildren();
+        logRendered = 0;
+    }
+    if (logRendered === logLines.length) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 28;
+    for (; logRendered < logLines.length; logRendered++) {
+        const line = logLines[logRendered];
         const li = document.createElement('li');
         li.className = line.mine ? 'is-mine' : '';
         li.innerHTML = line.html;
         el.append(li);
     }
-    el.scrollTop = el.scrollHeight;
+    while (el.children.length > 60) el.firstChild.remove();
+    if (atBottom) el.scrollTop = el.scrollHeight;
 }
 
 function note(html, mine) {
@@ -501,6 +839,7 @@ function note(html, mine) {
     if (screen === 'battleScreen') renderLog();
 }
 
+/** Bring one plot forward. On a phone the other is hidden; on a wide screen it sits back in the dark. */
 function showSide(which) {
     $('enemySide').classList.toggle('is-off', which !== 'enemy');
     $('ownSide').classList.toggle('is-off', which !== 'own');
@@ -511,21 +850,156 @@ function showSide(which) {
 }
 
 // ------------------------------------------------------------------
-//  Animating what a report says
+//  The stage: reports are played, not painted
 // ------------------------------------------------------------------
 
-const WORD = { hit: 'res.hit', sunk: 'res.sunk', miss: 'res.miss', decoy: 'res.hit', blast: 'res.blast' };
+const stage = { queue: [], running: false, landed: new Set(), state: null };
 
-function announce(seatOfActor, kind, cells, sunk) {
+/** Reports that arrived together are played one after another. */
+function enqueue(ops) {
+    if (!ops.length) return;
+    // A phone that was asleep does not owe the player a re-enactment of the
+    // whole stretch it missed; the last two land, the rest are read in.
+    if (ops.length > 3) {
+        for (const op of ops.slice(0, -2)) readIn(op);
+        ops = ops.slice(-2);
+    }
+    stage.queue.push(...ops);
+    if (!stage.running) runStage();
+}
+
+async function runStage() {
+    stage.running = true;
+    while (stage.queue.length) {
+        const op = stage.queue[0];
+        stage.landed = new Set();
+        await playOp(op);
+        stage.queue.shift();
+    }
+    stage.running = false;
+    stage.state = null;
+    const v = currentView();
+    if (v && v.room.status === 'battle' && screen === 'battleScreen') {
+        // The turn flips first; the plot follows a beat later, so the eye
+        // reads the flag before the table moves under it.
+        renderBattle({ keepSide: true });
+        await wait(tempo(reduced()).handover);
+        if (!stage.running) settleSide();
+    }
+    if (stage.running) return;
+    if (mode === 'room') syncScreen();
+    else afterSoloStage();
+}
+
+async function playOp(op) {
+    const v = currentView();
+    if (!v || screen !== 'battleScreen') { readIn(op); return; }
+    const t0 = tempo(reduced());
+    const mine = op.seat === mySeat();
+    const which = mine ? 'enemy' : 'own';
+    clearFired();
+    // The bar names what the room is doing, not whose turn the snapshot says
+    // it is: the turn has already passed by the time a report is played. A
+    // sweep or a reberth is not a shell, so neither claims one is in the air.
+    stage.state = mine ? null : 'theirs';
+
+    switch (op.op) {
+        case 'shot': {
+            stage.state = mine ? 'inair' : 'incoming';
+            showSide(which);
+            renderTurn(v);
+            renderOrder(v);
+            const plan = landingPlan(op, reduced());
+            const all = plan.groups.flat();
+            for (const c of all) nodes[which][c].classList.add('is-incoming');
+            await wait(plan.aimMs);
+            for (const group of plan.groups) {
+                const cur = currentView();
+                const next = latestGrid(which, cur);
+                for (const c of group) {
+                    nodes[which][c].classList.remove('is-incoming');
+                    if (next[c] === '.') {
+                        // Churned water: nothing to set down, so the splash
+                        // is the whole record of the shell.
+                        nodes[which][c].classList.remove('is-splash');
+                        void nodes[which][c].offsetWidth;
+                        nodes[which][c].classList.add('is-splash');
+                    }
+                }
+                for (const c of landingCells(group, shown[which] ?? next, next)) stage.landed.add(c);
+                if (plan.shake) theatre(which);
+                paintBoards(cur);
+                renderTote(cur);
+                await wait(plan.gapMs);
+            }
+            announceShot(op.seat, op.kind, op.cells, op.sunk);
+            renderRoster(currentView());
+            renderFleetStatus(currentView(), false);
+            if (op.sunk.length) {
+                callout(which, op.sunk, t0.callout);
+                await wait(t0.callout);
+            }
+            await wait(plan.settleMs);
+            break;
+        }
+        case 'swept': {
+            showSide(which);
+            const block = blockCells(op.at);
+            for (const c of block) nodes[which][c].classList.add('is-incoming');
+            await wait(t0.aim);
+            for (const c of block) nodes[which][c].classList.remove('is-incoming');
+            readIn(op);
+            paintBoards(currentView());
+            await wait(t0.settle);
+            break;
+        }
+        case 'moved':
+            readIn(op);
+            paintBoards(currentView());
+            await wait(t0.settle);
+            break;
+        default:
+            // A buoy dropped by the other side shows nothing, but it took
+            // their turn, and the room should feel it pass.
+            await wait(t0.settle);
+            break;
+    }
+}
+
+/** Record a report in the log without playing it. */
+function readIn(op) {
+    const mine = op.seat === mySeat();
+    switch (op.op) {
+        case 'shot':
+            announceShot(op.seat, op.kind, op.cells, op.sunk);
+            break;
+        case 'swept':
+            if (mine) {
+                mySweeps++;
+                const count = op.count ?? readingAt(currentView()?.you?.intel, op.at);
+                const line = t('log.reading', { at: coordName(op.at), n: count ?? '?' });
+                note(`<b>${t('log.you')}</b> ${line}`, true);
+                cry(line);
+            } else {
+                note(`<b>${t('log.them')}</b> ${t('log.sweptYou', { at: coordName(op.at) })}`, false);
+            }
+            break;
+        case 'moved':
+            if (!mine) {
+                // Every reading taken so far may now be wrong.
+                intelStaleFrom = mySweeps;
+                note(`<b>${t('log.them')}</b> ${t('log.moved')}`, false);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+function announceShot(seatOfActor, kind, cells, sunk) {
     const mine = seatOfActor === mySeat();
     const who = mine ? t('log.you') : t('log.them');
-    if (kind === 'sonar') {
-        note(`<b>${who}</b> ${t('log.swept')}`, mine);
-    } else if (kind === 'decoy') {
-        note(`<b>${who}</b> ${t('log.buoy')}`, mine);
-    } else if (kind === 'reposition') {
-        note(`<b>${who}</b> ${t('log.moved')}`, mine);
-    } else if (cells.length) {
+    if (cells.length) {
         const hits = cells.filter((c) => c.result === 'hit' || c.result === 'sunk' || c.result === 'decoy').length;
         const where = cells.map((c) => coordName(c.cell)).join(' ');
         note(`<b>${who}</b> ${t(`log.${kind}`)} ${where} &middot; ${t('log.hits', { n: hits })}`, mine);
@@ -533,15 +1007,27 @@ function announce(seatOfActor, kind, cells, sunk) {
     for (const key of sunk) {
         note(`<b>${t('ship.' + key).toUpperCase()}</b> ${t('log.down')}`, !mine);
     }
+    const WORD = { hit: 'res.hit', sunk: 'res.sunk', miss: 'res.miss', decoy: 'res.hit', blast: 'res.blast' };
     if (cells.length === 1) cry(`${coordName(cells[0].cell)}, ${t(WORD[cells[0].result] ?? 'res.miss')}`);
     else if (cells.length) cry(t('log.hits', { n: cells.filter((c) => c.result !== 'miss' && c.result !== 'blast').length }));
 }
 
+/** A hull's name across the plot as it goes down. */
+function callout(which, keys, ms) {
+    const el = which === 'enemy' ? $('enemyCallout') : $('ownCallout');
+    const ship = keys.map((k) => t('ship.' + k).toUpperCase()).join(' + ');
+    el.textContent = t('callout.down', { ship });
+    el.classList.toggle('is-good', which === 'enemy');
+    el.classList.remove('is-up');
+    void el.offsetWidth;
+    el.classList.add('is-up');
+    setTimeout(() => el.classList.remove('is-up'), ms + 300);
+}
+
 /** The one authored moment: a charge lands and the room shakes. */
-function theatre(kind, which) {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (kind !== 'depthCharge') return;
-    const plot = which === 'enemy' ? $('enemyPlot') : $('ownPlot');
+function theatre(which) {
+    if (reduced()) return;
+    const plot = plotEl(which);
     const lamp = document.querySelector('.lamp');
     plot.classList.remove('is-blasting');
     lamp.classList.remove('is-flare');
@@ -560,8 +1046,12 @@ let picking = FLEET[0].key;
 let placeDir = 'h';
 
 function renderPlace() {
-    const you = { fleet: draft, grid: '.'.repeat(CELLS), decoys: [], swept: [] };
-    paintOwn($('placePlot'), you);
+    const plot = $('placePlot');
+    const hull = new Set(draft.flatMap((s) => shipCells(s)));
+    cellsOf(plot).forEach((b, i) => {
+        b.className = 'cell' + (hull.has(i) ? ' is-hull' : '');
+        b.setAttribute('aria-label', `${coordName(i)}, ${hull.has(i) ? 'your hull' : 'open water'}`);
+    });
 
     const rail = $('hullRail');
     rail.replaceChildren();
@@ -635,24 +1125,20 @@ async function submitFleet() {
 const refusal = (res) => (res.body?.reason ? t(`refuse.${res.body.reason}`) : t('refuse.network'));
 
 // ------------------------------------------------------------------
-//  Taking a turn
+//  Taking a turn, room mode
 // ------------------------------------------------------------------
-
-function aimAt(at) {
-    const v = currentView();
-    if (!v || !isMyTurn(v)) return;
-    const action = actionFor(at, v);
-    const err = actionError(asMatch(v), mySeat(), action);
-    if (err !== null) { toast(t(`refuse.${err}`)); return; }
-    if (mode === 'solo') { soloAct(action); return; }
-    queue(action);
-}
 
 function queue(action) {
     outbox.push(action);
-    // Optimistically stand the rail down, so a double tap cannot spend twice
-    // while the poll is still in flight.
-    if (snapshot) { snapshot = { ...snapshot, room: { ...snapshot.room, turn: other(seat) } }; renderBattle(); }
+    // Optimistically stand the rail down, so a second order cannot spend
+    // twice while the poll is still in flight, and remember how far along
+    // the room must be before a poll is believed again.
+    if (snapshot) {
+        expectTurns = (snapshot.room.turns ?? 0) + 1;
+        staleSkips = 0;
+        snapshot = { ...snapshot, room: { ...snapshot.room, turn: other(seat) } };
+        renderBattle();
+    }
     pump();
 }
 
@@ -673,6 +1159,8 @@ async function pump() {
             await new Promise((r) => setTimeout(r, Math.min(8000, 500 * 2 ** failures)));
         } else {
             outbox.shift();
+            expectTurns = null;
+            clearFired();
             toast(refusal(res));
             schedulePoll(0);
         }
@@ -690,8 +1178,16 @@ function schedulePoll(delay) {
 }
 
 async function pollOnce() {
-    if (!session || pollBusy || mode !== 'room') return;
+    if (!session || mode !== 'room') return;
+    if (pollBusy) {
+        // Asked for while one is in flight: go again the moment it lands,
+        // rather than waiting out the delay the in-flight one will pick.
+        pollWanted = true;
+        return;
+    }
     pollBusy = true;
+    pollWanted = false;
+    const replay = model.lastSeq === 0;
     const res = await post('poll', { code: session.code, token: session.token, since: model.lastSeq });
     pollBusy = false;
     if (!session) return;
@@ -699,7 +1195,7 @@ async function pollOnce() {
     let more = false;
     if (res.ok && res.body) {
         failures = 0;
-        more = handlePoll(res.body);
+        more = handlePoll(res.body, replay);
     } else if (res.status === 404) {
         leaveLocal(t('toast.roomClosed'));
         return;
@@ -711,7 +1207,7 @@ async function pollOnce() {
     }
 
     const v = snapshot;
-    schedulePoll(more ? 30 : pollDelay({
+    schedulePoll(more || pollWanted ? 30 : pollDelay({
         status: v?.room?.status,
         hidden: document.hidden,
         failures,
@@ -719,32 +1215,47 @@ async function pollOnce() {
     }));
 }
 
-function handlePoll(body) {
-    snapshot = { room: body.room, you: body.you, enemy: body.enemy };
+function handlePoll(body, replay) {
+    let room = body.room;
+    if (isStaleRoom(room, expectTurns)) {
+        // The answer left the server before our move arrived. Its plots are
+        // consistent with its events, so keep both, but do not let it hand
+        // the turn back: that is the flicker that invites a second tap.
+        if (++staleSkips > 6) expectTurns = null;
+        else room = { ...room, turn: other(seat), turns: expectTurns };
+    } else {
+        expectTurns = null;
+        staleSkips = 0;
+    }
+    snapshot = { room, you: body.you, enemy: body.enemy };
     seat = body.you?.seat ?? seat;
     const ops = applyEvents(model, body.events, body.you?.id ?? null);
 
+    const staged = [];
     for (const op of ops) {
         switch (op.op) {
             case 'shot':
-                announce(op.seat, op.kind, op.cells, op.sunk);
-                theatre(op.kind, op.seat === seat ? 'enemy' : 'own');
-                break;
             case 'swept':
-                if (op.seat !== seat) note(`<b>${t('log.them')}</b> ${t('log.sweptYou', { at: coordName(op.at) })}`, false);
-                break;
             case 'moved':
-                if (op.seat !== seat) note(`<b>${t('log.them')}</b> ${t('log.moved')}`, false);
+                // A replay from the start of the log is the record of a
+                // match already at sea, read in rather than re-enacted.
+                if (replay) readIn(op);
+                else staged.push(op);
                 break;
             case 'abandon':
                 toast(t('toast.abandoned'));
                 break;
             case 'again':
                 logLines = [];
+                mySweeps = 0;
+                intelStaleFrom = 0;
                 break;
         }
     }
-
+    // Queued BEFORE the screen syncs: the paint holds back every cell a
+    // queued report is still going to land on, and a report that arrives
+    // while the page is elsewhere is read into the log instead of played.
+    enqueue(staged);
     syncScreen();
     return body.more === true;
 }
@@ -752,7 +1263,7 @@ function handlePoll(body) {
 /** The snapshot is the truth; the screen follows it, never the other way. */
 function syncScreen() {
     const v = snapshot;
-    if (!v) return;
+    if (!v || mode !== 'room') return;
     $('roomTagCode').textContent = session?.code ?? '----';
     switch (v.room.status) {
         case 'lobby':
@@ -760,6 +1271,8 @@ function syncScreen() {
             if (screen !== 'lobbyScreen') replaceTo('lobbyScreen');
             break;
         case 'place':
+            // A rematch waits for the last shell to land.
+            if (stage.running) break;
             if (screen !== 'placeScreen') {
                 draft = [];
                 picking = FLEET[0].key;
@@ -772,10 +1285,12 @@ function syncScreen() {
                 || placementError(draft) !== null;
             break;
         case 'battle':
-            if (screen !== 'battleScreen') { replaceTo('battleScreen'); showSide('enemy'); }
+            if (screen !== 'battleScreen') { resetBoards(); replaceTo('battleScreen'); }
             renderBattle();
             break;
         case 'over':
+            // So does the verdict.
+            if (stage.running) break;
             renderVerdict(v);
             if (screen !== 'overScreen') replaceTo('overScreen');
             break;
@@ -783,7 +1298,7 @@ function syncScreen() {
 }
 
 function renderVerdict(v) {
-    const won = v.room.outcome === (seat === 1 ? 'p1' : 'p2');
+    const won = v.room.outcome === (mySeat() === 1 ? 'p1' : 'p2');
     const stamp = $('verdictStamp');
     stamp.textContent = won ? t('over.won') : t('over.lost');
     stamp.classList.toggle('is-win', won);
@@ -818,7 +1333,8 @@ function renderVerdict(v) {
 //
 //  Entirely in this tab: the bot never touches the controller, which is why
 //  a solo result posted to ?action=record is self reported and the card
-//  labels those games practice.
+//  labels those games practice. Both seats' reports go through the same
+//  stage as a room game's, so the two modes feel the same.
 // ------------------------------------------------------------------
 
 function soloView() {
@@ -838,6 +1354,16 @@ function soloView() {
     };
 }
 
+/** A local report in the shape the event log would have given it. */
+function opFromReport(actor, report) {
+    switch (report.kind) {
+        case 'sonar': return { op: 'swept', seat: actor, at: report.swept, count: report.intel?.count ?? null };
+        case 'reposition': return { op: 'moved', seat: actor };
+        case 'decoy': return { op: 'decoy', seat: actor };
+        default: return { op: 'shot', seat: actor, kind: report.kind, cells: report.cells, sunk: report.sunk };
+    }
+}
+
 function startSolo(fleet) {
     const me = 1;
     solo = {
@@ -847,45 +1373,42 @@ function startSolo(fleet) {
         match: newMatch({ fleets: [fleet, autoPlace()], starter: Math.random() < 0.5 ? 1 : 2 }),
     };
     logLines = [];
-    tool = 'fire';
+    resetBoards();
     replaceTo('battleScreen');
-    showSide('enemy');
     renderBattle();
-    if (solo.match.turn !== me) setTimeout(botTurn, 700);
+    if (solo.match.turn !== me) setTimeout(botTurn, tempo(reduced()).think);
 }
 
 function soloAct(action) {
     const me = solo.seat;
     const { match, report } = applyAction(solo.match, me, action);
     solo.match = match;
-    announce(me, report.kind, report.cells, report.sunk);
-    theatre(report.kind, 'enemy');
-    if (match.outcome) { finishSolo(); return; }
-    renderBattle();
-    setTimeout(botTurn, 620);
+    enqueue([opFromReport(me, report)]);
+}
+
+function afterSoloStage() {
+    if (!solo) return;
+    if (solo.match.outcome) { finishSolo(); return; }
+    if (solo.match.turn !== solo.seat) setTimeout(botTurn, tempo(reduced()).think);
 }
 
 function botTurn() {
-    if (!solo || solo.match.outcome || solo.match.turn === solo.seat) return;
+    if (!solo || solo.match.outcome || solo.match.turn === solo.seat || stage.running) return;
     const foe = other(solo.seat);
     const action = chooseAction({
         enemy: enemyView(solo.match, foe),
         own: ownView(solo.match, foe),
         policy: LEVELS[solo.level],
     });
+    let report;
     if (actionError(solo.match, foe, action) !== null) {
         const open = solo.match.sides[solo.seat].grid.indexOf('.');
         if (open < 0) return;
-        ({ match: solo.match } = applyAction(solo.match, foe, { kind: 'fire', at: open }));
+        ({ match: solo.match, report } = applyAction(solo.match, foe, { kind: 'fire', at: open }));
     } else {
-        const { match, report } = applyAction(solo.match, foe, action);
-        solo.match = match;
-        announce(foe, report.kind, report.cells, report.sunk);
-        theatre(report.kind, 'own');
+        ({ match: solo.match, report } = applyAction(solo.match, foe, action));
     }
-    if (solo.match.outcome) { finishSolo(); return; }
-    renderBattle();
-    if (solo.match.turn !== solo.seat) setTimeout(botTurn, 620);
+    enqueue([opFromReport(foe, report)]);
 }
 
 async function finishSolo() {
@@ -1000,6 +1523,8 @@ function leaveLocal(message) {
     mode = null;
     seat = 0;
     outbox.length = 0;
+    stage.queue.length = 0;
+    expectTurns = null;
     saveSession();
     history.replaceState(history.state, '', location.pathname);
     showScreen('bootScreen');
@@ -1070,9 +1595,13 @@ async function init() {
     await loadStrings();
     buildRail();
     renderRules();
-    buildPlot($('enemyPlot'), aimAt, renderAim);
-    buildPlot($('ownPlot'), aimAt, renderAim);
+    buildPlot($('enemyPlot'), pickCell, peek);
+    buildPlot($('ownPlot'), pickCell, peek);
     buildPlot($('placePlot'), placeAt, null);
+    nodes.enemy = cellsOf($('enemyPlot'));
+    nodes.own = cellsOf($('ownPlot'));
+    buildLamps($('ownLamps'));
+    buildLamps($('enemyLamps'));
 
     $('doorRoom').addEventListener('click', () => go('open'));
     $('doorJoin').addEventListener('click', () => go('join'));
@@ -1107,8 +1636,10 @@ async function init() {
     $('placeAuto').addEventListener('click', autoLay);
     $('placeReady').addEventListener('click', submitFleet);
 
-    $('switchEnemy').addEventListener('click', () => showSide('enemy'));
-    $('switchOwn').addEventListener('click', () => showSide('own'));
+    $('switchEnemy').addEventListener('click', () => { userSide = 'enemy'; showSide('enemy'); });
+    $('switchOwn').addEventListener('click', () => { userSide = 'own'; showSide('own'); });
+    $('cmdGo').addEventListener('click', commit);
+    $('cmdTurn').addEventListener('click', swing);
     $('againBtn').addEventListener('click', async () => {
         if (mode === 'solo') {
             draft = [];
@@ -1122,19 +1653,24 @@ async function init() {
         schedulePoll(0);
     });
 
-    // The keyboard. Numbers pick a tool, R turns a barrage or a hull, and the
-    // plot is a real grid of buttons, so arrows and Enter already work.
+    // The keyboard. Numbers pick a tool, R swings a barrage or a hull, and
+    // the plot is a real grid of buttons, so arrows, Tab and Enter already
+    // work: Enter aims, Enter again on the same cell gives the order.
     document.addEventListener('keydown', (e) => {
         if (e.target.matches('input')) return;
         if (screen === 'battleScreen') {
             const n = Number(e.key);
             if (n >= 1 && n <= TOOLS.length) { pickTool(TOOLS[n - 1]); e.preventDefault(); }
-            if (e.key.toLowerCase() === 'r') { pendingDir = pendingDir === 'h' ? 'v' : 'h'; toast(t('toast.turned')); }
+            if (e.key.toLowerCase() === 'r') swing();
         } else if (screen === 'placeScreen' && e.key.toLowerCase() === 'r') {
             placeDir = placeDir === 'h' ? 'v' : 'h';
             renderPlace();
         }
     });
+
+    // On a wide screen both plots are on the table and the dimmed one is
+    // still readable; on a phone the hidden one has to come back.
+    window.addEventListener('resize', () => { if (screen === 'battleScreen' && !stage.running) settleSide(); });
 
     $('back-link').addEventListener('click', (e) => {
         // The game screens carry no history entry of their own, so the href

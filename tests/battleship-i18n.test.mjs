@@ -63,6 +63,8 @@ test('every ship, tool and hint the rules know about is named', () => {
     for (const kind of [...tools, 'fire']) {
         assert.ok(ui[`tool.${kind}`], `tool.${kind} has no label`);
         assert.ok(ui[`hint.${kind}`], `tool.${kind} has no hint`);
+        // The order button reads the move back before it is committed.
+        assert.ok(ui[`commit.${kind}`]?.en.includes('{at}'), `commit.${kind} does not name the cell`);
         if (kind !== 'fire') assert.ok(ui[`rules.${kind}`], `tool.${kind} is missing from How it works`);
     }
 });

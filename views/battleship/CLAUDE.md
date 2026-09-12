@@ -72,14 +72,62 @@ no rule set shows a snowball under that microscope. The comeback claim is
 measured by handicapping a fleet outright (`playOut({ handicap: [0, 2] })`) and
 asking whether the toolbox lets it fight: 11.8% against 8.0% without.
 
+## The turn, and why it is two taps
+
+A tap on a plot **aims**. The shot leaves on the order button under the rail,
+which reads the move back (`FIRE AT E5`, `DROP A CHARGE ON E5`) with its price.
+Three reasons, and all three were bugs before:
+
+- A charge costs eight salvage and a turn. A brushed thumb must not spend it.
+- A cell with a `:hover` rule eats the first tap on iOS and fires on the
+  second, which is where "it needs a double tap" came from. The hover preview
+  is now behind `@media (hover: hover)` and a `finePointer()` check, and every
+  cell carries `touch-action: manipulation` so the second tap cannot zoom.
+- The refusal is legible **before** you commit. The slab turns red and names
+  the reason instead of toasting it after the fact.
+
+`TURN` swings a barrage or a reberth and is only present for those two tools.
+A keyboard needs no order button: Enter aims, Enter again on the same cell
+fires, because a keyboard cannot brush a key by accident.
+
+## The stage: reports are played, not painted
+
+The poll hands over a plot that has **already changed**. Painting it directly
+is how the old page worked and it is why nothing felt like it landed: the
+counter, the wreck and the salvage all appeared in the same frame, on a plot
+you were not looking at.
+
+`choreo.js` owns the arithmetic of the delay and `script.js` only paints what
+it returns. A report is queued, and while it plays the painted plot is held
+**behind** the truth: `heldCells()` names every cell a queued report still has
+to land on, and `projectGrid()` keeps those cells at what the plot already
+shows. A queued sinking also holds the rest of the wreck, because the hull
+those cells belong to is not known until the shell lands.
+
+Consequences worth knowing before you change it:
+
+- **The plot lags the poll on purpose.** `shown` is what is painted, not what
+  is true. Anything reading a plot for state must read the view, not the DOM.
+- **The lamp says whose table it is.** On a phone the plot turns over with the
+  turn; on a wide screen both stay up and the one being shot at comes forward.
+  `restingSide()` decides where it settles, and a tab the player pressed wins
+  until the turn changes.
+- **A phone that was asleep does not get a re-enactment.** More than three
+  queued reports and all but the last two are read into the log instead.
+  A full replay (`since = 0`, after a refresh) is never played at all.
+- **`is-new` is the only thing that animates a counter.** A counter moves when
+  it is set down, never when a poll repaints the same plot. Rebuilding the
+  lamp pips on every render is what made the salvage board flash.
+
 ## The files
 
 | File | What it owns |
 |---|---|
 | `logic.js` | The rules, DOM free. Placement, firing, salvage, the five tools, the two fog projections, codes and names, the event reducer, poll pacing. |
+| `choreo.js` | How a report is played, DOM free. Tempo, the landing plan, how far the painted plot may lag the poll, and which plot the lamp rests on. |
 | `bot.js` | Probability density targeting and the ability policies, plus `playOut()`, the simulation the balance suite runs. Decides from the two projections only, never from the match. |
-| `script.js` | Screens, transport, the outbox, the poll loop, the placement editor, rendering. Decides nothing. |
-| `i18n/ui.json` | One row per string, one column per language. Every `refuse.*` code the controller can send has a row, and a test fails if one does not. |
+| `script.js` | Screens, transport, the outbox, the poll loop, the placement editor, the order, the stage. Decides nothing. |
+| `i18n/ui.json` | One row per string, one column per language. Every `refuse.*` code the controller can send has a row, and a test fails if one does not. Every tool also needs a `commit.*` row naming the cell, or the order button cannot read its move back. |
 
 Constants are mirrored in `app/controllers/battleship-controller.php`. **Change
 them in both**; `tests/battleship-logic.test.mjs` reads the PHP and compares.
@@ -110,6 +158,21 @@ screen on `<site-footer>`. The navigational screens carry a real hash so the
 Android back button and `back-link.js` walk them; the game screens are entered
 with `replaceState`, because pressing back mid match must never land on the
 placement screen of a match already at sea.
+
+## Two poll traps, both fixed and both easy to reintroduce
+
+1. **A poll in flight is older than your own move.** It left the server before
+   the `act` arrived, so it answers with the turn still yours and the salvage
+   still unspent. Believing it hands the turn back for a second and invites a
+   second tap the server then refuses. `isStaleRoom()` compares the room's
+   `turns` against the count the client expects and holds the turn until a
+   fresh answer arrives. Six stale answers in a row and it gives up, so a
+   dropped write can never wedge the page.
+2. **A poll requested while one is in flight used to be dropped.** The old
+   guard returned without rescheduling, so the request `act` made was lost and
+   the next poll ran on the delay the in-flight one picked, which read the
+   stale snapshot and chose 3000ms. That is most of what "clunky" was.
+   `pollWanted` re-fires 30ms after the in-flight one lands.
 
 ## Modes
 

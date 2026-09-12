@@ -176,7 +176,7 @@
 
         <!-- 7. THE BATTLE -->
         <section class="screen screen-wide" id="battleScreen">
-            <div class="turn-bar">
+            <div class="turn-bar" id="turnBar">
                 <span class="turn-flag" id="turnFlag"></span>
                 <span class="turn-text" id="turnText"></span>
             </div>
@@ -196,12 +196,9 @@
                     </header>
                     <div class="plot-wrap">
                         <div class="plot plot-enemy" id="enemyPlot" role="grid" aria-label="Enemy waters"></div>
+                        <p class="plot-callout" id="enemyCallout" aria-hidden="true"></p>
                     </div>
-                    <div class="tote tote-enemy">
-                        <span class="tote-label" data-i18n="battle.theirSalvage">THEIR SALVAGE</span>
-                        <span class="lamps" id="enemyLamps"></span>
-                        <span class="tote-count" id="enemyCount">0</span>
-                    </div>
+                    <ul class="fleet-status roster" id="enemyFleet" aria-label="Their fleet"></ul>
                 </section>
 
                 <section class="table-side" id="ownSide">
@@ -211,19 +208,39 @@
                     </header>
                     <div class="plot-wrap">
                         <div class="plot plot-own" id="ownPlot" role="grid" aria-label="Your fleet"></div>
+                        <p class="plot-callout" id="ownCallout" aria-hidden="true"></p>
                     </div>
-                    <ul class="fleet-status" id="fleetStatus"></ul>
+                    <ul class="fleet-status" id="fleetStatus" aria-label="Your fleet"></ul>
                 </section>
             </div>
 
-            <div class="tote tote-mine">
-                <span class="tote-label" data-i18n="battle.salvage">SALVAGE</span>
-                <span class="lamps" id="ownLamps"></span>
-                <span class="tote-count" id="ownCount">0</span>
+            <!-- Everything a turn needs, in one block that stays in reach on a
+                 phone: what you can afford, the tools, and the order that
+                 commits one. A shot is never fired by the tap that aims it. -->
+            <div class="command" id="command">
+                <div class="ledger">
+                    <div class="tote tote-mine">
+                        <span class="tote-label" data-i18n="battle.salvage">SALVAGE</span>
+                        <span class="lamps" id="ownLamps"></span>
+                        <span class="tote-count" id="ownCount">0</span>
+                    </div>
+                    <div class="tote tote-enemy">
+                        <span class="tote-label" data-i18n="battle.theirSalvage">THEIRS</span>
+                        <span class="lamps" id="enemyLamps"></span>
+                        <span class="tote-count" id="enemyCount">0</span>
+                    </div>
+                </div>
+                <div class="rail" id="rail"></div>
+                <p class="rail-hint" id="railHint"></p>
+                <div class="order">
+                    <button type="button" class="btn order-turn" id="cmdTurn" hidden
+                        data-i18n="place.rotate">TURN</button>
+                    <button type="button" class="btn btn-primary order-go" id="cmdGo" disabled>
+                        <span class="order-verb" id="cmdVerb"></span>
+                        <span class="order-cost" id="cmdCost"></span>
+                    </button>
+                </div>
             </div>
-
-            <div class="rail" id="rail"></div>
-            <p class="rail-hint" id="railHint"></p>
 
             <ol class="log" id="log" aria-live="off"></ol>
         </section>

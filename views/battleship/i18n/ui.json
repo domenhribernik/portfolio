@@ -132,8 +132,8 @@
     "sl": "PLEN"
   },
   "battle.theirSalvage": {
-    "en": "THEIR SALVAGE",
-    "sl": "NJIHOV PLEN"
+    "en": "THEIRS",
+    "sl": "NJIHOV"
   },
   "battle.yourTurn": {
     "en": "YOUR MOVE",
@@ -142,6 +142,38 @@
   "battle.theirTurn": {
     "en": "{who} IS THINKING",
     "sl": "{who} RAZMIŠLJA"
+  },
+  "battle.incoming": {
+    "en": "INCOMING",
+    "sl": "PRIHAJA"
+  },
+  "battle.inAir": {
+    "en": "SHELL IN THE AIR",
+    "sl": "GRANATA JE V ZRAKU"
+  },
+  "battle.pickTarget": {
+    "en": "PICK A TARGET",
+    "sl": "IZBERI TARČO"
+  },
+  "battle.pickWater": {
+    "en": "PICK YOUR OWN WATER",
+    "sl": "IZBERI SVOJE MORJE"
+  },
+  "battle.pickHull": {
+    "en": "PICK A HULL TO MOVE",
+    "sl": "IZBERI LADJO ZA PREMIK"
+  },
+  "battle.badTarget": {
+    "en": "NOT THERE",
+    "sl": "TAM NE GRE"
+  },
+  "battle.free": {
+    "en": "free",
+    "sl": "zastonj"
+  },
+  "battle.cost": {
+    "en": "{n} salvage",
+    "sl": "{n} plena"
   },
   "ship.carrier": {
     "en": "Carrier",
@@ -195,25 +227,49 @@
     "en": "NEEDS {n}",
     "sl": "POTREBUJE {n}"
   },
+  "commit.fire": {
+    "en": "FIRE AT {at}",
+    "sl": "STRELJAJ NA {at}"
+  },
+  "commit.sonar": {
+    "en": "SWEEP AROUND {at}",
+    "sl": "PREIŠČI OKOLI {at}"
+  },
+  "commit.decoy": {
+    "en": "DROP A BUOY AT {at}",
+    "sl": "SPUSTI BOJO NA {at}"
+  },
+  "commit.barrage": {
+    "en": "RAKE FROM {at}",
+    "sl": "OBSTRELJUJ OD {at}"
+  },
+  "commit.reposition": {
+    "en": "REBERTH AT {at}",
+    "sl": "PRESTAVI NA {at}"
+  },
+  "commit.depthCharge": {
+    "en": "DROP A CHARGE ON {at}",
+    "sl": "ODVRZI BOMBO NA {at}"
+  },
   "hint.fire": {
-    "en": "One cell. Pick well.",
-    "sl": "Eno polje. Dobro premisli."
+    "en": "One shell. Pick a cell, then give the order.",
+    "sl": "Ena granata. Izberi polje, nato ukaži."
   },
   "hint.sonar": {
     "en": "Pick a centre. You learn how many hulls are in the block, never which.",
     "sl": "Izberi središče. Izvedel boš, koliko ladij je v bloku, nikoli katerih."
   },
   "hint.decoy": {
-    "en": "Drop it on your own open water. It reads as a hit.",
-    "sl": "Postavi jo na svoje prazno morje. Zdi se kot zadetek."
+    "en": "Drop it on your own open water. The next shell there reads as a hit.",
+    "sl": "Postavi jo na svoje prazno morje. Naslednja granata tam se bere kot zadetek."
   },
   "hint.barrage": {
-    "en": "Three shells in a line. Press R to turn it.",
-    "sl": "Tri granate v vrsti. Pritisni R za obrat."
+    "en": "Three shells in a line from the cell you pick. TURN swings it.",
+    "sl": "Tri granate v vrsti od izbranega polja. OBRNI jo zasuka."
   },
   "hint.reposition": {
-    "en": "Pick an undamaged hull, then a fresh berth. Press R to turn it.",
-    "sl": "Izberi nepoškodovano ladjo in novo mesto. Pritisni R za obrat."
+    "en": "Pick an undamaged hull, then a fresh berth. TURN swings it.",
+    "sl": "Izberi nepoškodovano ladjo, nato novo mesto. OBRNI jo zasuka."
   },
   "hint.depthCharge": {
     "en": "Nine cells at once. It damages, it does not survey.",
@@ -251,6 +307,14 @@
     "en": "swept the water around {at}",
     "sl": "je preiskal vodo okoli {at}"
   },
+  "log.reading": {
+    "en": "swept around {at}: {n} inside",
+    "sl": "je preiskal okoli {at}: v bloku {n}"
+  },
+  "log.buoyWas": {
+    "en": "the hit at {at} was a buoy",
+    "sl": "zadetek na {at} je bila boja"
+  },
   "log.buoy": {
     "en": "dropped a buoy",
     "sl": "je spustil bojo"
@@ -262,6 +326,10 @@
   "log.down": {
     "en": "is down",
     "sl": "je potopljena"
+  },
+  "callout.down": {
+    "en": "{ship} DOWN",
+    "sl": "{ship} GRE NA DNO"
   },
   "res.hit": {
     "en": "hit",
@@ -496,8 +564,8 @@
     "sl": "PLEN"
   },
   "rules.salvage": {
-    "en": "You earn a salvage for every shell you land, and one for every shell that lands on you. A wreck pays its owner two per cell it was long, so a carrier going down funds a real reply. Area fire pays the gunner nothing: a barrage or a charge feeds the fleet it lands on, and never itself.",
-    "sl": "Za vsak zadetek dobiš plen, in enega za vsak zadetek, ki ga prejmeš. Razbitina svojemu lastniku prinese dva na polje njene dolžine, zato potopljena letalonosilka financira pravi odgovor. Ploskovni ogenj strelcu ne prinese ničesar: salva ali bomba nahrani floto, na katero pade, nikoli sebe."
+    "en": "You earn a salvage for every shell you land, and one for every shell that lands on you. A wreck pays its owner two per cell it was long, so a carrier going down funds a real reply. Area fire pays the gunner nothing: a barrage or a charge feeds the fleet it lands on, and never itself. Salvage stops at ten, so hoarding it buys nothing.",
+    "sl": "Za vsak zadetek dobiš plen, in enega za vsak zadetek, ki ga prejmeš. Razbitina svojemu lastniku prinese dva na polje njene dolžine, zato potopljena letalonosilka financira pravi odgovor. Ploskovni ogenj strelcu ne prinese ničesar: salva ali bomba nahrani floto, na katero pade, nikoli sebe. Plen se ustavi pri desetih, zato kopičenje ne prinese ničesar."
   },
   "rules.ladderHead": {
     "en": "THE LADDER",
