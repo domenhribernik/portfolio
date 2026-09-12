@@ -50,6 +50,7 @@ the PHP suites with `C:\xampp\php\php.exe`. They spawn whatever interpreter runs
 | `iliana-photos-controller.test.php` | Public reads, writes gated by `requireProjectRole('iliana', 'editor')`, `added_by` derived from the session (body values ignored, spoof-tested) | Real multipart upload through `ImageService`, **needs GD**; asserts the file appears on and disappears from disk |
 | `music-controller.test.php` | Public reads, writes gated by `requireProjectRole('music', 'editor')`, analysis concurrency lock (fresh → 429, stale ignored) | Seam `MUSIC_ANALYSIS_LOCK`. Cases stop at the gate/lock/validation, so no Python or ffmpeg ever runs |
 | `vrata.test.php` | The SEC-03 contract: POST-only (bare GET → 405), key from the JSON body only (URL key ignored), same-origin + content-type backstops, per-IP rate limiting, session-role bypass, happy-path unlock/stream | A **second** server runs `fixtures/tuya-stub.php`, a fake Tuya that logs every call, with `TUYA_BASE_URL` pointed at it, so no real door is touched and denied requests can be asserted to reach Tuya **zero** times. Seams: `VRATA_MAX_ATTEMPTS`, `VRATA_ATTEMPT_WINDOW`, `VRATA_ATTEMPTS_FILE` |
+| `list-controller.test.php` | The two contracts of the shared lists: A LIST IS PRIVATE TO ITS GRANTS (a member without a grant is 403 on reads and writes and never sees the name in any listing) and ATTRIBUTION COMES FROM THE SESSION (spoofed `added_by` / `checked_by` in the body are ignored on create and patch). Then label CRUD and the closed kind set, the cross-collection label rejection, archive-on-clear with text snapshots, the 24h auto-archive, history paging, and the poll version bumping on a same-second check | Port **8965**. Setup applies `list-model.sql` on a fresh DB or `seeds/list-rework-2026-09.sql` on a pre-rework one, so running the suite against an old scratch DB **rehearses the production migration**. The auto-archive is tested by backdating `checked_at`, never by sleeping |
 | `workout-controller.test.php` | Per-user rows, soft-delete reads, type immutability | |
 | `beseda-controller.test.php` | The streak merge (re-upload is idempotent, a merge adds rather than replaces), `requireLogin` on both verbs, day validation (junk skipped without failing the request, today+1 allowed, far future and ancient dropped), cross-user isolation | Creates `beseda_activity` if absent. No project row or role: the feature is open to anyone, so there is no gate to test |
 | `flowers-share.test.php` | Save/load/validation/pruning of the share endpoint | **No database.** Boots against the repo root, unlinks everything it created in `app/cache/flowers/` |
@@ -71,6 +72,16 @@ scrubbing (the report lands in the web root, so redaction is a **security proper
 binary choice (newest 8+ with `pdo_mysql` wins, 7.x never), and log trimming. Stdlib
 `unittest`, no dependencies, no network, no DB. Sync *behaviour* belongs to
 `stocks-sync.test.php` instead.
+
+### list
+
+`list-logic.test.mjs` holds the decisions a person sees the consequence of in a shop: that
+a shop filter keeps items naming no shop (hide those and you go home without them), that
+the list walks in store order with unplaced items last, that only labels still in play
+become filter chips, and that a remembered filter survives a reload that has not loaded
+its items yet. It also greps the PHP twice, for the two rules that exist in both
+languages: `nameKey` (drift there splits "Mleko" and "mleko" in the history) and the
+default label vocabulary.
 
 ### bearing
 

@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sl">
 <head>
     <meta charset="UTF-8">
     <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Lists</title>
+    <title>Seznami</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#211f1c">
+    <meta name="theme-color" content="#f8f7f4">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Lists">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Seznami">
     <link rel="apple-touch-icon" href="icon-192.png">
 
-    <link rel="stylesheet" href="../../base-style.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- base-style.css is deliberately NOT linked: it paints body with a navy
+         gradient via the `background` shorthand, and a gradient is a
+         background-image, so it would sit over the paper ground whatever bg-*
+         utility is set. -->
     <link rel="stylesheet" href="../../assets/fonts/fonts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
     tailwind.config = {
@@ -28,126 +30,242 @@
                 colors: {
                     ink:    '#211f1c',
                     paper:  '#f8f7f4',
-                    muted:  '#9b978f',
-                    line:   '#e9e6e0',
-                    accent: '#d97706',
+                    card:   '#ffffff',
+                    /* Contrast is why these differ from the old three-colour
+                       set: white on #d97706 is 3.19:1 and the old muted was
+                       4.15:1, both under the bar for text. Amber keeps every
+                       fill and always carries ink (5.16:1); amberInk is amber
+                       when it has to BE text (4.69:1); faint is decoration
+                       only, never type. */
+                    muted:    '#736e66',
+                    faint:    '#9b978f',
+                    line:     '#e9e6e0',
+                    accent:   '#d97706',
+                    amberInk: '#b45309',
+                    danger:   '#b3261e',
                 },
             },
         },
     };
     </script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="font-sans bg-paper text-ink h-dvh overflow-hidden m-0 p-0 flex flex-col">
 
-    <header class="bg-paper border-b border-line shadow-sm shrink-0">
-        <div class="max-w-[720px] mx-auto px-4 py-3 flex items-center gap-3">
-            <a id="back-link" href="../../" class="text-ink hover:text-accent transition-colors inline-flex items-center gap-2 font-medium text-sm">
-                <i class="fas fa-arrow-left"></i>
+    <!-- ============ Glava ============ -->
+    <header class="bg-paper border-b border-line shrink-0">
+        <div class="max-w-[720px] mx-auto pl-1 pr-2 h-12 flex items-center gap-1">
+            <a id="back-link" href="../../" aria-label="Nazaj"
+                class="tap text-muted hover:text-ink">
+                <i class="fas fa-arrow-left text-[0.95rem]"></i>
             </a>
-            <h1 class="flex-1 text-center text-xl sm:text-2xl font-semibold tracking-tight">Lists</h1>
-            <button id="manage-access" aria-label="Manage list access" title="Who can see this list"
-                class="invisible w-10 h-10 flex items-center justify-center rounded-full text-muted hover:text-ink hover:bg-line/60 transition-colors">
-                <i class="fas fa-user-lock"></i>
+
+            <button id="picker-open" type="button"
+                class="min-w-0 flex-1 flex items-baseline gap-1.5 px-1 py-1.5 rounded text-left hover:bg-line/50 transition-colors"
+                aria-haspopup="dialog">
+                <span id="current-list" class="truncate text-[1.05rem] font-semibold tracking-tight">Seznami</span>
+                <i class="fas fa-angle-down text-[0.7rem] text-muted shrink-0 translate-y-[-1px]"></i>
+                <span id="count" class="ml-auto pl-2 shrink-0 text-[0.78rem] tabular-nums text-muted"></span>
+            </button>
+
+            <button id="menu-open" type="button" aria-label="Oznake in nastavitve"
+                class="tap invisible text-muted hover:text-ink">
+                <i class="fas fa-sliders text-[0.95rem]"></i>
             </button>
         </div>
     </header>
 
-    <nav id="tabs" class="bg-paper border-b border-line shrink-0">
-        <div class="max-w-[720px] mx-auto pl-2">
-            <div id="tabs-row" class="flex gap-2 px-4 py-2 overflow-x-auto snap-x snap-mandatory no-scrollbar">
-                <!-- tabs injected here -->
-            </div>
-        </div>
-    </nav>
-
+    <!-- ============ Vnos ============ -->
     <section id="add-bar" class="bg-paper border-b border-line shrink-0">
-        <div class="max-w-[720px] mx-auto px-4 py-3 flex items-center gap-2">
-            <input
-                id="add-input"
-                type="text"
-                inputmode="text"
-                autocomplete="off"
-                enterkeyhint="done"
-                placeholder="Add item…"
-                class="flex-1 px-4 py-3 rounded-2xl border border-line bg-white text-ink text-base outline-none focus:border-accent focus:ring-2 focus:ring-amber-100 transition-colors min-w-0"
-            />
-            <button
-                id="add-button"
-                aria-label="Add item"
-                class="w-12 h-12 flex items-center justify-center rounded-full bg-accent text-white text-xl hover:opacity-90 active:scale-95 transition-all shrink-0"
-            >
+        <div class="max-w-[720px] mx-auto px-3 py-2 flex items-center gap-2">
+            <input id="add-input" type="text" inputmode="text" autocomplete="off"
+                enterkeyhint="done" placeholder="Dodaj…"
+                class="field flex-1 min-w-0 h-10 px-3 text-[0.95rem]" />
+            <button id="add-button" type="button" aria-label="Dodaj"
+                class="w-10 h-10 shrink-0 rounded-lg bg-accent text-ink grid place-items-center press">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
+
+        <!-- Označevalnik: odpre se, ko pišeš -->
+        <div id="tray" class="tray max-w-[720px] mx-auto px-3">
+            <div class="pb-2 flex gap-1.5 overflow-x-auto no-scrollbar" id="tray-row"></div>
+        </div>
     </section>
 
-    <main id="main" class="flex-1 overflow-y-auto w-full max-w-[720px] mx-auto px-4 py-2 pb-24">
+    <!-- ============ Filtri ============ -->
+    <nav id="filters" class="hidden bg-paper border-b border-line shrink-0" aria-label="Filtri">
+        <div class="max-w-[720px] mx-auto px-3 py-2 flex gap-1.5 overflow-x-auto no-scrollbar" id="filter-row"></div>
+    </nav>
+
+    <!-- ============ Seznam ============ -->
+    <main id="main" class="flex-1 overflow-y-auto w-full max-w-[720px] mx-auto px-3">
         <ul id="items-active" class="divide-y divide-line"></ul>
 
-        <div id="done-divider" class="hidden flex items-center justify-between gap-3 mt-6 mb-1 px-1">
-            <div class="flex items-center gap-2 text-sm text-muted">
-                <span class="h-px bg-line flex-1 w-10"></span>
-                <span id="done-count">done</span>
-            </div>
-            <button id="clear-done" class="text-sm text-muted hover:text-ink underline underline-offset-2">Clear done</button>
+        <div id="done-divider" class="hidden items-center justify-between gap-3 mt-5 mb-0.5">
+            <span id="done-count" class="text-[0.7rem] uppercase tracking-[0.14em] text-muted"></span>
+            <button id="clear-done" type="button"
+                class="text-[0.78rem] text-muted hover:text-amberInk underline underline-offset-4 decoration-line">
+                počisti
+            </button>
         </div>
-
         <ul id="items-checked" class="divide-y divide-line"></ul>
 
-        <div id="empty-items" class="hidden text-center text-muted text-sm py-12">
-            Nothing here yet. Add something above.
-        </div>
-
-        <div id="gate" class="hidden flex flex-col items-center justify-center py-16 gap-4 text-center">
-            <i id="gate-icon" class="fas fa-user-lock text-4xl text-muted"></i>
-            <p id="gate-message" class="text-muted max-w-xs"></p>
-            <a id="gate-link" href="#" class="hidden px-5 py-3 rounded-full bg-accent text-white font-medium hover:opacity-90 transition-opacity">Sign in</a>
-        </div>
-
-        <div id="empty-collections" class="hidden flex flex-col items-center justify-center py-16 gap-4">
-            <i class="fas fa-list-check text-4xl text-muted"></i>
-            <p class="text-muted text-center">No lists yet. Create your first one.</p>
-            <div class="flex gap-2 w-full max-w-xs">
-                <input
-                    id="first-list-input"
-                    type="text"
-                    placeholder="e.g. Groceries"
-                    enterkeyhint="done"
-                    class="flex-1 px-4 py-3 rounded-2xl border border-line bg-white text-ink outline-none focus:border-accent focus:ring-2 focus:ring-amber-100"
-                />
-                <button id="first-list-create" class="px-4 py-3 rounded-full bg-accent text-white font-medium hover:opacity-90 transition-opacity">Create</button>
+        <!-- Prazno stanje -->
+        <div id="empty-items" class="hidden py-10 text-center">
+            <p class="text-[0.9rem] text-muted">Seznam je prazen.</p>
+            <div id="quick-add" class="hidden mt-4">
+                <p class="text-[0.7rem] uppercase tracking-[0.14em] text-muted mb-2">Pogosto</p>
+                <div id="quick-add-row" class="flex flex-wrap justify-center gap-1.5"></div>
             </div>
         </div>
+
+        <!-- Nobenega seznama še ni -->
+        <div id="empty-collections" class="hidden flex-col items-center justify-center py-14 gap-4">
+            <p class="text-[0.95rem] text-muted text-center">Nimaš še nobenega seznama.</p>
+            <div class="flex gap-2 w-full max-w-xs">
+                <input id="first-list-input" type="text" placeholder="npr. trgovina" enterkeyhint="done"
+                    class="field flex-1 min-w-0 px-3 py-2.5" />
+                <button id="first-list-create" type="button" class="px-4 py-2.5 rounded-lg bg-accent text-ink text-[0.9rem] font-medium press">
+                    Ustvari
+                </button>
+            </div>
+        </div>
+
+        <!-- Vrata -->
+        <div id="gate" class="hidden flex-col items-center justify-center py-16 gap-4 text-center">
+            <i id="gate-icon" class="fas fa-lock text-3xl text-muted"></i>
+            <p id="gate-message" class="text-[0.95rem] text-muted max-w-xs"></p>
+            <a id="gate-link" href="#" class="hidden px-5 py-2.5 rounded-lg bg-accent text-ink text-[0.9rem] font-medium">Prijava</a>
+        </div>
+
+        <!-- Zgodovina -->
+        <section id="history" class="hidden mt-6 border-t border-line">
+            <button id="history-toggle" type="button"
+                class="w-full py-3 flex items-center gap-2 text-left text-[0.78rem] text-muted hover:text-ink transition-colors"
+                aria-expanded="false" aria-controls="history-body">
+                <i class="fas fa-angle-right text-[0.7rem] transition-transform" id="history-caret"></i>
+                <span>Zgodovina</span>
+                <span id="history-hint" class="ml-auto text-muted text-[0.72rem]"></span>
+            </button>
+            <div id="history-body" class="hidden pb-4"></div>
+        </section>
+
+        <div class="h-6" aria-hidden="true"></div>
     </main>
 
-    <!-- admin-only: per-collection access management -->
-    <div id="access-backdrop" class="hidden fixed inset-0 bg-ink/40 z-40"></div>
-    <section id="access-sheet" class="hidden fixed bottom-0 left-0 right-0 z-50 max-w-[720px] mx-auto bg-paper rounded-t-2xl shadow-2xl">
-        <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-line">
-            <h2 class="text-lg font-semibold">Who can see this list</h2>
-            <button id="access-close" aria-label="Close" class="w-10 h-10 flex items-center justify-center rounded-full text-muted hover:text-ink">
-                <i class="fas fa-xmark text-lg"></i>
-            </button>
+    <!-- ============ Pregrinjalo ============ -->
+    <div id="backdrop" class="hidden fixed inset-0 bg-ink/40 z-40"></div>
+
+    <!-- ============ Izbira seznama ============ -->
+    <section id="picker-sheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+        <div class="sheet-head">
+            <h2 id="picker-title" class="text-[1rem] font-semibold">Seznami</h2>
+            <button type="button" class="tap text-muted hover:text-ink sheet-close" aria-label="Zapri"><i class="fas fa-xmark"></i></button>
         </div>
-        <div class="px-5 py-3 border-b border-line">
-            <label for="access-collection" class="block text-xs uppercase tracking-wide text-muted mb-1">Collection</label>
-            <select id="access-collection"
-                class="w-full px-4 py-3 rounded-2xl border border-line bg-white text-ink text-base outline-none focus:border-accent"></select>
-        </div>
-        <ul id="access-users" class="divide-y divide-line max-h-[45vh] overflow-y-auto px-5"></ul>
-        <div class="px-5 pt-3 pb-5 flex flex-col gap-3 border-t border-line">
-            <button id="access-delete"
-                class="w-full px-4 py-3 rounded-2xl border border-red-200 text-red-600 font-medium flex items-center justify-center gap-2 hover:bg-red-50 disabled:opacity-50 transition-colors">
-                <i class="fas fa-trash-can"></i>
-                <span>Delete this list</span>
-            </button>
-            <p class="text-xs text-muted text-center">Admins always see every list.</p>
+        <ul id="picker-list" class="sheet-body divide-y divide-line"></ul>
+        <div class="sheet-foot">
+            <div class="flex gap-2">
+                <input id="new-list-input" type="text" placeholder="nov seznam" enterkeyhint="done" maxlength="100"
+                    class="field flex-1 min-w-0 px-3 py-2.5" />
+                <button id="new-list-create" type="button" class="px-4 py-2.5 rounded-lg bg-accent text-ink text-[0.9rem] font-medium press">
+                    Dodaj
+                </button>
+            </div>
         </div>
     </section>
 
-    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-ink text-paper text-sm opacity-0 pointer-events-none transition-opacity z-[60]"></div>
+    <!-- ============ Postavka ============ -->
+    <section id="item-sheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="item-title">
+        <div class="sheet-head">
+            <h2 id="item-title" class="text-[1rem] font-semibold">Postavka</h2>
+            <button type="button" class="tap text-muted hover:text-ink sheet-close" aria-label="Zapri"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="sheet-body">
+            <label for="item-name" class="lbl">Ime</label>
+            <input id="item-name" type="text" class="field w-full px-3 py-2.5 mb-4" maxlength="255" />
+
+            <p class="lbl">Oddelek</p>
+            <div id="item-sections" class="flex flex-wrap gap-1.5 mb-4"></div>
+
+            <p class="lbl">Trgovina</p>
+            <div id="item-shops" class="flex flex-wrap gap-1.5 mb-4"></div>
+
+            <p id="item-meta" class="text-[0.78rem] text-muted leading-relaxed"></p>
+        </div>
+        <div class="sheet-foot">
+            <button id="item-delete" type="button"
+                class="w-full px-4 py-2.5 rounded-lg border border-line text-danger text-[0.9rem] font-medium flex items-center justify-center gap-2 hover:bg-danger/5 transition-colors">
+                <i class="fas fa-trash-can text-[0.8rem]"></i> Izbriši
+            </button>
+        </div>
+    </section>
+
+    <!-- ============ Oznake ============ -->
+    <section id="labels-sheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="labels-title">
+        <div class="sheet-head">
+            <div>
+                <h2 id="labels-title" class="text-[1rem] font-semibold leading-tight">Oznake</h2>
+                <p class="text-[0.72rem] text-muted">Tapni ime za preimenovanje.</p>
+            </div>
+            <button type="button" class="tap text-muted hover:text-ink sheet-close" aria-label="Zapri"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="sheet-body">
+            <div id="labels-empty" class="hidden py-2 mb-4">
+                <p class="text-[0.85rem] text-muted mb-3">Ta seznam še nima oznak.</p>
+                <button id="labels-defaults" type="button"
+                    class="w-full px-4 py-2.5 rounded-lg bg-accent text-ink text-[0.9rem] font-medium press">
+                    Dodaj privzete oznake
+                </button>
+            </div>
+
+            <p class="lbl">Oddelek</p>
+            <ul id="labels-sections" class="mb-3"></ul>
+            <div class="flex gap-2 mb-5">
+                <input id="new-section" type="text" placeholder="nov oddelek" maxlength="40" enterkeyhint="done"
+                    class="field flex-1 min-w-0 px-3 py-2" />
+                <button data-add-label="section" type="button" class="px-3 py-2 rounded-lg border border-line text-[0.85rem] text-muted hover:text-ink hover:border-ink transition-colors">Dodaj</button>
+            </div>
+
+            <p class="lbl">Trgovina</p>
+            <ul id="labels-shops" class="mb-3"></ul>
+            <div class="flex gap-2">
+                <input id="new-shop" type="text" placeholder="nova trgovina" maxlength="40" enterkeyhint="done"
+                    class="field flex-1 min-w-0 px-3 py-2" />
+                <button data-add-label="shop" type="button" class="px-3 py-2 rounded-lg border border-line text-[0.85rem] text-muted hover:text-ink hover:border-ink transition-colors">Dodaj</button>
+            </div>
+        </div>
+        <div class="sheet-foot">
+            <button id="access-open" type="button"
+                class="hidden w-full px-4 py-2.5 rounded-lg border border-line text-[0.9rem] text-muted hover:text-ink hover:border-ink transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-user-lock text-[0.8rem]"></i> Kdo vidi ta seznam
+            </button>
+        </div>
+    </section>
+
+    <!-- ============ Dostop (samo admin) ============ -->
+    <section id="access-sheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="access-title">
+        <div class="sheet-head">
+            <h2 id="access-title" class="text-[1rem] font-semibold">Kdo vidi ta seznam</h2>
+            <button type="button" class="tap text-muted hover:text-ink sheet-close" aria-label="Zapri"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="px-4 pt-3 pb-2 border-b border-line">
+            <label for="access-collection" class="lbl">Seznam</label>
+            <select id="access-collection" class="field w-full px-3 py-2.5"></select>
+        </div>
+        <ul id="access-users" class="sheet-body divide-y divide-line"></ul>
+        <div class="sheet-foot">
+            <button id="access-delete" type="button"
+                class="w-full px-4 py-2.5 rounded-lg border border-line text-danger text-[0.9rem] font-medium flex items-center justify-center gap-2 hover:bg-danger/5 disabled:opacity-50 transition-colors">
+                <i class="fas fa-trash-can text-[0.8rem]"></i> Izbriši ta seznam
+            </button>
+            <p class="mt-2 text-[0.72rem] text-muted text-center">Administratorji vedno vidijo vse sezname.</p>
+        </div>
+    </section>
+
+    <div id="toast" class="fixed left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-ink text-paper text-[0.85rem] opacity-0 pointer-events-none transition-opacity z-[60]"></div>
 
     <script src="../../components/back-link.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

@@ -1,152 +1,448 @@
-/* hide scrollbar on tab strip */
+/* views/list: only what Tailwind cannot cleanly express.
+   Component classes, the two authored motions, the state overrides that must
+   beat Tailwind's injected utilities, and the browser surfaces (caret,
+   selection, scrollbar) that otherwise ship with nobody's design.
+
+   The palette lives in the inline tailwind.config in index.html; it is
+   repeated here as custom properties because this file cannot read it. */
+
+:root {
+    --ink: #211f1c;
+    --paper: #f8f7f4;
+    --card: #ffffff;
+    --muted: #736e66;
+    --faint: #9b978f;
+    --line: #e9e6e0;
+    --accent: #d97706;
+    --amber-ink: #b45309;
+    --danger: #b3261e;
+
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* base-style.css is not linked (see index.html), so the ground is painted here. */
+body {
+    background: var(--paper);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* The poll refresh and pull-to-refresh fight each other on a phone. */
+html, body { overscroll-behavior-y: contain; }
+
+/* Tailwind's utilities are injected after this sheet, and these elements carry
+   flex/grid classes, so `hidden` alone loses on specificity. */
+#done-divider.hidden,
+#empty-collections.hidden,
+#empty-items.hidden,
+#quick-add.hidden,
+#history.hidden,
+#history-body.hidden,
+#filters.hidden,
+#gate.hidden,
+#backdrop.hidden,
+#access-open.hidden,
+#labels-empty.hidden,
+.sheet.hidden { display: none !important; }
+
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* prevent body pull-to-refresh fighting the polling refresh */
-html, body { overscroll-behavior-y: contain; }
+/* ---------------------------------------------------------------
+   Browser surfaces. These ship with defaults belonging to no design
+   system, and they are on screen constantly in a text-entry app.
+   --------------------------------------------------------------- */
 
-/* override base-style.css gradient so the warm off-white actually shows */
-body { background: #f8f7f4; }
+::selection { background: rgba(217, 119, 6, 0.22); color: var(--ink); }
+input { caret-color: var(--accent); }
 
-/* fix: ensure hidden overrides Tailwind flex/flex-col on these IDs */
-#done-divider.hidden,
-#empty-collections.hidden,
-#gate.hidden { display: none !important; }
+#main { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+#main::-webkit-scrollbar { width: 8px; }
+#main::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+#main::-webkit-scrollbar-track { background: transparent; }
 
-/* tab chip */
-.tab-chip {
-    flex-shrink: 0;
-    padding: 0.45rem 0.9rem;
-    border-radius: 9999px;
-    border: 1px solid #e9e6e0;
-    background: #fff;
-    color: #211f1c;
-    font-weight: 500;
-    font-size: 0.95rem;
-    cursor: pointer;
-    white-space: nowrap;
-    scroll-snap-align: start;
-    min-height: 36px;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.tab-chip:hover { border-color: #211f1c; }
-.tab-chip.active {
-    background: #211f1c;
-    color: #fff;
-    border-color: #211f1c;
-}
-.tab-chip.add-tab {
-    color: #9b978f;
-    border-style: dashed;
-}
-.tab-chip.add-tab:hover { color: #211f1c; }
-
-/* tab inline-edit input */
-.tab-input {
-    flex-shrink: 0;
-    padding: 0.45rem 0.9rem;
-    border-radius: 9999px;
-    border: 1px solid #d97706;
-    background: #fff;
-    color: #211f1c;
-    font-family: inherit;
-    font-size: 0.95rem;
-    font-weight: 500;
-    outline: none;
-    min-width: 8rem;
-}
-
-/* item row */
-.item-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 0.25rem;
-    min-height: 52px;
-    cursor: pointer;
-    user-select: none;
-}
-.item-checkbox {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    border: 2px solid #c8c4bc;
+/* One focus treatment for the whole app: never an outline removed without a
+   replacement, and never a browser-blue ring on a warm paper ground. */
+:where(a, button, input, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
     border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: transparent;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.item-row:not(.checked):hover .item-checkbox {
-    border-color: #211f1c;
-}
-.item-row.checked .item-checkbox {
-    background: #d97706;
-    border-color: #d97706;
-    color: #fff;
-}
-.item-name {
-    flex: 1;
-    min-width: 0;
-    word-break: break-word;
-    font-size: 1rem;
-    transition: color 0.15s;
-}
-.item-row.checked .item-name {
-    text-decoration: line-through;
-    color: #9b978f;
-}
-.item-delete {
+
+/* ---------------------------------------------------------------
+   Primitives
+   --------------------------------------------------------------- */
+
+/* A 40px target for an icon-only control, whatever the glyph inside. */
+.tap {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
     flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #c8c4bc;
-    background: transparent;
+    background: none;
     border: none;
     cursor: pointer;
-    font-size: 1.25rem;
-    border-radius: 9999px;
-    transition: color 0.15s, background 0.15s;
+    transition: color 0.15s var(--ease);
 }
-.item-delete:hover { color: #211f1c; background: #f0ede8; }
 
-/* optimistic ghost state */
-.item-row.pending .item-name { color: #9b978f; }
-
-/* toast visible state */
-#toast.visible { opacity: 1; transform: translate(-50%, 0); }
-
-/* tiny entrance animation for new items */
-@keyframes list-item-in {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
+.field {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font: inherit;
+    outline: none;
+    transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
-.item-row { animation: list-item-in 0.18s ease-out; }
+.field::placeholder { color: var(--muted); opacity: 1; }
+.field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.16);
+}
+select.field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%23736e66' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 10px;
+    padding-right: 32px;
+}
 
-/* iOS safe area: pad body for the notch, pad main for the home indicator */
+/* A press that answers immediately: the button sinks rather than lighting up,
+   which is the one thing a thumb can feel on a phone. */
+.press {
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s var(--ease), filter 0.15s var(--ease);
+}
+.press:hover:not(:disabled) { filter: brightness(1.04); }
+.press:active:not(:disabled) { transform: scale(0.96); }
+.press:disabled { opacity: 0.5; cursor: default; }
+
+/* Small uppercase field label. */
+.lbl {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+}
+
+/* ---------------------------------------------------------------
+   Chips: filter row, label tray, sheet pickers, quick add.
+   Colour here means ACTIVE and nothing else, which is what keeps the
+   labels on the rows themselves quiet.
+   --------------------------------------------------------------- */
+
+.chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 32px;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.82rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s var(--ease), color 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+.chip:hover:not(.chip--on) { color: var(--ink); border-color: var(--muted); }
+.chip--on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+    font-weight: 500;
+}
+.chip--muted { border-style: dashed; }
+.chip--section.chip--on { background: var(--accent); }
+
+/* The tray's two groups are separated by a rule, not by a heading: at this
+   size a heading costs more than it explains. */
+.chip-sep {
+    flex-shrink: 0;
+    width: 1px;
+    align-self: stretch;
+    margin: 0.15rem 0.25rem;
+    background: var(--line);
+}
+
+/* ---------------------------------------------------------------
+   The label tray under the add field. Opens while you are typing and
+   closes when you are not, so a plain list never sees it.
+   --------------------------------------------------------------- */
+
+.tray {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 0.22s var(--ease), opacity 0.16s var(--ease);
+}
+/* The tray sits in the add bar, not above the list: without a ground of its own
+   it reads as a second filter row stacked on the first. */
+.tray--open > div { border-top: 1px solid var(--line); padding-top: 0.5rem; }
+.tray > div { overflow: hidden; min-height: 0; }
+.tray.tray--open { grid-template-rows: 1fr; opacity: 1; }
+
+/* ---------------------------------------------------------------
+   Item rows
+   --------------------------------------------------------------- */
+
+/* Compact on purpose: a real shop is thirty lines, and every row that does not
+   fit is a row somebody scrolls past in an aisle. 44px stays a safe target. */
+.item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.45rem 0.1rem;
+    min-height: 44px;
+}
+
+.item-check {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin: -0.15rem 0 -0.15rem -0.5rem;
+    display: grid;
+    place-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+.item-check::before {
+    content: "";
+    width: 21px;
+    height: 21px;
+    border: 2px solid #c8c4bc;
+    border-radius: 6px;
+    transition: background 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+.item-check:hover::before { border-color: var(--ink); }
+.item-check .fa-check {
+    position: absolute;
+    font-size: 0.7rem;
+    color: var(--ink);
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
+}
+.item-row--done .item-check::before { background: var(--accent); border-color: var(--accent); }
+.item-row--done .item-check .fa-check { opacity: 1; transform: scale(1); }
+
+/* The tappable middle: name on top, labels and initials beneath. Both lines are
+   one target, and it opens the item rather than toggling it, so the checkbox
+   stays the only way to tick something by accident. */
+.item-body {
+    flex: 1;
+    min-width: 0;
+    display: block;
+    padding: 0.15rem 0;
+    background: none;
+    border: none;
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+}
+.item-name {
+    display: block;
+    font-size: 0.94rem;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    transition: color 0.15s var(--ease);
+}
+.item-row--done .item-name { text-decoration: line-through; color: var(--muted); }
+
+/* Labels on a row are TEXT, never chips. Chips are how the filter says
+   "active"; if every row also wore them, nothing would read as selected and a
+   ten-item list would carry twenty coloured pills. */
+.item-meta {
+    display: block;
+    margin-top: 0.05rem;
+    font-size: 0.73rem;
+    line-height: 1.25;
+    color: var(--muted);
+}
+.item-meta__who {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.02rem 0.3rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+}
+
+.item-row--pending { opacity: 0.55; }
+
+/* ---------------------------------------------------------------
+   History
+   --------------------------------------------------------------- */
+
+.hist-day {
+    padding: 0.6rem 0 0.25rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+}
+.hist-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.4rem 0.1rem;
+    border-top: 1px solid var(--line);
+}
+.hist-name { flex: 1; min-width: 0; font-size: 0.88rem; overflow-wrap: anywhere; }
+.hist-meta { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+.hist-again {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin: -0.35rem 0;
+    display: grid;
+    place-items: center;
+    border: none;
+    background: none;
+    color: var(--muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.hist-again:hover { color: var(--ink); background: var(--line); }
+
+/* ---------------------------------------------------------------
+   Sheets. One shell for all four, so the app has exactly one modal
+   vocabulary. Depth is a real offset shadow with blur, not a halo.
+   --------------------------------------------------------------- */
+
+.sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    max-height: 88dvh;
+    background: var(--paper);
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -8px 34px rgba(33, 31, 28, 0.18);
+}
+.sheet-head {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.85rem 0.6rem 0.75rem 1rem;
+    border-bottom: 1px solid var(--line);
+}
+.sheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.9rem 1rem;
+}
+.sheet-foot {
+    flex-shrink: 0;
+    padding: 0.8rem 1rem;
+    border-top: 1px solid var(--line);
+}
+
+/* A row in the list picker or the labels manager. */
+.sheet-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0;
+}
+/* Nineteen one-word labels do not need list-row spacing; at full height the
+   manager is four screens of scrolling for a vocabulary you can see at once. */
+#labels-sections .sheet-row,
+#labels-shops .sheet-row { padding: 0.15rem 0; }
+#labels-sections .sheet-row__name,
+#labels-shops .sheet-row__name { padding: 0.3rem 0; font-size: 0.9rem; }
+.sheet-row__name {
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.92rem;
+    color: inherit;
+    text-align: left;
+    padding: 0.35rem 0;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+.sheet-row__name:disabled { cursor: default; }
+.sheet-row--on .sheet-row__name { font-weight: 600; color: var(--amber-ink); }
+.sheet-row__act {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: none;
+    background: none;
+    color: var(--muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.sheet-row__act:hover { color: var(--ink); background: var(--line); }
+.sheet-row__act--danger:hover { color: var(--danger); background: rgba(179, 38, 30, 0.08); }
+
+/* ---------------------------------------------------------------
+   Toast
+   --------------------------------------------------------------- */
+
+#toast {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 2rem);
+}
+#toast.visible { opacity: 1; }
+
+/* ---------------------------------------------------------------
+   Motion. One authored moment: a new row arrives. Everything else is
+   a state transition, not choreography.
+   --------------------------------------------------------------- */
+
+@keyframes row-in {
+    from { opacity: 0; transform: translateY(-3px); }
+    to   { opacity: 1; transform: none; }
+}
+.item-row--new { animation: row-in 0.18s var(--ease); }
+
+@keyframes sheet-in {
+    from { transform: translateY(14px); opacity: 0.6; }
+    to   { transform: none; opacity: 1; }
+}
+.sheet:not(.hidden) { animation: sheet-in 0.2s var(--ease); }
+
+/* ---------------------------------------------------------------
+   Safe areas: the notch above, the home indicator below.
+   --------------------------------------------------------------- */
+
 @supports (padding: env(safe-area-inset-top)) {
     body { padding-top: env(safe-area-inset-top); }
-}
-@supports (padding: env(safe-area-inset-bottom)) {
-    main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
-}
-
-/* access sheet: slide up from the bottom, clear the home indicator */
-@keyframes sheet-in {
-    from { transform: translateY(24px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-}
-#access-sheet:not(.hidden) { animation: sheet-in 0.22s ease-out; }
-@supports (padding: env(safe-area-inset-bottom)) {
-    #access-sheet { padding-bottom: env(safe-area-inset-bottom); }
+    #main { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
+    .sheet-foot { padding-bottom: calc(0.8rem + env(safe-area-inset-bottom)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .item-row { animation: none; }
-    #access-sheet:not(.hidden) { animation: none; }
-    * { transition: none !important; }
+    .item-row--new,
+    .sheet:not(.hidden) { animation: none; }
+    .tray { transition: none; }
+    *, *::before, *::after { transition: none !important; }
 }
