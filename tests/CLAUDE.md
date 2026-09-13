@@ -67,6 +67,22 @@ precedence when one spelling is several words, and the append-only merges that s
 rebuild from re-dating a word someone already saw. Stdlib `unittest`, no network and no
 large fixtures. The generated output is checked separately by `beseda-data.test.mjs`.
 
+`music-analysis-py.test.py` unit-tests the analysis engine `app/scripts/music_analysis.py`
+from synthesized audio: chord progressions rendered as plucked strings over a drum bed, so
+the key, the loop and the tempo are known exactly. Covers the parts that were silently
+wrong before (a relative pair told apart by structure, N.C. meaning "nothing is playing"
+rather than "dense mix", loop detection surviving a seventh relabelled mid-song, a
+third-less chord not claiming a mode) plus the payload contract the analysis page reads.
+Stdlib `unittest` + numpy, no audio files, ~30s.
+
+`music-corpus-py.test.py` is the accuracy corpus and is **opt-in**: `MUSIC_CORPUS=1`,
+because it decodes the whole local track library (~20s) and needs ffmpeg plus the MP3s.
+Ground truth is in `fixtures/music-corpus.json`, written from published chord charts and
+**never from the analyzer's own output** (that would be a test that can only agree with
+itself). Assertions are hit rates, not per-song, so one oddly mastered recording cannot
+wedge the build while a regression still fails it. A song whose key cannot be settled
+independently is left out of the file rather than guessed at.
+
 `stocks-sync-py.test.py` unit-tests the cron wrapper `app/scripts/stocks-sync.py`: secret
 scrubbing (the report lands in the web root, so redaction is a **security property**), PHP
 binary choice (newest 8+ with `pdo_mysql` wins, 7.x never), and log trimming. Stdlib

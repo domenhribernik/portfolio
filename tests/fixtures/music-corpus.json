@@ -1,0 +1,143 @@
+{
+  "_comment": "Ground truth for the opt-in accuracy corpus (tests/music-corpus-py.test.py). Only songs whose key is unambiguous and well documented are listed; 'chords' is the set of chords the analyzer should find, not an ordered progression. Paths are relative to assets/music/.",
+  "songs": [
+    {
+      "file": "acoustic/House of the Rising Sun - The Animals.mp3",
+      "key": "A minor",
+      "chords": [
+        "Am",
+        "C",
+        "D",
+        "F",
+        "E"
+      ]
+    },
+    {
+      "file": "electric/Seven Nation Army - White Stripes.mp3",
+      "key": "E minor"
+    },
+    {
+      "file": "acoustic/Wish You Were Here - Pink Floyd.mp3",
+      "key": "G major",
+      "chords": [
+        "G",
+        "Em",
+        "C",
+        "D",
+        "Am"
+      ]
+    },
+    {
+      "file": "acoustic/Brown eyed girl - Van Morrison.mp3",
+      "key": "G major",
+      "chords": [
+        "G",
+        "C",
+        "D",
+        "Em"
+      ]
+    },
+    {
+      "file": "electric/Blitzkrieg Bop - The Ramones.mp3",
+      "key": "A major",
+      "chords": [
+        "A",
+        "D",
+        "E"
+      ]
+    },
+    {
+      "file": "acoustic/Hey ya! - Outcast.mp3",
+      "key": "G major",
+      "chords": [
+        "G",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    {
+      "file": "electric/Jingle Bells - Rock Version - G Major.mp3",
+      "key": "G major",
+      "chords": [
+        "G",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "file": "acoustic/Don't Look Back In Anger - Oasis.mp3",
+      "key": "C major",
+      "chords": [
+        "C",
+        "G",
+        "Am",
+        "E",
+        "F"
+      ]
+    },
+    {
+      "file": "acoustic/Save tonight - Eagle Eye Cherry.mp3",
+      "key": "A minor",
+      "chords": [
+        "Am",
+        "F",
+        "C",
+        "G"
+      ]
+    },
+    {
+      "file": "acoustic/Hurt - Johnny Cash.mp3",
+      "key": "A minor",
+      "chords": [
+        "Am",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "file": "acoustic/A Horse With No Name - America.mp3",
+      "key": "E minor",
+      "chords": [
+        "Em",
+        "D"
+      ]
+    },
+    {
+      "file": "acoustic/Wonderwall - Oasis.mp3",
+      "key": "F# minor",
+      "chords": [
+        "F#m",
+        "A",
+        "E",
+        "B"
+      ]
+    },
+    {
+      "file": "acoustic/Somebody That I Used to Know - Gotye.mp3",
+      "key": "D minor"
+    },
+    {
+      "file": "acoustic/Layla Unplugged - Eric Clapton.mp3",
+      "key": "D minor"
+    },
+    {
+      "file": "acoustic/Don't Dream It's Over - Crowded House.mp3",
+      "key": "Eb major"
+    },
+    {
+      "file": "acoustic/Fast Car - Tracy Chapman.mp3",
+      "key": "A major",
+      "chords": [
+        "A",
+        "D",
+        "F#m",
+        "E"
+      ]
+    },
+    {
+      "file": "acoustic/To Be With You - Mr. Big.mp3",
+      "key": "E major"
+    }
+  ]
+}

@@ -23,9 +23,53 @@ Guitar backing tracks app with three screens sharing one retro tape-deck design 
 
 ## Backend
 
-- Controller: [app/controllers/music-controller.php](../../app/controllers/music-controller.php), `?resource=sync` (chord/lyrics CRUD) and `?resource=analysis` (audio upload -> Python -> JSON, optional DB save via `save=0/1` POST field). Reads are public; **writes (saveSync/deleteSync/runAnalysis) require `Auth::requireProjectRole('music', 'editor')`** (admins pass implicitly; the project is seeded by `music-model.sql`). Analysis also holds a one-at-a-time concurrency lock (`app/cache/music-analysis.lock`, stale after 300 s, second run gets 429) because each run spawns a synchronous Python + ffmpeg process. Integration suite: `tests/music-controller.test.php`. Accepted uploads: `.mp3`, plus `.webm/.ogg/.m4a/.mp4/.wav` for the analysis page's in-browser mic recordings (MediaRecorder output varies by browser); each format is magic-byte sniffed. The audio file itself is never persisted, only the result JSON.
+- Controller: [app/controllers/music-controller.php](../../app/controllers/music-controller.php), `?resource=sync` (chord/lyrics CRUD) and `?resource=analysis` (audio upload -> Python -> JSON, optional DB save via `save=0/1` POST field). Reads are public; **writes (saveSync/deleteSync/runAnalysis) require `Auth::requireProjectRole('music', 'editor')`** (admins pass implicitly; the project is seeded by `music-model.sql`). Analysis also holds a one-at-a-time concurrency lock (`app/cache/music-analysis.lock`, stale after 300 s, second run gets 429) because each run spawns a synchronous Python + ffmpeg process. Integration suite: `tests/music-controller.test.php`. The analyzer itself has
+  `tests/music-analysis-py.test.py` (fast, synthesized audio) and
+  `tests/music-corpus-py.test.py` (`MUSIC_CORPUS=1`, real recordings with known keys). Accepted uploads: `.mp3`, plus `.webm/.ogg/.m4a/.mp4/.wav` for the analysis page's in-browser mic recordings (MediaRecorder output varies by browser); each format is magic-byte sniffed. The audio file itself is never persisted, only the result JSON.
 - Tables: [app/models/music-model.sql](../../app/models/music-model.sql) (`music_sync`, `music_analyses`). Run manually via phpMyAdmin like all models.
-- Analyzer: [app/scripts/analyze_audio.py](../../app/scripts/analyze_audio.py), invoked by the controller through `exec()`. Decodes via the system `ffmpeg` binary, all DSP is plain numpy (no librosa). Analyzes the first 180s. Every stage is wrapped independently: failed stages return `null` plus an entry in `warnings`, so partial results still render.
+- Analyzer: [app/scripts/analyze_audio.py](../../app/scripts/analyze_audio.py) is only the
+  CLI the controller `exec()`s: decode with the system `ffmpeg`, hand the samples to
+  [app/scripts/music_analysis.py](../../app/scripts/music_analysis.py), print JSON. The
+  engine is plain numpy (no librosa), IO-free and importable, which is the whole reason it
+  can be unit tested from a synthesized signal instead of only against real MP3s. Analyzes
+  the first 180s in roughly 6s and 240MB. Every stage is wrapped independently: a failed
+  stage returns `null` plus an entry in `warnings`, so partial results still render.
+- **The CLI must print JSON on stdout and nothing else, ever.** The controller runs it with
+  `2>&1` and parses the combined output, so one numpy RuntimeWarning reads as a failed
+  analysis; `analyze_audio.py` silences warnings at import for exactly this reason.
+
+## How the analysis actually works
+
+Worth knowing before changing any of it, because most of these steps exist to fix a
+specific wrong answer the obvious version gave:
+
+- **Chroma is NNLS-deconvolved, not folded.** Summing FFT bins into 12 pitch classes puts
+  a chord's own overtones on other chords' notes (a C major triad's partials land on G, E
+  and Bb), which reported the wrong triad and, averaged over a song, the wrong key. The
+  log-frequency spectrogram is whitened and then fitted against a dictionary of harmonic
+  note profiles. Whitening **divides** by the running background as well as subtracting it:
+  without the division a densely mastered song produces a chroma that simply slopes from C
+  down to B, which is the shape of its spectrum rather than of any chord in it.
+- **Segmentation is beat-synchronous**, falling back to a fixed grid when beat tracking
+  finds no usable pulse. Chords change on beats, so a beat is both the smallest useful
+  boundary and a free noise average.
+- **N.C. is scored relative to the field, never against a fixed template-fit cutoff.** A
+  sparse or quiet mix scores lower against every template, so an absolute bar silenced half
+  of "Hurt" rather than the parts where nothing was playing.
+- **A power chord is its own state.** Rock guitar plays root and fifth with no third, and
+  forcing those bars to choose major or minor is how a whole song lands in the wrong mode.
+  It is relabelled to the key's own triad before output, so nothing downstream sees a `5`.
+- **The key comes from chord function and song structure, not from chroma correlation.** A
+  relative pair shares all seven chords, so a profile match cannot separate C major from A
+  minor; what does is which chord holds the time, what the bass sits on, what resolves to
+  what, and which third the song actually plays. Weights live in `KEY_W_*`.
+- **Loop detection runs on triads, with a tolerance.** The seventh refinement relabels
+  segment by segment, so one pass returns `Am` and the next `Am7`; matched literally, a
+  loop that repeats perfectly looks like it never repeats. Repetitions must also take
+  comparable time, or a chord held through half a verse matches a quick vamp of the same
+  chords elsewhere. The fullest spelling the song spends most time on is reattached after.
+- Tempo octave errors remain: a half-time rock song with busy eighths can report double.
+
 - The controller sets `serialize_precision=-1`; without it PHP re-encodes the analyzer's floats as `87.900000000000006`.
 
 ## Data contract (the part that bites)
