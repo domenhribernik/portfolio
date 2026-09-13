@@ -78,6 +78,55 @@ test('every card carries a title, description, icon and gradient', () => {
     }
 });
 
+//? ---------------------------------------------------------------------- kind
+
+// The share index shows projects and nothing else, so each card has to say
+// which it is. The page cannot work this out for itself: it reads the catalog
+// and never sees the registry, and "views/rocks" and "views/privacy" are the
+// same shape by the time they get there.
+
+test('a registry-backed card is a project', () => {
+    const catalog = build();
+    assert.equal(catalog.pages['views/tells'].kind, 'project');
+    assert.equal(catalog.pages['views/nebo'].kind, 'project');
+});
+
+test('an extras page carries the kind its SHARE_EXTRAS entry declares', () => {
+    const catalog = build();
+    // Not in the registry, but unmistakably a project.
+    assert.equal(catalog.pages['views/rocks'].kind, 'project');
+    assert.equal(catalog.pages['views/jeger'].kind, 'project');
+    // Site furniture. Reachable by QR, never listed among the projects.
+    assert.equal(catalog.pages[''].kind, 'page');
+    assert.equal(catalog.pages['views/privacy'].kind, 'page');
+    assert.equal(catalog.pages['views/terms'].kind, 'page');
+    assert.equal(catalog.pages['views/about'].kind, 'page');
+});
+
+test('a blog post is its own kind, neither a project nor a page', () => {
+    const catalog = build();
+    assert.equal(catalog.pages['views/blog/building-this-blog'].kind, 'post');
+    // The blog itself is a registered project; its posts are not.
+    assert.equal(catalog.pages['views/blog'].kind, 'project');
+});
+
+test('every card declares a kind the page knows how to file', () => {
+    const catalog = build();
+    for (const [page, card] of Object.entries(catalog.pages)) {
+        assert.ok(['project', 'page', 'post'].includes(card.kind),
+            `kind for ${page || '(homepage)'}: ${card.kind}`);
+    }
+});
+
+test('an extras entry with no kind fails the build rather than guessing', () => {
+    // Guessing is how views/privacy ends up in the project grid. A new extra
+    // has to say what it is, the same way it has to bring an icon.
+    assert.throws(
+        () => build({ extras: { ...SHARE_EXTRAS, 'views/rocks': { icon: 'fas fa-gem', gradient: 'linear-gradient(45deg, #4a4036 0%, #a49a8a 100%)' } } }),
+        /kind/i,
+    );
+});
+
 test('the catalog carries the origin the URLs are built from', () => {
     assert.equal(build().origin, SITE_ORIGIN);
 });

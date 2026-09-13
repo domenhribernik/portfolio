@@ -38,15 +38,22 @@ function isShareHost(hostname) {
     return /^share\./i.test(String(hostname || ''));
 }
 
-// Where the visitor is asking to point the code. On the share subdomain the
-// path is the target, so share.<site>/views/tells/ shares /views/tells/. Read
+// What the address is asking for: the raw path of a page to draw a code for, or
+// null when it names nothing and the page should show its rack of projects.
+//
+// On the share subdomain the path is the target, so share.<site>/views/tells/
+// shares /views/tells/ and the bare share.<site>/ shares the site itself. Read
 // off any other host the pathname is this page's own address, so only an
 // explicit ?p= counts there and the page cannot end up sharing itself.
-export function targetPathFrom({ hostname = '', pathname = '', search = '' } = {}) {
+//
+// null rather than '' for "nothing named", because '' is the homepage and the
+// homepage is a real thing to hand over. Sharing one value between the two is
+// what would make the site's own code the one code this page cannot draw.
+export function requestedTarget({ hostname = '', pathname = '', search = '' } = {}) {
     const explicit = new URLSearchParams(search).get('p');
     if (explicit !== null) return explicit;
     if (isShareHost(hostname)) return String(pathname).replace(/^\/+/, '');
-    return '';
+    return null;
 }
 
 // Reduce a raw address to a site-root-relative page path, or null if it is not
@@ -89,6 +96,26 @@ export function targetUrl(origin, path) {
     const base = String(origin || '').replace(/\/+$/, '');
     const clean = String(path || '').replace(/^\/+|\/+$/g, '');
     return clean ? `${base}/${clean}/` : `${base}/`;
+}
+
+// The address this page should be at while `path` is the card on screen: the
+// inverse of targetPathFrom. Used for both the grid card's href and the history
+// entry the sheet pushes, so a link and a back button can never disagree.
+//
+// Off the subdomain the page's own pathname is kept rather than assumed. XAMPP
+// serves the repo from /portfolio/, and a hard-coded /views/share/ would break
+// every card on the machine this is developed on.
+export function shareAddressFor({ hostname = '', pathname = '', path = null } = {}) {
+    const here = String(pathname || '/');
+
+    //? null is the rack. Off the subdomain that is this page with no query; on
+    //? the subdomain there is no such address, since every address there names
+    //? a target, so it collapses onto the root the same as the homepage does.
+    if (path === null || path === undefined) return isShareHost(hostname) ? '/' : here;
+
+    const clean = String(path).replace(/^\/+|\/+$/g, '');
+    if (isShareHost(hostname)) return clean ? `/${clean}/` : '/';
+    return clean ? `${here}?p=${encodeURIComponent(clean)}` : `${here}?p=`;
 }
 
 export function shareOriginFor(origin) {
@@ -145,8 +172,20 @@ export function indexEntries(catalog) {
         description: card.description,
         icon: card.icon,
         gradient: card.gradient,
+        kind: card.kind,
         url: targetUrl(origin, path),
     }));
+}
+
+// The index this page actually grids. Every catalog card stays reachable by its
+// own address, but only the work is listed: the homepage, the legal pair, the
+// about and projects pages and the blog posts are all furniture around it.
+//
+// The kind is read, never inferred. An old catalog.json written before kinds
+// existed lists nothing here rather than filing the privacy policy as a
+// project, because showing less is the recoverable failure.
+export function projectEntries(catalog) {
+    return indexEntries(catalog).filter((entry) => entry.kind === 'project');
 }
 
 //? ------------------------------------------------------------------- colour

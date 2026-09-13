@@ -2,17 +2,21 @@
 <html lang="en">
 
 <head>
-    <script src="../../components/consent/consent.js"></script>
+    <!-- Absolute, like every shared file here. On share.<site> this directory is
+         the document root, so ../../ resolves to nothing. Consent must still
+         come first: google-analytics.js registers against it and stays inert
+         without it, so the order is what makes the page fail closed. -->
+    <script src="https://domenhribernik.com/components/consent/consent.js"></script>
     <script src="https://domenhribernik.com/components/google-analytics.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Share | A QR Code for Any Page on This Site</title>
-    <meta name="description" content="Put share. in front of any address on this site and get a page built to be held up to a phone: what the project is, and a QR code big enough to scan across a room.">
+    <meta name="description" content="Every project on this site as a code you can hand over. Pick one and its QR comes up big enough to scan across a room, or put share. in front of any address.">
     <link rel="canonical" href="https://domenhribernik.com/views/share/">
     <meta property="og:site_name" content="Domen Hribernik">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Share, a QR code for any page on this site">
-    <meta property="og:description" content="Put share. in front of any address on this site and get a QR code big enough to scan across a room, drawn by a hand-written encoder.">
+    <meta property="og:description" content="Every project on this site as a code you can hand over, drawn by a hand-written encoder. Or put share. in front of any address and land straight on its code.">
     <meta property="og:url" content="https://domenhribernik.com/views/share/">
     <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
     <meta property="og:image:width" content="1200">
@@ -24,11 +28,17 @@
          nothing. Same reason there is no navbar and no shared component here. -->
     <link rel="icon" type="image/x-icon" href="https://domenhribernik.com/assets/favicon.ico" />
 
-    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
+    <!-- Self-hosted, never hot-linked from Google: hot-linking hands every
+         visitor's IP to Google before they have consented to anything. Served
+         from the main domain, so on the subdomain the woff2 files need one
+         Access-Control-Allow-Origin header to be used rather than skipped.
+         Without it the stacks below fall back to system-ui, which is a worse
+         page but still a working one. See CLAUDE.md next to this file. -->
+    <link rel="stylesheet" href="https://domenhribernik.com/assets/fonts/fonts.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- No Tailwind CDN. A share link is opened cold, on a phone, on whatever
-         signal the room has, and this page is one card and one square: the JIT
+         signal the room has, and this page is one rack and one square: the JIT
          compiler would be the largest thing on it. Same call as
          views/flowers/share. -->
     <link rel="stylesheet" href="style.css">
@@ -36,64 +46,92 @@
 
 <body>
     <header class="masthead">
-        <p class="eyebrow">Share</p>
         <a class="masthead__host" id="masthead-host" href="https://domenhribernik.com/">domenhribernik.com</a>
+        <span class="masthead__mark">Share</span>
     </header>
 
     <main class="sheet">
-        <!-- The static copy below is the landing state and is what a crawler
-             or a visitor without JS sees. script.js replaces it in place when
-             the address names a page. -->
-        <article class="card" id="card">
-            <p class="card__band" aria-hidden="true"></p>
-            <div class="card__inner">
-                <i class="card__icon fas fa-qrcode" id="card-icon" aria-hidden="true"></i>
-                <p class="card__kicker" id="card-kicker">This site</p>
-                <h1 class="card__title" id="card-title">Share</h1>
-                <p class="card__deck" id="card-deck">
-                    Put <b>share.</b> in front of any address on this site and this page draws
-                    the code for it. Point a phone at the square, or hand over the link.
-                </p>
+        <!-- Static, so a crawler and a visitor without JS get the page's actual
+             point rather than an empty grid. The rack below is drawn from
+             catalog.json and cannot be. -->
+        <div class="lede">
+            <h1 class="lede__title">Hand any of these over as a code</h1>
+            <p class="lede__deck">
+                Pick a project and its code comes up, big enough to scan across a room.
+                Or put <b>share.</b> in front of any address on this site and land
+                straight on that page's code.
+            </p>
+            <p class="lede__actions">
+                <!-- ?p= is the homepage, on both routes: an explicit query beats the
+                     path even on the subdomain. So this link is correct as written,
+                     with no JS, from either document root. -->
+                <a class="btn btn--ghost" id="lede-self" href="?p=">Code for the site itself</a>
+            </p>
+        </div>
 
-                <figure class="qr" id="qr-figure">
-                    <div class="qr__frame">
-                        <svg class="qr__svg" id="qr-svg" viewBox="0 0 33 33" role="img"
-                            aria-label="QR code" shape-rendering="crispEdges">
-                            <rect width="33" height="33" fill="var(--card)"></rect>
-                            <g transform="translate(4 4)">
-                                <path id="qr-path" d="" fill="var(--ink)"></path>
-                            </g>
-                        </svg>
-                    </div>
-                    <figcaption class="qr__url" id="qr-url">domenhribernik.com</figcaption>
-                </figure>
-
-                <div class="actions">
-                    <a class="btn btn--primary" id="action-open" href="https://domenhribernik.com/">
-                        Open page
-                    </a>
-                    <button class="btn btn--ghost" id="action-copy" type="button">Copy link</button>
-                    <button class="btn btn--ghost" id="action-share" type="button" hidden>Share</button>
-                    <button class="btn btn--ghost" id="action-save" type="button">Save QR</button>
-                </div>
-                <p class="actions__status" id="action-status" role="status" aria-live="polite"></p>
-            </div>
-        </article>
-
-        <section class="index" id="index" hidden>
+        <section class="rack">
             <div class="section-head">
-                <span class="section-head__label">Every page</span>
+                <h2 class="section-head__label">Projects</h2>
                 <span class="section-head__rule" aria-hidden="true"></span>
-                <span class="section-head__count" id="index-count"></span>
+                <span class="section-head__count" id="rack-count"></span>
             </div>
-            <ol class="index__list" id="index-list"></ol>
+
+            <p class="rack__note" id="rack-note">Reading the catalog</p>
+            <ul class="rack__grid" id="rack-grid"></ul>
         </section>
     </main>
+
+    <!-- The code itself. A dialog rather than a second page: this is the thing
+         you hold up, it wants the screen and the keyboard, and closing it should
+         put you back in the rack you were picking from. showModal() brings the
+         focus trap and the escape key with it. -->
+    <dialog class="plate" id="plate" aria-labelledby="plate-title">
+        <p class="plate__band" aria-hidden="true"></p>
+
+        <form method="dialog" class="plate__dismiss">
+            <button class="plate__close" id="plate-close" type="submit" aria-label="Close this code">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </form>
+
+        <div class="plate__inner">
+            <i class="plate__icon fas fa-qrcode" id="plate-icon" aria-hidden="true"></i>
+            <p class="plate__kicker" id="plate-kicker">Scan to open</p>
+            <h2 class="plate__title" id="plate-title" tabindex="-1" autofocus>Share</h2>
+            <p class="plate__deck" id="plate-deck"></p>
+
+            <figure class="qr" id="qr-figure">
+                <div class="qr__frame">
+                    <svg class="qr__svg" id="qr-svg" viewBox="0 0 33 33" role="img"
+                        aria-label="QR code" shape-rendering="crispEdges">
+                        <rect width="33" height="33" fill="var(--card)"></rect>
+                        <g transform="translate(4 4)">
+                            <path id="qr-path" d="" fill="var(--ink)"></path>
+                        </g>
+                    </svg>
+                </div>
+                <figcaption class="qr__url" id="qr-url"></figcaption>
+            </figure>
+
+            <div class="actions">
+                <a class="btn btn--primary" id="action-open" href="https://domenhribernik.com/">
+                    Open page
+                </a>
+                <button class="btn btn--ghost" id="action-copy" type="button">Copy link</button>
+                <button class="btn btn--ghost" id="action-share" type="button" hidden>Share</button>
+                <button class="btn btn--ghost" id="action-save" type="button">Save QR</button>
+            </div>
+            <p class="actions__status" id="action-status" role="status" aria-live="polite"></p>
+        </div>
+    </dialog>
 
     <site-footer></site-footer>
 
     <script type="module" src="script.js"></script>
-    <script type="module" src="../../components/site-footer.js"></script>
+    <!-- Classic, not a module: a module fetched cross-origin needs CORS, and a
+         classic script does not. site-footer.js imports nothing, so it loads
+         either way, and this way it loads on the subdomain too. -->
+    <script src="https://domenhribernik.com/components/site-footer.js"></script>
 </body>
 
 </html>

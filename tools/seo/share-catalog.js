@@ -43,52 +43,69 @@ export function cardDescription(text, max = CARD_DESCRIPTION_MAX) {
     return clipDescription(full, max) + '\u2026';
 }
 
-//? Icon and gradient for the public pages that are not registry entries. The
-//? words come from each page's own head, so only the card art lives here.
-//? tests/share-catalog.test.mjs asserts this covers exactly those pages, so a
-//? stale key fails just as loudly as a missing one.
+//? Icon, gradient and kind for the public pages that are not registry entries.
+//? The words come from each page's own head, so only the card art and the
+//? filing live here. tests/share-catalog.test.mjs asserts this covers exactly
+//? those pages, so a stale key fails just as loudly as a missing one.
+//?
+//? `kind` is what the share index files a card under, and it has no default on
+//? purpose. Registry entries are projects by definition; everything here is
+//? either a project the registry happens not to carry (`views/rocks` is not in
+//? project-data.js, it is still a project) or site furniture that should never
+//? appear in a grid of work. Those two are indistinguishable by the time the
+//? share page reads the catalog, so the answer is declared once, here.
 export const SHARE_EXTRAS = {
     '': {
         icon: 'fas fa-house',
         gradient: 'linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)',
+        kind: 'page',
     },
     'views/about': {
         icon: 'fas fa-user',
         gradient: 'linear-gradient(45deg, #2f5b53 0%, #6b6256 100%)',
+        kind: 'page',
     },
     'views/projects': {
         icon: 'fas fa-newspaper',
         gradient: 'linear-gradient(45deg, #1f35e0 0%, #1c1a17 100%)',
+        kind: 'page',
     },
     'views/store': {
         icon: 'fas fa-seedling',
         gradient: 'linear-gradient(45deg, #2f5b53 0%, #f2b705 100%)',
+        kind: 'project',
     },
     'views/rocks': {
         icon: 'fas fa-gem',
         gradient: 'linear-gradient(45deg, #4a4036 0%, #a49a8a 100%)',
+        kind: 'project',
     },
     'views/dnd': {
         icon: 'fas fa-dice-d20',
         gradient: 'linear-gradient(45deg, #4c1d95 0%, #d4451f 100%)',
+        kind: 'project',
     },
     'views/jeger': {
         icon: 'fas fa-wine-bottle',
         gradient: 'linear-gradient(45deg, #0f0d0a 0%, #f2b705 100%)',
+        kind: 'project',
     },
     'views/on-this-day': {
         icon: 'fas fa-calendar-day',
         gradient: 'linear-gradient(45deg, #1c1a17 0%, #2f5b53 100%)',
+        kind: 'project',
     },
     //? The legal pair earns a card for the same reason it is in the sitemap:
     //? it has to be findable. Both share the quietest gradient on the list.
     'views/privacy': {
         icon: 'fas fa-shield-halved',
         gradient: 'linear-gradient(45deg, #6b6256 0%, #a49a8a 100%)',
+        kind: 'page',
     },
     'views/terms': {
         icon: 'fas fa-scale-balanced',
         gradient: 'linear-gradient(45deg, #6b6256 0%, #a49a8a 100%)',
+        kind: 'page',
     },
 };
 
@@ -132,28 +149,46 @@ export function registryByPage(projects) {
     return byPage;
 }
 
-export function buildShareCatalog({ projects, pages, headMeta = {}, posts = [], origin }) {
+//? The three things a card can be. `project` is what the share index grids;
+//? `page` is site furniture, reachable by its own address but never listed
+//? among the work; `post` is one piece of writing.
+export const CARD_KINDS = ['project', 'page', 'post'];
+
+export function buildShareCatalog({
+    projects, pages, headMeta = {}, posts = [], origin, extras = SHARE_EXTRAS,
+}) {
     const byPage = registryByPage(projects);
     const cards = {};
 
     for (const page of pages) {
         const entry = byPage[page];
         if (entry) {
+            //? Being in the registry is what makes something a project, so a
+            //? registry-backed card never has to declare it.
             cards[page] = {
                 title: entry.title,
                 description: cardDescription(entry.description),
                 icon: entry.iconClass,
                 gradient: entry.gradient,
+                kind: 'project',
             };
             continue;
         }
 
-        const art = SHARE_EXTRAS[page];
+        const art = extras[page];
         if (!art) {
             throw new Error(
                 `share catalog: nothing describes "${page}". Either register it in ` +
-                'components/project-data.js or add an icon and gradient for it to ' +
+                'components/project-data.js or add an icon, gradient and kind for it to ' +
                 'SHARE_EXTRAS in tools/seo/share-catalog.js.',
+            );
+        }
+
+        if (!CARD_KINDS.includes(art.kind)) {
+            throw new Error(
+                `share catalog: the SHARE_EXTRAS entry for "${page}" declares no kind. ` +
+                `Add kind: one of ${CARD_KINDS.join(', ')}. There is no default, because ` +
+                'guessing is how a legal page ends up in the project grid.',
             );
         }
 
@@ -170,6 +205,7 @@ export function buildShareCatalog({ projects, pages, headMeta = {}, posts = [], 
             description: cardDescription(decodeEntities(head.description)),
             icon: art.icon,
             gradient: art.gradient,
+            kind: art.kind,
         };
     }
 
@@ -181,6 +217,7 @@ export function buildShareCatalog({ projects, pages, headMeta = {}, posts = [], 
             description: cardDescription(post.meta?.excerpt || ''),
             icon: blog?.icon || 'fas fa-pen-nib',
             gradient: blog?.gradient || 'linear-gradient(45deg, #1f35e0 0%, #1c1a17 100%)',
+            kind: 'post',
         };
     }
 

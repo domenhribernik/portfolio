@@ -1,6 +1,6 @@
-/* The share page. Mobile first: this is opened on a phone, held up to another
-   phone, and closed. Everything above the fold on a 360px screen is the title,
-   the code and the button.
+/* The share page. A rack of every project on the site, each one a plate you can
+   pull out as a code and hold up. Mobile first: this is opened on a phone,
+   pointed at another phone, and closed.
 
    Hand written rather than Tailwind, and self-contained rather than importing
    base-style.css, because on the share subdomain this directory is the document
@@ -17,14 +17,22 @@
     --hairline: rgba(28, 26, 23, 0.12);
     --clay: #d4451f;
     --cobalt: #1f35e0;
+    --pine: #2f5b53;
+    --danger: #b3261e;
 
-    /* Set per card by script.js from the project's own gradient. */
+    /* Set per plate by script.js from that project's own registry gradient.
+       --acc is inked down until it reads on paper; --band is the same pair
+       pulled most of the way to paper. Both come from logic.js. */
     --acc: var(--clay);
     --band: linear-gradient(90deg, var(--paper-2) 0%, var(--paper-2) 100%);
 
     --display: 'Bricolage Grotesque', system-ui, sans-serif;
     --body: 'IBM Plex Sans', system-ui, sans-serif;
     --mono: 'Space Mono', ui-monospace, monospace;
+
+    --lift: 0 12px 30px rgba(28, 26, 23, 0.08);
+    --ring: 0 0 0 3px rgba(212, 69, 31, 0.2);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *,
@@ -39,8 +47,8 @@ html {
 
 /* Author rules here set display on elements that script.js also toggles with
    the hidden attribute, and an author display beats the UA stylesheet's
-   [hidden] at equal specificity. Without this the "no such address" state
-   still draws an empty QR frame. */
+   [hidden] at equal specificity. Without this the rack still draws its own
+   loading line under a full grid. */
 [hidden] {
     display: none !important;
 }
@@ -59,7 +67,21 @@ body {
     min-height: 100vh;
     min-height: 100svh;
     padding: 1.5rem 1.25rem 1.25rem;
-    gap: 1.6rem;
+    gap: 2rem;
+}
+
+/* The surfaces the browser draws rather than the page. Left at their defaults
+   they belong to no design system, and they are the cheapest tell that a page
+   was assembled instead of built. */
+::selection {
+    background: var(--ink);
+    color: var(--paper);
+}
+
+:root {
+    scrollbar-color: var(--faint) transparent;
+    scrollbar-width: thin;
+    accent-color: var(--clay);
 }
 
 /* ---------------------------------------------------------------- masthead */
@@ -69,98 +91,334 @@ body {
     align-items: baseline;
     justify-content: space-between;
     gap: 1rem;
+    width: 100%;
+    max-width: 62rem;
+    margin: 0 auto;
     padding-bottom: 0.6rem;
     border-bottom: 1px solid var(--hairline);
 }
 
-.eyebrow {
-    margin: 0;
+/* Chrome, not an eyebrow: it names the surface you are on, opposite the site it
+   belongs to, above a rule. It is not sitting on top of the headline telling
+   you what the headline is about to say. */
+.masthead__mark {
     font-family: var(--mono);
     font-weight: 700;
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: var(--acc);
+    color: var(--clay);
 }
 
 .masthead__host {
     font-family: var(--mono);
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--stone);
     text-decoration: none;
     border-bottom: 1px solid transparent;
+    transition: color 0.14s ease, border-color 0.14s ease;
 }
 
 .masthead__host:hover,
 .masthead__host:focus-visible {
     color: var(--ink);
-    border-bottom-color: var(--acc);
+    border-bottom-color: var(--clay);
 }
 
-/* -------------------------------------------------------------------- card */
+/* -------------------------------------------------------------------- lede */
 
 .sheet {
     flex: 1;
     width: 100%;
-    max-width: 34rem;
+    max-width: 62rem;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 3rem;
 }
 
-.card {
+.lede__title {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(2.1rem, 7.5vw, 4rem);
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    max-width: 16ch;
+}
+
+.lede__deck {
+    margin: 1.1rem 0 0;
+    max-width: 56ch;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: var(--stone);
+}
+
+.lede__deck b {
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.lede__actions {
+    margin: 1.4rem 0 0;
+    display: flex;
+}
+
+/* A ghost button in running text needs its own box; the .actions row it usually
+   lives in is what normally gives it one. */
+.lede__actions .btn--ghost {
+    flex: 0 0 auto;
+}
+
+/* ------------------------------------------------------------- section head */
+
+/* The rack runs cobalt, per the one-accent-per-section rule. Each plate inside
+   it then redeclares --acc as its own project's ink, which is the whole subject
+   of this page: the rack is a colour chart of the work. */
+.rack {
+    --acc: var(--cobalt);
+}
+
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.section-head__label {
+    margin: 0;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--acc);
+}
+
+.section-head__rule {
+    flex: 1;
+    height: 2px;
+    background: var(--ink);
+}
+
+.section-head__count {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: var(--stone);
+}
+
+/* -------------------------------------------------------------------- rack */
+
+.rack__note {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--stone);
+}
+
+.rack__note--error {
+    color: var(--danger);
+}
+
+.rack__grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 0.75rem;
+}
+
+.tile {
     position: relative;
     background: var(--card);
     border: 1px solid var(--hairline);
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
 }
 
-/* The project's colour, and the only place on the page it appears as a
-   surface. Pulled most of the way to paper by logic.js so it reads as the
-   stock being tinted rather than a second background. */
-.card__band {
-    margin: 0;
-    height: 6px;
+/* The project's own ink, and the only place it appears as a surface. Pulled
+   most of the way to paper by logic.js so twenty-six of them at once read as
+   tinted stock rather than twenty-six competing backgrounds. */
+.tile__band {
+    display: block;
+    height: 5px;
     background: var(--band);
 }
 
-.card__inner {
-    padding: 1.6rem 1.25rem 1.25rem;
+.tile__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    height: 100%;
+    padding: 0.85rem 0.85rem 0.9rem;
+    text-decoration: none;
+    color: inherit;
 }
 
-.card__icon {
+.tile__icon {
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--acc);
+}
+
+.tile__name {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(0.95rem, 3.4vw, 1.08rem);
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    /* Declared transparent at rest so the offset has something to grow from
+       rather than appearing out of nothing. */
+    text-shadow: 0.05em 0.05em 0 transparent;
+    transition: text-shadow 0.16s ease;
+}
+
+.tile:hover,
+.tile:focus-within {
+    transform: translateY(-3px);
+    box-shadow: var(--lift);
+    border-color: var(--acc);
+}
+
+.tile:hover .tile__name,
+.tile:focus-within .tile__name {
+    text-shadow: 0.05em 0.05em 0 var(--acc);
+}
+
+.tile__link:focus-visible {
+    outline: 2px solid var(--acc);
+    outline-offset: -4px;
+}
+
+/* ------------------------------------------------------------------- plate */
+
+/* The code itself, as a dialog. It is the thing you hold up: it wants the
+   screen, the escape key and the focus trap, and closing it should put you back
+   in the rack rather than on a different page. */
+.plate {
+    padding: 0;
+    width: min(92vw, 26rem);
+    max-height: 92svh;
+    margin: auto;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    /* The dialog scrolls, not its inner column: an inner scroller clips the
+       primary button's lift and shadow at the edge of its box. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* A dialog with no [open] must stay display:none, and an author display on the
+   bare class would beat the UA rule that does that. Scope it to [open]. */
+.plate[open] {
+    display: flex;
+    flex-direction: column;
+    animation: plate-rise 300ms var(--ease-out);
+}
+
+.plate::backdrop {
+    background: rgba(28, 26, 23, 0.55);
+    backdrop-filter: blur(3px);
+}
+
+.plate[open]::backdrop {
+    animation: backdrop-in 220ms ease-out;
+}
+
+.plate__band {
+    margin: 0;
+    height: 6px;
+    background: var(--band);
+    flex: none;
+}
+
+.plate__dismiss {
+    margin: 0;
+}
+
+.plate__close {
+    position: absolute;
+    top: 0.65rem;
+    right: 0.65rem;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: grid;
+    place-items: center;
+    font-size: 0.95rem;
+    background: transparent;
+    color: var(--stone);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 0.14s ease, border-color 0.14s ease;
+}
+
+.plate__close:hover,
+.plate__close:focus-visible {
+    color: var(--ink);
+    border-color: var(--hairline);
+}
+
+.plate__close:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+.plate__inner {
+    padding: 1.5rem 1.25rem 1.25rem;
+}
+
+.plate__icon {
     display: block;
     font-size: 1.75rem;
     line-height: 1;
     color: var(--acc);
 }
 
-.card__kicker {
+.plate__kicker {
     margin: 0.9rem 0 0;
     font-family: var(--mono);
     font-weight: 700;
-    font-size: 0.62rem;
+    font-size: 0.72rem;
     letter-spacing: 0.24em;
     text-transform: uppercase;
     color: var(--stone);
 }
 
-.card__title {
+.plate__title {
     margin: 0.35rem 0 0;
     font-family: var(--display);
     font-weight: 800;
-    font-size: clamp(1.9rem, 8vw, 2.8rem);
+    font-size: clamp(1.9rem, 8vw, 2.6rem);
     line-height: 0.98;
     letter-spacing: -0.02em;
     text-transform: uppercase;
     text-wrap: balance;
 }
 
-.card__deck {
+/* showModal() focuses the title (tabindex -1, autofocus) so a screen reader
+   announces what opened. It is not a control, so it draws no ring. */
+.plate__title:focus {
+    outline: none;
+}
+
+.plate__deck {
     margin: 0.9rem 0 0;
     max-width: 62ch;
     font-size: 0.92rem;
@@ -168,20 +426,14 @@ body {
     color: var(--stone);
 }
 
-.card__deck b {
-    font-family: var(--mono);
-    font-weight: 700;
-    color: var(--ink);
-}
-
-.card__deck:empty {
+.plate__deck:empty {
     display: none;
 }
 
 /* ---------------------------------------------------------------------- qr */
 
 .qr {
-    margin: 1.6rem 0 0;
+    margin: 1.5rem 0 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -189,10 +441,16 @@ body {
 }
 
 .qr__frame {
-    width: min(72vw, 300px);
+    width: min(70vw, 280px);
     border: 1px solid var(--hairline);
     border-radius: 3px;
     background: var(--card);
+}
+
+.plate[open] .qr__frame {
+    /* The one authored moment on the page: the code prints down the frame the
+       way it would come off a press, once, after the plate has settled. */
+    animation: qr-print 460ms cubic-bezier(0.22, 1, 0.36, 1) 140ms backwards;
 }
 
 .qr__svg {
@@ -203,7 +461,7 @@ body {
 
 .qr__url {
     font-family: var(--mono);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     letter-spacing: 0.04em;
     color: var(--stone);
     text-align: center;
@@ -216,7 +474,7 @@ body {
 /* ----------------------------------------------------------------- actions */
 
 .actions {
-    margin-top: 1.6rem;
+    margin-top: 1.5rem;
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
@@ -242,7 +500,9 @@ body {
     background: var(--ink);
     color: var(--paper);
     border: 2px solid var(--ink);
-    box-shadow: 4px 4px 0 var(--acc);
+    /* Flat at rest, per DESIGN.md: the shadow is the response to a touch, not
+       part of the button. Declared transparent so it has something to grow from. */
+    box-shadow: 0 0 0 transparent;
 }
 
 .btn--primary:hover,
@@ -250,7 +510,7 @@ body {
     background: var(--acc);
     border-color: var(--acc);
     transform: translate(-3px, -3px);
-    box-shadow: 7px 7px 0 var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
 }
 
 .btn--primary:active {
@@ -264,277 +524,144 @@ body {
     background: transparent;
     color: var(--stone);
     border: 1px solid var(--hairline);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     letter-spacing: 0.12em;
 }
 
 .btn--ghost:hover,
 .btn--ghost:focus-visible {
-    color: var(--acc);
+    color: var(--ink);
     border-color: var(--acc);
 }
 
 .btn:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.18), 4px 4px 0 var(--acc);
+    box-shadow: var(--ring), 6px 6px 0 var(--ink);
 }
 
 .btn--ghost:focus-visible {
-    box-shadow: 0 0 0 3px rgba(212, 69, 31, 0.18);
+    box-shadow: var(--ring);
 }
 
+/* Pine for a confirmation, signal red for a refusal, per DESIGN.md. Not the
+   plate's accent: that is sized for rules and icons at 3:1, and this is a
+   sentence somebody has to read. */
 .actions__status {
     margin: 0.75rem 0 0;
     min-height: 1rem;
     font-family: var(--mono);
-    font-size: 0.62rem;
+    font-size: 0.72rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--acc);
+    color: var(--pine);
 }
 
-/* ------------------------------------------------------------------- index */
-
-/* Its own accent, per the one-accent-per-section rule: the card runs the
-   project's colour, the index runs cobalt. */
-.index {
-    --acc: var(--cobalt);
+.actions__status--warn {
+    color: var(--danger);
 }
 
-.section-head {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.6rem;
-}
+/* ------------------------------------------------------------------ motion */
 
-.section-head__label {
-    font-family: var(--mono);
-    font-weight: 700;
-    font-size: 0.62rem;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: var(--acc);
-}
-
-.section-head__rule {
-    flex: 1;
-    height: 2px;
-    background: var(--ink);
-}
-
-.section-head__count {
-    font-family: var(--mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.12em;
-    color: var(--stone);
-}
-
-.index__list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-top: 1px solid var(--hairline);
-}
-
-.row {
-    position: relative;
-    display: grid;
-    grid-template-columns: 2.25rem 1fr 1.5rem;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding: 0.85rem 0;
-    border-bottom: 1px solid var(--hairline);
-}
-
-.row__ord {
-    font-family: var(--mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.12em;
-    color: var(--stone);
-}
-
-.row__title {
-    display: block;
-    font-family: var(--display);
-    font-weight: 800;
-    font-size: 1.05rem;
-    line-height: 1.15;
-    letter-spacing: 0.01em;
-    text-transform: uppercase;
-    /* Declared transparent at rest so the offset has something to grow from
-       rather than appearing out of nothing. */
-    text-shadow: 0.06em 0.06em 0 transparent;
-    transition: text-shadow 0.12s ease, color 0.12s ease;
-}
-
-.row__path {
-    display: block;
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.06em;
-    color: var(--faint);
-    overflow-wrap: anywhere;
-}
-
-.row__arrow {
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    color: var(--faint);
-    justify-self: end;
-    transition: transform 0.12s ease, color 0.12s ease;
-}
-
-/* The whole row is one tap target, so nothing here depends on hover. */
-.row__cover {
-    position: absolute;
-    inset: 0;
-}
-
-.row:hover .row__title,
-.row:focus-within .row__title {
-    text-shadow: 0.06em 0.06em 0 var(--acc);
-}
-
-.row:hover .row__ord,
-.row:focus-within .row__ord,
-.row:hover .row__arrow,
-.row:focus-within .row__arrow {
-    color: var(--acc);
-}
-
-.row:hover .row__arrow,
-.row:focus-within .row__arrow {
-    transform: translate(4px, -4px);
-}
-
-.row__cover:focus-visible {
-    outline: 2px solid var(--acc);
-    outline-offset: 2px;
-}
-
-/* -------------------------------------------------------------------- foot */
-
-.foot {
-    width: 100%;
-    max-width: 34rem;
-    margin: 0 auto;
-    padding-top: 1rem;
-}
-
-/* The thick-over-thin double rule that closes a section. */
-.foot__rule {
-    margin: 0 0 0.6rem;
-    height: 3px;
-    background: var(--ink);
-    border-bottom: 1px solid var(--hairline);
-    box-shadow: 0 4px 0 -3px var(--hairline);
-}
-
-.foot__line {
-    margin: 0;
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--faint);
-}
-
-.foot__addr {
-    margin: 0.4rem 0 0;
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.06em;
-    color: var(--stone);
-    overflow-wrap: anywhere;
-}
-
-.foot__addr:empty {
-    display: none;
-}
-
-/* ------------------------------------------------------------- wider screens */
-
-@media (min-width: 640px) {
-    body {
-        padding: 2.5rem;
+@keyframes plate-rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
     }
 
-    .card__inner {
-        padding: 2rem 1.75rem 1.75rem;
-    }
-
-    .btn--primary {
-        flex: 0 0 auto;
-    }
-
-    /* One left edge for the whole card once there is room for one. On a phone
-       the code nearly fills the card, so centring it there reads as fitted
-       rather than as a stray indent. */
-    .qr {
-        align-items: flex-start;
-    }
-
-    .qr__frame {
-        width: 320px;
-    }
-
-    .qr__url {
-        text-align: left;
+    to {
+        opacity: 1;
+        transform: none;
     }
 }
 
-/* --------------------------------------------------------------- reduced motion */
+@keyframes backdrop-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes qr-print {
+    from {
+        clip-path: inset(0 0 100% 0);
+    }
+
+    to {
+        clip-path: inset(0 0 0 0);
+    }
+}
 
 @media (prefers-reduced-motion: reduce) {
 
+    .plate[open],
+    .plate[open]::backdrop,
+    .plate[open] .qr__frame {
+        animation: none;
+    }
+
     .btn,
-    .row__title,
-    .row__arrow {
+    .tile,
+    .tile__name,
+    .masthead__host {
         transition: none;
     }
 
     .btn--primary:hover,
     .btn--primary:focus-visible,
-    .row:hover .row__arrow,
-    .row:focus-within .row__arrow {
+    .tile:hover,
+    .tile:focus-within {
         transform: none;
     }
 }
 
 /* ------------------------------------------------------------------- print */
 
-/* Printing this page means one thing: a code to pin on a wall. Keep the name,
-   the square and the address, drop everything that is a control. */
+/* Printing this page means one thing: the code on screen, to pin on a wall.
+   Keep the name, the square and the address, drop everything that is a
+   control. A dialog does not print at all in some browsers, so the plate is
+   lifted out of the overlay and laid on the sheet. */
 @media print {
 
     .masthead,
+    .lede,
+    .rack,
     .actions,
     .actions__status,
-    .index,
-    .foot,
-    .card__icon,
-    .card__kicker,
-    .card__deck {
+    .plate__close,
+    .plate__band,
+    .plate__icon,
+    .plate__kicker,
+    .plate__deck,
+    site-footer {
         display: none !important;
     }
 
     body {
         padding: 0;
         background: #fff;
+        display: block;
     }
 
-    .card {
+    .plate[open] {
+        display: block;
+        position: static;
+        width: auto;
+        max-height: none;
         border: none;
+        animation: none;
     }
 
-    .card__band {
+    .plate[open]::backdrop {
         display: none;
     }
 
     .qr__frame {
         width: 90mm;
         border: none;
+        animation: none;
     }
 
     .qr__url {

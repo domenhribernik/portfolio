@@ -13,13 +13,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    targetPathFrom,
+    requestedTarget,
     normalizeSharePath,
     targetUrl,
     shareOriginFor,
     prettyTitleFromPath,
     resolveCard,
     indexEntries,
+    projectEntries,
+    shareAddressFor,
     parseGradientStops,
     mixHex,
     relativeLuminance,
@@ -35,51 +37,73 @@ const ORIGIN = 'https://domenhribernik.com';
 const catalog = {
     origin: ORIGIN,
     pages: {
-        '': { title: 'Domen Hribernik', description: 'The site itself.', icon: 'fas fa-house', gradient: 'linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)' },
-        'views/tells': { title: 'Tells', description: 'Forty-eight of them on one grid.', icon: 'fas fa-crosshairs', gradient: 'linear-gradient(45deg, #1c1a17 0%, #d4451f 100%)' },
-        'views/rocks': { title: 'Our Rock Pile', description: 'A small 3D museum.', icon: 'fas fa-gem', gradient: 'linear-gradient(45deg, #4a4036 0%, #a49a8a 100%)' },
+        '': { title: 'Domen Hribernik', description: 'The site itself.', icon: 'fas fa-house', gradient: 'linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)', kind: 'page' },
+        'views/tells': { title: 'Tells', description: 'Forty-eight of them on one grid.', icon: 'fas fa-crosshairs', gradient: 'linear-gradient(45deg, #1c1a17 0%, #d4451f 100%)', kind: 'project' },
+        'views/rocks': { title: 'Our Rock Pile', description: 'A small 3D museum.', icon: 'fas fa-gem', gradient: 'linear-gradient(45deg, #4a4036 0%, #a49a8a 100%)', kind: 'project' },
+        'views/privacy': { title: 'Privacy and Cookies', description: 'What this site stores.', icon: 'fas fa-shield-halved', gradient: 'linear-gradient(45deg, #6b6256 0%, #a49a8a 100%)', kind: 'page' },
+        'views/blog/small-software': { title: 'In Praise of Small Software', description: 'One person had the problem.', icon: 'fas fa-book-open', gradient: 'linear-gradient(45deg, #1c1a17 0%, #6b6256 100%)', kind: 'post' },
     },
 };
 
 //? ------------------------------------------------------------------ routing
 
+// requestedTarget answers one question: does this address name a page to draw a
+// code for, or does it name nothing, in which case the page shows its rack of
+// projects instead? The two answers must not share a value. The homepage is a
+// perfectly good thing to hand over ("here, my portfolio"), and its path is the
+// empty string, so "no target" has to be null and not ''.
+
 test('on the share subdomain the path itself is the target', () => {
-    const at = (pathname) => targetPathFrom({
+    const at = (pathname) => requestedTarget({
         hostname: 'share.domenhribernik.com', pathname, search: '',
     });
     assert.equal(at('/views/tells/'), 'views/tells/');
     assert.equal(at('/views/blog/building-this-blog/'), 'views/blog/building-this-blog/');
+});
+
+test('the bare share subdomain names the site itself, which is a real target', () => {
+    // share.<site>/ has to mean <site>/, or the page breaks the promise its own
+    // deck makes: put share. in front of any address and get that address.
+    const at = (pathname) => requestedTarget({
+        hostname: 'share.domenhribernik.com', pathname, search: '',
+    });
     assert.equal(at('/'), '');
     assert.equal(at(''), '');
 });
 
-test('anywhere else only the p query counts, so the page never resolves itself', () => {
+test('anywhere else naming nothing means the rack, not the share page itself', () => {
     // Served from the main domain the pathname is /views/share/, which would
     // otherwise be read as a request to share the share page forever.
-    assert.equal(targetPathFrom({
+    assert.equal(requestedTarget({
+        hostname: 'domenhribernik.com', pathname: '/views/share/', search: '',
+    }), null);
+    assert.equal(requestedTarget({
         hostname: 'domenhribernik.com', pathname: '/views/share/', search: '?p=views/tells',
     }), 'views/tells');
-    assert.equal(targetPathFrom({
-        hostname: 'domenhribernik.com', pathname: '/views/share/', search: '',
-    }), '');
-    assert.equal(targetPathFrom({
+    assert.equal(requestedTarget({
         hostname: 'localhost', pathname: '/portfolio/views/share/', search: '?p=views/nebo',
     }), 'views/nebo');
 });
 
+test('an empty p query is the homepage, not the absence of a target', () => {
+    assert.equal(requestedTarget({
+        hostname: 'domenhribernik.com', pathname: '/views/share/', search: '?p=',
+    }), '');
+});
+
 test('an explicit p query wins even on the share subdomain', () => {
-    assert.equal(targetPathFrom({
+    assert.equal(requestedTarget({
         hostname: 'share.domenhribernik.com', pathname: '/views/tells/', search: '?p=views/nebo',
     }), 'views/nebo');
 });
 
 test('a host that merely contains "share" is not the share subdomain', () => {
-    assert.equal(targetPathFrom({
+    assert.equal(requestedTarget({
         hostname: 'notshare.domenhribernik.com', pathname: '/views/tells/', search: '',
-    }), '');
-    assert.equal(targetPathFrom({
+    }), null);
+    assert.equal(requestedTarget({
         hostname: 'domenhribernik.com.share.evil.test', pathname: '/views/tells/', search: '',
-    }), '');
+    }), null);
 });
 
 //? ------------------------------------------------------------ path hardening
@@ -196,10 +220,118 @@ test('the homepage resolves to its own card, not to the unknown fallback', () =>
 
 test('indexEntries lists every catalog page with its target address', () => {
     const entries = indexEntries(catalog);
-    assert.equal(entries.length, 3);
-    assert.deepEqual(entries.map((e) => e.path), ['', 'views/tells', 'views/rocks']);
+    assert.equal(entries.length, 5);
+    assert.deepEqual(entries.map((e) => e.path),
+        ['', 'views/tells', 'views/rocks', 'views/privacy', 'views/blog/small-software']);
     assert.equal(entries[1].title, 'Tells');
     assert.equal(entries[1].url, 'https://domenhribernik.com/views/tells/');
+});
+
+test('indexEntries carries the kind through, so a caller can file a card', () => {
+    const byPath = Object.fromEntries(indexEntries(catalog).map((e) => [e.path, e.kind]));
+    assert.deepEqual(byPath, {
+        '': 'page',
+        'views/tells': 'project',
+        'views/rocks': 'project',
+        'views/privacy': 'page',
+        'views/blog/small-software': 'post',
+    });
+});
+
+test('projectEntries is the index the page grids: the work, nothing else', () => {
+    // The homepage, the legal pages and the blog posts all have share cards and
+    // all stay reachable by address. None of them belongs in a grid of projects.
+    const entries = projectEntries(catalog);
+    assert.deepEqual(entries.map((e) => e.path), ['views/tells', 'views/rocks']);
+});
+
+test('projectEntries reads the kind and never guesses from the path', () => {
+    // A card with no kind is not quietly promoted into the grid. The catalog is
+    // generated and always writes one; anything else is a stale catalog.json,
+    // and a stale file should show less, not show the wrong thing.
+    const entries = projectEntries({
+        origin: ORIGIN,
+        pages: { 'views/mystery': { title: 'Mystery', description: '', icon: 'fas fa-link', gradient: '' } },
+    });
+    assert.deepEqual(entries, []);
+});
+
+test('projectEntries survives a catalog that never loaded', () => {
+    assert.deepEqual(projectEntries(null), []);
+    assert.deepEqual(projectEntries({ origin: ORIGIN }), []);
+});
+
+//? ------------------------------------------------------------------ address
+
+// The inverse of targetPathFrom. A card in the grid is a real link (so it opens
+// in a new tab, copies, and works with no JS), and tapping it also pushes that
+// same address so the back button closes the code sheet. One function, both
+// jobs, or the two spellings drift and back goes somewhere the link never did.
+
+test('on the share subdomain a card addresses its target by path', () => {
+    const on = { hostname: 'share.domenhribernik.com', pathname: '/views/rocks/' };
+    assert.equal(shareAddressFor({ ...on, path: 'views/tells' }), '/views/tells/');
+    assert.equal(shareAddressFor({ ...on, path: 'views/blog/small-software' }),
+        '/views/blog/small-software/');
+});
+
+test('the homepage keeps an address of its own, distinct from the rack', () => {
+    // null is "show the rack", '' is "show the site's own code". Collapsing the
+    // two makes the homepage unshareable from the page built for sharing.
+    const on = { hostname: 'share.domenhribernik.com', pathname: '/views/tells/' };
+    assert.equal(shareAddressFor({ ...on, path: '' }), '/');
+
+    const off = { hostname: 'domenhribernik.com', pathname: '/views/share/' };
+    assert.equal(shareAddressFor({ ...off, path: '' }), '/views/share/?p=');
+    assert.equal(shareAddressFor({ ...off, path: null }), '/views/share/');
+});
+
+test('anywhere else a card addresses its target by query, keeping the page path', () => {
+    const off = { hostname: 'domenhribernik.com', pathname: '/views/share/' };
+    assert.equal(shareAddressFor({ ...off, path: 'views/tells' }), '/views/share/?p=views%2Ftells');
+    // Closing the plate drops the query rather than leaving one behind.
+    assert.equal(shareAddressFor({ ...off, path: null }), '/views/share/');
+});
+
+test('the address round-trips back through requestedTarget', () => {
+    // The two halves have to agree, or the plate opens on a path the rack never
+    // offered. Checked as a property rather than against a remembered string.
+    for (const hostname of ['share.domenhribernik.com', 'domenhribernik.com']) {
+        const pathname = hostname.startsWith('share.') ? '/' : '/views/share/';
+        for (const path of ['', 'views/tells', 'views/blog/small-software']) {
+            const address = shareAddressFor({ hostname, pathname, path });
+            const url = new URL(address, `https://${hostname}`);
+            assert.equal(
+                normalizeSharePath(
+                    requestedTarget({ hostname, pathname: url.pathname, search: url.search }),
+                    catalog.pages,
+                ),
+                path,
+                `${hostname} -> ${address}`,
+            );
+        }
+    }
+});
+
+test('the closed address names no target, on both routes', () => {
+    // The other half of the round trip, and the one that stops a close from
+    // immediately reopening the plate it just closed.
+    const off = { hostname: 'domenhribernik.com', pathname: '/views/share/' };
+    const address = shareAddressFor({ ...off, path: null });
+    const url = new URL(address, 'https://domenhribernik.com');
+    assert.equal(
+        requestedTarget({ hostname: off.hostname, pathname: url.pathname, search: url.search }),
+        null,
+    );
+});
+
+test('a local development path is preserved, not rewritten to the site root', () => {
+    // XAMPP serves the repo under /portfolio/, so a hard-coded /views/share/
+    // would send every card to a 404 on the machine this is written on.
+    assert.equal(
+        shareAddressFor({ hostname: 'localhost', pathname: '/portfolio/views/share/', path: 'views/tells' }),
+        '/portfolio/views/share/?p=views%2Ftells',
+    );
 });
 
 //? ------------------------------------------------------------------- colour

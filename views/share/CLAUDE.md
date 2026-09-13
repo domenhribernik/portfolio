@@ -1,7 +1,8 @@
 # views/share
 
-The QR landing page. `share.domenhribernik.com/views/tells/` shows a card for
-`domenhribernik.com/views/tells/` with a code pointing at it.
+The QR page. The bare address is a **rack of every project**; picking one opens its
+code in a `<dialog>` plate. `share.domenhribernik.com/views/tells/` lands straight on
+the Tells plate, with the rack behind it.
 
 ## This directory must stay self-contained
 
@@ -13,7 +14,16 @@ locally and 404s only on the subdomain.
 
 Consequences, all deliberate:
 
-- The analytics script and the favicon are absolute `https://domenhribernik.com/...` URLs.
+- Every shared file is an absolute `https://domenhribernik.com/...` URL: consent,
+  analytics, `fonts.css`, `site-footer.js`, the favicon. `tests/share-page.test.mjs`
+  fails on any `../` or root-relative reference in this directory.
+- **`site-footer.js` is loaded as a classic script, not `type="module"`.** Cross-origin
+  module scripts need CORS and classic scripts do not. It imports nothing, so this works.
+- **The self-hosted fonts need one CORS header to work on the subdomain.** Font files are
+  CORS-restricted even when the stylesheet is not, so without
+  `Access-Control-Allow-Origin: https://share.domenhribernik.com` on `assets/fonts/files/`
+  the page renders in `system-ui`. It still works, it just looks worse. The header is
+  server config (root `.htaccess` is untracked), so it is a manual step.
 - There is no `main-navbar`, no `base-style.css`, no `gtranslate`. The palette in
   `style.css` is a copy of DESIGN.md's tokens; that duplication is the price of the
   subdomain, so keep it in sync by hand rather than importing.
@@ -25,15 +35,31 @@ Consequences, all deliberate:
 
 ## Two routes, and why the host check is explicit
 
-| Address | Target comes from |
+| Address | What it opens |
 |---|---|
-| `share.domenhribernik.com/views/tells/` | the pathname |
-| `domenhribernik.com/views/share/?p=views/tells` | the `p` query |
+| `share.domenhribernik.com/views/tells/` | the Tells plate (target is the pathname) |
+| `share.domenhribernik.com/` | the **homepage** plate, not the rack |
+| `domenhribernik.com/views/share/` | the rack, no plate |
+| `domenhribernik.com/views/share/?p=views/tells` | the Tells plate |
+| `domenhribernik.com/views/share/?p=` | the homepage plate |
 
-`targetPathFrom()` switches on `hostname` starting with `share.` rather than sniffing the
+`requestedTarget()` switches on `hostname` starting with `share.` rather than sniffing the
 path. Off the subdomain the pathname *is* this page's own address, so reading it would
 make the page share itself forever. The `?p=` route is also how this is developed locally
 and the fallback if the subdomain is ever down, so both must keep working.
+
+**`null` and `''` are different answers, and collapsing them is the bug to avoid.**
+`requestedTarget()` returns `null` for "names nothing, show the rack" and `''` for "the
+homepage". The homepage is the thing most worth handing over, so it cannot share a value
+with "nothing". `shareAddressFor()` is the inverse and takes the same distinction; it is
+the single source for both a tile's `href` and the history entry the plate pushes, so a
+link and the back button can never disagree. The two are held together by a round-trip
+property test.
+
+**The plate's history handling has one trap.** A dialog's `close` event is *queued*, not
+fired synchronously, so a "closing silently" flag must be cleared by the handler, never on
+the line after `close()`. Clear it early and a back button closes the plate, the handler
+walks history back again, and the visitor falls off the page.
 
 **The deploy may not carry `.htaccess` here.** The workflow's exclude list has a bare
 `.htaccess` entry meant for the root one, and whether that glob also catches this nested
@@ -55,8 +81,28 @@ document root and at `/views/share/`.
 **Adding a public view to the site fails the build until it has a share card.** That is
 the point: `buildShareCatalog` throws when a page in the sitemap inventory is described by
 neither the registry nor `SHARE_EXTRAS`. Fix it by registering the project, or by adding
-an icon and gradient to `SHARE_EXTRAS` (the words then come from that page's own
-hand-written `<title>` and meta description).
+an icon, gradient **and `kind`** to `SHARE_EXTRAS` (the words then come from that page's
+own hand-written `<title>` and meta description).
+
+**Every card has a `kind`: `project`, `page` or `post`.** The rack shows `project` only.
+Registry entries are projects by definition; blog posts are `post`. A `SHARE_EXTRAS`
+entry has to declare its kind and the build throws if it does not, because `views/rocks`
+(a project the registry does not carry) and `views/privacy` (furniture) are
+indistinguishable by the time the page reads the catalog. `projectEntries()` reads the
+kind and never infers it, so a stale catalog without kinds shows an empty rack rather than
+filing the privacy policy as a project. Every catalog page stays reachable by address
+regardless of kind; `kind` only decides what is listed.
+
+Off-site registry entries (the professional client sites, two academic papers) are not in
+the catalog at all and cannot be: `normalizeSharePath()` is a security boundary that
+refuses anything leaving this site, so a code can only ever point at a page here.
+
+## Dashboard tile
+
+`app/models/seeds/dashboard-tile-share.sql` adds a Share tile for the admin only. The page
+is public; only the launcher shortcut is private. It works by pointing the tile at a
+`share` row in `projects` that nobody holds a role in, which leaves site admins. Granting
+anyone a `share` role widens the tile to them.
 
 ## The encoder
 
