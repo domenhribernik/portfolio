@@ -23,7 +23,7 @@ import {
     sortItems,
     usedLabels,
     initials,
-    isMine,
+    attribution,
     formatDaySl,
     formatTimeSl,
     groupByDay,
@@ -328,12 +328,30 @@ test('a long name gives first and last initials, never a run of them', () => {
     assert.equal(initials({ display_name: 'Ana Marija Novak Kovač' }), 'AK');
 });
 
-test('your own items are not tagged with your own initials', () => {
-    // You know what you added. The information is who ELSE did.
-    const me = { id: 1 };
-    assert.equal(isMine(item('mleko', { addedBy: 1 }), me), true);
-    assert.equal(isMine(item('kruh', { addedBy: 2 }), me), false);
-    assert.equal(isMine(item('kruh', { addedBy: 2 }), null), false);
+test('every open row names who added it, your own rows included', () => {
+    // Every row carries the same two lines. When your own rows went unsigned
+    // they were one line tall, and their names sat higher than everyone else's.
+    const mine = { ...item('mleko', { addedBy: 1 }), added_by: 'Domen Hribernik' };
+    assert.deepEqual(attribution(mine), { who: 'Domen', title: 'Dodal/a Domen Hribernik' });
+});
+
+test('a bought row names who bought it, not who added it', () => {
+    const bought = {
+        ...item('kruh', { checked: 1 }),
+        added_by: 'Domen Hribernik',
+        checked_by: 'Iliana Novak',
+    };
+    assert.deepEqual(attribution(bought), { who: 'Iliana', title: 'Kupil/a Iliana Novak' });
+});
+
+test('an account stored by email is named by the start of the address', () => {
+    const legacy = { ...item('sol'), added_by: 'domen.hribernik4@gmail.com' };
+    assert.equal(attribution(legacy).who, 'Domen');
+});
+
+test('a row with nobody on record carries no attribution', () => {
+    assert.equal(attribution({ ...item('sol'), added_by: null }), null);
+    assert.equal(attribution({ ...item('sol'), added_by: '   ' }), null);
 });
 
 // ------------------------------------------------------------------

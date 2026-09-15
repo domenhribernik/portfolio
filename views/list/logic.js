@@ -192,10 +192,21 @@ export function initials(user) {
     return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
 }
 
-/** You know what you added; the information on a row is who ELSE did. */
-export function isMine(item, me) {
-    if (!me || !item) return false;
-    return item.added_by_user_id != null && item.added_by_user_id === me.id;
+/**
+ * Who a row is signed with: the buyer once it is ticked, the person who added it
+ * before that. Every row is signed, your own too, so every row has the same two
+ * lines and the names line up; an unsigned row was one line tall and sat higher.
+ * A first name is enough on a household list, and the title keeps the full one.
+ */
+export function attribution(item) {
+    const bought = item && item.checked && String(item.checked_by || '').trim();
+    const full = bought || String((item && item.added_by) || '').trim();
+    if (!full) return null;
+    // Older rows stored the email instead of a display name.
+    const source = full.includes('@') ? full.split('@')[0] : full;
+    const first = source.split(/[\s._-]+/).filter(Boolean)[0] || full;
+    const who = full.includes('@') ? first.charAt(0).toUpperCase() + first.slice(1) : first;
+    return { who, title: `${bought ? 'Kupil/a' : 'Dodal/a'} ${full}` };
 }
 
 /**

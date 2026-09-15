@@ -99,6 +99,16 @@ its items yet. It also greps the PHP twice, for the two rules that exist in both
 languages: `nameKey` (drift there splits "Mleko" and "mleko" in the history) and the
 default label vocabulary.
 
+`list-page.test.mjs` is the one **browser** suite: the real page in headless Chrome at
+phone size, driven over the DevTools protocol with Node 22's global `WebSocket` (still no
+dependencies). A Node server serves the repo and answers the auth and list controllers from
+in-memory fixtures, so there is **no PHP and no database** and no route to prod. It holds
+what only a render can get wrong: picking a list actually switches, no field is under 16px
+(iOS focus zoom), and rows sit on one measured grid. It **skips with a reason** when there
+is no Chrome (`CHROME_BIN` overrides the lookup), no global `WebSocket` (CI's Node 20), or
+no network for the Tailwind CDN. Note that Node 22 rejects the bare `node --test tests/`
+directory form; use the glob.
+
 ### bearing
 
 `bearing-logic.test.mjs` holds the instrument. Two tests are the point of the

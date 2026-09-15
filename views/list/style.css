@@ -94,6 +94,12 @@ input { caret-color: var(--accent); }
     outline: none;
     transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
+/* 16px is the floor, not a style: iOS Safari zooms the page into any focused
+   field smaller than that, and the list is typed into on a phone all day. The
+   element selector outranks a Tailwind text-* utility, so a field cannot be
+   shrunk back under it by accident. */
+input.field,
+select.field { font-size: max(16px, 1rem); }
 .field::placeholder { color: var(--muted); opacity: 1; }
 .field:focus {
     border-color: var(--accent);
@@ -195,20 +201,29 @@ select.field {
    --------------------------------------------------------------- */
 
 /* Compact on purpose: a real shop is thirty lines, and every row that does not
-   fit is a row somebody scrolls past in an aisle. 44px stays a safe target. */
+   fit is a row somebody scrolls past in an aisle. 44px stays a safe target.
+
+   The row sits on the grid of the chrome above it, which tests/list-page.test.mjs
+   measures: the checkbox SQUARE (not its 40px target) on the add field's left
+   edge, the name on the list title's (40px in, past the back arrow), and the
+   square's centre on the name's first line whether the row has one line or
+   three. */
 .item-row {
+    --check: 40px;
+    --box: 21px;
+    --inset: calc((var(--check) - var(--box)) / 2);
+    --name-lh: calc(0.94rem * 1.3);
     display: flex;
     align-items: flex-start;
-    gap: 0.6rem;
-    padding: 0.45rem 0.1rem;
+    gap: calc(40px - var(--check) + var(--inset));
     min-height: 44px;
 }
 
 .item-check {
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    margin: -0.15rem 0 -0.15rem -0.5rem;
+    width: var(--check);
+    height: var(--check);
+    margin-left: calc(-1 * var(--inset));
     display: grid;
     place-items: center;
     background: none;
@@ -217,8 +232,8 @@ select.field {
 }
 .item-check::before {
     content: "";
-    width: 21px;
-    height: 21px;
+    width: var(--box);
+    height: var(--box);
     border: 2px solid #c8c4bc;
     border-radius: 6px;
     transition: background 0.15s var(--ease), border-color 0.15s var(--ease);
@@ -235,14 +250,16 @@ select.field {
 .item-row--done .item-check::before { background: var(--accent); border-color: var(--accent); }
 .item-row--done .item-check .fa-check { opacity: 1; transform: scale(1); }
 
-/* The tappable middle: name on top, labels and initials beneath. Both lines are
-   one target, and it opens the item rather than toggling it, so the checkbox
-   stays the only way to tick something by accident. */
+/* The tappable middle: name on top, labels and who beneath. Both lines are one
+   target, and it opens the item rather than toggling it, so the checkbox stays
+   the only way to tick something by accident. The top padding is what drops the
+   first line's centre onto the checkbox's; it pads the target, not the row, so
+   the whole height of the row stays tappable. */
 .item-body {
     flex: 1;
     min-width: 0;
     display: block;
-    padding: 0.15rem 0;
+    padding: calc((var(--check) - var(--name-lh)) / 2) 0 0.6rem;
     background: none;
     border: none;
     font: inherit;
@@ -253,7 +270,7 @@ select.field {
 .item-name {
     display: block;
     font-size: 0.94rem;
-    line-height: 1.3;
+    line-height: var(--name-lh);
     overflow-wrap: anywhere;
     transition: color 0.15s var(--ease);
 }
@@ -263,21 +280,23 @@ select.field {
    "active"; if every row also wore them, nothing would read as selected and a
    ten-item list would carry twenty coloured pills. */
 .item-meta {
-    display: block;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
     margin-top: 0.05rem;
     font-size: 0.73rem;
     line-height: 1.25;
     color: var(--muted);
 }
+.item-meta__labels { min-width: 0; overflow-wrap: anywhere; }
+/* Every row is signed, so the name is plain text rather than a boxed tag: a
+   box on every row is the same clutter the label rule above exists to prevent.
+   Its place is what tells it apart from a label: the right edge, in one column
+   down the list. */
 .item-meta__who {
-    display: inline-block;
-    margin-left: 0.4rem;
-    padding: 0.02rem 0.3rem;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    font-size: 0.66rem;
-    letter-spacing: 0.04em;
-    color: var(--muted);
+    flex-shrink: 0;
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 .item-row--pending { opacity: 0.55; }

@@ -14,7 +14,9 @@ that is known drift, kept because the owner asked for this look.
 Backed by [list-controller.php](../../app/controllers/list-controller.php), schema in
 [list-model.sql](../../app/models/list-model.sql). Decision logic is in
 [logic.js](logic.js), tested by [tests/list-logic.test.mjs](../../tests/list-logic.test.mjs);
-the API by [tests/list-controller.test.php](../../tests/list-controller.test.php).
+the API by [tests/list-controller.test.php](../../tests/list-controller.test.php); the rendered
+page (list switching, field sizes, row alignment) by
+[tests/list-page.test.mjs](../../tests/list-page.test.mjs) in headless Chrome.
 
 ## Two layers of access, both server-side
 
@@ -56,8 +58,18 @@ page reads like a route through the shop rather than like the order things were 
 3. **Labels on a row are muted text, never chips.** Colour is reserved for the filter row,
    where it means *active*. If every row wore pills too, nothing would read as selected.
 
-A row is also not signed with your own initials. You know what you added; the information
-is who else did (`isMine()`).
+**Every row is signed, your own included** (`attribution()`): the first name of whoever added
+it, or of the buyer once ticked, as plain text at the row's right edge. Unsigned own rows were
+one line tall and their names rode higher than everyone else's, which the owner asked to stop.
+
+Rows sit on the chrome's grid: the checkbox square on the add field's left edge, the name on
+the list title's, the square's centre on the name's first line. The numbers live in the
+`--check` / `--box` / `--name-lh` custom properties on `.item-row`, and the page suite
+measures the result, so change them together.
+
+**Fields are 16px or larger.** iOS Safari zooms into any focused field under 16px. The floor is
+on `input.field, select.field` in `style.css`, not a `maximum-scale` viewport, which would take
+pinch zoom away too.
 
 ## Checking is not deleting, and deleting is not buying
 
@@ -71,7 +83,15 @@ is who else did (`isMine()`).
 - A purchase stores its labels and both names as **text snapshots**, never foreign keys, so
   history still reads correctly after somebody renames or deletes a label.
 
-## Two gotchas that cost real bugs
+## Three gotchas that cost real bugs
+
+**Nothing may touch the URL until a sheet's history entry has popped.** An open sheet is a
+pushed history entry so the phone's back gesture closes it, and `history.back()` lands
+asynchronously. Picking a list used to write the new hash first; the pop then restored the old
+one, `hashchange` fired, and you were switched straight back. `closeTopSheet()` now returns a
+promise that resolves on the `popstate`, callers that change lists await it, and `setActive()`
+uses `replaceState` (carrying `history.state`, where `back-link.js` keeps its depth) so a list
+switch is not a history step at all.
 
 **The poll version must be millisecond-precision.** It is `COUNT` plus `MAX(updated_at)`
 over items *and* labels. When `updated_at` was a second-granular `DATETIME`, a check

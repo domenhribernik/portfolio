@@ -3,7 +3,7 @@
 
 import {
     nameKey, parseAddInput, resolveNewItemLabels, applyFilter, sortItems,
-    usedLabels, initials, isMine, formatDaySl, formatTimeSl, groupByDay,
+    usedLabels, initials, attribution, formatDaySl, formatTimeSl, groupByDay,
     filterStorageKey, pruneFilter, todayIso,
 } from './logic.js';
 
@@ -167,18 +167,33 @@ function openSheet(el, onOpen) {
     if (focusable && !('ontouchstart' in window)) focusable.focus();
 }
 
+/**
+ * Resolves once the sheet's history entry has actually been popped.
+ * history.back() is asynchronous: anything that touches the URL before the pop
+ * lands (switching lists does) gets rolled back by it, which is how picking a
+ * list used to leave you on the one you were already on.
+ */
 function closeTopSheet({ fromPop = false } = {}) {
     const el = state.sheets[state.sheets.length - 1];
-    if (!el) return;
+    if (!el) return Promise.resolve();
     // The item sheet has no save button: closing it is the save, by whichever
     // route it closes (button, backdrop, Escape, or the phone's back gesture).
     if (el === els.itemSheet && state.editing) saveItemSheet();
     state.sheets.pop();
     show(el, false);
     if (!state.sheets.length) show(els.backdrop, false);
-    if (!fromPop) {
-        try { history.back(); } catch { /* ignore */ }
-    }
+    if (fromPop) return Promise.resolve();
+
+    return new Promise((resolve) => {
+        const done = () => {
+            window.removeEventListener('popstate', done);
+            clearTimeout(fallback);
+            resolve();
+        };
+        const fallback = setTimeout(done, 400);
+        window.addEventListener('popstate', done);
+        try { history.back(); } catch { done(); }
+    });
 }
 
 function closeAllSheets() {
@@ -197,8 +212,13 @@ function setActive(name, { updateHash = true } = {}) {
     state.historyOpen = false;
     state.filter = loadFilter(name);
     if (updateHash) {
+        // Replaced, not pushed: a list is not a screen to walk back through,
+        // and a pushed hash fires the hashchange listener below at itself.
+        // history.state is carried over because back-link.js keeps its depth there.
         const target = '#' + encodeURIComponent(name);
-        if (location.hash !== target) location.hash = target;
+        if (location.hash !== target) {
+            try { history.replaceState(history.state, '', target); } catch { location.hash = target; }
+        }
     }
     els.addInput.placeholder = 'Dodaj…';
     if (!state.itemsBy[name]) state.itemsBy[name] = [];
@@ -377,20 +397,23 @@ function renderItem(item) {
     const bits = [];
     if (item.section) bits.push(item.section.name);
     for (const shop of item.shops || []) bits.push(shop.name);
-    const mine = isMine(item, state.user);
-    const who = item.checked ? item.checked_by : item.added_by;
+    const signed = attribution(item);
 
-    if (bits.length || (!mine && who)) {
+    if (bits.length || signed) {
         const meta = document.createElement('span');
         meta.className = 'item-meta';
-        meta.textContent = bits.join(' · ');
-        // Svojih vnosov ne podpisujemo: veš, kaj si dodal. Zanimivo je, kdo drug.
-        if (!mine && who) {
-            const tag = document.createElement('span');
-            tag.className = 'item-meta__who';
-            tag.textContent = initials({ display_name: who, email: who });
-            tag.title = item.checked ? `Kupil/a ${who}` : `Dodal/a ${who}`;
-            meta.appendChild(tag);
+        if (bits.length) {
+            const text = document.createElement('span');
+            text.className = 'item-meta__labels';
+            text.textContent = bits.join(' · ');
+            meta.appendChild(text);
+        }
+        if (signed) {
+            const who = document.createElement('span');
+            who.className = 'item-meta__who';
+            who.textContent = signed.who;
+            who.title = signed.title;
+            meta.appendChild(who);
         }
         bodyBtn.appendChild(meta);
     }
@@ -790,8 +813,8 @@ function openPicker() {
             btn.type = 'button';
             btn.className = 'sheet-row__name';
             btn.textContent = name;
-            btn.addEventListener('click', () => {
-                closeTopSheet();
+            btn.addEventListener('click', async () => {
+                await closeTopSheet();
                 setActive(name);
             });
             li.appendChild(btn);
@@ -1202,11 +1225,11 @@ function wire() {
     els.menuOpen.addEventListener('click', openLabelsSheet);
     els.accessOpen.addEventListener('click', openAccessSheet);
 
-    els.newListCreate.addEventListener('click', () => {
+    els.newListCreate.addEventListener('click', async () => {
         const name = els.newListInput.value.trim();
         if (!name) return;
         els.newListInput.value = '';
-        closeTopSheet();
+        await closeTopSheet();
         createCollection(name);
     });
     els.newListInput.addEventListener('keydown', (e) => {
