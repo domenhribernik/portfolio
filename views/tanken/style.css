@@ -1,0 +1,94 @@
+/* views/tanken
+ *
+ * Only what Tailwind cannot express cleanly: the state panels whose default
+ * must be display:none, the chart tooltip, and a couple of keyframes. The
+ * palette and the focus ring come from components/editorial/theme.css.
+ *
+ * base-style.css is deliberately NOT linked, so the navy body gradient never
+ * has to be fought off here.
+ */
+
+/* ---- State panels -------------------------------------------------------
+   Toggled by a single body class in script.js, so exactly one can ever show. */
+.state-panel { display: none !important; }
+body.nolocation #nolocation,
+body.loading    #loader,
+body.error      #error { display: block !important; }
+body.ready      #app { display: block !important; }
+#app { display: none; }
+
+@keyframes loaderPulse {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 1; }
+}
+.loader-pulse { animation: loaderPulse 1.6s var(--ease-out) infinite; }
+
+/* ---- The hard-offset press shared by the page's buttons ----------------- */
+.hover-hard {
+    transition: transform 120ms var(--ease-out), box-shadow 120ms var(--ease-out);
+}
+.hover-hard:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--clay);
+}
+.hover-hard:active {
+    transform: translate(0, 0);
+    box-shadow: 0 0 0 var(--clay);
+}
+
+/* ---- Station rows -------------------------------------------------------
+   Rules, not boxes: a list of stations is a table of one thing, so it reads
+   as hairline-separated rows rather than a stack of cards. */
+.station-row {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr auto;
+    gap: 0 0.9rem;
+    align-items: baseline;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--hairline);
+}
+.station-row:first-child { border-top: 1px solid var(--hairline); }
+
+/* A closed station stays in the list (the licence terms forbid filtering the
+   results), but reads as inactive rather than as a live offer. */
+.station-row.is-closed .station-price { opacity: 0.45; }
+.station-row.is-best   .station-price { color: var(--pine); font-weight: 700; }
+
+.station-price { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+@media (max-width: 30rem) {
+    .station-row { grid-template-columns: 1.7rem 1fr auto; gap: 0 0.6rem; }
+}
+
+/* ---- Chart --------------------------------------------------------------
+   Same shape as views/stocks: the SVG scales to its host, the tooltip is
+   fixed-position so it is never clipped by an overflow ancestor. */
+.chart-host { position: relative; width: 100%; }
+.chart-host svg { display: block; width: 100%; height: auto; }
+
+.chart-tip {
+    position: fixed;
+    z-index: 50;
+    pointer-events: none;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Space Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    padding: 0.35rem 0.5rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    transform: translate(-50%, calc(-100% - 10px));
+}
+.chart-tip.hidden { display: none; }
+
+.sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loader-pulse { animation: none; opacity: 0.7; }
+    .hover-hard { transition: none; }
+}

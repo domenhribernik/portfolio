@@ -155,6 +155,13 @@
       "gradient": "linear-gradient(45deg, #1f35e0 0%, #d4451f 100%)",
       "kind": "project"
     },
+    "views/tanken": {
+      "title": "Tanken",
+      "description": "German filling stations change their prices several times a day, and by law they have to report every change within minutes.",
+      "icon": "fas fa-gas-pump",
+      "gradient": "linear-gradient(45deg, #1f3a5f 0%, #f2b705 100%)",
+      "kind": "project"
+    },
     "views/about": {
       "title": "About Domen Hribernik",
       "description": "About Domen Hribernik, a full-stack developer based in Celje, Slovenia: education, work experience, the technologies I use, and the projects I build.",

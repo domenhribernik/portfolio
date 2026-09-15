@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-10",
+  "updated": "2026-09-14",
   "requirements": [
     {
       "id": "title",
@@ -58,6 +58,28 @@
     }
   ],
   "pages": [
+    {
+      "path": "views/tanken",
+      "name": "Tanken",
+      "tier": "flagship",
+      "status": {
+        "title": "done",
+        "description": "done",
+        "canonical": "done",
+        "og": "done",
+        "jsonld": "done",
+        "h1": "done",
+        "crawlable": "partial",
+        "robots": "done",
+        "sitemap": "done",
+        "indexed": "todo",
+        "cwv": "unknown"
+      },
+      "notes": {
+        "crawlable": "the station list needs a location and is fetched on device, so a crawler sees the head, the h1 and the framing prose but no prices; the daily curve is a static JSON the page could be prerendered from later",
+        "indexed": "the angle worth ranking on is the cheapest hour rather than the price list, which every German comparison site already owns"
+      }
+    },
     {
       "path": "views/tells",
       "name": "Tells",

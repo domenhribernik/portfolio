@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="../../components/consent/consent.js"></script>
+    <script src="../../components/google-analytics.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tanken | German fuel prices and the cheapest hour to fill up</title>
+    <meta name="description" content="Live petrol and diesel prices for stations near you in Germany, sorted cheapest first, plus the hour of the day prices actually fall. Built on the Bundeskartellamt's MTS-K data.">
+    <link rel="canonical" href="https://domenhribernik.com/views/tanken/">
+
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Tanken, German fuel prices by the hour">
+    <meta property="og:description" content="Live petrol and diesel prices near you, sorted cheapest first, plus the hour of the day prices actually fall.">
+    <meta property="og:url" content="https://domenhribernik.com/views/tanken/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Tanken",
+      "url": "https://domenhribernik.com/views/tanken/",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Any (web browser)",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@type": "Person", "name": "Domen Hribernik", "url": "https://domenhribernik.com/" },
+      "inLanguage": "en",
+      "description": "Live German fuel prices near a chosen location with the daily price curve from the MTS-K historical archive."
+    }
+    </script>
+
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../components/editorial/theme.js"></script>
+    <link rel="stylesheet" href="../../components/editorial/theme.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="font-sans bg-paper text-ink min-h-screen antialiased nolocation">
+
+    <div class="mx-auto w-full max-w-[64rem] px-5 sm:px-8">
+
+        <header class="pt-6 pb-3">
+            <a id="back-link" href="../../" class="inline-block text-stone no-underline hover:text-clay transition-colors font-mono text-sm" aria-label="Back">&larr; back</a>
+            <div class="mt-5 sm:mt-7 h-px bg-hairline"></div>
+            <h1 class="mt-4 font-display font-extrabold leading-[0.85] tracking-[-0.035em] text-[clamp(2.8rem,11vw,6rem)]">Tanken<span class="text-clay">.</span></h1>
+            <p class="mt-3 max-w-[54ch] leading-relaxed text-stone">
+                Every German filling station reports a price change to the Bundeskartellamt within
+                minutes of making it. This shows you the ones near you, cheapest first, and the hour
+                of the day it is worth waiting for.
+            </p>
+        </header>
+
+        <!-- ============ Pick a place ============ -->
+        <section class="mt-6 sm:mt-8" aria-labelledby="whereHead">
+            <h2 id="whereHead" class="sr-only">Choose a location</h2>
+            <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+                <form id="searchForm" class="flex-1 min-w-0">
+                    <label for="searchInput" class="block font-mono text-[0.62rem] tracking-[0.25em] uppercase text-stone">Town or address</label>
+                    <div class="mt-2 flex gap-2">
+                        <input id="searchInput" type="search" autocomplete="off" placeholder="Hamburg, Leipziger Str. 4…"
+                            class="flex-1 min-w-0 bg-card border border-hairline rounded-[3px] px-3 py-2 text-[0.95rem] placeholder:text-faint">
+                        <button type="submit" class="shrink-0 border border-ink bg-ink text-paper px-4 py-2 font-mono text-[0.72rem] tracking-[0.12em] uppercase hover-hard">Find</button>
+                    </div>
+                </form>
+                <button id="geoBtn" type="button" class="shrink-0 border border-ink px-4 py-2 font-mono text-[0.72rem] tracking-[0.12em] uppercase hover-hard">Use my location</button>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+                <div class="flex items-center gap-2">
+                    <label for="radiusInput" class="font-mono text-[0.62rem] tracking-[0.25em] uppercase text-stone">Radius</label>
+                    <input id="radiusInput" type="range" min="1" max="25" step="1" value="5" class="w-32 accent-clay">
+                    <span id="radiusValue" class="font-mono text-[0.78rem] tabular-nums">5 km</span>
+                </div>
+                <p id="searchStatus" class="font-mono text-[0.72rem] text-stone" role="status"></p>
+            </div>
+        </section>
+
+        <!-- ============ States ============ -->
+        <div id="nolocation" class="state-panel py-16 text-center">
+            <p class="font-mono text-[0.72rem] tracking-[0.18em] uppercase text-stone">Pick a place to see prices</p>
+        </div>
+
+        <div id="loader" class="state-panel py-16 text-center">
+            <p class="font-mono text-[0.72rem] tracking-[0.25em] uppercase text-stone loader-pulse">Reading the forecourt…</p>
+        </div>
+
+        <div id="error" class="state-panel py-16 text-center">
+            <p id="errorText" class="text-stone">Could not reach the price service.</p>
+            <button id="retryBtn" type="button" class="mt-4 border border-ink px-4 py-2 font-mono text-[0.72rem] tracking-[0.12em] uppercase hover-hard">Try again</button>
+        </div>
+
+        <!-- ============ Prices ============ -->
+        <main id="app">
+            <section class="mt-8" aria-labelledby="pricesHead">
+                <div class="flex flex-wrap items-baseline justify-between gap-3 border-b-2 border-ink pb-2">
+                    <h2 id="pricesHead" class="font-mono text-[0.68rem] tracking-[0.24em] uppercase text-clay">Stations nearby</h2>
+                    <p id="stationCount" class="font-mono text-[0.72rem] text-stone tabular-nums"></p>
+                </div>
+
+                <div id="fuelTabs" class="mt-3 flex gap-4" role="tablist" aria-label="Fuel type"></div>
+
+                <p id="headline" class="mt-4 text-[1.05rem]"></p>
+
+                <ol id="stationList" class="mt-3"></ol>
+
+                <p id="emptyNote" class="hidden py-10 text-center text-stone">
+                    No stations reported inside this radius. Try a wider one.
+                </p>
+
+                <!-- CC BY 4.0: the credit travels with the data it covers, which
+                     is why it sits here rather than in a colophon. -->
+                <p class="mt-5 pt-3 border-t border-hairline font-mono text-[0.68rem] leading-relaxed text-stone">
+                    Prices: MTS-K via <a href="https://www.tankerkoenig.de" rel="noopener external" class="underline decoration-clay decoration-2 underline-offset-2 hover:text-ink">Tankerkönig</a>, CC BY 4.0.
+                    <span id="freshness"></span>
+                </p>
+            </section>
+
+            <!-- ============ The daily curve ============ -->
+            <section class="mt-12 mb-16" aria-labelledby="statsHead">
+                <div class="flex flex-wrap items-baseline justify-between gap-3 border-b-2 border-ink pb-2">
+                    <h2 id="statsHead" class="font-mono text-[0.68rem] tracking-[0.24em] uppercase text-clay">The shape of the day</h2>
+                    <p id="statsWindow" class="font-mono text-[0.72rem] text-stone tabular-nums"></p>
+                </div>
+
+                <p id="statsHeadline" class="mt-4 text-[1.05rem]"></p>
+
+                <div id="chartHost" class="chart-host mt-4"></div>
+
+                <p id="statsEmpty" class="hidden py-10 text-center text-stone">
+                    The daily curve is not built yet. It comes from the historical archive,
+                    which is a separate offline job.
+                </p>
+
+                <div id="weekdayTabs" class="mt-4 flex flex-wrap gap-3" role="tablist" aria-label="Weekday"></div>
+
+                <!-- BY-NC-SA 4.0 is a licence condition, not a credit line: the
+                     non-commercial term has to be stated where the data is shown. -->
+                <p class="mt-5 pt-3 border-t border-hairline font-mono text-[0.68rem] leading-relaxed text-stone">
+                    Historical data: <a href="https://creativecommons.tankerkoenig.de" rel="noopener external" class="underline decoration-clay decoration-2 underline-offset-2 hover:text-ink">Tankerkönig price archive</a>, CC BY-NC-SA 4.0.
+                    This page is non-commercial: no ads, no paid tiers, nothing sold.
+                </p>
+            </section>
+        </main>
+    </div>
+
+    <div id="chartTip" class="chart-tip hidden" role="status"></div>
+
+    <site-footer></site-footer>
+
+    <script src="../../components/back-link.js"></script>
+    <script type="module" src="script.js"></script>
+    <script type="module" src="../../components/site-footer.js"></script>
+    <script src="../../components/gtranslate.js"></script>
+</body>
+
+</html>

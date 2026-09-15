@@ -276,5 +276,15 @@ export const projects = {
       visitSite: "views/share",
     },
     iconClass: "fas fa-qrcode",
+  },
+  tanken: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #1f3a5f 0%, #f2b705 100%)",
+    title: "Tanken",
+    description: "German filling stations change their prices several times a day, and by law they have to report every change within minutes. Tanken shows the stations near you cheapest first, then answers the question that actually saves money: which hour of the day to turn up. The daily curve comes from eleven years of price changes, normalised so the oil market drops out and only the shape of the day is left.",
+    links: {
+      visitSite: "views/tanken",
+    },
+    iconClass: "fas fa-gas-pump",
   }
 };
