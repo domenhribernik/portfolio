@@ -140,7 +140,7 @@ export const projects = {
   tarok: {
     category: "passion",
     gradient: "linear-gradient(45deg, #ff006e 0%, #ff4d4d 100%)",
-    title: "Tarok Scoring",
+    title: "Tarok",
     description: "A scorekeeper for Slovenia's beloved card game. Handles radelci, multipliers, and full game history, so the table argument about who's winning stays settled.",
     links: {
       visitSite: "views/tarok",

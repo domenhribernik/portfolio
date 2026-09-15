@@ -14,15 +14,9 @@ import { projects } from '../components/project-data.js';
 
 test('every FEATURED key exists in the live registry, in the agreed order', () => {
   assert.deepEqual(FEATURED, [
-    'tanken',
-    'tells',
-    'peal',
-    'bearing',
     'battleship',
     'seam',
-    'trails',
     'nebo',
-    'beseda',
     'tarok',
     'workout',
     'recipes',
@@ -38,7 +32,7 @@ test('every FEATURED key exists in the live registry, in the agreed order', () =
 test('featuredEntries returns registry entries in FEATURED order', () => {
   const titles = featuredEntries(projects).map(e => e.title);
   assert.equal(titles.length, FEATURED.length);
-  assert.equal(titles[0], 'Tanken');
+  assert.equal(titles[0], 'Battleship');
   assert.equal(titles.at(-1), 'Guitar Backing Tracks');
 });
 
