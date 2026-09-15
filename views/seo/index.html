@@ -73,7 +73,10 @@
                         <code>https://domenhribernik.com</code>, no www. The root <code>.htaccess</code> 301s
                         www&rarr;apex and http&rarr;https (rules are host-anchored so local XAMPP is untouched).
                         Every page also declares an absolute <code>&lt;link rel="canonical"&gt;</code> with a
-                        trailing slash, the same form the sitemap uses. One URL per page, everywhere.</p>
+                        trailing slash, the same form the sitemap uses. One URL per page, everywhere.
+                        That URL is the short one (<code>/nebo/</code>, not <code>/views/nebo/</code>): the server
+                        301s the long form, and a canonical pointing at a redirect keeps the page out of the
+                        index as "Page with redirect".</p>
                     <p class="mb-3"><strong>robots.txt vs noindex.</strong> They answer different questions.
                         <code>robots.txt Disallow</code> means "do not crawl": good for private tools, but a blocked
                         page can still be indexed URL-only if someone links it. <code>&lt;meta name="robots"

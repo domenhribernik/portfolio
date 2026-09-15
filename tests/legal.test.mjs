@@ -143,7 +143,7 @@ test('the legal pages exist, are indexable, and carry a canonical', () => {
         assert.match(src, /<title>[^<]+<\/title>/, `views/${page} needs a title`);
         assert.match(
             src,
-            new RegExp(`<link rel="canonical" href="https://domenhribernik\\.com/views/${page}/">`),
+            new RegExp(`<link rel="canonical" href="https://domenhribernik\\.com/${page}/">`),
             `views/${page} needs an absolute trailing-slash canonical`,
         );
         assert.doesNotMatch(

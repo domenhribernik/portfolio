@@ -56,6 +56,16 @@ export function registryInternalPages(projects) {
     return pages;
 }
 
+//? The public URL for a site-root-relative page path. The server 301s
+//? /views/<x>/ to /<x>/, so anything Google reads (sitemap <loc>, canonical,
+//? og:url, JSON-LD) must use the short form or it points at a redirect and
+//? the page never indexes. '' is the homepage; nested paths keep their tail
+//? ('views/blog/my-post' -> '/blog/my-post/').
+export function publicUrl(origin, path) {
+    const rel = String(path).replace(/^\/+|\/+$/g, '').replace(/^views(?:\/|$)/, '');
+    return `${String(origin).replace(/\/+$/, '')}/${rel ? `${rel}/` : ''}`;
+}
+
 //? ---------------------------------------------------------------- sitemap
 
 //? entries: [{ loc, lastmod?, priority }] with loc already absolute.
@@ -186,7 +196,8 @@ export function postsFallbackHtml(posts) {
 export function blogPostPage({ slug, meta, bodyHtml, minutes, dateLabel, dateModified, origin }) {
     const title = meta.title || slug;
     const desc = clipDescription(meta.excerpt || '');
-    const url = `${origin}/views/blog/${slug}/`;
+    const url = publicUrl(origin, `views/blog/${slug}`);
+    const blogUrl = publicUrl(origin, 'views/blog');
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
@@ -196,14 +207,14 @@ export function blogPostPage({ slug, meta, bodyHtml, minutes, dateLabel, dateMod
         author: { '@type': 'Person', name: meta.author || 'Domen Hribernik', url: `${origin}/` },
         url,
         description: desc,
-        isPartOf: { '@type': 'Blog', url: `${origin}/views/blog/` },
+        isPartOf: { '@type': 'Blog', url: blogUrl },
         inLanguage: 'en',
     };
     const breadcrumbs = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Blog', item: `${origin}/views/blog/` },
+            { '@type': 'ListItem', position: 1, name: 'Blog', item: blogUrl },
             { '@type': 'ListItem', position: 2, name: title, item: url },
         ],
     };

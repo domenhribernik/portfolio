@@ -42,7 +42,7 @@ import { SITE_ORIGIN, FLAGSHIP, EXTRA_PUBLIC_PAGES, NOT_DEPLOYED, PRIORITY } fro
 import {
     buildInventory, registryInternalPages, sitemapXml, replaceBetweenMarkers,
     projectsFallbackHtml, archiveFallbackHtml, postsFallbackHtml, blogPostPage,
-    tellsFallbackHtml, validateSlug,
+    tellsFallbackHtml, validateSlug, publicUrl,
 } from './logic.js';
 import { renderMarkdown } from './markdown.js';
 import { SHARE_EXTRAS, buildShareCatalog } from './share-catalog.js';
@@ -128,17 +128,17 @@ const flagshipSet = new Set(FLAGSHIP);
 const entries = pages.map((page) => {
     if (page === '') {
         const dates = [lastmod('index.html'), lastmod('views/homepage')].filter(Boolean).sort();
-        return { loc: `${SITE_ORIGIN}/`, lastmod: dates.at(-1), priority: PRIORITY.home };
+        return { loc: publicUrl(SITE_ORIGIN, ''), lastmod: dates.at(-1), priority: PRIORITY.home };
     }
     const priority = flagshipSet.has(page) ? PRIORITY.flagship
         : page === 'views/about' ? PRIORITY.about
         : page === 'views/projects' ? PRIORITY.archive
         : PRIORITY.default;
-    return { loc: `${SITE_ORIGIN}/${page}/`, lastmod: lastmod(page), priority };
+    return { loc: publicUrl(SITE_ORIGIN, page), lastmod: lastmod(page), priority };
 });
 for (const post of posts) {
     entries.push({
-        loc: `${SITE_ORIGIN}/views/blog/${post.slug}/`,
+        loc: publicUrl(SITE_ORIGIN, `views/blog/${post.slug}`),
         lastmod: post.dateModified || post.meta.date,
         priority: PRIORITY.post,
     });

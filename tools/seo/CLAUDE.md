@@ -48,6 +48,17 @@ Suites: `tests/seo-logic.test.mjs`, `tests/seo-generate.test.mjs`,
 `node --test tests/`, and excludes `tools/**` from the SFTP upload. So the artifacts are
 committed for local truth and regenerated for deploy, and prod can never be stale.
 
+## Public URLs drop the `views/` prefix
+
+Prod 301s `/views/<x>/` to `/<x>/`, so every URL Google is *told* about (sitemap `<loc>`,
+canonical, `og:url`, JSON-LD) must be the short form: `https://domenhribernik.com/nebo/`,
+`.../blog/<slug>/`. A `/views/` form there points at a redirect, and Search Console files
+the page under "Page with redirect" and indexes nothing (it did, for 35 pages, until
+2026-09). `publicUrl()` in `logic.js` builds them for generated output;
+`tests/seo-generate.test.mjs` fails if a committed head or the sitemap regresses.
+Relative internal links (`views/nebo/`, `../../views/x`) stay as they are: local XAMPP has
+no pretty-URL rewrites, and a followed redirect on a link costs nothing.
+
 ## Head tags are NOT generated
 
 Every public `views/*/index.html` carries its `<title>` (`{Name} | {plain descriptor}`),
