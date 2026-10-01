@@ -145,6 +145,7 @@ Consequences worth knowing before you change it:
 |---|---|
 | `logic.js` | The rules, DOM free. Placement, firing, salvage, the five tools, the two fog projections, codes and names, the event reducer, poll pacing. |
 | `choreo.js` | How a report is played, DOM free. Tempo, the landing plan, how far the painted plot may lag the poll, and which plot the lamp rests on. |
+| `theme.js` | The theme list, the default, and the storage key. DOM free. |
 | `bot.js` | Probability density targeting and the ability policies, plus `playOut()`, the simulation the balance suite runs. Decides from the two projections only, never from the match. |
 | `script.js` | Screens, transport, the outbox, the poll loop, the placement editor, the order, the stage. Decides nothing. |
 | `i18n/ui.json` | One row per string, one column per language. Every `refuse.*` code the controller can send has a row, and a test fails if one does not. Every tool also needs a `commit.*` row naming the cell, or the order button cannot read its move back. |
@@ -154,7 +155,7 @@ them in both**; `tests/battleship-logic.test.mjs` reads the PHP and compares.
 
 ## The Plot Table
 
-A costume view: it declares its own palette inline rather than loading
+A costume view: it owns its palette rather than loading
 `components/editorial/theme.js`, which is what [DESIGN.md](../../DESIGN.md)
 licenses a showcase project to do. The direction contract is at the top of
 `style.css`. Olive drab ground, chalk type, International Code of Signals colour
@@ -162,6 +163,33 @@ licenses a showcase project to do. The direction contract is at the top of
 water), corner registration brackets instead of boxes, zero radius. Depth is
 lamplight and cast shadow, never a glow: spy owns glow and the house owns the
 hard offset.
+
+### Themes
+
+That olive room is the default theme (`ops`). `girlypop` is a blush skin of the
+same room: raspberry for damage and the order, orchid for yours, periwinkle for
+theirs, everything tinted from a berry ink. A theme is **colour only**; layout,
+type, counters and motion are shared.
+
+- **Every colour is a role token**, declared once per theme in the
+  `[data-theme="…"]` blocks at the top of `style.css` and nowhere else. The
+  names are roles (`--ground`, `--ink`, `--damage`, `--accent`, `--enemy`), not
+  the olive room's own words, because a light theme cannot be the dark one
+  inverted: `--ground` is the page in one and the text on an accent fill in
+  both. The inline `tailwind.config` deliberately carries no colours, and the
+  markup uses no Tailwind colour utilities.
+- **Adding a theme** takes three homes: a token block in `style.css`, a key in
+  `THEMES` in `theme.js`, and a `theme.<key>` row in `i18n/ui.json`.
+  `tests/battleship-theme.test.mjs` fails if a block is missing a token (it
+  would silently fall back to olive), if a theme lacks a name, or if a colour
+  literal turns up outside the blocks.
+- **It is per device, not per room.** The choice is saved under
+  `battleship:theme` and never sent to the server, so each player sees the game
+  in their own theme. An inline script in the head applies it before the first
+  paint, so a saved theme never flashes the default; the test holds its key to
+  `THEME_KEY`.
+- **The picker is a native `<select>`** on the start screen and on HOW IT WORKS.
+  With nothing saved it shows the default; a change is worn at once and saved.
 
 **Two gotchas in `style.css`:**
 
@@ -171,7 +199,9 @@ hard offset.
   correctly collapses the rows. There is an `@supports (width: 1cqw)` layer over
   an `aspect-ratio` fallback.
 - `site-footer` is self styled and its dark skin is the retired navy one. It is
-  recoloured from the outside here rather than forked.
+  recoloured from the outside here rather than forked, by overriding its two
+  neutrals on its own inner `.site-footer` element: a value set on the host is
+  not inherited, because the component declares them one level down.
 
 **Chrome.** Unlike spy, this view does load `back-link.js` and does end its boot
 screen on `<site-footer>`. The navigational screens carry a real hash so the

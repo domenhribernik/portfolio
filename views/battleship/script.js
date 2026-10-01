@@ -42,6 +42,7 @@ import {
     tempo, landingPlan, heldCells, projectGrid, landingCells,
     readingAt, restingSide, isStaleRoom,
 } from './choreo.js';
+import { THEMES, THEME_KEY, resolveTheme } from './theme.js';
 
 const API = '../../app/controllers/battleship-controller.php';
 const SESSION_KEY = 'battleship:session';
@@ -1588,11 +1589,42 @@ function renderRules() {
 }
 
 // ------------------------------------------------------------------
+//  Theme
+// ------------------------------------------------------------------
+
+/**
+ * Wear a theme and keep it on this device. The head script has usually put
+ * it on already; this normalises an unknown value and tells the browser
+ * chrome, whose colour comes from the page ground of whatever is worn.
+ */
+function wearTheme(key, { save = true } = {}) {
+    const theme = resolveTheme(key);
+    document.documentElement.dataset.theme = theme;
+    if (save) localStorage.setItem(THEME_KEY, theme);
+    const ground = getComputedStyle(document.documentElement).getPropertyValue('--ground').trim();
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && ground) meta.content = ground;
+    for (const select of document.querySelectorAll('.theme-select')) select.value = theme;
+}
+
+/** One option per theme in every dropdown, in THEMES order. */
+function renderThemePicks() {
+    for (const select of document.querySelectorAll('.theme-select')) {
+        select.innerHTML = THEMES.map((key) => `<option value="${key}">${t('theme.' + key)}</option>`).join('');
+    }
+}
+
+// ------------------------------------------------------------------
 //  Boot
 // ------------------------------------------------------------------
 
 async function init() {
     await loadStrings();
+    renderThemePicks();
+    wearTheme(localStorage.getItem(THEME_KEY), { save: false });
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('.theme-select')) wearTheme(e.target.value);
+    });
     buildRail();
     renderRules();
     buildPlot($('enemyPlot'), pickCell, peek);

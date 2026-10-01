@@ -39,6 +39,18 @@
     "en": "HOW IT WORKS",
     "sl": "KAKO SE IGRA"
   },
+  "theme.label": {
+    "en": "THEME",
+    "sl": "TEMA"
+  },
+  "theme.ops": {
+    "en": "OPS ROOM",
+    "sl": "OPERATIVA"
+  },
+  "theme.girlypop": {
+    "en": "GIRLYPOP",
+    "sl": "GIRLYPOP"
+  },
   "gate.open": {
     "en": "OPEN A ROOM",
     "sl": "ODPRI SOBO"

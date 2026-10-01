@@ -47,22 +47,11 @@
         // THE PLOT TABLE. A costume view: it owns its palette rather than
         // loading components/editorial/theme.js, which is what DESIGN.md
         // licenses a showcase project to do. See views/battleship/CLAUDE.md.
+        // No colours here: they change with the player's theme, so they live
+        // as tokens in the theme blocks at the top of style.css.
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        blackout: '#15140f',
-                        drab: '#23271b',
-                        table: '#2f3524',
-                        'table-lit': '#3a4129',
-                        chalk: '#ece7d6',
-                        stone: '#9aa088',
-                        red: '#d81e2c',
-                        'red-lt': '#ff6b60',
-                        yellow: '#f2c00e',
-                        blue: '#1156b8',
-                        'flag-black': '#0d0e08',
-                    },
                     fontFamily: {
                         stencil: ['"Saira Stencil One"', 'sans-serif'],
                         cond: ['"Saira Condensed"', 'sans-serif'],
@@ -72,6 +61,15 @@
                 },
             },
         };
+    </script>
+    <script>
+        // The saved theme lands before the first paint, so it never flashes
+        // the default on the way in. theme.js owns the list and the key; an
+        // unknown value matches no theme block and simply renders the default.
+        try {
+            var savedTheme = localStorage.getItem('battleship:theme');
+            if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+        } catch (e) { /* storage blocked: the default it is */ }
     </script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -102,6 +100,11 @@
                 <button class="btn btn-quiet" id="doorRules" data-i18n="boot.rules">HOW IT WORKS</button>
             </div>
 
+            <div class="theme-row">
+                <label class="field-label" for="themeBoot" data-i18n="theme.label">THEME</label>
+                <select class="theme-select" id="themeBoot"></select>
+            </div>
+
             <section class="card record" id="recordCard" hidden>
                 <h2 class="card-head" data-i18n="record.head">YOUR RECORD</h2>
                 <div class="record-tally" id="recordTally"></div>
@@ -118,6 +121,10 @@
         <section class="screen" id="rulesScreen">
             <h2 class="screen-title" data-i18n="rules.title">HOW IT WORKS</h2>
             <div class="prose" id="rulesProse"></div>
+            <div class="theme-row">
+                <label class="field-label" for="themeRules" data-i18n="theme.label">THEME</label>
+                <select class="theme-select" id="themeRules"></select>
+            </div>
             <button class="btn" id="rulesBack" data-i18n="common.back">BACK</button>
         </section>
 
