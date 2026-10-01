@@ -148,6 +148,13 @@
       "gradient": "linear-gradient(45deg, #0a151d 0%, #ff2d78 100%)",
       "kind": "project"
     },
+    "views/trips": {
+      "title": "Trips",
+      "description": "Holiday photos end up as one long scroll in your camera roll, with no sense of where each one was taken.",
+      "icon": "fas fa-route",
+      "gradient": "linear-gradient(45deg, #cf2d25 0%, #0b7a80 100%)",
+      "kind": "project"
+    },
     "views/share": {
       "title": "Share",
       "description": "Put share. in front of any address on this site and you get a page built to be pointed at a phone: what the project is, what it does, and a QR code big enough to scan across a room.",

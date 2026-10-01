@@ -267,6 +267,16 @@ export const projects = {
     },
     iconClass: "fas fa-plane-up",
   },
+  trips: {
+    category: "passion",
+    gradient: "linear-gradient(45deg, #cf2d25 0%, #0b7a80 100%)",
+    title: "Trips",
+    description: "Holiday photos end up as one long scroll in your camera roll, with no sense of where each one was taken. Trips turns a holiday into a line on the map: add each place as you reach it, and the photos you take there land on the spot, even with no signal, with the people you travel with adding theirs too.",
+    links: {
+      visitSite: "views/trips",
+    },
+    iconClass: "fas fa-route",
+  },
   share: {
     category: "passion",
     gradient: "linear-gradient(45deg, #1f35e0 0%, #d4451f 100%)",

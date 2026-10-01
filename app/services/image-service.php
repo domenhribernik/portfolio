@@ -50,6 +50,8 @@ class ImageService
 
     private const SIZES = [
         'thumb'    => ['width' => 150,  'height' => 150,  'crop' => true],
+        // A square big enough for a three-column grid on a retina phone.
+        'grid'     => ['width' => 480,  'height' => 480,  'crop' => true],
         'small'    => ['width' => 400,  'height' => null,  'crop' => false],
         'medium'   => ['width' => 800,  'height' => null,  'crop' => false],
         'large'    => ['width' => 1200, 'height' => null,  'crop' => false],
@@ -259,6 +261,50 @@ class ImageService
         if (file_exists($path) && !unlink($path)) {
             throw new RuntimeException('Failed to delete image file');
         }
+    }
+
+    /**
+     * Make a folder's files unreachable over the web, so a controller that
+     * checks who is asking is the only way to read them (views/trips).
+     *
+     * Written at runtime rather than committed: assets/uploads/ is gitignored
+     * and excluded from the deploy, so a committed .htaccess there would never
+     * reach production. php -S ignores .htaccess; Apache honours it.
+     */
+    public static function protectFolder(string $folder): void
+    {
+        $folder = self::sanitizeFolder($folder);
+        $dir = self::UPLOADS_ROOT . '/' . $folder;
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+            throw new RuntimeException('Failed to create upload directory: ' . $folder);
+        }
+        $deny = $dir . '/.htaccess';
+        if (!is_file($deny)) {
+            $rules = "# Written by ImageService::protectFolder(). These files are served only\n"
+                . "# through a controller that checks who is asking.\n"
+                . "<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n"
+                . "<IfModule !mod_authz_core.c>\n    Deny from all\n</IfModule>\n";
+            if (file_put_contents($deny, $rules) === false) {
+                throw new RuntimeException('Failed to protect upload directory: ' . $folder);
+            }
+        }
+    }
+
+    /**
+     * Absolute path of a stored file, for a controller that serves it itself.
+     * Same guard as remove(): nothing outside the uploads root, ever.
+     *
+     * @throws RuntimeException  If the file is missing or escapes the root.
+     */
+    public static function filePath(string $uuid, string $folder, string $mimeType): string
+    {
+        $ext  = self::mimeToExtension($mimeType);
+        $path = realpath(self::UPLOADS_ROOT . '/' . self::sanitizeFolder($folder) . '/' . $uuid . '.' . $ext);
+        $root = realpath(self::UPLOADS_ROOT);
+        if ($path === false || $root === false || !str_starts_with($path, $root . DIRECTORY_SEPARATOR)) {
+            throw new RuntimeException('Stored image not found');
+        }
+        return $path;
     }
 
     /**

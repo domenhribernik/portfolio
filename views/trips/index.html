@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../../components/consent/consent.js"></script>
+    <script src="../../components/google-analytics.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Trips | Travel Photos on a Map of Everywhere You Went</title>
+    <meta name="description" content="Chain the places of a trip into a line on the map and keep the photos from each stop right where you took them. Works with no signal and lets the people you travel with add theirs.">
+    <link rel="canonical" href="https://domenhribernik.com/trips/">
+    <meta property="og:site_name" content="Domen Hribernik">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Trips, travel photos on a map of everywhere you went">
+    <meta property="og:description" content="Chain the places of a trip into a line on the map and keep the photos from each stop right where you took them. Works with no signal and lets the people you travel with add theirs.">
+    <meta property="og:url" content="https://domenhribernik.com/trips/">
+    <meta property="og:image" content="https://domenhribernik.com/assets/img/og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Trips",
+      "url": "https://domenhribernik.com/trips/",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Any (web browser)",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@type": "Person", "name": "Domen Hribernik", "url": "https://domenhribernik.com/" },
+      "inLanguage": "en",
+      "description": "Travel photo albums on a map: each trip is a line of places, each place keeps its photos where they were taken, and it all works offline."
+    }
+    </script>
+    <meta name="theme-color" content="#f5f5f2">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Trips">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico" />
+    <link rel="stylesheet" href="../../assets/fonts/fonts.css">
+    <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="bar">
+    <a id="back-link" href="../../" class="mark" aria-label="Back to the portfolio">
+        <svg class="mark__glyph" viewBox="0 0 28 14" aria-hidden="true" focusable="false">
+            <path d="M0 7h28" />
+            <circle cx="7" cy="7" r="4" />
+            <circle cx="21" cy="7" r="4" />
+        </svg>
+        <span class="mark__word">Trips</span>
+    </a>
+    <p class="service" id="service" role="status" aria-live="polite" hidden></p>
+    <div class="who" id="who"></div>
+</header>
+
+<h1 class="sr-only">Trips: your travel photos on a map of everywhere you went</h1>
+
+<!-- The basemap's ground: OSM tiles turned pale grey, with a faint blue put
+     back only where a pixel is clearly bluer than it is red (water). One CSS
+     filter cannot tell water from land; this can. -->
+<svg class="sr-only" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+        <filter id="tripsGround" color-interpolation-filters="sRGB">
+            <feColorMatrix in="SourceGraphic" type="matrix" result="grey"
+                values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0" />
+            <feComponentTransfer in="grey" result="pale">
+                <feFuncR type="linear" slope="0.5" intercept="0.48" />
+                <feFuncG type="linear" slope="0.5" intercept="0.48" />
+                <feFuncB type="linear" slope="0.5" intercept="0.46" />
+            </feComponentTransfer>
+            <feColorMatrix in="SourceGraphic" type="matrix" result="waterMask"
+                values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -6 0 6 0 -0.3" />
+            <feFlood flood-color="#cfdde3" result="water" />
+            <feComposite in="water" in2="waterMask" operator="in" result="waterOnly" />
+            <feComposite in="waterOnly" in2="pale" operator="over" />
+        </filter>
+        <filter id="tripsGroundClose" color-interpolation-filters="sRGB">
+            <feColorMatrix in="SourceGraphic" type="matrix" result="grey"
+                values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0" />
+            <feComponentTransfer in="grey" result="pale">
+                <feFuncR type="linear" slope="0.4" intercept="0.58" />
+                <feFuncG type="linear" slope="0.4" intercept="0.58" />
+                <feFuncB type="linear" slope="0.4" intercept="0.56" />
+            </feComponentTransfer>
+            <feColorMatrix in="SourceGraphic" type="matrix" result="waterMask"
+                values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -6 0 6 0 -0.3" />
+            <feFlood flood-color="#d3e0e5" result="water" />
+            <feComposite in="water" in2="waterMask" operator="in" result="waterOnly" />
+            <feComposite in="waterOnly" in2="pale" operator="over" />
+        </filter>
+    </defs>
+</svg>
+
+<div class="banners" id="banners" aria-live="polite"></div>
+
+<main class="stage" id="stage">
+    <div class="mapwrap" id="mapwrap">
+        <div class="map" id="map" role="region" aria-label="Map"></div>
+        <p class="map__hint" id="mapHint" hidden></p>
+    </div>
+
+    <div class="panel" id="panel">
+
+        <!-- ================= atlas: the network ================= -->
+        <section class="screen" id="screenAtlas" aria-labelledby="atlasTitle">
+            <div class="head">
+                <h2 class="head__title" id="atlasTitle">Your network</h2>
+                <p class="head__count mono" id="atlasCount"></p>
+            </div>
+
+            <section class="tray" id="tray" aria-labelledby="trayTitle" hidden>
+                <h3 class="tray__title" id="trayTitle">Not sent</h3>
+                <ul class="tray__list" id="trayList"></ul>
+            </section>
+
+            <ol class="key" id="tripKey" aria-label="Your trips"></ol>
+
+            <div class="empty" id="atlasEmpty" hidden>
+                <p class="empty__lead">No lines yet.</p>
+                <p>A trip is a line on this map. Start one, then add each place you stop at, as you get there.</p>
+            </div>
+
+            <form class="newtrip" id="newTrip" hidden>
+                <label class="field">
+                    <span class="field__label">Trip name</span>
+                    <input class="field__input" id="newTripName" name="name" maxlength="120" autocomplete="off" required placeholder="Summer on the coast">
+                </label>
+                <fieldset class="swatches" id="newTripLine">
+                    <legend class="field__label">Line colour</legend>
+                </fieldset>
+                <div class="actions">
+                    <button class="btn btn--line" type="submit">Start the line</button>
+                    <button class="btn btn--ghost" type="button" id="newTripCancel">Cancel</button>
+                </div>
+            </form>
+
+            <div class="usage" id="usage" hidden>
+                <div class="usage__bar"><span class="usage__fill" id="usageFill"></span></div>
+                <p class="usage__text" id="usageText"></p>
+            </div>
+
+            <div class="signin" id="signin" hidden>
+                <p class="signin__lead">Keep your own trips.</p>
+                <p>Sign in to start a line of your own, add places as you go, and keep the photos from each one where you took them.</p>
+                <a class="btn btn--ink" id="signinLink" href="../account/">Start your own</a>
+            </div>
+        </section>
+
+        <!-- ================= trip: one line ================= -->
+        <section class="screen" id="screenTrip" aria-labelledby="tripTitle" hidden>
+            <div class="band" id="tripBand">
+                <span class="bullet" id="tripBullet" aria-hidden="true"></span>
+                <div class="band__text">
+                    <h2 class="band__title" id="tripTitle"></h2>
+                    <p class="band__meta mono" id="tripMeta"></p>
+                </div>
+                <button class="band__more" id="tripMore" type="button" aria-expanded="false" aria-controls="tripMenu">
+                    <span class="sr-only">Trip options</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                </button>
+            </div>
+            <div class="menu" id="tripMenu" hidden></div>
+
+            <ol class="line" id="tripLine" aria-label="Places on this trip"></ol>
+
+            <div class="addplace" id="addPlace" hidden>
+                <p class="addplace__lead">Add the next place</p>
+                <div class="addplace__ways">
+                    <button class="btn btn--line" type="button" id="placeHere">I'm here</button>
+                    <button class="btn btn--ghost" type="button" id="placeTap">Tap the map</button>
+                </div>
+                <form class="search" id="placeSearch" role="search">
+                    <label class="field">
+                        <span class="field__label">Or search for it</span>
+                        <span class="search__row">
+                            <input class="field__input" id="placeQuery" name="q" autocomplete="off" placeholder="Town, beach, hut">
+                            <button class="btn btn--ghost" type="submit">Search</button>
+                        </span>
+                    </label>
+                </form>
+                <ol class="results" id="placeResults" hidden></ol>
+                <form class="confirm" id="placeConfirm" hidden>
+                    <label class="field">
+                        <span class="field__label">Name this stop</span>
+                        <input class="field__input" id="placeName" maxlength="120" required autocomplete="off">
+                    </label>
+                    <p class="confirm__where mono" id="placeWhere"></p>
+                    <div class="actions">
+                        <button class="btn btn--line" type="submit">Add station</button>
+                        <button class="btn btn--ghost" type="button" id="placeCancel">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================= place: one station ================= -->
+        <section class="screen" id="screenPlace" aria-labelledby="placeTitle" hidden>
+            <nav class="strip" id="strip" aria-label="Stations on this trip">
+                <button class="strip__step strip__step--prev" id="stripPrev" type="button"><span class="sr-only">Previous station</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+                <div class="strip__window" id="stripWindow">
+                    <ol class="strip__track" id="stripTrack"></ol>
+                    <span class="strip__here" aria-hidden="true"></span>
+                </div>
+                <button class="strip__step strip__step--next" id="stripNext" type="button"><span class="sr-only">Next station</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+            </nav>
+
+            <div class="board">
+                <div class="board__text">
+                    <h2 class="board__name" id="placeTitle"></h2>
+                    <p class="board__meta mono" id="placeMeta"></p>
+                </div>
+                <button class="board__more" id="placeMore" type="button" aria-expanded="false" aria-controls="placeMenu" hidden>
+                    <span class="sr-only">Place options</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                </button>
+            </div>
+            <div class="menu menu--place" id="placeMenu" hidden></div>
+
+            <div class="seg" role="group" aria-label="Show photos as">
+                <button class="seg__btn" type="button" data-view="map" aria-pressed="true">Map</button>
+                <button class="seg__btn" type="button" data-view="grid" aria-pressed="false">Grid</button>
+            </div>
+
+            <p class="album__note mono" id="albumNote" hidden></p>
+            <div class="album" id="album"></div>
+            <div class="empty" id="placeEmpty" hidden>
+                <p class="empty__lead">No photos at this stop yet.</p>
+                <p>Take one, or add some from your gallery. Each lands where it was taken when the photo knows, and at this stop when it does not.</p>
+            </div>
+
+            <div class="capture" id="capture">
+                <label class="btn btn--line capture__btn">
+                    <input class="sr-only" type="file" accept="image/*" capture="environment" id="takePhoto">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                    Take photo
+                </label>
+                <label class="btn btn--ghost capture__btn">
+                    <input class="sr-only" type="file" accept="image/jpeg,image/png,image/heic,image/heif" multiple id="addPhotos">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="m4 16 5-5 4 4 3-3 4 4"/></svg>
+                    Add photos
+                </label>
+            </div>
+        </section>
+
+        <!-- ================= join a trip ================= -->
+        <section class="screen" id="screenJoin" aria-labelledby="joinTitle" hidden>
+            <div class="head">
+                <h2 class="head__title" id="joinTitle">Join a trip</h2>
+            </div>
+            <div class="join" id="join"></div>
+        </section>
+    </div>
+</main>
+
+<!-- ================= one photo ================= -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lbTitle" hidden>
+    <div class="lightbox__frame">
+        <div class="lightbox__media" id="lbMedia"></div>
+        <button class="lightbox__nav lightbox__nav--prev" id="lbPrev" type="button"><span class="sr-only">Previous photo</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+        <button class="lightbox__nav lightbox__nav--next" id="lbNext" type="button"><span class="sr-only">Next photo</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+    </div>
+    <div class="lightbox__info">
+        <h2 class="lightbox__title mono" id="lbTitle"></h2>
+        <p class="lightbox__where" id="lbWhere"></p>
+        <p class="lightbox__by" id="lbBy"></p>
+        <div class="lightbox__actions" id="lbActions"></div>
+    </div>
+    <button class="lightbox__close" id="lbClose" type="button"><span class="sr-only">Close</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+</div>
+
+<site-footer></site-footer>
+
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="../../components/back-link.js"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => { /* the offline shell is a bonus, not a requirement */ });
+    }
+</script>
+<script type="module" src="../../components/site-footer.js"></script>
+<script type="module" src="script.js"></script>
+</body>
+</html>

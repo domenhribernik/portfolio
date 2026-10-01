@@ -29,6 +29,12 @@ register_shutdown_function(function () {
     }
 });
 
+// Folders whose files belong to a controller that checks who is asking
+// (views/trips serves its photos only to a trip's members). This public
+// endpoint must neither list them nor let an images editor rename or delete
+// half of one: to it, they do not exist.
+const PRIVATE_FOLDERS = ['trips'];
+
 $method = $_SERVER['REQUEST_METHOD'];
 $uuid   = isset($_GET['uuid']) ? trim($_GET['uuid']) : null;
 $folder = isset($_GET['folder']) ? trim($_GET['folder']) : null;
@@ -111,15 +117,20 @@ function formatImage(array $row): array
 
 function getAllImages(): void
 {
-    $stmt = Database::read()->query(
+    $stmt = Database::read()->prepare(
         'SELECT id, uuid, folder, original_name, mime_type, width, height, file_size, uploaded_at
-         FROM images ORDER BY uploaded_at DESC'
+         FROM images WHERE folder NOT IN (' . implode(',', array_fill(0, count(PRIVATE_FOLDERS), '?')) . ')
+         ORDER BY uploaded_at DESC'
     );
+    $stmt->execute(PRIVATE_FOLDERS);
     sendJson(array_map('formatImage', $stmt->fetchAll()));
 }
 
 function getImagesByFolder(string $folder): void
 {
+    if (in_array($folder, PRIVATE_FOLDERS, true)) {
+        sendJson([]);
+    }
     $stmt = Database::read()->prepare(
         'SELECT id, uuid, folder, original_name, mime_type, width, height, file_size, uploaded_at
          FROM images WHERE folder = ? ORDER BY uploaded_at DESC'
@@ -144,6 +155,9 @@ function uploadImage(): void
     }
 
     $folder = isset($_POST['folder']) ? trim($_POST['folder']) : 'general';
+    if (in_array($folder, PRIVATE_FOLDERS, true)) {
+        sendError('That folder is private', 400);
+    }
 
     // Let the service validate, process, and write to disk
     $processed = ImageService::prepareFromUpload($_FILES['image'], [
@@ -190,6 +204,9 @@ function updateImage(string $uuid): void
     // Only the folder label is updatable — the file itself is immutable after upload
     $newFolder = isset($data['folder']) ? trim($data['folder']) : $row['folder'];
     $newFolder = ImageService::sanitizeFolder($newFolder);
+    if (in_array($newFolder, PRIVATE_FOLDERS, true)) {
+        sendError('That folder is private', 400);
+    }
 
     $stmt = Database::write()->prepare('UPDATE images SET folder = ? WHERE uuid = ?');
     $stmt->execute([$newFolder, $uuid]);
@@ -217,8 +234,8 @@ function fetchByUuid(string $uuid): array|false
 {
     $stmt = Database::read()->prepare(
         'SELECT id, uuid, folder, original_name, mime_type, width, height, file_size, uploaded_at
-         FROM images WHERE uuid = ?'
+         FROM images WHERE uuid = ? AND folder NOT IN (' . implode(',', array_fill(0, count(PRIVATE_FOLDERS), '?')) . ')'
     );
-    $stmt->execute([$uuid]);
+    $stmt->execute([$uuid, ...PRIVATE_FOLDERS]);
     return $stmt->fetch();
 }

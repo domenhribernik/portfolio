@@ -98,6 +98,33 @@
         ],
         "createdAt": "2026-08-13T14:54:00.149Z",
         "reason": "Inside @media print. Printing the broadsheet on the warm paper ground would waste ink; white stock is correct."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.45, 0.64, 1)",
+        "files": [
+          "views/trips/style.css"
+        ],
+        "createdAt": "2026-10-01T13:38:25.322Z",
+        "reason": "Direction contract (surface brief views-trips, seed 92ce4a49): the station strip snaps one station with one short overshoot, the signature interaction; reduced-motion override ships"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "overpass",
+        "files": [
+          "views/trips/index.html"
+        ],
+        "createdAt": "2026-10-01T13:44:44.473Z",
+        "reason": "Own-world showcase view (DESIGN.md Scope licenses showcase projects their own type); Overpass and Overpass Mono are named in the views/trips direction contract, seed 92ce4a49"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "overpass",
+        "files": [
+          "views/trips/style.css"
+        ],
+        "createdAt": "2026-10-01T13:44:44.494Z",
+        "reason": "Own-world showcase view (DESIGN.md Scope licenses showcase projects their own type); Overpass and Overpass Mono are named in the views/trips direction contract, seed 92ce4a49"
       }
     ]
   }

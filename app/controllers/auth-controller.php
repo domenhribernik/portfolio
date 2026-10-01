@@ -9,6 +9,7 @@ header('Cache-Control: no-store');
 require_once __DIR__ . '/../config/dev-mode.php';
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../services/google-auth-service.php';
+require_once __DIR__ . '/../services/trips-service.php';
 
 const PASSWORD_MIN_LENGTH = 10;
 const PASSWORD_MAX_LENGTH = 200;
@@ -56,6 +57,10 @@ const USER_DATA_TABLES = [
     'stocks_transactions'  => 'user_id',
     'trails_flights'       => 'user_id',
     'trails_shares'        => 'user_id',
+    'trips'                => 'owner_id',
+    'trips_members'        => 'user_id',
+    'trips_photos'         => 'uploaded_by',
+    'trips_places'         => 'created_by',
     'user_project_roles'   => 'user_id',
     'workouts'             => 'user_id',
     'workout_exercises'    => 'user_id',
@@ -485,6 +490,11 @@ function deleteOwnAccount(): void
     }
 
     $userId = (int) $user['id'];
+
+    //? Trip photos are files on disk behind rows the cascade below would strand,
+    //? so their files go first. Before logout: if this throws, the person is
+    //? still signed in and can simply try again.
+    TripsService::purgeUser(Database::write(), $userId);
 
     //? Sessions cascade with the row, but the cookie in the browser does not.
     Auth::logout();

@@ -155,11 +155,42 @@
                 shares it.
             </p>
 
+            <h3>Trips: your photos and where they were taken</h3>
+            <p>
+                <a href="../trips/">Trips</a> is a photo album on a map, so unlike everywhere else on
+                this site it keeps where and when each photo was taken, on purpose. Your phone reads
+                the position and time out of the photo before sending it (or, for a photo you just
+                took, uses where the phone is right now, if you let the browser share that), and
+                those two things are stored next to the photo. The photo file itself still has its
+                metadata stripped. Photos are stored at up to 2048 pixels, not as originals.
+            </p>
+            <p>
+                A trip is private to you and the people you invite. An invite is a secret link:
+                anyone signed in who opens it joins the trip, sees every place and photo on it, sees
+                your name next to what you added, and can add their own. You can turn the link off
+                or remove someone at any time. The photos are only ever served to the trip's members;
+                there is no public address for them.
+            </p>
+            <p>
+                One trip of mine is shown to visitors who are not signed in, as a demonstration. If
+                you join that trip, the photos you add to it are shown too, without your name.
+            </p>
+            <p>
+                If you delete your account, every trip you own is deleted with all its photos,
+                including ones other people added to it. Photos you added to someone else's trip
+                stay there, no longer linked to you, the same way shared list entries do.
+            </p>
+            <p>
+                <strong>Legal basis:</strong> performance of a contract.
+                <strong>Kept:</strong> until you delete the photo, the trip or the account.
+            </p>
+
             <h3>Files you upload</h3>
             <p>
                 Photos and audio you upload are stored on the server. Photos have their EXIF
                 metadata stripped on upload, so the camera details and any GPS coordinates baked
-                into the file are discarded before it is saved.
+                into the file are discarded before it is saved. Trips, above, is the one exception
+                that keeps a position, and it keeps it as a separate field you can see and change.
             </p>
 
             <h3>Bouquets you share</h3>
@@ -244,6 +275,12 @@
                 exception is the vocabulary trainer, which merges your local practice history into
                 your account when you sign in, so it survives a new device.
             </p>
+            <p>
+                Trips keeps more than most on your phone, because it has to work with no signal: the
+                trips you last looked at, and any photos and places you added offline, which wait
+                there until they are sent. Until a photo is sent, that copy on your phone may be the
+                only one, so do not clear the site's data while something is still waiting.
+            </p>
 
             <h3 id="settings">Your current choices</h3>
             <div class="legal__consent" data-consent-panel>
@@ -292,6 +329,14 @@
                 geolocation services directly, so those services see your address. Nothing is sent
                 until you press it and nothing is stored here. The map tiles on that page come from
                 CARTO.
+            </p>
+            <h3>The Trips page</h3>
+            <p>
+                <a href="../trips/">Trips</a> draws its map from OpenStreetMap's own tile servers,
+                which see your IP address as they send each piece of the map, the same as any website
+                you load an image from. When you search for a place or name one you tapped on the
+                map, the text or the coordinates go to OpenStreetMap's Nominatim service to find its
+                name. Neither is sent anything about your account or your photos.
             </p>
             <h3>The fuel price page</h3>
             <p>
