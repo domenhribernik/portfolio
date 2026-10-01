@@ -119,30 +119,33 @@ export function autoPlace(rng = Math.random) {
 //  Salvage
 // ------------------------------------------------------------------
 
-// The economy, and the whole point of this variant. Accuracy pays, and so
-// does being shot: the fleet that is losing funds its own comeback, but has
-// to aim it. MIRRORED in battleship-controller.php.
+// The economy, in two lines, and both sides start with nothing:
+//
+//   Every shell that lands on your fleet pays YOU one. The gunner is paid
+//   nothing for the hit. Bad luck funds its own reply, and the side that is
+//   losing is the side with money to spend.
+//
+//   Sinking a whole ship pays the HUNTER a flat bounty. That is what keeps a
+//   hunt worth finishing: a scatter of hits across three hulls pays the
+//   hunter nothing, one hull run down pays two. It is flat rather than the
+//   ship's length so the damaged side always nets at least as much per ship
+//   as the hunter (they tie only on the destroyer).
+//
+// There used to be a lump paid to a wreck's OWNER, two per cell. A carrier
+// going down filled the bank, which made finishing a ship feel like a gift
+// to the other side, and a hit paid both sides so nobody ever pulled ahead.
+// MIRRORED in battleship-controller.php.
 export const SALVAGE_CAP = 10;
-export const SALVAGE_HIT_DEALT = 1;
-// Area fire is deliberately crippled in two ways, and both are load bearing.
-//
-//   It recovers no salvage. A barrage or a depth charge pays the fleet it
-//   lands on and pays the gunner nothing, so heavy weapons cannot refuel
-//   themselves and every one funds the other side a little.
-//
-//   It does not survey. A blast damages what it touches, but the water it
-//   churns is NOT plotted as missed, and those cells can be fired at again.
-//   This is the important one. The bottleneck in battleship is the search,
-//   not the damage, so a weapon that cleared nine cells of the search for one
-//   turn was simply a rate multiplier. The balance suite had a depth charge
-//   policy taking 83% of its games against a plain gunner before this.
-export const AREA_KINDS = ['barrage', 'depthCharge'];
 export const SALVAGE_HIT_TAKEN = 1;
-// A wreck salvages in proportion to what was lost, so a carrier going down
-// funds a real reply and a destroyer funds a sweep. This is the rubber band:
-// it is the one income the side that is winning cannot earn.
-export const SALVAGE_WRECK_PER_CELL = 2;
-export const SALVAGE_SECOND_MOVER = 1;
+export const SALVAGE_SINK_BOUNTY = 2;
+
+// Area fire does not survey. A blast damages what it touches, but the water
+// it churns is NOT plotted as missed, and those cells can be fired at again.
+// The bottleneck in battleship is the search, not the damage, so a weapon
+// that cleared nine cells of the search for one turn was simply a rate
+// multiplier. The balance suite had a depth charge policy taking 83% of its
+// games against a plain gunner before this.
+export const AREA_KINDS = ['barrage', 'depthCharge'];
 
 const cap = (n) => Math.min(SALVAGE_CAP, Math.max(0, n));
 
@@ -156,7 +159,9 @@ const cap = (n) => Math.min(SALVAGE_CAP, Math.max(0, n));
 export const COST = {
     sonar: 2,
     decoy: 3,
-    barrage: 4,
+    // Was 4. Once a hit stopped paying the gunner there was less salvage in
+    // the game, and at 4 the toolbox lost to plain fire in the balance suite.
+    barrage: 3,
     reposition: 3,
     depthCharge: 8,
 };
@@ -172,7 +177,8 @@ export const ABILITIES = Object.keys(COST);
 // games the toolbox made comebacks LESS likely, 26.8% against 30.1% without.
 // So the heavy tools are gated on wreckage instead. A fleet that is winning
 // fights with a sweep and a buoy; a fleet that is burning gets the barrage
-// and then the charge. Access is the rubber band, salvage is only the pacing.
+// and then the charge. Access is the rubber band. Salvage, paid to the side
+// being hit, leans the same way but is mostly the pacing.
 //
 // Losing hulls on purpose to unlock faster is a real line, and a losing one:
 // the unlock buys access, not salvage and not turns, and you still lose when
@@ -275,8 +281,9 @@ export const EMPTY_GRID = '.'.repeat(CELLS);
 
 // A grid cell, from the point of view of the fleet being shot at:
 //   .  unfired      o  miss             x  hit, ship still afloat
-//   s  sunk hull    D  decoy popped, not yet revealed
-//   d  decoy, revealed
+//   s  sunk hull    d  decoy popped. The enemy is shown an x, for good.
+//   D  a decoy popped under the old rules, before a buoy stopped owning up.
+//      Only a row mid match at the deploy can hold one; it reads like d.
 const isSpent = (mark) => mark !== '.';
 
 export const other = (seat) => (seat === 1 ? 2 : 1);
@@ -296,7 +303,11 @@ function newSide(fleet, salvage) {
     };
 }
 
-/** A fresh battle. `starter` moves first; the other opens with a salvage. */
+/**
+ * A fresh battle. `starter` moves first. Both banks open empty: moving second
+ * used to be paid a salvage, and the balance suite finds no first shot edge
+ * worth compensating (the second mover wins about half either way).
+ */
 export function newMatch({ fleets, starter = 1 }) {
     const second = other(starter);
     return {
@@ -307,7 +318,7 @@ export function newMatch({ fleets, starter = 1 }) {
         outcome: null,        // 'p1' | 'p2'; digit strings, never bare ints
         sides: {
             [starter]: newSide(fleets[starter - 1], 0),
-            [second]: newSide(fleets[second - 1], SALVAGE_SECOND_MOVER),
+            [second]: newSide(fleets[second - 1], 0),
         },
     };
 }
@@ -330,8 +341,8 @@ const shipAt = (side, cell) => side.fleet.find((s) => shipCells(s).includes(cell
 
 /**
  * Resolve one shell against `side`, mutating a working copy. Returns the
- * result: miss | hit | sunk | decoy. A decoy resolves as `hit` to everyone
- * watching, and only stops looking like one on the owner's next turn.
+ * result: miss | blast | hit | sunk | decoy. A decoy resolves as `hit` to
+ * everyone watching, and keeps looking like one for the rest of the match.
  */
 function strike(side, cell, survey) {
     if (isSpent(side.grid[cell])) return null;   // already plotted; nothing happens
@@ -339,7 +350,7 @@ function strike(side, cell, survey) {
     const decoyAt = side.decoys.indexOf(cell);
     if (decoyAt >= 0) {
         side.decoys = side.decoys.filter((_, i) => i !== decoyAt);
-        side.grid = setMark(side.grid, cell, 'D');
+        side.grid = setMark(side.grid, cell, 'd');
         return 'decoy';
     }
 
@@ -391,32 +402,27 @@ export function applyAction(match, seat, action) {
     const mine = { ...match.sides[seat] };
     const theirs = { ...match.sides[foe] };
 
-    // A decoy of mine that popped last turn stops pretending now. Doing it
-    // here means the reveal always lands exactly one turn after the shot.
-    mine.grid = mine.grid.replace(/D/g, 'd');
-
     const report = { cells: [], sunk: [], intel: null, swept: null, moved: false, kind: action.kind };
     let gainMine = 0;
     let gainTheirs = 0;
 
-    // Only aimed fire refuels the gunner. See AREA_KINDS.
-    const paysFirer = !AREA_KINDS.includes(action.kind);
+    // Only aimed fire plots the water it misses. See AREA_KINDS.
+    const surveys = !AREA_KINDS.includes(action.kind);
 
     const resolve = (cells) => {
         for (const cell of cells) {
-            const result = strike(theirs, cell, paysFirer);
+            const result = strike(theirs, cell, surveys);
             if (!result) continue;
             report.cells.push({ cell, result });
             mine.shots++;
             if (result === 'miss' || result === 'blast') continue;
             mine.hits++;
-            // A decoy pays out exactly like a hull. If it did not, the public
-            // tote board would give the bluff away on the very next glance.
-            if (paysFirer) gainMine += SALVAGE_HIT_DEALT;
+            // A decoy pays its owner exactly like a hull. If it did not, the
+            // public tote board would give the bluff away on the next glance.
             gainTheirs += SALVAGE_HIT_TAKEN;
             if (result === 'sunk') {
                 const hull = shipAt(theirs, cell);
-                gainTheirs += SALVAGE_WRECK_PER_CELL * shipCells(hull).length;
+                gainMine += SALVAGE_SINK_BOUNTY;
                 report.sunk.push(hull.key);
             }
         }
@@ -492,9 +498,10 @@ export function applyAction(match, seat, action) {
 export function enemyView(match, seat) {
     const foe = match.sides[other(seat)];
     return {
-        // A buoy that popped last turn still reads as a hit. It confesses on
-        // its owner's next action, not on the shooter's next poll.
-        grid: foe.grid.replace(/D/g, 'x'),
+        // A buoy that popped reads as a hit for the rest of the match. It
+        // never owns up: the shooter has to box it in with misses, or sweep
+        // it (sonar does not count buoys), to learn it was never a hull.
+        grid: foe.grid.replace(/[Dd]/g, 'x'),
         sunk: sunkShips(foe),
         afloat: FLEET.length - sunkShips(foe).length,
         // The tote board is public on purpose: reading what the other side can

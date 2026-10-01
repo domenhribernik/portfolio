@@ -102,15 +102,6 @@ export function landingCells(group, shown, next) {
 //  Reading a plot for what happened
 // ------------------------------------------------------------------
 
-/** Enemy buoys that owned up: a plotted hit that became a decoy. */
-export function buoyReveals(shown, next) {
-    const out = [];
-    for (let i = 0; i < CELLS; i++) {
-        if (shown[i] === 'x' && next[i] === 'd') out.push(i);
-    }
-    return out;
-}
-
 /** The newest sonar reading centred on `at`, or null. */
 export function readingAt(intel, at) {
     for (let i = (intel ?? []).length - 1; i >= 0; i--) {

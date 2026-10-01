@@ -30,7 +30,7 @@
    ============================================================ */
 
 import {
-    SIZE, CELLS, FLEET, COST, UNLOCK, SALVAGE_CAP,
+    SIZE, CELLS, FLEET, COST, UNLOCK, SALVAGE_CAP, SALVAGE_HIT_TAKEN, SALVAGE_SINK_BOUNTY,
     coordName, onPlot, shipCells, placementError, autoPlace,
     blockCells, barrageCells, newMatch, actionError, applyAction,
     enemyView, ownView, other,
@@ -40,7 +40,7 @@ import {
 import { LEVELS, chooseAction } from './bot.js';
 import {
     tempo, landingPlan, heldCells, projectGrid, landingCells,
-    buoyReveals, readingAt, restingSide, isStaleRoom,
+    readingAt, restingSide, isStaleRoom,
 } from './choreo.js';
 
 const API = '../../app/controllers/battleship-controller.php';
@@ -268,12 +268,15 @@ const cellsOf = (el) => [...el.querySelectorAll('.cell')];
 const nodes = { enemy: [], own: [] };
 const plotEl = (which) => (which === 'enemy' ? $('enemyPlot') : $('ownPlot'));
 
+// Only your own plot ever holds a buoy mark: the enemy's comes over with every
+// popped buoy already turned into a hit. 'D' is the old unconfessed mark, which
+// only a row mid match at the deploy can still hold.
 const MARK_CLASS = {
-    o: 'mark-miss', x: 'mark-hit', s: 'mark-sunk', d: 'mark-decoy', D: 'mark-hit',
+    o: 'mark-miss', x: 'mark-hit', s: 'mark-sunk', d: 'mark-decoy', D: 'mark-decoy',
 };
 
 const MARK_WORD = {
-    '.': 'unfired', o: 'miss', x: 'hit', s: 'sunk', d: 'decoy', D: 'hit',
+    '.': 'unfired', o: 'miss', x: 'hit', s: 'sunk', d: 'decoy', D: 'decoy',
 };
 
 // What each plot currently shows. `shown` is the grid string as painted,
@@ -695,14 +698,8 @@ function holds(v) {
 function paintBoards(v) {
     const hold = holds(v);
     const live = isMyTurn(v) && !stage.running && AIMS_AT_SELF.has(tool);
-    // A buoy owning up is not an event, it is a mark changing under you.
-    const prevEnemy = shown.enemy ?? v.enemy.grid;
-    const reveals = buoyReveals(prevEnemy, projectGrid(prevEnemy, v.enemy.grid, hold.enemy));
     paintBoard('enemy', v, hold.enemy);
     paintBoard('own', v, hold.own, live);
-    for (const c of reveals) {
-        note(`<b>${t('log.them')}</b> ${t('log.buoyWas', { at: coordName(c) })}`, false);
-    }
 }
 
 /** The salvage board. Called as counters land, so the pay reads as earned. */
@@ -1004,8 +1001,11 @@ function announceShot(seatOfActor, kind, cells, sunk) {
         const where = cells.map((c) => coordName(c.cell)).join(' ');
         note(`<b>${who}</b> ${t(`log.${kind}`)} ${where} &middot; ${t('log.hits', { n: hits })}`, mine);
     }
+    // The bounty is named on the line, so the hunter's tote moving by two
+    // reads as paid for the kill rather than as something unexplained.
+    const bounty = t('log.bounty', { who, n: SALVAGE_SINK_BOUNTY });
     for (const key of sunk) {
-        note(`<b>${t('ship.' + key).toUpperCase()}</b> ${t('log.down')}`, !mine);
+        note(`<b>${t('ship.' + key).toUpperCase()}</b> ${t('log.down')} &middot; ${bounty}`, !mine);
     }
     const WORD = { hit: 'res.hit', sunk: 'res.sunk', miss: 'res.miss', decoy: 'res.hit', blast: 'res.blast' };
     if (cells.length === 1) cry(`${coordName(cells[0].cell)}, ${t(WORD[cells[0].result] ?? 'res.miss')}`);
@@ -1580,7 +1580,7 @@ function renderRules() {
         <h3>${t('rules.turnHead')}</h3>
         <p>${t('rules.turn')}</p>
         <h3>${t('rules.salvageHead')}</h3>
-        <p>${t('rules.salvage')}</p>
+        <p>${t('rules.salvage', { hit: SALVAGE_HIT_TAKEN, bounty: SALVAGE_SINK_BOUNTY, cap: SALVAGE_CAP })}</p>
         <h3>${t('rules.ladderHead')}</h3>
         <p>${t('rules.ladder')}</p>
         <h3>${t('rules.toolsHead')}</h3>

@@ -64,16 +64,17 @@ const CELLS = 100;
 const FLEET_SPEC = 'carrier:5,battleship:4,cruiser:3,submarine:3,destroyer:2';
 const EMPTY_GRID = '....................................................................................................';
 
+// A shell on your fleet pays you; sinking a whole ship pays the hunter. The
+// gunner is never paid for a hit, and both banks open empty. The reasoning is
+// in views/battleship/logic.js.
 const SALVAGE_CAP = 10;
-const SALVAGE_HIT_DEALT = 1;
 const SALVAGE_HIT_TAKEN = 1;
-const SALVAGE_WRECK_PER_CELL = 2;
-const SALVAGE_SECOND_MOVER = 1;
+const SALVAGE_SINK_BOUNTY = 2;
 const DECOY_MAX = 2;
 
 const COST_SONAR = 2;
 const COST_DECOY = 3;
-const COST_BARRAGE = 4;
+const COST_BARRAGE = 3;
 const COST_REPOSITION = 3;
 const COST_DEPTH_CHARGE = 8;
 
@@ -352,7 +353,9 @@ function strike(array &$side, int $cell, bool $survey): ?string
     $decoyAt = array_search($cell, $side['decoys'], true);
     if ($decoyAt !== false) {
         array_splice($side['decoys'], (int) $decoyAt, 1);
-        $side['grid'] = setMark($side['grid'], $cell, 'D');
+        // Marked for its owner only. enemyPayload() shows the shooter an x
+        // for the rest of the match: a buoy never owns up.
+        $side['grid'] = setMark($side['grid'], $cell, 'd');
         return 'decoy';
     }
 
@@ -497,22 +500,18 @@ function applyAction(array &$sides, int $seat, array $action): array
     $theirs = &$sides[$foeSeat];
     $kind = (string) $action['kind'];
 
-    // A buoy of mine that popped last turn stops pretending now, so the reveal
-    // always lands exactly one turn after the shot that found it.
-    $mine['grid'] = str_replace('D', 'd', $mine['grid']);
-
-    // Only aimed fire refuels the gunner. Area fire pays the fleet it lands on
-    // and pays the gunner nothing, so heavy weapons cannot refuel themselves.
-    $paysFirer = $kind !== 'barrage' && $kind !== 'depthCharge';
+    // Only aimed fire plots the water it misses. Area fire damages what it
+    // touches and leaves the rest of the search still to do.
+    $surveys = $kind !== 'barrage' && $kind !== 'depthCharge';
 
     $report = ['kind' => $kind, 'cells' => [], 'sunk' => [], 'moved' => false, 'swept' => null];
     $intel = null;
     $gainMine = 0;
     $gainTheirs = 0;
 
-    $resolve = function (array $cells) use (&$theirs, &$mine, &$report, &$gainMine, &$gainTheirs, $paysFirer): void {
+    $resolve = function (array $cells) use (&$theirs, &$mine, &$report, &$gainMine, &$gainTheirs, $surveys): void {
         foreach ($cells as $cell) {
-            $result = strike($theirs, $cell, $paysFirer);
+            $result = strike($theirs, $cell, $surveys);
             if ($result === null) {
                 continue;
             }
@@ -522,15 +521,12 @@ function applyAction(array &$sides, int $seat, array $action): array
                 continue;
             }
             $mine['hits']++;
-            // A decoy pays out exactly like a hull. If it did not, the public
-            // tote board would give the bluff away on the very next glance.
-            if ($paysFirer) {
-                $gainMine += SALVAGE_HIT_DEALT;
-            }
+            // A decoy pays its owner exactly like a hull. If it did not, the
+            // public tote board would give the bluff away on the next glance.
             $gainTheirs += SALVAGE_HIT_TAKEN;
             if ($result === 'sunk') {
                 $hull = shipAt($theirs, $cell);
-                $gainTheirs += SALVAGE_WRECK_PER_CELL * count(shipCells($hull));
+                $gainMine += SALVAGE_SINK_BOUNTY;
                 $report['sunk'][] = $hull['key'];
             }
         }
@@ -687,9 +683,10 @@ function enemyPayload(array $side, array $row): array
         'wantsAgain' => (bool) $row['wants_again'],
         'online' => strtotime($row['last_seen']) > time() - ONLINE_SECONDS,
         'ready' => $row['fleet'] !== null,
-        // A buoy that popped last turn still reads as a hit. It confesses on
-        // its owner's next action, not on the shooter's next poll.
-        'grid' => str_replace('D', 'x', $side['grid']),
+        // A buoy that popped reads as a hit for the rest of the match. It
+        // never owns up. 'D' is the old unconfessed mark, which only a row
+        // mid match at the deploy can still hold.
+        'grid' => str_replace(['D', 'd'], 'x', $side['grid']),
         'sunk' => sunkShips($side),
         // The tote board is public on purpose: reading what the other side can
         // afford, and guessing what they are saving for, is half the game.
@@ -940,10 +937,8 @@ function postPlacement(array $body): void
             }
         }
         if ($ready >= ROOM_CAP && count($rows) >= ROOM_CAP) {
-            $second = (int) $room['starter'] === 1 ? 2 : 1;
-            // The only salvage nobody earned: compensation for the first shot.
-            $db->prepare('UPDATE battleship_players SET salvage = ? WHERE room_id = ? AND seat = ?')
-               ->execute([SALVAGE_SECOND_MOVER, $room['id'], $second]);
+            // Both banks open empty. The seat rows are created, and zeroed
+            // again on a rematch, with salvage = 0.
             $db->prepare('UPDATE battleship_rooms SET status = ?, turn = ?, turns = 0 WHERE id = ?')
                ->execute(['battle', (int) $room['starter'], $room['id']]);
             logEvent($db, (int) $room['id'], null, 'start', ['starter' => (int) $room['starter']]);
@@ -1016,10 +1011,16 @@ function postAction(array $body): void
         }
 
         if ($report['cells'] !== []) {
+            // The log is public, so a buoy is logged as the hit it pretends
+            // to be. Its owner reads the truth off their own plot instead.
+            $cells = array_map(
+                fn(array $c): array => ['cell' => $c['cell'], 'result' => $c['result'] === 'decoy' ? 'hit' : $c['result']],
+                $report['cells']
+            );
             logEvent($db, (int) $room['id'], $sides[$seat]['id'], 'shot', [
                 'seat' => $seat,
                 'kind' => $report['kind'],
-                'cells' => $report['cells'],
+                'cells' => $cells,
                 'sunk' => $report['sunk'],
             ]);
         }

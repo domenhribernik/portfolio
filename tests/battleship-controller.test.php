@@ -91,7 +91,10 @@ function constant_(string $name): int
     return (int) $m[1];
 }
 $SALVAGE_CAP = constant_('SALVAGE_CAP');
+$SALVAGE_HIT_TAKEN = constant_('SALVAGE_HIT_TAKEN');
+$SALVAGE_SINK_BOUNTY = constant_('SALVAGE_SINK_BOUNTY');
 $COST_SONAR = constant_('COST_SONAR');
+$COST_DECOY = constant_('COST_DECOY');
 $COST_DEPTH_CHARGE = constant_('COST_DEPTH_CHARGE');
 $UNLOCK_DEPTH_CHARGE = constant_('UNLOCK_DEPTH_CHARGE');
 
@@ -422,8 +425,8 @@ check('ONE FLEET DOWN IS NOT A BATTLE', place($m, 1, fleetA())['status'] === 200
     && poll($m, 1)['body']['room']['status'] === 'place');
 place($m, 2, fleetA());
 check('BOTH FLEETS DOWN STARTS THE BATTLE', poll($m, 1)['body']['room']['status'] === 'battle');
-check('THE SEAT THAT MOVES SECOND OPENS WITH A SALVAGE',
-    poll($m, turnOf($m) === 1 ? 2 : 1)['body']['you']['salvage'] === 1);
+check('BOTH SEATS OPEN WITH AN EMPTY BANK',
+    poll($m, 1)['body']['you']['salvage'] === 0 && poll($m, 2)['body']['you']['salvage'] === 0);
 
 // ------------------------------------------------------------------
 //  4. Firing
@@ -452,10 +455,10 @@ $m = battle();
 $mover = turnOf($m);
 act($m, $mover, ['kind' => 'fire', 'at' => cell('B1')]);
 $hit = poll($m, $mover)['body'];
-check('A HIT IS PLOTTED AND PAYS THE GUNNER', $hit['enemy']['grid'][cell('B1')] === 'x'
-    && $hit['you']['salvage'] >= 1);
-check('THE STRUCK FLEET IS PAID TOO, SO AN EXCHANGE IS EVEN',
-    $hit['enemy']['salvage'] >= 1);
+check('A HIT IS PLOTTED AND PAYS THE GUNNER NOTHING', $hit['enemy']['grid'][cell('B1')] === 'x'
+    && $hit['you']['salvage'] === 0, "gunner has {$hit['you']['salvage']}");
+check('THE STRUCK FLEET IS PAID FOR THE SHELL',
+    $hit['enemy']['salvage'] === $SALVAGE_HIT_TAKEN, "struck fleet has {$hit['enemy']['salvage']}");
 
 // Sink the destroyer, one seat firing on both turns via the other passing.
 $m = battle();
@@ -468,6 +471,11 @@ $sunk = poll($m, $mover)['body'];
 check('THE LAST CELL OF A HULL SINKS IT', in_array('destroyer', $sunk['enemy']['sunk'], true));
 check('A WRECK IS RESTRUCK ACROSS ITS WHOLE HULL',
     $sunk['enemy']['grid'][cell('A9')] === 's' && $sunk['enemy']['grid'][cell('B9')] === 's');
+// Two shells on a live hull pay the hunter nothing; the kill pays the bounty.
+check('A SINKING PAYS THE HUNTER ITS BOUNTY',
+    $sunk['you']['salvage'] === $SALVAGE_SINK_BOUNTY, "hunter has {$sunk['you']['salvage']}");
+check('THE WRECK PAYS ITS OWNER NOTHING BEYOND THE SHELLS',
+    $sunk['enemy']['salvage'] === 2 * $SALVAGE_HIT_TAKEN, "owner has {$sunk['enemy']['salvage']}");
 $types = array_column(poll($m, $mover, 0)['body']['events'], 'type');
 check('A SINKING IS ANNOUNCED TO THE ROOM', in_array('sunk', $types, true));
 
@@ -586,14 +594,20 @@ check('A BUOY IS NOT DISCLOSED TO THE FLEET SHOOTING AT IT',
 act($m, $other, ['kind' => 'fire', 'at' => cell('A2')]);
 $popped = poll($m, $other)['body'];
 check('A BUOY READS AS A HIT WHEN IT POPS', $popped['enemy']['grid'][cell('A2')] === 'x');
-check('A BUOY PAYS OUT LIKE A HULL, SO THE PUBLIC TOTE DOES NOT GIVE IT AWAY',
-    $popped['you']['salvage'] >= 1 && $popped['enemy']['salvage'] >= 1);
+check('A BUOY PAYS ITS OWNER LIKE A HULL, SO THE PUBLIC TOTE DOES NOT GIVE IT AWAY',
+    $popped['you']['salvage'] === 0
+    && $popped['enemy']['salvage'] === $SALVAGE_CAP - $COST_DECOY + $SALVAGE_HIT_TAKEN,
+    "gunner {$popped['you']['salvage']}, owner {$popped['enemy']['salvage']}");
+check('THE EVENT LOG CALLS A BUOY A HIT',
+    !preg_match('/"result"\s*:\s*"decoy"/', poll($m, $other, 0)['raw']), 'a buoy was named in the log');
 check('A BUOY IS NOT A HULL AND CANNOT SINK', $popped['enemy']['sunk'] === []);
 
 arm($pdo, $m, $mover, $SALVAGE_CAP, 0);
 act($m, $mover, ['kind' => 'fire', 'at' => cell('J10')]);
-check('THE BUOY CONFESSES ON ITS OWNER NEXT TURN',
-    poll($m, $other)['body']['enemy']['grid'][cell('A2')] === 'd');
+check('A BUOY NEVER OWNS UP, EVEN AFTER ITS OWNER HAS MOVED',
+    poll($m, $other)['body']['enemy']['grid'][cell('A2')] === 'x');
+check('ITS OWNER SEES THE BUOY WAS FOUND',
+    poll($m, $mover)['body']['you']['grid'][cell('A2')] === 'd');
 
 $m = battle();
 $mover = turnOf($m);

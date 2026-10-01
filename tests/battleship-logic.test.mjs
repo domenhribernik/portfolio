@@ -11,7 +11,7 @@ import {
     enemyView, ownView,
     normalizeCode, isValidCode, cleanName, isValidName,
     createRoomModel, applyEvents, pollDelay,
-    SALVAGE_CAP, SALVAGE_HIT_DEALT, SALVAGE_HIT_TAKEN, SALVAGE_WRECK_PER_CELL, SALVAGE_SECOND_MOVER,
+    SALVAGE_CAP, SALVAGE_HIT_TAKEN, SALVAGE_SINK_BOUNTY,
 } from '../views/battleship/logic.js';
 
 // ------------------------------------------------------------------
@@ -179,17 +179,20 @@ test('sinking the last hull ends the match for the side that did it', () => {
 //  Salvage
 // ------------------------------------------------------------------
 
-test('the player who moves second opens with a salvage in hand', () => {
-    // Compensation for the first shot, and the only salvage nobody earned.
+test('both players open with an empty bank', () => {
+    // Moving second used to be paid a salvage. The balance suite finds no
+    // first shot edge worth compensating, so nobody starts with anything.
     const m = newMatch({ fleets: [legalFleet(), legalFleet()], starter: 1 });
-    assert.equal(m.sides[2].salvage, SALVAGE_SECOND_MOVER);
     assert.equal(m.sides[1].salvage, 0);
+    assert.equal(m.sides[2].salvage, 0);
 });
 
-test('a hit pays the firer and the struck alike, so an exchange is even', () => {
+test('a hit pays only the fleet it lands on', () => {
+    // Bad luck funds its own reply: the side taking damage is the side with
+    // money to spend, and the gunner is never paid for the hit itself.
     const before = openMatch();
     const { match } = fire(before, 1, 'B1');
-    assert.equal(match.sides[1].salvage - before.sides[1].salvage, SALVAGE_HIT_DEALT);
+    assert.equal(match.sides[1].salvage, before.sides[1].salvage, 'the gunner was paid for a hit');
     assert.equal(match.sides[2].salvage - before.sides[2].salvage, SALVAGE_HIT_TAKEN);
 });
 
@@ -200,20 +203,24 @@ test('a miss pays nobody', () => {
     assert.equal(match.sides[2].salvage, before.sides[2].salvage);
 });
 
-test('a wreck pays its owner in proportion to what went down', () => {
-    // This is the comeback engine: the fleet that is dying funds the fight.
+test('sinking a ship pays the hunter a bounty, and the wreck pays its owner nothing extra', () => {
+    // The bounty is what keeps a hunt worth finishing. The owner is paid for
+    // each shell as it lands, and gets no lump when the hull goes down: a
+    // carrier used to fill the bank, which made a sinking a gift to the loser.
     let m = openMatch();
     ({ match: m } = fire(m, 1, 'A9'));
-    const before = m.sides[2].salvage;
+    assert.equal(m.sides[1].salvage, 0, 'one hit on a live hull paid the hunter');
+    const before = { hunter: m.sides[1].salvage, owner: m.sides[2].salvage };
     ({ match: m } = fire({ ...m, turn: 1 }, 1, 'B9'));
-    assert.equal(m.sides[2].salvage - before, SALVAGE_HIT_TAKEN + SALVAGE_WRECK_PER_CELL * 2);
+    assert.equal(m.sides[1].salvage - before.hunter, SALVAGE_SINK_BOUNTY);
+    assert.equal(m.sides[2].salvage - before.owner, SALVAGE_HIT_TAKEN);
 });
 
 test('salvage stops at the cap, so hoarding forever buys nothing', () => {
     let m = openMatch();
-    m = { ...m, sides: { 1: { ...m.sides[1], salvage: SALVAGE_CAP }, 2: m.sides[2] } };
+    m = { ...m, sides: { 1: m.sides[1], 2: { ...m.sides[2], salvage: SALVAGE_CAP } } };
     ({ match: m } = fire(m, 1, 'B1'));
-    assert.equal(m.sides[1].salvage, SALVAGE_CAP);
+    assert.equal(m.sides[2].salvage, SALVAGE_CAP);
 });
 
 // ------------------------------------------------------------------
@@ -312,23 +319,29 @@ test('two decoys may be live at once, never three', () => {
     assert.equal(actionError(m, 1, { kind: 'decoy', at: cellIndex('C2') }), 'tooManyDecoys');
 });
 
-test('a decoy reads as a hit, pays out as a hit, and only confesses a turn later', () => {
+test('a decoy reads as a hit for the rest of the match and pays its owner like a hull', () => {
     // The tote board is public, so a decoy that paid nothing would give itself
-    // away the moment the enemy glanced at it.
+    // away the moment the enemy glanced at it. And it never owns up: a buoy
+    // that confessed on its owner's next turn cost the shooter nothing, since
+    // that turn comes before they fire again.
     let m = withSalvage(openMatch(), 2, SALVAGE_CAP);
     m = { ...m, turn: 2 };
     ({ match: m } = applyAction(m, 2, { kind: 'decoy', at: cellIndex('A2') }));
 
     const before = { one: m.sides[1].salvage, two: m.sides[2].salvage };
-    const { match, report } = applyAction(m, 1, { kind: 'fire', at: cellIndex('A2') });
+    let report;
+    ({ match: m, report } = applyAction(m, 1, { kind: 'fire', at: cellIndex('A2') }));
     assert.equal(report.cells[0].result, 'decoy');
-    assert.equal(match.sides[2].grid[cellIndex('A2')], 'D', 'not yet confessed');
-    assert.equal(match.sides[1].salvage - before.one, SALVAGE_HIT_DEALT);
-    assert.equal(match.sides[2].salvage - before.two, SALVAGE_HIT_TAKEN);
+    assert.equal(m.sides[2].grid[cellIndex('A2')], 'd', 'the owner sees their buoy was found');
+    assert.equal(m.sides[1].salvage, before.one, 'the gunner was paid for a buoy');
+    assert.equal(m.sides[2].salvage - before.two, SALVAGE_HIT_TAKEN);
     assert.deepEqual(report.sunk, [], 'a decoy is not a hull and can never sink');
 
-    const { match: later } = applyAction(match, 2, { kind: 'fire', at: cellIndex('J10') });
-    assert.equal(later.sides[2].grid[cellIndex('A2')], 'd', 'the decoy confessed on its owner turn');
+    // Both sides move a few times over. It is still a hit on the shooter's plot.
+    for (const [seat, at] of [[2, 'J10'], [1, 'J9'], [2, 'J8'], [1, 'J7']]) {
+        ({ match: m } = fire(m, seat, at));
+    }
+    assert.equal(enemyView(m, 1).grid[cellIndex('A2')], 'x', 'the buoy owned up');
 });
 
 // ------------------------------------------------------------------
@@ -388,11 +401,11 @@ test('the enemy plot shows only what has actually been fired at', () => {
     assert.equal(JSON.stringify(view).includes('carrier'), false, 'a ship key reached the enemy');
 });
 
-test('an unrevealed decoy is indistinguishable from a hit in the enemy plot', () => {
+test('a popped decoy is indistinguishable from a hit in the enemy plot', () => {
     let m = { ...withSalvage(openMatch(), 2, SALVAGE_CAP), turn: 2 };
     ({ match: m } = applyAction(m, 2, { kind: 'decoy', at: cellIndex('A2') }));
     ({ match: m } = fire(m, 1, 'A2'));
-    assert.equal(enemyView(m, 1).grid[cellIndex('A2')], 'x', 'the buoy confessed a turn early');
+    assert.equal(enemyView(m, 1).grid[cellIndex('A2')], 'x', 'the buoy owned up');
     assert.equal(enemyView(m, 1).decoys, undefined);
 });
 
@@ -407,7 +420,7 @@ test('your own view carries your fleet, your buoys and your sweeps, and the enem
 
 test('the enemy tote and hull count are public, because reading them is the game', () => {
     const view = enemyView(openMatch(), 1);
-    assert.equal(view.salvage, SALVAGE_SECOND_MOVER);
+    assert.equal(view.salvage, 0);
     assert.equal(view.afloat, FLEET.length);
     assert.deepEqual(view.sunk, []);
 });
@@ -470,9 +483,9 @@ test('polling is quick while the other side is thinking and slow while it is you
     assert.equal(pollDelay({ status: 'battle', failures: 9 }), 10000, 'backoff is capped');
 });
 
-test('area fire pays the gunner nothing, so the heavy weapons cannot refuel themselves', () => {
-    // Without this a nine cell blast is just a rate multiplier, and the
-    // balance suite shows a depth charge policy taking 86% of the ring.
+test('area fire pays the fleet it lands on, never the gunner', () => {
+    // No hit pays the gunner, and a blast is no exception: a barrage that
+    // refunded its own hits would let the heavy weapons refuel themselves.
     const base = armed(openMatch(), 1);
     const { match } = applyAction(base, 1, { kind: 'barrage', at: cellIndex('D1'), dir: 'h' });
     assert.equal(match.sides[1].salvage, SALVAGE_CAP - COST.barrage, 'the barrage refunded its own hits');
@@ -562,10 +575,8 @@ test('the constants mirrored into battleship-controller.php still agree with it'
     assert.equal(constant('SIZE'), SIZE);
     assert.equal(constant('CELLS'), SIZE * SIZE);
     assert.equal(constant('SALVAGE_CAP'), SALVAGE_CAP);
-    assert.equal(constant('SALVAGE_HIT_DEALT'), SALVAGE_HIT_DEALT);
     assert.equal(constant('SALVAGE_HIT_TAKEN'), SALVAGE_HIT_TAKEN);
-    assert.equal(constant('SALVAGE_WRECK_PER_CELL'), SALVAGE_WRECK_PER_CELL);
-    assert.equal(constant('SALVAGE_SECOND_MOVER'), SALVAGE_SECOND_MOVER);
+    assert.equal(constant('SALVAGE_SINK_BOUNTY'), SALVAGE_SINK_BOUNTY);
     assert.equal(constant('DECOY_MAX'), DECOY_MAX);
 
     const snake = { sonar: 'SONAR', decoy: 'DECOY', barrage: 'BARRAGE', reposition: 'REPOSITION', depthCharge: 'DEPTH_CHARGE' };

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { EMPTY_GRID, cellIndex } from '../views/battleship/logic.js';
 import {
     TEMPO, tempo, landingPlan, newWrecks, heldCells, projectGrid, landingCells,
-    buoyReveals, readingAt, restingSide, isStaleRoom,
+    readingAt, restingSide, isStaleRoom,
 } from '../views/battleship/choreo.js';
 
 const at = cellIndex;
@@ -87,11 +87,6 @@ test('only shots hold the plot; a sweep or a move holds nothing', () => {
     const held = heldCells([{ op: 'swept', at: 5 }, { op: 'moved' }], EMPTY_GRID, grid({ A1: 'o' }));
     assert.equal(held.size, 0);
     assert.equal(projectGrid(EMPTY_GRID, grid({ A1: 'o' }), held), grid({ A1: 'o' }));
-});
-
-test('a buoy owning up is read off the plot as a hit turning into a decoy', () => {
-    assert.deepEqual(buoyReveals(grid({ E5: 'x', F5: 'x' }), grid({ E5: 'd', F5: 'x' })), [at('E5')]);
-    assert.deepEqual(buoyReveals(grid({ E5: 'd' }), grid({ E5: 'd' })), [], 'a revealed buoy is not news twice');
 });
 
 test('the newest reading on a cell wins', () => {

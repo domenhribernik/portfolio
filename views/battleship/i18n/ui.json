@@ -260,8 +260,8 @@
     "sl": "Izberi središče. Izvedel boš, koliko ladij je v bloku, nikoli katerih."
   },
   "hint.decoy": {
-    "en": "Drop it on your own open water. The next shell there reads as a hit.",
-    "sl": "Postavi jo na svoje prazno morje. Naslednja granata tam se bere kot zadetek."
+    "en": "Drop it on your own open water. A shell there reads as a hit, for good.",
+    "sl": "Postavi jo na svoje prazno morje. Granata tam se bere kot zadetek, za vedno."
   },
   "hint.barrage": {
     "en": "Three shells in a line from the cell you pick. TURN swings it.",
@@ -311,9 +311,9 @@
     "en": "swept around {at}: {n} inside",
     "sl": "je preiskal okoli {at}: v bloku {n}"
   },
-  "log.buoyWas": {
-    "en": "the hit at {at} was a buoy",
-    "sl": "zadetek na {at} je bila boja"
+  "log.bounty": {
+    "en": "{who} +{n} salvage",
+    "sl": "{who} +{n} plena"
   },
   "log.buoy": {
     "en": "dropped a buoy",
@@ -564,8 +564,8 @@
     "sl": "PLEN"
   },
   "rules.salvage": {
-    "en": "You earn a salvage for every shell you land, and one for every shell that lands on you. A wreck pays its owner two per cell it was long, so a carrier going down funds a real reply. Area fire pays the gunner nothing: a barrage or a charge feeds the fleet it lands on, and never itself. Salvage stops at ten, so hoarding it buys nothing.",
-    "sl": "Za vsak zadetek dobiš plen, in enega za vsak zadetek, ki ga prejmeš. Razbitina svojemu lastniku prinese dva na polje njene dolžine, zato potopljena letalonosilka financira pravi odgovor. Ploskovni ogenj strelcu ne prinese ničesar: salva ali bomba nahrani floto, na katero pade, nikoli sebe. Plen se ustavi pri desetih, zato kopičenje ne prinese ničesar."
+    "en": "Salvage pays for damage you <b>take</b>, not damage you deal. Every shell that lands on your fleet pays you {hit}, so bad luck funds its own reply. The gunner is paid for finishing the job instead: sinking a whole ship pays the hunter {bounty}, while hits scattered across hulls that are still afloat pay the hunter nothing. Both fleets start with none, and salvage stops at {cap}, so hoarding it buys nothing.",
+    "sl": "Plen dobiš za škodo, ki jo <b>prejmeš</b>, ne za škodo, ki jo narediš. Vsaka granata, ki zadene tvojo floto, ti prinese {hit}, zato smola financira svoj odgovor. Strelec je plačan šele, ko delo dokonča: potopljena ladja lovcu prinese {bounty}, raztreseni zadetki po ladjah, ki še plujejo, pa mu ne prinesejo ničesar. Obe floti začneta brez plena, plen pa se ustavi pri {cap}, zato kopičenje ne prinese ničesar."
   },
   "rules.ladderHead": {
     "en": "THE LADDER",
@@ -592,8 +592,8 @@
     "sl": "Označi polje tri krat tri in ti pove, koliko ladij je v njem, nikoli katerih. Nekaj te tudi stane: flota pod njim izve, kam si pogledal."
   },
   "rules.decoy": {
-    "en": "A buoy on your own open water. The next shell that finds it reports a hit and pays out exactly like a hull, so the tote board does not give it away. It owns up one turn later.",
-    "sl": "Boja na tvojem praznem morju. Naslednja granata, ki jo najde, javi zadetek in izplača enako kot prava ladja, da je semafor ne izda. Prizna šele naslednjo potezo."
+    "en": "A buoy on your own open water. The shell that finds it reads as a hit on their plot, and it stays a hit for the rest of the match. It pays you like a hull would, so the tote board does not give it away. They can only rule it out by boxing it in with misses, or by sweeping it: sonar never counts a buoy.",
+    "sl": "Boja na tvojem praznem morju. Granata, ki jo najde, se na njihovi karti bere kot zadetek in zadetek ostane do konca igre. Izplača ti enako kot prava ladja, da je semafor ne izda. Izločijo jo lahko le tako, da jo obkrožijo z zgrešenimi streli, ali s sonarjem: sonar boje nikoli ne šteje."
   },
   "rules.barrage": {
     "en": "Three shells in a straight line, in one turn.",

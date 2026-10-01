@@ -47,11 +47,31 @@ each of them replaced something that measurably did not:
   `tests/battleship-balance.test.mjs` had a depth-charge policy taking 83% of its
   games against a plain gunner.
 - **The heavy tools are gated on YOUR OWN wrecks, not bought with a lead.**
-  `UNLOCK` in `logic.js`. This is the comeback engine and the salvage economy is
-  not: paying the losing side more currency turned out to be worthless, because
-  both sides own the same tools and the winning side has the better plot to aim
-  them at. Over 400 simulated games the toolbox made comebacks *less* likely,
-  26.8% against 30.1%. Access is the rubber band; salvage is only the pacing.
+  `UNLOCK` in `logic.js`. This is the main comeback engine: paying the losing
+  side more currency on its own turned out to be worthless, because both sides
+  own the same tools and the winning side has the better plot to aim them at.
+  Over 400 simulated games that version of the toolbox made comebacks *less*
+  likely, 26.8% against 30.1%. Access is the rubber band.
+- **Salvage pays the side being hit, and the hunter only for a kill.** A shell
+  on your fleet pays you 1; the gunner gets nothing for it. Sinking a whole ship
+  pays the hunter a flat 2 (`SALVAGE_SINK_BOUNTY`), so a hunt is worth finishing
+  and a scatter of hits pays nothing. Both banks open at 0. This replaced a hit
+  paying both sides (so nobody pulled ahead), a wreck paying its owner two per
+  cell (a carrier filled the bank, which made finishing a ship a gift to the
+  other side), and a salvage for moving second (the sims show no first shot
+  edge to compensate). The bounty is flat rather than the ship's length so the
+  damaged side always nets at least the hunter's share per ship; both passed
+  the suite. With less money in the game the barrage had to drop from 4 to 3,
+  or the full toolbox lost to plain fire (39%).
+
+**A popped buoy never owns up.** It reads as a hit on the shooter's plot for
+the rest of the match and pays its owner like a hull. The shooter can only rule
+it out by boxing it in with misses (the shortest hull is two) or by sweeping it,
+because sonar never counts a buoy. It used to confess on its owner's next
+action, which comes before the shooter fires again, so it cost them nothing and
+the decoy policy lost to plain fire. Treat it as a secret next to the fleet: the
+public `shot` event logs a buoy as `hit`, and `enemyPayload()` maps `d` to `x`.
+`tests/battleship-controller.test.php` greps the log for `"result":"decoy"`.
 
 **A sweep is public.** Sonar buys you a count and pays for it by telling the
 fleet underneath where you looked. Without that, reposition had nothing to react
@@ -70,7 +90,7 @@ equal bots. Both simulated players are the same near optimal density hunter, so
 an early lead between them is mostly a fact about where the fleets landed, and
 no rule set shows a snowball under that microscope. The comeback claim is
 measured by handicapping a fleet outright (`playOut({ handicap: [0, 2] })`) and
-asking whether the toolbox lets it fight: 11.8% against 8.0% without.
+asking whether the toolbox lets it fight: 12.7% against 8.0% without.
 
 ## The turn, and why it is two taps
 
