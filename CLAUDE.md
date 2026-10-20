@@ -50,7 +50,7 @@ All page directories live under [views/](views/), **named to match their URL pat
 
 `account`, `admin`, `dashboard`, `download`, `list`, `masaza`, `medication`, `narek`, `pricing`, `seo`, `stocks`, `valentine`, `vrata`.
 
-Everything else under `views/` is public. Two exceptions to the "public means portfolio" rule: `views/store` is a product (the Everbloom storefront), and `views/wildflowers` is an unregistered experiment; neither belongs in `project-data.js` or the navbar.
+Everything else under `views/` is public. Three exceptions to the "public means portfolio" rule: `views/store` is a product (the Everbloom storefront), `views/wildflowers` is an unregistered experiment, and `views/wishlist` is a friend's housewarming list shared by link (public, `noindex`); none belongs in `project-data.js`, the dashboard or the navbar.
 
 ### Frontend: Styling
 

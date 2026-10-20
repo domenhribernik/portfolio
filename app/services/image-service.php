@@ -36,6 +36,9 @@ class ImageService
         'image/gif',
         'image/heic',
         'image/heif',
+        // Accepted as input only (shop pictures often are); GD decodes it and
+        // it is re-encoded to an output format below. There is no webp output.
+        'image/webp',
     ];
 
     // Absolute path to the uploads root (assets/uploads/)
@@ -90,7 +93,7 @@ class ImageService
         $mime  = $finfo->buffer($rawData);
         if (!in_array($mime, self::ALLOWED_MIMES, true)) {
             throw new InvalidArgumentException(
-                'Invalid image type "' . $mime . '". Allowed: JPEG, PNG, GIF, HEIC'
+                'Invalid image type "' . $mime . '". Allowed: JPEG, PNG, GIF, HEIC, WebP'
             );
         }
 

@@ -1,0 +1,908 @@
+/* ============================================================
+   views/wishlist: shelf-edge signage.
+
+   Every gift stands on a white shelf over its clip-on tag; the
+   tag sits in the rail's channel. Saying "I'll bring this"
+   punches the tag and hangs the yellow flag on it. Yellow means
+   spoken for and nothing else. One fixed neutral ramp, no
+   off-ramp greys.
+   ============================================================ */
+
+:root {
+    --ramp-0: #fffffd;
+    --ramp-1: #f6f6f2;
+    --ramp-2: #eaeae4;
+    --ramp-3: #d9d9d1;
+    --ramp-4: #bdbdb4;
+    --ramp-6: #64645c;
+    --ramp-7: #4b4b45;
+    --ramp-9: #171715;
+    --flag:   #ffd200;
+    --danger: #b3261e;
+
+    /* One feed rhythm: every change moves in this one duration. */
+    --feed: 260ms;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    --photo: 152px;
+    color-scheme: light;
+}
+
+@media (min-width: 640px) {
+    :root { --photo: 168px; }
+}
+
+/* base-style.css is not loaded, but the house rule stands: a view with its
+   own ground reasserts it with the shorthand. */
+body {
+    background: var(--ramp-1);
+    margin: 0;
+    caret-color: var(--ramp-9);
+}
+
+::selection {
+    background: var(--flag);
+    color: var(--ramp-9);
+}
+
+:focus-visible {
+    outline: 2px solid var(--ramp-9);
+    outline-offset: 2px;
+}
+
+.aisle :focus-visible {
+    outline-color: var(--ramp-0);
+}
+
+.icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+}
+
+.icon--lg {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* ------------------------------------------------------------
+   The aisle sign
+   ------------------------------------------------------------ */
+
+.aisle {
+    background: var(--ramp-9);
+}
+
+.aisle__title {
+    font-size: clamp(2.5rem, 11vw, 4.75rem);
+    line-height: 0.9;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+}
+
+/* ------------------------------------------------------------
+   Shelves, bays, rails, tags
+   ------------------------------------------------------------ */
+
+.shelf {
+    list-style: none;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 2.75rem;
+    column-gap: 0;
+}
+
+@media (min-width: 640px) {
+    .shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+    .shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.bay {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* The white shelf the product stands on. Bays in one row touch, so their
+   shelves and rails read as one continuous run. */
+.bay__product {
+    background: var(--ramp-0);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 18px 16px 0;
+}
+
+.bay__photo {
+    width: var(--photo);
+    height: var(--photo);
+    display: grid;
+    place-items: center;
+    color: var(--ramp-4);
+}
+
+/* Shop photos are shot on white. Multiplying them onto the shelf drops the
+   white box, so every product stands on the same ground. */
+.bay__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.bay__photo--none {
+    height: calc(var(--photo) * 0.45);
+}
+
+/* The rail: the shelf's front edge. On a phone it is a strip under the
+   product and the tag hangs from its lip at full width; from 640px up, bays
+   in a row share it, so it becomes a channel the tags sit in side by side. */
+.rail {
+    --pad-x: 0px;
+    position: relative;
+    flex: 1;
+    display: flex;
+    background: linear-gradient(var(--ramp-2), var(--ramp-2)) top / 100% 8px no-repeat;
+    border-top: 3px solid var(--ramp-3);
+    padding: 8px 0 0;
+}
+
+@media (min-width: 640px) {
+    .rail {
+        --pad-x: 8px;
+        background: var(--ramp-2);
+        border-bottom: 1px solid var(--ramp-3);
+        padding: 8px 8px 10px;
+    }
+}
+
+/* Every tag in a row is as tall as the tallest, so names and keys align
+   down the run from one shared baseline. */
+.tag {
+    --hole: 0px;
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--ramp-0);
+    border: 1px solid var(--ramp-3);
+    padding: 14px 16px 12px;
+}
+
+.tag__name {
+    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    line-height: 1.05;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    padding-right: 26px;
+    margin: 0;
+}
+
+.tag__qty {
+    margin: 4px 0 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ramp-6);
+    font-variant-numeric: tabular-nums;
+}
+
+.tag__note {
+    margin: 8px 0 0;
+    color: var(--ramp-7);
+    font-size: 1rem;
+    line-height: 1.45;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.tag__foot {
+    margin-top: auto;
+    padding-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+}
+
+.tag__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 16px;
+    min-width: 0;
+}
+
+.shop-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    color: var(--ramp-7);
+    text-decoration: underline;
+    text-decoration-color: var(--ramp-4);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: color var(--feed) var(--ease), text-decoration-color var(--feed) var(--ease);
+}
+
+.shop-link:hover {
+    color: var(--ramp-9);
+    text-decoration-color: var(--ramp-9);
+}
+
+.shop-link .icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.mine-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    min-height: 44px;
+    font-weight: 500;
+}
+
+/* ---- Spoken for: the punch and the flag -------------------- */
+
+@property --hole {
+    syntax: '<length>';
+    inherits: false;
+    initial-value: 0px;
+}
+
+.bay[data-state='mine'] .tag,
+.bay[data-state='taken'] .tag {
+    --hole: 9px;
+}
+
+/* The hole is cut through the tag. */
+.bay[data-state='mine'] .tag,
+.bay[data-state='taken'] .tag,
+.bay.is-closing .tag {
+    -webkit-mask: radial-gradient(circle at calc(100% - 20px) 20px, transparent var(--hole), #000 calc(var(--hole) + 0.5px));
+    mask: radial-gradient(circle at calc(100% - 20px) 20px, transparent var(--hole), #000 calc(var(--hole) + 0.5px));
+}
+
+/* What the hole shows: the dark of the shelf behind the rail. It sits under
+   the tag, so only the cut reveals it. Centre: rail padding + 20px. */
+.bay[data-state='mine'] .rail::before,
+.bay[data-state='taken'] .rail::before,
+.bay.is-closing .rail::before {
+    content: '';
+    position: absolute;
+    top: calc(8px + 20px - 9px);
+    right: calc(var(--pad-x) + 20px - 9px);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--ramp-9);
+    pointer-events: none;
+}
+
+.tag {
+    z-index: 1;
+}
+
+/* Hangs from the rail's lip over the top of the tag. */
+.tag__flag {
+    position: absolute;
+    top: -3px;
+    left: 20px;
+    z-index: 1;
+    background: var(--flag);
+    color: var(--ramp-9);
+    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px 3px;
+    transform-origin: top center;
+}
+
+.is-punching .tag {
+    animation: dip var(--feed) var(--ease), punch var(--feed) var(--ease);
+}
+
+.is-punching .tag__flag {
+    animation: flag-drop var(--feed) var(--ease);
+}
+
+.bay.is-closing .tag {
+    animation: unpunch var(--feed) var(--ease) forwards;
+}
+
+.bay.is-closing .tag__flag {
+    animation: flag-lift var(--feed) var(--ease) forwards;
+}
+
+@keyframes dip {
+    0%, 100% { transform: none; }
+    35% { transform: translateY(2px); }
+}
+
+@keyframes punch {
+    from { --hole: 0px; }
+    to { --hole: 9px; }
+}
+
+@keyframes unpunch {
+    from { --hole: 9px; }
+    to { --hole: 0px; }
+}
+
+@keyframes flag-drop {
+    from { transform: translateY(-8px) scaleY(0.3); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+
+@keyframes flag-lift {
+    to { transform: translateY(-8px) scaleY(0.3); opacity: 0; }
+}
+
+/* ---- Taken: the same shelf, smaller ------------------------ */
+
+.shelf-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 1.25rem;
+    padding-bottom: 6px;
+    border-bottom: 3px solid var(--ramp-9);
+}
+
+.shelf--compact {
+    row-gap: 1.75rem;
+}
+
+.bay--compact {
+    --photo: 72px;
+}
+
+.bay--compact .bay__product {
+    padding: 12px 16px 0;
+}
+
+.bay--compact .tag {
+    padding: 12px 16px 10px;
+}
+
+.bay--compact .tag__name {
+    font-size: 1.1875rem;
+    padding-right: 34px;
+}
+
+.bay--compact .tag__foot {
+    padding-top: 6px;
+}
+
+.bay--compact .tag__foot .link-btn,
+.bay--compact .mine-line {
+    min-height: 36px;
+}
+
+/* Covered, not gone: muted enough to read as done, plain enough to recognise. */
+.bay--compact[data-state='taken'] .bay__photo img {
+    opacity: 0.75;
+    filter: grayscale(0.7);
+}
+
+.bay--compact[data-state='taken'] .tag__name {
+    color: var(--ramp-6);
+}
+
+/* ---- An editor writes on the tag ----------------------------- */
+
+[data-inline] {
+    cursor: text;
+    border-radius: 1px;
+    transition: background-color var(--feed) var(--ease);
+}
+
+@media (hover: hover) {
+    [data-inline]:hover {
+        background: var(--ramp-1);
+    }
+}
+
+[data-inline]:focus {
+    outline: 2px solid var(--ramp-9);
+    outline-offset: 3px;
+    background: var(--ramp-0);
+}
+
+[data-inline]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--ramp-6);
+    text-decoration: underline dashed var(--ramp-4);
+    text-underline-offset: 4px;
+}
+
+.aisle__line {
+    font-size: 1.0625rem;
+    line-height: 1.45;
+}
+
+/* ---- Loading ------------------------------------------------ */
+
+.bay--ghost .bay__photo {
+    background: var(--ramp-2);
+}
+
+.ghost-line {
+    height: 14px;
+    background: var(--ramp-2);
+}
+
+.bay--ghost .bay__photo,
+.ghost-line {
+    animation: breathe 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes breathe {
+    from { opacity: 1; }
+    to { opacity: 0.55; }
+}
+
+/* ------------------------------------------------------------
+   Controls
+   ------------------------------------------------------------ */
+
+.key {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 2px;
+    background: var(--ramp-9);
+    color: var(--ramp-0);
+    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-weight: 600;
+    font-size: 1.0625rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--feed) var(--ease), color var(--feed) var(--ease);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.key:hover {
+    background: var(--ramp-7);
+}
+
+.key:active {
+    transform: translateY(1px);
+}
+
+.key:disabled,
+.key[aria-busy='true'] {
+    opacity: 0.55;
+    cursor: default;
+    transform: none;
+}
+
+.key--light {
+    background: var(--ramp-0);
+    color: var(--ramp-9);
+}
+
+.key--light:hover {
+    background: var(--ramp-2);
+}
+
+.key--ghost {
+    background: transparent;
+    color: var(--ramp-9);
+    box-shadow: inset 0 0 0 1.5px var(--ramp-9);
+}
+
+.key--ghost:hover {
+    background: var(--ramp-2);
+}
+
+.key--sm {
+    height: 38px;
+    padding: 0 12px;
+    font-size: 0.9375rem;
+}
+
+.link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ramp-9);
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.link-btn:hover {
+    text-decoration-thickness: 2px;
+}
+
+.link-btn--quiet {
+    color: var(--ramp-7);
+    text-decoration-color: var(--ramp-4);
+}
+
+.link {
+    color: var(--ramp-9);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: none;
+    color: var(--ramp-7);
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    color: var(--ramp-9);
+}
+
+.danger-btn {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 14px;
+    border: 1.5px solid var(--danger);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--danger);
+    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color var(--feed) var(--ease), color var(--feed) var(--ease);
+}
+
+.danger-btn:hover,
+.danger-btn:focus-visible {
+    background: var(--danger);
+    color: var(--ramp-0);
+}
+
+.notice {
+    margin-top: 2.5rem;
+    padding: 20px;
+    background: var(--ramp-0);
+    border: 1px solid var(--ramp-3);
+    border-top: 3px solid var(--ramp-9);
+}
+
+/* Phones: Add item in the thumb zone. */
+.add-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--ramp-1);
+    border-top: 1px solid var(--ramp-3);
+}
+
+@media (min-width: 640px) {
+    .add-bar { display: none !important; }
+}
+
+/* Phones get the thumb-zone bar instead of the button in the sign. */
+@media (max-width: 639px) {
+    .add-top { display: none !important; }
+}
+
+body.is-editor main {
+    padding-bottom: 7rem;
+}
+
+/* ------------------------------------------------------------
+   The editor's sheet
+   ------------------------------------------------------------ */
+
+.sheet {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    padding: 0;
+    border: 0;
+    border-top: 3px solid var(--ramp-9);
+    background: var(--ramp-0);
+    color: var(--ramp-9);
+}
+
+.sheet[open] {
+    animation: sheet-in var(--feed) var(--ease);
+}
+
+.sheet::backdrop {
+    background: rgba(23, 23, 21, 0.5);
+}
+
+@media (min-width: 640px) {
+    .sheet {
+        margin: auto;
+        max-width: 560px;
+        max-height: 88vh;
+        border: 1px solid var(--ramp-3);
+        border-top: 3px solid var(--ramp-9);
+    }
+}
+
+@keyframes sheet-in {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+
+.sheet form {
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+}
+
+.sheet__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 8px 10px 20px;
+    border-bottom: 1px solid var(--ramp-3);
+}
+
+.sheet__body {
+    display: grid;
+    gap: 20px;
+    padding: 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.sheet__foot {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--ramp-3);
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+}
+
+.field__label {
+    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ramp-7);
+}
+
+/* 16px at least, or iOS zooms the page on focus. */
+.field__input {
+    width: 100%;
+    font: inherit;
+    font-size: 1rem;
+    padding: 11px 12px;
+    border: 1px solid var(--ramp-4);
+    border-radius: 2px;
+    background: var(--ramp-0);
+    color: var(--ramp-9);
+}
+
+.field__input::placeholder {
+    color: var(--ramp-6);
+}
+
+.field__input:focus {
+    border-color: var(--ramp-9);
+    outline: 2px solid var(--ramp-9);
+    outline-offset: 0;
+}
+
+.field__input--area {
+    min-height: 6.5rem;
+    line-height: 1.45;
+    resize: vertical;
+}
+
+.field__hint {
+    font-size: 0.875rem;
+    color: var(--ramp-6);
+}
+
+.field__hint:empty,
+.field__error:empty {
+    display: none;
+}
+
+.field__error {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--danger);
+}
+
+.field--invalid .field__input {
+    border-color: var(--danger);
+}
+
+.pic-well {
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: var(--ramp-0);
+    border: 1px solid var(--ramp-3);
+    padding: 6px;
+}
+
+.pic-well img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.stepper {
+    display: inline-flex;
+    align-items: center;
+    align-self: start;
+    justify-self: start;
+    border: 1px solid var(--ramp-4);
+    border-radius: 2px;
+}
+
+.stepper__btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: none;
+    color: var(--ramp-9);
+    cursor: pointer;
+}
+
+.stepper__btn:hover {
+    background: var(--ramp-2);
+}
+
+.stepper__btn:disabled {
+    color: var(--ramp-4);
+    background: none;
+    cursor: default;
+}
+
+.stepper__value {
+    min-width: 3ch;
+    text-align: center;
+    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* ------------------------------------------------------------
+   Toast
+   ------------------------------------------------------------ */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    z-index: 60;
+    width: min(560px, calc(100% - 32px));
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 10px 10px 16px;
+    background: var(--ramp-9);
+    color: var(--ramp-0);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    animation: toast-in var(--feed) var(--ease);
+}
+
+.toast[hidden] {
+    display: none;
+}
+
+body.is-editor .toast {
+    bottom: calc(88px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+    body.is-editor .toast {
+        bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+}
+
+.toast__action {
+    flex-shrink: 0;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 253, 0.45);
+    border-radius: 2px;
+    background: none;
+    color: var(--ramp-0);
+    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.toast__action:hover {
+    background: rgba(255, 255, 253, 0.12);
+}
+
+.toast :focus-visible {
+    outline-color: var(--ramp-0);
+}
+
+@keyframes toast-in {
+    from { transform: translate(-50%, 8px); opacity: 0; }
+    to { transform: translateX(-50%); opacity: 1; }
+}
+
+/* ------------------------------------------------------------
+   Reduced motion: every state still lands, nothing travels.
+   ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+    .is-punching .tag,
+    .is-punching .tag__flag,
+    .bay.is-closing .tag,
+    .bay.is-closing .tag__flag,
+    .sheet[open],
+    .toast,
+    .bay--ghost .bay__photo,
+    .ghost-line {
+        animation: none;
+    }
+
+    .key:active {
+        transform: none;
+    }
+}

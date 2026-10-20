@@ -58,6 +58,7 @@ the PHP suites with `C:\xampp\php\php.exe`. They spawn whatever interpreter runs
 | `stats-proxy.test.php` | Exact per-extension counting, dev-tooling exclusions, same-day cache, the version stamp that busts it | **No database.** `STATS_ROOT` / `STATS_CACHE` point at a generated fixture tree; the proxy reads them via `getenv()` for exactly this reason |
 | `trips-controller.test.php` | The three rules Trips rests on: A TRIP IS PRIVATE TO ITS MEMBERS (an outsider's 404 is indistinguishable from no trip, the raw bytes are grepped for the name, and that includes the photo bytes served through the controller), EVERY CREATE IS IDEMPOTENT BY ITS UUID (a replayed upload returns the same row and stores no second file) and A DELETED THING STAYS DELETED (a queued create for a tombstoned uuid gets 410). Then the role matrix, invite links (only the hash stored, reset and remove stop a rejoin), the showcase (no traveller names, admin only), the images endpoint refusing to list or delete trip photos, and account deletion purging files while leaving the person's photos in other people's trips unattributed | Port **8968**. Applies `trips-model.sql` from the real file. Creates a third user `tripstest-c@test.local` (token 64 x 'c') and deletes it through `delete-account`. Boots with `TRIPS_QUOTA_BYTES=400000` so the quota is reachable with one noisy GD image. Needs GD; writes to and cleans `assets/uploads/trips/` |
 | `battleship-controller.test.php` | The two rules the game rests on: A FLEET IS A SECRET (the raw bytes of every payload are grepped for the other fleet, during placement, mid battle and after the verdict) and THE SERVER OWNS BOTH PLOTS (a body reporting its own hits, bank, plot and outcome is read straight past). Then the unlock ladder, sonar privacy, area fire not surveying, buoys, repositioning, the verdict and rematch, seat reclaim, abandonment | Port **8963**. Applies `battleship-model.sql` itself. `arm()` forces a seat's salvage and scuttles its own hulls, because most tools are gated on your own wrecks and a legitimately reached test state would take forty turns to set up. Reclaim is tested by backdating `last_seen` rather than sleeping |
+| `wishlist-controller.test.php` | The three rules of the wish list: ANYONE CAN CLAIM, ONLY THE TOKEN CAN UNCLAIM (the raw bytes of every read are searched for the stored hash and the token), ONLY EDITORS CHANGE THE LIST (admin or the `write` role; signed out 401, anyone else 403) and A GUEST NEVER LOADS A THIRD-PARTY PICTURE (a saved `image_url` becomes a local JPEG, WebP included; the fetcher refuses private, loopback and IPv6-loopback addresses and redirects to them; tracking pixels are refused). Then the race-safe quantity, the honeypot, soft delete and restore, `source_key` idempotence, the Amazon captcha and URL fallback, and the poll version | Ports **8969** and **8970**: the second runs `fixtures/wishlist-shop-stub.php`, a fake shop, and `WISHLIST_FETCH_ALLOW=127.0.0.1:8970` lets exactly that host through the SSRF guard so the other refusals stay live in the same boot. Boots with `-d extension=gd` when GD is not loaded (it is commented out in XAMPP's php.ini), and in that case also boots the app WITHOUT GD on port **8971** to hold the stock-XAMPP case: the item saves, its picture does not, and the warning names GD. The stub's `/flaky.jpg` hangs once to test the fetcher's single retry. Applies `images-model.sql` and `wishlist-model.sql` if absent |
 
 ## Python
 
@@ -142,3 +143,13 @@ and seconds alone must not be able to score, however good the guess). It also
 runs a whole night to dawn. Note the deliberate non-secret: a sweep returns the
 full 360-sample trace, because reading it is the game and there is no opponent to
 cheat against.
+### wishlist
+
+`wishlist-logic.test.mjs` holds what a guest or editor sees the consequence of: whether an
+item wanted twice is still open after one claim, that a claim held by this browser offers
+Undo, that an item you just claimed stays put until the next visit (it would otherwise jump
+out from under your thumb), what an editor may save (a link must be http(s), because it
+becomes an href for every guest), how a shop title is cut to a name, and that forgotten
+tokens are pruned. It also greps the controller for the four field caps that exist in both
+languages.
+
