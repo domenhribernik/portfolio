@@ -1,29 +1,36 @@
 /* ============================================================
-   views/wishlist: shelf-edge signage.
+   views/wishlist: blush.
 
-   Every gift stands on a white shelf over its clip-on tag; the
-   tag sits in the rail's channel. Saying "I'll bring this"
-   punches the tag and hangs the yellow flag on it. Yellow means
-   spoken for and nothing else. One fixed neutral ramp, no
-   off-ramp greys.
+   A near-white pink ground, a fuller blush band across the top
+   with Iliana's note tucked into its lower edge, and every gift
+   as one white card: the photo in a blush well, the name, the
+   note and the key beneath. Ink for all text. Blush for every
+   button. Deep rose means spoken for and nothing else.
+
+   The palette is mirrored in the inline tailwind.config in
+   index.html; this file cannot read it.
    ============================================================ */
 
 :root {
-    --ramp-0: #fffffd;
-    --ramp-1: #f6f6f2;
-    --ramp-2: #eaeae4;
-    --ramp-3: #d9d9d1;
-    --ramp-4: #bdbdb4;
-    --ramp-6: #64645c;
-    --ramp-7: #4b4b45;
-    --ramp-9: #171715;
-    --flag:   #ffd200;
+    --ramp-0: #ffffff;
+    --ramp-1: #fdf7f8;
+    --ramp-2: #fdf1f3;
+    --ramp-3: #f3dde2;
+    --ramp-4: #e3bcc5;
+    --ramp-6: #6f5f64;
+    --ramp-7: #4a3d41;
+    --ramp-9: #1a1416;
+    --blush: #ffc2cc;
+    --blush-deep: #ffb3c1;
+    --rose: #b23a57;
     --danger: #b3261e;
 
-    /* One feed rhythm: every change moves in this one duration. */
+    /* One feed rhythm: every change moves in this one duration.
+       FEED_MS in script.js waits on it. */
     --feed: 260ms;
     --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
+    --radius: 16px;
     --photo: 152px;
     color-scheme: light;
 }
@@ -37,21 +44,21 @@
 body {
     background: var(--ramp-1);
     margin: 0;
-    caret-color: var(--ramp-9);
+    caret-color: var(--rose);
+}
+
+html {
+    scrollbar-color: var(--ramp-4) var(--ramp-1);
 }
 
 ::selection {
-    background: var(--flag);
+    background: var(--blush);
     color: var(--ramp-9);
 }
 
 :focus-visible {
     outline: 2px solid var(--ramp-9);
     outline-offset: 2px;
-}
-
-.aisle :focus-visible {
-    outline-color: var(--ramp-0);
 }
 
 .icon {
@@ -66,22 +73,127 @@ body {
 }
 
 /* ------------------------------------------------------------
-   The aisle sign
+   The band
    ------------------------------------------------------------ */
 
 .aisle {
-    background: var(--ramp-9);
+    background: var(--blush);
+    color: var(--ramp-9);
 }
 
 .aisle__title {
-    font-size: clamp(2.5rem, 11vw, 4.75rem);
-    line-height: 0.9;
-    letter-spacing: -0.005em;
+    font-size: clamp(2.25rem, 9vw, 4rem);
+    line-height: 0.98;
+    letter-spacing: -0.01em;
     text-wrap: balance;
 }
 
+.aisle__line {
+    font-size: 1.0625rem;
+    line-height: 1.45;
+}
+
 /* ------------------------------------------------------------
-   Shelves, bays, rails, tags
+   Iliana's note
+   ------------------------------------------------------------ */
+
+.welcome {
+    position: relative;
+    z-index: 1;
+    margin-top: -3.25rem;
+    display: grid;
+    grid-template-areas: "lead" "body" "sign";
+    gap: 14px;
+    padding: 24px 20px 22px;
+    background: var(--ramp-0);
+    border-radius: 20px;
+    box-shadow: 0 1px 2px rgba(178, 58, 87, 0.08), 0 16px 40px -18px rgba(178, 58, 87, 0.32);
+}
+
+@media (min-width: 640px) {
+    .welcome {
+        padding: 32px 36px 30px;
+        gap: 18px;
+    }
+}
+
+/* Wide screens: the greeting and the signature hold a narrow column, the
+   letter runs beside them at a reading measure. */
+@media (min-width: 900px) {
+    .welcome {
+        grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+        grid-template-areas: "lead body" "sign body";
+        column-gap: 3.5rem;
+        padding: 40px 44px;
+    }
+
+    .welcome__sign {
+        align-self: end;
+    }
+}
+
+.welcome__lead {
+    grid-area: lead;
+    margin: 0;
+    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-weight: 600;
+    font-size: clamp(1.6rem, 5vw, 2.1rem);
+    line-height: 1.05;
+    color: var(--ramp-9);
+    text-wrap: balance;
+}
+
+.welcome__body {
+    grid-area: body;
+    max-width: 66ch;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--ramp-7);
+}
+
+.welcome__body p {
+    margin: 0;
+}
+
+.welcome__body p + p {
+    margin-top: 0.85em;
+}
+
+/* The same blush as the real key, so guests know it when they see it. */
+.welcome__pill {
+    display: inline-block;
+    padding: 0 0.55em;
+    border-radius: 999px;
+    background: var(--blush);
+    color: var(--ramp-9);
+    font-weight: 600;
+    font-size: 0.92em;
+    line-height: 1.55;
+    white-space: nowrap;
+}
+
+.welcome__sign {
+    grid-area: sign;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: 'Dancing Script', cursive;
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 1.1;
+    color: var(--ramp-9);
+}
+
+.welcome__sign .icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    color: var(--rose);
+    transform: translateY(2px);
+}
+
+/* ------------------------------------------------------------
+   The list: one white card per gift
    ------------------------------------------------------------ */
 
 .shelf {
@@ -91,12 +203,14 @@ body {
     padding: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 2.75rem;
-    column-gap: 0;
+    gap: 16px;
 }
 
 @media (min-width: 640px) {
-    .shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .shelf {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+    }
 }
 
 @media (min-width: 1024px) {
@@ -104,19 +218,31 @@ body {
 }
 
 .bay {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-width: 0;
+    background: var(--ramp-0);
+    border: 1px solid var(--ramp-3);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color var(--feed) var(--ease), box-shadow var(--feed) var(--ease);
 }
 
-/* The white shelf the product stands on. Bays in one row touch, so their
-   shelves and rails read as one continuous run. */
+@media (hover: hover) {
+    .bay:not(.bay--ghost):hover {
+        border-color: var(--ramp-4);
+    }
+}
+
+/* The photo well. Shop photos are shot on white; multiplying them onto the
+   blush drops the white box, so every product stands on the same ground. */
 .bay__product {
-    background: var(--ramp-0);
+    background: var(--ramp-2);
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    padding: 18px 16px 0;
+    padding: 20px 16px;
 }
 
 .bay__photo {
@@ -124,11 +250,10 @@ body {
     height: var(--photo);
     display: grid;
     place-items: center;
+    overflow: hidden;
     color: var(--ramp-4);
 }
 
-/* Shop photos are shot on white. Multiplying them onto the shelf drops the
-   white box, so every product stands on the same ground. */
 .bay__photo img {
     width: 100%;
     height: 100%;
@@ -140,50 +265,29 @@ body {
     height: calc(var(--photo) * 0.45);
 }
 
-/* The rail: the shelf's front edge. On a phone it is a strip under the
-   product and the tag hangs from its lip at full width; from 640px up, bays
-   in a row share it, so it becomes a channel the tags sit in side by side. */
 .rail {
-    --pad-x: 0px;
-    position: relative;
     flex: 1;
     display: flex;
-    background: linear-gradient(var(--ramp-2), var(--ramp-2)) top / 100% 8px no-repeat;
-    border-top: 3px solid var(--ramp-3);
-    padding: 8px 0 0;
+    min-width: 0;
 }
 
-@media (min-width: 640px) {
-    .rail {
-        --pad-x: 8px;
-        background: var(--ramp-2);
-        border-bottom: 1px solid var(--ramp-3);
-        padding: 8px 8px 10px;
-    }
-}
-
-/* Every tag in a row is as tall as the tallest, so names and keys align
-   down the run from one shared baseline. */
+/* Every card in a row is as tall as the tallest, and the foot is pushed to
+   the bottom, so the keys line up across the row. */
 .tag {
-    --hole: 0px;
-    position: relative;
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    background: var(--ramp-0);
-    border: 1px solid var(--ramp-3);
-    padding: 14px 16px 12px;
+    padding: 16px 18px 14px;
 }
 
 .tag__name {
     font-family: 'Barlow Condensed', Barlow, sans-serif;
     font-weight: 600;
     font-size: 1.5rem;
-    line-height: 1.05;
+    line-height: 1.08;
     text-wrap: balance;
     overflow-wrap: anywhere;
-    padding-right: 26px;
     margin: 0;
 }
 
@@ -199,14 +303,14 @@ body {
     margin: 8px 0 0;
     color: var(--ramp-7);
     font-size: 1rem;
-    line-height: 1.45;
+    line-height: 1.5;
     white-space: pre-line;
     overflow-wrap: anywhere;
 }
 
 .tag__foot {
     margin-top: auto;
-    padding-top: 14px;
+    padding-top: 16px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -239,7 +343,7 @@ body {
 
 .shop-link:hover {
     color: var(--ramp-9);
-    text-decoration-color: var(--ramp-9);
+    text-decoration-color: var(--rose);
 }
 
 .shop-link .icon {
@@ -256,75 +360,37 @@ body {
     font-weight: 500;
 }
 
-/* ---- Spoken for: the punch and the flag -------------------- */
+/* ---- Spoken for: the flag ---------------------------------- */
 
-@property --hole {
-    syntax: '<length>';
-    inherits: false;
-    initial-value: 0px;
-}
-
-.bay[data-state='mine'] .tag,
-.bay[data-state='taken'] .tag {
-    --hole: 9px;
-}
-
-/* The hole is cut through the tag. */
-.bay[data-state='mine'] .tag,
-.bay[data-state='taken'] .tag,
-.bay.is-closing .tag {
-    -webkit-mask: radial-gradient(circle at calc(100% - 20px) 20px, transparent var(--hole), #000 calc(var(--hole) + 0.5px));
-    mask: radial-gradient(circle at calc(100% - 20px) 20px, transparent var(--hole), #000 calc(var(--hole) + 0.5px));
-}
-
-/* What the hole shows: the dark of the shelf behind the rail. It sits under
-   the tag, so only the cut reveals it. Centre: rail padding + 20px. */
-.bay[data-state='mine'] .rail::before,
-.bay[data-state='taken'] .rail::before,
-.bay.is-closing .rail::before {
-    content: '';
-    position: absolute;
-    top: calc(8px + 20px - 9px);
-    right: calc(var(--pad-x) + 20px - 9px);
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--ramp-9);
-    pointer-events: none;
-}
-
-.tag {
-    z-index: 1;
-}
-
-/* Hangs from the rail's lip over the top of the tag. */
+/* Pinned to the card's corner over the photo well. */
 .tag__flag {
     position: absolute;
-    top: -3px;
-    left: 20px;
-    z-index: 1;
-    background: var(--flag);
-    color: var(--ramp-9);
-    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    padding: 3px 10px 4px;
+    border-radius: 999px;
+    background: var(--rose);
+    color: #fff;
+    font-family: Barlow, sans-serif;
     font-weight: 600;
     font-size: 0.8125rem;
     line-height: 1.2;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 2px 8px 3px;
-    transform-origin: top center;
+    letter-spacing: 0.01em;
+    transform-origin: top left;
 }
 
-.is-punching .tag {
-    animation: dip var(--feed) var(--ease), punch var(--feed) var(--ease);
+.bay[data-state='mine'] {
+    border-color: var(--blush-deep);
+    box-shadow: 0 0 0 1px var(--blush-deep);
+}
+
+.bay.is-punching {
+    animation: dip var(--feed) var(--ease);
 }
 
 .is-punching .tag__flag {
     animation: flag-drop var(--feed) var(--ease);
-}
-
-.bay.is-closing .tag {
-    animation: unpunch var(--feed) var(--ease) forwards;
 }
 
 .bay.is-closing .tag__flag {
@@ -336,64 +402,70 @@ body {
     35% { transform: translateY(2px); }
 }
 
-@keyframes punch {
-    from { --hole: 0px; }
-    to { --hole: 9px; }
-}
-
-@keyframes unpunch {
-    from { --hole: 9px; }
-    to { --hole: 0px; }
-}
-
 @keyframes flag-drop {
-    from { transform: translateY(-8px) scaleY(0.3); opacity: 0; }
+    from { transform: translateY(-6px) scale(0.7); opacity: 0; }
     to { transform: none; opacity: 1; }
 }
 
 @keyframes flag-lift {
-    to { transform: translateY(-8px) scaleY(0.3); opacity: 0; }
+    to { transform: translateY(-6px) scale(0.7); opacity: 0; }
 }
 
-/* ---- Taken: the same shelf, smaller ------------------------ */
+/* ---- Already taken: the same card, as a short row ----------- */
 
 .shelf-head {
     display: flex;
     align-items: baseline;
     gap: 10px;
-    font-size: 1.25rem;
-    padding-bottom: 6px;
-    border-bottom: 3px solid var(--ramp-9);
+    font-size: 1.625rem;
+    line-height: 1.1;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--ramp-3);
 }
 
 .shelf--compact {
-    row-gap: 1.75rem;
+    gap: 12px;
+}
+
+@media (min-width: 640px) {
+    .shelf--compact { gap: 16px; }
 }
 
 .bay--compact {
-    --photo: 72px;
+    --photo: 64px;
+    flex-direction: row;
 }
 
 .bay--compact .bay__product {
-    padding: 12px 16px 0;
+    flex-shrink: 0;
+    width: 96px;
+    padding: 12px;
 }
 
 .bay--compact .tag {
-    padding: 12px 16px 10px;
+    justify-content: center;
+    padding: 12px 16px;
 }
 
 .bay--compact .tag__name {
     font-size: 1.1875rem;
-    padding-right: 34px;
 }
 
 .bay--compact .tag__foot {
-    padding-top: 6px;
+    margin-top: 0;
+    padding-top: 4px;
 }
 
 .bay--compact .tag__foot .link-btn,
 .bay--compact .mine-line {
     min-height: 36px;
+}
+
+.bay--compact .tag__flag {
+    top: 8px;
+    left: 8px;
+    padding: 2px 8px 3px;
+    font-size: 0.75rem;
 }
 
 /* Covered, not gone: muted enough to read as done, plain enough to recognise. */
@@ -406,17 +478,17 @@ body {
     color: var(--ramp-6);
 }
 
-/* ---- An editor writes on the tag ----------------------------- */
+/* ---- An editor writes on the card ---------------------------- */
 
 [data-inline] {
     cursor: text;
-    border-radius: 1px;
+    border-radius: 4px;
     transition: background-color var(--feed) var(--ease);
 }
 
 @media (hover: hover) {
     [data-inline]:hover {
-        background: var(--ramp-1);
+        background: var(--ramp-2);
     }
 }
 
@@ -433,19 +505,16 @@ body {
     text-underline-offset: 4px;
 }
 
-.aisle__line {
-    font-size: 1.0625rem;
-    line-height: 1.45;
-}
-
 /* ---- Loading ------------------------------------------------ */
 
 .bay--ghost .bay__photo {
-    background: var(--ramp-2);
+    background: var(--ramp-3);
+    border-radius: 12px;
 }
 
 .ghost-line {
     height: 14px;
+    border-radius: 7px;
     background: var(--ramp-2);
 }
 
@@ -468,24 +537,22 @@ body {
     align-items: center;
     gap: 8px;
     height: 44px;
-    padding: 0 18px;
+    padding: 0 20px;
     border: 0;
-    border-radius: 2px;
-    background: var(--ramp-9);
-    color: var(--ramp-0);
-    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    border-radius: 999px;
+    background: var(--blush);
+    color: var(--ramp-9);
+    font-family: Barlow, sans-serif;
     font-weight: 600;
-    font-size: 1.0625rem;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
+    font-size: 1rem;
     white-space: nowrap;
     cursor: pointer;
-    transition: background-color var(--feed) var(--ease), color var(--feed) var(--ease);
+    transition: background-color var(--feed) var(--ease), color var(--feed) var(--ease), transform 0.1s var(--ease);
     -webkit-tap-highlight-color: transparent;
 }
 
 .key:hover {
-    background: var(--ramp-7);
+    background: var(--blush-deep);
 }
 
 .key:active {
@@ -509,9 +576,9 @@ body {
 }
 
 .key--ghost {
-    background: transparent;
+    background: var(--ramp-0);
     color: var(--ramp-9);
-    box-shadow: inset 0 0 0 1.5px var(--ramp-9);
+    box-shadow: inset 0 0 0 1.5px var(--ramp-4);
 }
 
 .key--ghost:hover {
@@ -520,7 +587,7 @@ body {
 
 .key--sm {
     height: 38px;
-    padding: 0 12px;
+    padding: 0 14px;
     font-size: 0.9375rem;
 }
 
@@ -555,6 +622,7 @@ body {
     color: var(--ramp-9);
     font-weight: 500;
     text-decoration: underline;
+    text-decoration-color: var(--rose);
     text-underline-offset: 3px;
 }
 
@@ -564,13 +632,16 @@ body {
     width: 44px;
     height: 44px;
     border: 0;
+    border-radius: 999px;
     background: none;
     color: var(--ramp-7);
     cursor: pointer;
+    transition: background-color var(--feed) var(--ease), color var(--feed) var(--ease);
 }
 
 .icon-btn:hover {
     color: var(--ramp-9);
+    background: var(--ramp-2);
 }
 
 .danger-btn {
@@ -579,16 +650,14 @@ body {
     align-items: center;
     gap: 8px;
     height: 40px;
-    padding: 0 14px;
+    padding: 0 16px;
     border: 1.5px solid var(--danger);
-    border-radius: 2px;
+    border-radius: 999px;
     background: transparent;
     color: var(--danger);
-    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-family: Barlow, sans-serif;
     font-weight: 600;
     font-size: 0.9375rem;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
     cursor: pointer;
     transition: background-color var(--feed) var(--ease), color var(--feed) var(--ease);
 }
@@ -596,15 +665,15 @@ body {
 .danger-btn:hover,
 .danger-btn:focus-visible {
     background: var(--danger);
-    color: var(--ramp-0);
+    color: #fff;
 }
 
 .notice {
     margin-top: 2.5rem;
-    padding: 20px;
+    padding: 20px 22px;
     background: var(--ramp-0);
     border: 1px solid var(--ramp-3);
-    border-top: 3px solid var(--ramp-9);
+    border-radius: var(--radius);
 }
 
 /* Phones: Add item in the thumb zone. */
@@ -623,7 +692,7 @@ body {
     .add-bar { display: none !important; }
 }
 
-/* Phones get the thumb-zone bar instead of the button in the sign. */
+/* Phones get the thumb-zone bar instead of the button in the band. */
 @media (max-width: 639px) {
     .add-top { display: none !important; }
 }
@@ -643,9 +712,10 @@ body.is-editor main {
     margin: auto 0 0;
     padding: 0;
     border: 0;
-    border-top: 3px solid var(--ramp-9);
+    border-radius: 20px 20px 0 0;
     background: var(--ramp-0);
     color: var(--ramp-9);
+    box-shadow: 0 -10px 40px rgba(26, 20, 22, 0.12);
 }
 
 .sheet[open] {
@@ -653,7 +723,7 @@ body.is-editor main {
 }
 
 .sheet::backdrop {
-    background: rgba(23, 23, 21, 0.5);
+    background: rgba(26, 20, 22, 0.45);
 }
 
 @media (min-width: 640px) {
@@ -661,8 +731,7 @@ body.is-editor main {
         margin: auto;
         max-width: 560px;
         max-height: 88vh;
-        border: 1px solid var(--ramp-3);
-        border-top: 3px solid var(--ramp-9);
+        border-radius: 20px;
     }
 }
 
@@ -682,14 +751,14 @@ body.is-editor main {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 8px 10px 20px;
+    padding: 14px 10px 12px 22px;
     border-bottom: 1px solid var(--ramp-3);
 }
 
 .sheet__body {
     display: grid;
     gap: 20px;
-    padding: 20px;
+    padding: 20px 22px;
     overflow-y: auto;
     overscroll-behavior: contain;
 }
@@ -698,7 +767,7 @@ body.is-editor main {
     display: flex;
     flex-direction: column;
     gap: 28px;
-    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    padding: 16px 22px calc(16px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--ramp-3);
 }
 
@@ -708,11 +777,9 @@ body.is-editor main {
 }
 
 .field__label {
-    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    font-family: Barlow, sans-serif;
     font-weight: 600;
-    font-size: 0.875rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 0.9375rem;
     color: var(--ramp-7);
 }
 
@@ -721,11 +788,12 @@ body.is-editor main {
     width: 100%;
     font: inherit;
     font-size: 1rem;
-    padding: 11px 12px;
+    padding: 11px 14px;
     border: 1px solid var(--ramp-4);
-    border-radius: 2px;
+    border-radius: 10px;
     background: var(--ramp-0);
     color: var(--ramp-9);
+    transition: border-color var(--feed) var(--ease), box-shadow var(--feed) var(--ease);
 }
 
 .field__input::placeholder {
@@ -734,8 +802,8 @@ body.is-editor main {
 
 .field__input:focus {
     border-color: var(--ramp-9);
-    outline: 2px solid var(--ramp-9);
-    outline-offset: 0;
+    outline: none;
+    box-shadow: 0 0 0 3px var(--blush);
 }
 
 .field__input--area {
@@ -770,8 +838,9 @@ body.is-editor main {
     flex-shrink: 0;
     display: grid;
     place-items: center;
-    background: var(--ramp-0);
+    background: var(--ramp-2);
     border: 1px solid var(--ramp-3);
+    border-radius: 12px;
     padding: 6px;
 }
 
@@ -788,7 +857,8 @@ body.is-editor main {
     align-self: start;
     justify-self: start;
     border: 1px solid var(--ramp-4);
-    border-radius: 2px;
+    border-radius: 999px;
+    overflow: hidden;
 }
 
 .stepper__btn {
@@ -810,6 +880,10 @@ body.is-editor main {
     color: var(--ramp-4);
     background: none;
     cursor: default;
+}
+
+.stepper__btn:focus-visible {
+    outline-offset: -3px;
 }
 
 .stepper__value {
@@ -835,11 +909,13 @@ body.is-editor main {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 10px 10px 10px 16px;
+    padding: 10px 10px 10px 18px;
+    border-radius: 14px;
     background: var(--ramp-9);
-    color: var(--ramp-0);
+    color: #fff;
     font-weight: 500;
     font-size: 0.9375rem;
+    box-shadow: 0 12px 30px -10px rgba(26, 20, 22, 0.4);
     animation: toast-in var(--feed) var(--ease);
 }
 
@@ -860,25 +936,23 @@ body.is-editor .toast {
 .toast__action {
     flex-shrink: 0;
     min-height: 40px;
-    padding: 0 12px;
-    border: 1px solid rgba(255, 255, 253, 0.45);
-    border-radius: 2px;
-    background: none;
-    color: var(--ramp-0);
-    font-family: 'Barlow Condensed', Barlow, sans-serif;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--blush);
+    color: var(--ramp-9);
+    font-family: Barlow, sans-serif;
     font-weight: 600;
     font-size: 0.9375rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
     cursor: pointer;
 }
 
 .toast__action:hover {
-    background: rgba(255, 255, 253, 0.12);
+    background: var(--blush-deep);
 }
 
 .toast :focus-visible {
-    outline-color: var(--ramp-0);
+    outline-color: #fff;
 }
 
 @keyframes toast-in {
@@ -891,9 +965,8 @@ body.is-editor .toast {
    ------------------------------------------------------------ */
 
 @media (prefers-reduced-motion: reduce) {
-    .is-punching .tag,
+    .bay.is-punching,
     .is-punching .tag__flag,
-    .bay.is-closing .tag,
     .bay.is-closing .tag__flag,
     .sheet[open],
     .toast,

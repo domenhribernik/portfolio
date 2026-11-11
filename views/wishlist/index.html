@@ -6,22 +6,23 @@
     <!-- Unlisted on purpose: shared by link with the owner's friends, never
          registered in project-data.js, the dashboard or the navbar. -->
     <meta name="robots" content="noindex, nofollow">
-    <title>Housewarming wish list</title>
+    <title>Iliana's house warming wishlist</title>
     <meta name="description" content="What the new home still needs. Tap I'll bring this on anything you're getting, so nobody doubles up.">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Housewarming wish list">
+    <meta property="og:title" content="Iliana's house warming wishlist">
     <meta property="og:description" content="What the new home still needs. Tap I'll bring this on anything you're getting, so nobody doubles up.">
     <meta name="twitter:card" content="summary">
-    <meta name="theme-color" content="#171715">
+    <meta name="theme-color" content="#ffc2cc">
     <link rel="icon" type="image/x-icon" href="../../assets/favicon.ico">
 
     <!-- base-style.css is deliberately NOT linked: it paints body with a navy
-         gradient that would sit over the shelf ground. -->
+         gradient that would sit over the blush ground. -->
     <link rel="stylesheet" href="../../assets/fonts/fonts.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-    // Shelf-edge signage: one fixed neutral ramp, ink, and tag yellow, which
-    // only ever means "spoken for". Nothing off-ramp.
+    // Blush: a near-white pink ground, white cards, ink text, a fuller blush
+    // for the header and every button, and one deep rose that only ever means
+    // "spoken for". Mirrored as custom properties in style.css.
     tailwind.config = {
         theme: {
             extend: {
@@ -31,16 +32,17 @@
                 },
                 colors: {
                     ramp: {
-                        0: '#fffffd',
-                        1: '#f6f6f2',
-                        2: '#eaeae4',
-                        3: '#d9d9d1',
-                        4: '#bdbdb4',
-                        6: '#64645c',
-                        7: '#4b4b45',
-                        9: '#171715',
+                        0: '#ffffff',
+                        1: '#fdf7f8',
+                        2: '#fdf1f3',
+                        3: '#f3dde2',
+                        4: '#e3bcc5',
+                        6: '#6f5f64',
+                        7: '#4a3d41',
+                        9: '#1a1416',
                     },
-                    flag: '#ffd200',
+                    blush: { DEFAULT: '#ffc2cc', deep: '#ffb3c1' },
+                    rose: '#b23a57',
                     danger: '#b3261e',
                 },
             },
@@ -51,12 +53,12 @@
 </head>
 <body class="font-sans text-ramp-9 antialiased">
 
-    <!-- ============ The aisle sign ============ -->
+    <!-- ============ The pink band ============ -->
     <header class="aisle">
-        <div class="mx-auto max-w-[1120px] px-4 sm:px-6 pt-8 pb-7 sm:pt-12 sm:pb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+        <div class="mx-auto max-w-[1120px] px-4 sm:px-6 pt-9 pb-20 sm:pt-14 sm:pb-24 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
             <div class="min-w-0">
-                <h1 class="aisle__title font-cond font-semibold uppercase text-ramp-0">Housewarming wish list</h1>
-                <p class="aisle__line mt-4 text-ramp-0/85 max-w-[52ch]"><span id="tally" class="text-ramp-0 font-medium tabular-nums" aria-live="polite"></span> Tap I'll bring this on anything you're getting, so nobody doubles up.</p>
+                <h1 class="aisle__title font-cond font-semibold text-ramp-9">Iliana's house warming wishlist</h1>
+                <p class="aisle__line mt-3 text-ramp-7 max-w-[52ch]"><span id="tally" class="text-ramp-9 font-semibold tabular-nums" aria-live="polite"></span> Tap I'll bring this on anything you're getting, so nobody doubles up.</p>
             </div>
             <button id="add-top" type="button" class="key key--light add-top hidden shrink-0" data-editor>
                 <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
@@ -67,21 +69,34 @@
 
     <main class="mx-auto max-w-[1120px] px-4 sm:px-6 pb-16">
 
-        <!-- Loading: three empty bays -->
-        <ul id="loading" class="shelf mt-10" aria-hidden="true">
+        <!-- Iliana's note, tucked into the bottom of the band. Static, so it
+             reads the same while the list is loading or failing. -->
+        <section class="welcome" aria-labelledby="welcome-heading">
+            <h2 id="welcome-heading" class="welcome__lead">Heyyy everybody, I'm moving&nbsp;- how exciting&nbsp;🥳</h2>
+            <div class="welcome__body">
+                <p>Therefore, I have curated this list of what I think I need in my flat. Please note, that everything is just an inspiration, I don't need the exact item on the exact link. You are free to look for any discounts or cheaper websites. Just make sure it's high quality, and will last me a while.</p>
+                <p>If you decide to get something, please click <span class="welcome__pill">I'll bring this</span>(it's anonymous), so it goes off the list, and no one else will bring it by accident. I'm also more than happy to take hand-me-downs, if you have anything around, that you don't need.</p>
+                <p>Moreover, I want to add to please respect the comments made on the items, e.g. no teflon ;). Lastly, I'm also welcoming any gifts that are not written in this list, I'm a rookie, I don't know what I need. Thank you all so much, I appreciate you <3</p>
+                <p>If you have any concerns, about the address, you can reach out to me or Dommy.</p>
+            </div>
+            <p class="welcome__sign">Mwaaah, Iliana <3</p>
+        </section>
+
+        <!-- Loading: three empty cards -->
+        <ul id="loading" class="shelf mt-12" aria-hidden="true">
             <li class="bay bay--ghost"><div class="bay__product"><div class="bay__photo"></div></div><div class="rail"><div class="tag"><div class="ghost-line w-2/3"></div><div class="ghost-line w-full mt-3"></div><div class="ghost-line w-4/5 mt-2"></div></div></div></li>
             <li class="bay bay--ghost"><div class="bay__product"><div class="bay__photo"></div></div><div class="rail"><div class="tag"><div class="ghost-line w-1/2"></div><div class="ghost-line w-full mt-3"></div><div class="ghost-line w-3/5 mt-2"></div></div></div></li>
             <li class="bay bay--ghost"><div class="bay__product"><div class="bay__photo"></div></div><div class="rail"><div class="tag"><div class="ghost-line w-3/5"></div><div class="ghost-line w-full mt-3"></div><div class="ghost-line w-2/3 mt-2"></div></div></div></li>
         </ul>
 
         <div id="error" class="notice hidden" role="alert">
-            <p class="font-cond font-semibold uppercase text-xl">The list didn't load</p>
+            <p class="font-cond font-semibold text-2xl">The list didn't load</p>
             <p class="mt-1 text-ramp-7">Check your connection, then try again.</p>
             <button id="retry" type="button" class="key mt-4">Try again</button>
         </div>
 
         <div id="empty" class="notice hidden">
-            <p class="font-cond font-semibold uppercase text-xl">Nothing on the list yet</p>
+            <p class="font-cond font-semibold text-2xl">Nothing on the list yet</p>
             <p class="mt-1 text-ramp-7" data-guest-only>Check back soon.</p>
             <div class="hidden" data-editor>
                 <p class="mt-1 text-ramp-7">Start from the Amazon registry, or add the first item yourself.</p>
@@ -95,16 +110,16 @@
 
         <section id="needed-section" class="hidden" aria-labelledby="needed-heading">
             <h2 id="needed-heading" class="sr-only">Still needed</h2>
-            <ul id="needed" class="shelf mt-10"></ul>
+            <ul id="needed" class="shelf mt-12"></ul>
             <p id="all-done" class="notice hidden">
-                <span class="font-cond font-semibold uppercase text-xl block">Everything's taken</span>
+                <span class="font-cond font-semibold text-2xl block">Everything's taken</span>
                 <span class="mt-1 block text-ramp-7">Thank you, all of you.</span>
             </p>
         </section>
 
         <section id="taken-section" class="hidden mt-16" aria-labelledby="taken-heading">
             <h2 id="taken-heading" class="shelf-head">
-                <span class="font-cond font-semibold uppercase tracking-[0.02em]">Already taken</span>
+                <span class="font-cond font-semibold">Already taken</span>
                 <span id="taken-count" class="tabular-nums text-ramp-6"></span>
             </h2>
             <ul id="taken" class="shelf shelf--compact mt-4"></ul>
@@ -134,7 +149,7 @@
     <dialog id="sheet" class="sheet" aria-labelledby="sheet-title">
         <form id="sheet-form" method="dialog" novalidate>
             <div class="sheet__head">
-                <h2 id="sheet-title" class="font-cond font-semibold uppercase text-2xl">Add item</h2>
+                <h2 id="sheet-title" class="font-cond font-semibold text-[1.75rem] leading-none">Add item</h2>
                 <button type="button" class="icon-btn" data-close aria-label="Close">
                     <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
                 </button>
@@ -235,6 +250,7 @@
             <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4"/></symbol>
             <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4V8Z"/><circle cx="12" cy="13.25" r="3.25"/></symbol>
             <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="m4 16 4.5-4.5L13 16l2.5-2.5L20 18"/><circle cx="15.5" cy="9" r="1.5"/></symbol>
+            <symbol id="i-heart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.9 4 7.4 4c2 0 3.6 1.1 4.6 2.7C13 5.1 14.6 4 16.6 4c3.5 0 5.8 3.6 4.6 7.1-1.7 4.8-9.2 9.4-9.2 9.4Z"/></symbol>
             <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><path d="M5 7h14M10 7V4.5h4V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></symbol>
         </defs>
     </svg>

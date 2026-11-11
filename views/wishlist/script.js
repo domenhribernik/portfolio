@@ -201,10 +201,9 @@ function inlineField(tagName, cls, item, field) {
 }
 
 /**
- * One gift on its shelf: the product square, the rail, and the tag clipped
- * into it. The taken run uses the same bay, smaller and without the note, so
- * a claimed tag stays punched and flagged on every visit, not just the one
- * that claimed it.
+ * One gift as one card: the photo well, then the tag with name, note and key.
+ * The taken run uses the same card as a short row without the note, so a
+ * claimed gift stays flagged on every visit, not just the one that claimed it.
  */
 function bay(item, st, compact = false) {
     const shown = displayState(st);
@@ -245,8 +244,7 @@ function bay(item, st, compact = false) {
     }
     if (links.childElementCount || action) tag.append(el('div', { class: 'tag__foot' }, links, action));
 
-    // The flag hangs from the rail, not the tag: the tag is masked to cut the
-    // punch hole, and the mask would clip anything sticking out of it.
+    // The flag is pinned to the card's corner, over the photo well.
     const flag = shown === 'open' ? null : el('span', { class: 'tag__flag' }, shown === 'mine' ? 'Yours' : 'Taken');
 
     return el('li', { class: `bay${compact ? ' bay--compact' : ''}`, 'data-id': item.id, 'data-state': shown },
