@@ -93,6 +93,7 @@ function constant_(string $name): int
 $SALVAGE_CAP = constant_('SALVAGE_CAP');
 $SALVAGE_HIT_TAKEN = constant_('SALVAGE_HIT_TAKEN');
 $SALVAGE_SINK_BOUNTY = constant_('SALVAGE_SINK_BOUNTY');
+$SALVAGE_BEHIND_BONUS = constant_('SALVAGE_BEHIND_BONUS');
 $COST_SONAR = constant_('COST_SONAR');
 $COST_DECOY = constant_('COST_DECOY');
 $COST_DEPTH_CHARGE = constant_('COST_DEPTH_CHARGE');
@@ -459,14 +460,18 @@ check('A HIT IS PLOTTED AND PAYS THE GUNNER NOTHING', $hit['enemy']['grid'][cell
     && $hit['you']['salvage'] === 0, "gunner has {$hit['you']['salvage']}");
 check('THE STRUCK FLEET IS PAID FOR THE SHELL',
     $hit['enemy']['salvage'] === $SALVAGE_HIT_TAKEN, "struck fleet has {$hit['enemy']['salvage']}");
+check('AN AIMED HIT KEEPS THE TURN', (int) $hit['room']['turn'] === $mover,
+    "turn went to {$hit['room']['turn']}");
+check('THE OTHER SEAT CANNOT FIRE INTO A CHAIN',
+    act($m, $mover === 1 ? 2 : 1, ['kind' => 'fire', 'at' => cell('J1')])['body']['reason'] === 'notYourTurn');
 
-// Sink the destroyer, one seat firing on both turns via the other passing.
+// Sink the destroyer in one chain: a hit buys the next shell.
 $m = battle();
 $mover = turnOf($m);
 $other = $mover === 1 ? 2 : 1;
 act($m, $mover, ['kind' => 'fire', 'at' => cell('A9')]);
-act($m, $other, ['kind' => 'fire', 'at' => cell('J1')]);
-act($m, $mover, ['kind' => 'fire', 'at' => cell('B9')]);
+check('THE SECOND SHELL OF A CHAIN IS ACCEPTED',
+    act($m, $mover, ['kind' => 'fire', 'at' => cell('B9')])['status'] === 200);
 $sunk = poll($m, $mover)['body'];
 check('THE LAST CELL OF A HULL SINKS IT', in_array('destroyer', $sunk['enemy']['sunk'], true));
 check('A WRECK IS RESTRUCK ACROSS ITS WHOLE HULL',
@@ -478,6 +483,9 @@ check('THE WRECK PAYS ITS OWNER NOTHING BEYOND THE SHELLS',
     $sunk['enemy']['salvage'] === 2 * $SALVAGE_HIT_TAKEN, "owner has {$sunk['enemy']['salvage']}");
 $types = array_column(poll($m, $mover, 0)['body']['events'], 'type');
 check('A SINKING IS ANNOUNCED TO THE ROOM', in_array('sunk', $types, true));
+check('A SINKING KEEPS THE TURN TOO', (int) $sunk['room']['turn'] === $mover);
+act($m, $mover, ['kind' => 'fire', 'at' => cell('J10')]);
+check('A MISS ENDS THE CHAIN', (int) poll($m, $mover)['body']['room']['turn'] === $other);
 
 // ------------------------------------------------------------------
 //  5. The unlock ladder
@@ -557,19 +565,38 @@ act($m, $mover, ['kind' => 'depthCharge', 'at' => cell('B1')]);
 $blast = poll($m, $mover)['body'];
 check('A CHARGE STRIKES ITS WHOLE BLOCK',
     substr_count($blast['enemy']['grid'], 'x') + substr_count($blast['enemy']['grid'], 's') >= 3);
-check('A CHARGE DOES NOT SURVEY THE WATER IT CHURNS',
-    $blast['enemy']['grid'][cell('A2')] === '.' && $blast['enemy']['grid'][cell('B2')] === '.',
-    'row 2 was plotted for free');
+// The charge is held only by a fleet two hulls down, and it is the comeback:
+// it plots the water it churns. The barrage still does not.
+check('A CHARGE SURVEYS THE WATER IT CHURNS',
+    $blast['enemy']['grid'][cell('A2')] === 'o' && $blast['enemy']['grid'][cell('B2')] === 'o',
+    'row 2 reads ' . substr($blast['enemy']['grid'], 10, 3));
 check('AREA FIRE PAYS THE GUNNER NOTHING',
     $blast['you']['salvage'] === $bank - $COST_DEPTH_CHARGE,
     "bank went $bank -> {$blast['you']['salvage']}");
 check('THE FLEET IT LANDED ON IS STILL PAID', $blast['enemy']['salvage'] > 0);
+check('AREA FIRE ENDS THE TURN EVEN WHEN IT HITS', (int) $blast['room']['turn'] !== $mover,
+    'a charge bought another action');
 
 $m = battle();
 $mover = turnOf($m);
 arm($pdo, $m, $mover, $SALVAGE_CAP, 1);
 check('A BARRAGE MAY NOT WRAP ONTO THE NEXT ROW',
     act($m, $mover, ['kind' => 'barrage', 'at' => cell('I4'), 'dir' => 'h'])['body']['reason'] === 'offPlot');
+act($m, $mover, ['kind' => 'barrage', 'at' => cell('A2'), 'dir' => 'h']);
+check('A BARRAGE DOES NOT SURVEY THE WATER IT CHURNS',
+    substr(poll($m, $mover)['body']['enemy']['grid'], 10, 3) === '...', 'row 2 was plotted for free');
+
+// The rubber band on the bank: a fleet with more of its own hulls on the
+// bottom is paid extra for every shell it takes.
+$m = battle();
+$mover = turnOf($m);
+$other = $mover === 1 ? 2 : 1;
+act($m, $mover, ['kind' => 'fire', 'at' => cell('J10')]);   // a miss hands the turn over
+arm($pdo, $m, $mover, 0, 2);                                 // carrier and battleship on the bottom
+act($m, $other, ['kind' => 'fire', 'at' => cell('A5')]);    // the live cruiser
+check('A FLEET THAT IS BEHIND IS PAID A BONUS FOR THE SHELL',
+    poll($m, $mover)['body']['you']['salvage'] === $SALVAGE_HIT_TAKEN + $SALVAGE_BEHIND_BONUS,
+    'paid ' . poll($m, $mover)['body']['you']['salvage']);
 
 // ------------------------------------------------------------------
 //  8. Buoys and repositioning
@@ -601,9 +628,14 @@ check('A BUOY PAYS ITS OWNER LIKE A HULL, SO THE PUBLIC TOTE DOES NOT GIVE IT AW
 check('THE EVENT LOG CALLS A BUOY A HIT',
     !preg_match('/"result"\s*:\s*"decoy"/', poll($m, $other, 0)['raw']), 'a buoy was named in the log');
 check('A BUOY IS NOT A HULL AND CANNOT SINK', $popped['enemy']['sunk'] === []);
+// If the turn passed here, the shooter would know at once it was no hull.
+check('A POPPED BUOY KEEPS THE TURN, EXACTLY LIKE A HIT', (int) $popped['room']['turn'] === $other,
+    "turn went to {$popped['room']['turn']}");
 
+act($m, $other, ['kind' => 'fire', 'at' => cell('J10')]);   // a miss hands it back
 arm($pdo, $m, $mover, $SALVAGE_CAP, 0);
-act($m, $mover, ['kind' => 'fire', 'at' => cell('J10')]);
+check('ITS OWNER MOVES AGAIN AFTER THE CHAIN ENDS',
+    act($m, $mover, ['kind' => 'fire', 'at' => cell('J10')])['status'] === 200);
 check('A BUOY NEVER OWNS UP, EVEN AFTER ITS OWNER HAS MOVED',
     poll($m, $other)['body']['enemy']['grid'][cell('A2')] === 'x');
 check('ITS OWNER SEES THE BUOY WAS FOUND',

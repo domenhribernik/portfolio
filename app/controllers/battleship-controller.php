@@ -70,7 +70,15 @@ const EMPTY_GRID = '............................................................
 const SALVAGE_CAP = 10;
 const SALVAGE_HIT_TAKEN = 1;
 const SALVAGE_SINK_BOUNTY = 2;
+// While a fleet has lost more hulls than the other, each shell on it pays its
+// owner this much on top. Wreck counts are public, so the tote stays readable.
+const SALVAGE_BEHIND_BONUS = 1;
 const DECOY_MAX = 2;
+
+// The actions whose hit (or popped buoy) keeps the turn. Only aimed fire: a
+// tool always spends the turn. A buoy must chain exactly like a hull, or the
+// turn passing would confess it. The reasoning is in views/battleship/logic.js.
+const CHAIN_KINDS = 'fire';
 
 const COST_SONAR = 2;
 const COST_DECOY = 3;
@@ -500,16 +508,18 @@ function applyAction(array &$sides, int $seat, array $action): array
     $theirs = &$sides[$foeSeat];
     $kind = (string) $action['kind'];
 
-    // Only aimed fire plots the water it misses. Area fire damages what it
-    // touches and leaves the rest of the search still to do.
-    $surveys = $kind !== 'barrage' && $kind !== 'depthCharge';
+    // Aimed fire and the charge plot the water they miss. The barrage damages
+    // what it touches and leaves the rest of the search still to do.
+    $surveys = $kind !== 'barrage';
+    // Judged before anything lands, so one action pays at one rate.
+    $behind = count(sunkShips($theirs)) > count(sunkShips($mine));
 
     $report = ['kind' => $kind, 'cells' => [], 'sunk' => [], 'moved' => false, 'swept' => null];
     $intel = null;
     $gainMine = 0;
     $gainTheirs = 0;
 
-    $resolve = function (array $cells) use (&$theirs, &$mine, &$report, &$gainMine, &$gainTheirs, $surveys): void {
+    $resolve = function (array $cells) use (&$theirs, &$mine, &$report, &$gainMine, &$gainTheirs, $surveys, $behind): void {
         foreach ($cells as $cell) {
             $result = strike($theirs, $cell, $surveys);
             if ($result === null) {
@@ -523,7 +533,7 @@ function applyAction(array &$sides, int $seat, array $action): array
             $mine['hits']++;
             // A decoy pays its owner exactly like a hull. If it did not, the
             // public tote board would give the bluff away on the next glance.
-            $gainTheirs += SALVAGE_HIT_TAKEN;
+            $gainTheirs += SALVAGE_HIT_TAKEN + ($behind ? SALVAGE_BEHIND_BONUS : 0);
             if ($result === 'sunk') {
                 $hull = shipAt($theirs, $cell);
                 $gainMine += SALVAGE_SINK_BOUNTY;
@@ -583,7 +593,21 @@ function applyAction(array &$sides, int $seat, array $action): array
     $mine['salvage'] = max(0, min(SALVAGE_CAP, $mine['salvage'] - $cost + $gainMine));
     $theirs['salvage'] = max(0, min(SALVAGE_CAP, $theirs['salvage'] + $gainTheirs));
 
-    return ['report' => $report, 'intel' => $intel];
+    return ['report' => $report, 'intel' => $intel, 'again' => chains($kind, $report['cells'])];
+}
+
+/** Whether an action of this kind, landing these results, keeps the turn. */
+function chains(string $kind, array $cells): bool
+{
+    if (!in_array($kind, explode(',', CHAIN_KINDS), true)) {
+        return false;
+    }
+    foreach ($cells as $c) {
+        if (in_array($c['result'], ['hit', 'sunk', 'decoy'], true)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // ------------------------------------------------------------------
@@ -1047,8 +1071,9 @@ function postAction(array $body): void
             logEvent($db, (int) $room['id'], null, 'verdict', ['outcome' => $outcome, 'seat' => $seat]);
             writeRecords($db, $room, $byId, $sides, $seat);
         } else {
+            // A hit with aimed fire keeps the turn. See CHAIN_KINDS.
             $db->prepare('UPDATE battleship_rooms SET turn = ?, turns = turns + 1 WHERE id = ?')
-               ->execute([$foeSeat, $room['id']]);
+               ->execute([$out['again'] ? $seat : $foeSeat, $room['id']]);
         }
         touchRoom($db, (int) $room['id']);
         $db->commit();

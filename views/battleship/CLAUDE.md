@@ -34,18 +34,30 @@ reach the public event log if the public log has nowhere to put it.
 ## The design, and why it is what it is
 
 The complaint this variant answers is that classic battleship is mostly luck and
-that whoever finds a hull first runs away with it. Three rules do the work, and
+that whoever finds a hull first runs away with it. These rules do the work, and
 each of them replaced something that measurably did not:
 
-- **No "a hit buys another shot".** That variant is the snowball itself. Accuracy
-  is paid in salvage instead of in free turns.
-- **Area fire neither refuels nor surveys.** A barrage or a charge pays the fleet
-  it lands on and pays the gunner nothing, and the water it churns is *not*
-  plotted as missed. The second half is the load-bearing one: the bottleneck in
-  battleship is the search, not the damage, so a weapon that cleared nine cells
-  of the search for one turn was a pure rate multiplier. Before this,
-  `tests/battleship-balance.test.mjs` had a depth-charge policy taking 83% of its
-  games against a plain gunner.
+- **An aimed hit buys another shot; a tool never does.** `CHAIN_KINDS` in
+  `logic.js`. Strict alternation used to decide two players who found their
+  last hull on the same turn by hull length: a destroyer left beat a
+  battleship left. With the chain, a found hull costs one turn to finish and the
+  race is the search. Area fire does not chain (a charge touching two hulls and
+  going again is the snowball). **A popped buoy must chain exactly like a hit**,
+  or the turn passing would confess it. Under the chain a turn spent on a tool
+  costs more, which is what forced the two changes below.
+- **Area fire never refuels the gunner, and only the charge surveys.** Both pay
+  the fleet they land on and pay the gunner nothing. The barrage's churned water
+  is *not* plotted as missed: the bottleneck is the search, so a weapon that
+  cleared cells for free is a rate multiplier. The charge used to work the same
+  way (a surveying charge once took 83% of its games), but it is gated on two of
+  your own wrecks, and once hits chained a non-surveying charge left the
+  toolbox breaking even against plain fire (47%). Surveying, at 8, it is the
+  comeback; it sits on the suite's 72% ceiling by design.
+- **A fleet that is behind is paid more for being hit.** `SALVAGE_BEHIND_BONUS`:
+  while you have lost more hulls than the other side, each shell on you pays one
+  extra. Wreck counts are public, so the tote stays readable and a buoy still
+  pays like a hull. On its own it did little; with the surveying charge it is
+  what gets a losing fleet to the charge in time.
 - **The heavy tools are gated on YOUR OWN wrecks, not bought with a lead.**
   `UNLOCK` in `logic.js`. This is the main comeback engine: paying the losing
   side more currency on its own turned out to be worthless, because both sides
@@ -90,7 +102,13 @@ equal bots. Both simulated players are the same near optimal density hunter, so
 an early lead between them is mostly a fact about where the fleets landed, and
 no rule set shows a snowball under that microscope. The comeback claim is
 measured by handicapping a fleet outright (`playOut({ handicap: [0, 2] })`) and
-asking whether the toolbox lets it fight: 12.7% against 8.0% without.
+asking whether the toolbox lets it fight: 25% against 12% without (the chain
+alone already lifted it from 8%; before the chain it was 12.7% against 8.0%).
+
+`autoPlace()` lays fleets with no two hulls touching (diagonals included),
+scored for spread and mixed headings, so the simulated fleets are the good
+fleets a player gets from LAY THEM FOR ME. Every number above is measured on
+those; changing the placer moves them.
 
 ## The turn, and why it is two taps
 
@@ -98,7 +116,7 @@ A tap on a plot **aims**. The shot leaves on the order button under the rail,
 which reads the move back (`FIRE AT E5`, `DROP A CHARGE ON E5`) with its price.
 Three reasons, and all three were bugs before:
 
-- A charge costs eight salvage and a turn. A brushed thumb must not spend it.
+- A charge costs six salvage and a turn. A brushed thumb must not spend it.
 - A cell with a `:hover` rule eats the first tap on iOS and fires on the
   second, which is where "it needs a double tap" came from. The hover preview
   is now behind `@media (hover: hover)` and a `finePointer()` check, and every

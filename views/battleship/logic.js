@@ -88,30 +88,113 @@ export function placementError(fleet) {
     return null;
 }
 
-/** A random legal fleet. rng is injectable so tests and the bot are seedable. */
-export function autoPlace(rng = Math.random) {
-    for (let attempt = 0; attempt < 200; attempt++) {
-        const laid = [];
-        const taken = new Set();
-        let stuck = false;
-        for (const { key, len } of FLEET) {
-            let placed = null;
-            for (let tries = 0; tries < 200 && !placed; tries++) {
-                const dir = rng() < 0.5 ? 'h' : 'v';
-                const row = Math.floor(rng() * (dir === 'v' ? SIZE - len + 1 : SIZE));
-                const col = Math.floor(rng() * (dir === 'h' ? SIZE - len + 1 : SIZE));
-                const candidate = { key, at: row * SIZE + col, dir };
-                const cells = shipCells(candidate);
-                if (cells.some((c) => taken.has(c))) continue;
-                placed = candidate;
-                for (const c of cells) taken.add(c);
+// ------------------------------------------------------------------
+//  Laying a fleet for the player
+// ------------------------------------------------------------------
+
+// A purely random legal fleet is a bad fleet. Measured over 5000 of them,
+// 80% put two hulls side by side (find one, find both) and 42% laid four or
+// five the same way, which is why "lay them for me" used to need several
+// presses. So a fleet is drawn with no two hulls touching, diagonals
+// included, then a few dozen of those are scored for spread and the pick is
+// made at random among the best handful, so a second press still shuffles.
+
+const AUTO_CANDIDATES = 40;
+const AUTO_SHORTLIST = 5;
+
+/** The cells around `cells`: the eight neighbours, or only four when `diag` is off. */
+function halo(cells, diag) {
+    const out = new Set();
+    for (const c of cells) {
+        const row = Math.floor(c / SIZE);
+        const col = c % SIZE;
+        for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+                if (!diag && dr !== 0 && dc !== 0) continue;
+                const r = row + dr;
+                const k = col + dc;
+                if (r >= 0 && r < SIZE && k >= 0 && k < SIZE) out.add(r * SIZE + k);
             }
-            if (!placed) { stuck = true; break; }
-            laid.push(placed);
         }
-        if (!stuck) return laid;
     }
-    // Unreachable with a sane rng, but a caller must never receive a half fleet.
+    return out;
+}
+
+/**
+ * One random fleet in which no hull touches another, or null if this draw
+ * painted itself into a corner. `gap` is 2 for no contact at all, 1 to allow
+ * diagonal contact, 0 for any legal fleet.
+ */
+function drawFleet(rng, gap) {
+    const laid = [];
+    const blocked = new Set();
+    for (const { key, len } of FLEET) {
+        let placed = null;
+        for (let tries = 0; tries < 200 && !placed; tries++) {
+            const dir = rng() < 0.5 ? 'h' : 'v';
+            const row = Math.floor(rng() * (dir === 'v' ? SIZE - len + 1 : SIZE));
+            const col = Math.floor(rng() * (dir === 'h' ? SIZE - len + 1 : SIZE));
+            const candidate = { key, at: row * SIZE + col, dir };
+            const cells = shipCells(candidate);
+            if (cells.some((c) => blocked.has(c))) continue;
+            placed = candidate;
+            const around = gap > 0 ? halo(cells, gap > 1) : new Set(cells);
+            for (const c of around) blocked.add(c);
+        }
+        if (!placed) return null;
+        laid.push(placed);
+    }
+    return laid;
+}
+
+/** Higher is better: hulls spread across the plot, mixed headings, not all on the rim. */
+export function fleetScore(fleet) {
+    const centres = fleet.map((s) => {
+        const cells = shipCells(s);
+        const rows = cells.map((c) => Math.floor(c / SIZE));
+        const cols = cells.map((c) => c % SIZE);
+        return {
+            r: rows.reduce((a, b) => a + b, 0) / cells.length,
+            c: cols.reduce((a, b) => a + b, 0) / cells.length,
+            rim: rows.every((r) => r === 0 || r === SIZE - 1) || cols.every((c) => c === 0 || c === SIZE - 1),
+        };
+    });
+
+    // The closest two hulls decide how much one find gives away about another.
+    let closest = Infinity;
+    for (let i = 0; i < centres.length; i++) {
+        for (let j = i + 1; j < centres.length; j++) {
+            closest = Math.min(closest, Math.hypot(centres[i].r - centres[j].r, centres[i].c - centres[j].c));
+        }
+    }
+    const half = (SIZE - 1) / 2;
+    const quadrants = new Set(centres.map(({ r, c }) => (r < half ? 0 : 2) + (c < half ? 0 : 1))).size;
+    const across = fleet.filter((s) => s.dir === 'h').length;
+    const lopsided = Math.max(across, fleet.length - across);
+    const rim = centres.filter((x) => x.rim).length;
+
+    return closest
+        + quadrants
+        - (lopsided >= 5 ? 6 : lopsided === 4 ? 2 : 0)
+        - Math.max(0, rim - 1) * 3;
+}
+
+/** A good legal fleet. rng is injectable so tests and the bot are seedable. */
+export function autoPlace(rng = Math.random) {
+    // Fall back from no contact to no side contact to merely legal, so a caller
+    // can never be handed a half fleet. With a sane rng the first rung always
+    // fills: seventeen hull cells and their halo fit a ten by ten easily.
+    for (const gap of [2, 1, 0]) {
+        const pool = [];
+        for (let i = 0; i < AUTO_CANDIDATES * 3 && pool.length < AUTO_CANDIDATES; i++) {
+            const fleet = drawFleet(rng, gap);
+            if (fleet) pool.push({ fleet, score: fleetScore(fleet) });
+        }
+        if (pool.length === 0) continue;
+        pool.sort((a, b) => b.score - a.score);
+        const best = pool.slice(0, AUTO_SHORTLIST);
+        return best[Math.floor(rng() * best.length)].fleet;
+    }
     throw new Error('autoPlace could not lay a fleet');
 }
 
@@ -139,13 +222,38 @@ export const SALVAGE_CAP = 10;
 export const SALVAGE_HIT_TAKEN = 1;
 export const SALVAGE_SINK_BOUNTY = 2;
 
-// Area fire does not survey. A blast damages what it touches, but the water
-// it churns is NOT plotted as missed, and those cells can be fired at again.
+// The rubber band on the bank. While a fleet has lost MORE hulls than the
+// other one, every shell that lands on it pays its owner this much on top.
+// Both wreck counts are public, so the tote board stays readable and a buoy
+// still pays exactly like a hull. Measured with the surveying charge below:
+// a fleet two hulls down wins 26% of the balance suite instead of 21%.
+export const SALVAGE_BEHIND_BONUS = 1;
+
+// The barrage does not survey. It damages what it touches, but the water it
+// churns is NOT plotted as missed, and those cells can be fired at again.
 // The bottleneck in battleship is the search, not the damage, so a weapon
-// that cleared nine cells of the search for one turn was simply a rate
-// multiplier. The balance suite had a depth charge policy taking 83% of its
-// games against a plain gunner before this.
-export const AREA_KINDS = ['barrage', 'depthCharge'];
+// that clears cells of the search for one turn is a rate multiplier.
+//
+// The depth charge DOES survey, and that is deliberate. It used to churn
+// without plotting too, back when a charge policy took 83% of its games, but
+// it is now only ever held by a fleet with two of its own hulls on the
+// bottom. Once an aimed hit bought another shot, a charge that cleared
+// nothing was too weak to pull that fleet back: the toolbox broke even
+// against plain fire. A charge that plots its nine cells is the comeback.
+export const AREA_KINDS = ['barrage'];
+
+// The actions whose hit buys the gunner another action. Only aimed fire.
+//
+// Without this, two players who found their last hull on the same turn were
+// decided by hull length: whoever had a destroyer left beat whoever had a
+// battleship left. With it, a found hull is a sunk hull and the race is the
+// search. Area fire does not chain, because a tool spends the turn, and a
+// charge that touched two hulls and then went again would be the snowball.
+//
+// A popped buoy chains exactly like a hit. It has to: a buoy that ended the
+// turn would confess on the spot, which is the one thing it must never do.
+// MIRRORED in battleship-controller.php.
+export const CHAIN_KINDS = ['fire'];
 
 const cap = (n) => Math.min(SALVAGE_CAP, Math.max(0, n));
 
@@ -163,6 +271,8 @@ export const COST = {
     // the game, and at 4 the toolbox lost to plain fire in the balance suite.
     barrage: 3,
     reposition: 3,
+    // Surveys its block (see AREA_KINDS), which is why it is the dearest.
+    // At 7 it ran past the band against plain fire; 9 and 10 bought nothing.
     depthCharge: 8,
 };
 
@@ -258,9 +368,8 @@ export function abilityError(match, seat, action) {
 
             const moved = { key: action.ship, at: action.at, dir: action.dir };
             const rest = mine.fleet.filter((s) => s.key !== action.ship);
-            if (placementError([moved, ...rest]) !== null) {
-                return placementError([moved, ...rest]) === 'overlap' ? 'overlap' : 'offPlot';
-            }
+            const err = placementError([moved, ...rest]);
+            if (err !== null) return err === 'overlap' ? 'overlap' : 'offPlot';
             // The berth must be virgin water: a plotted miss must never quietly
             // stop being true under the enemy who plotted it.
             if (shipCells(moved).some((c) => mine.grid[c] !== '.')) return 'searched';
@@ -374,6 +483,12 @@ function strike(side, cell, survey) {
     return 'hit';
 }
 
+/** Whether an action of this kind, landing these results, keeps the turn. See CHAIN_KINDS. */
+export function chains(kind, cells) {
+    return CHAIN_KINDS.includes(kind)
+        && (cells ?? []).some((c) => c.result === 'hit' || c.result === 'sunk' || c.result === 'decoy');
+}
+
 /**
  * Why `seat` may not take this action, or null. Reason codes are refuse.* keys,
  * and the controller sends the same ones, so the client can translate either.
@@ -402,12 +517,14 @@ export function applyAction(match, seat, action) {
     const mine = { ...match.sides[seat] };
     const theirs = { ...match.sides[foe] };
 
-    const report = { cells: [], sunk: [], intel: null, swept: null, moved: false, kind: action.kind };
+    const report = { cells: [], sunk: [], intel: null, swept: null, moved: false, again: false, kind: action.kind };
     let gainMine = 0;
     let gainTheirs = 0;
 
-    // Only aimed fire plots the water it misses. See AREA_KINDS.
+    // Only aimed fire and the charge plot the water they miss. See AREA_KINDS.
     const surveys = !AREA_KINDS.includes(action.kind);
+    // Judged before anything lands, so one action pays at one rate.
+    const behind = sunkShips(theirs).length > sunkShips(mine).length;
 
     const resolve = (cells) => {
         for (const cell of cells) {
@@ -419,7 +536,7 @@ export function applyAction(match, seat, action) {
             mine.hits++;
             // A decoy pays its owner exactly like a hull. If it did not, the
             // public tote board would give the bluff away on the next glance.
-            gainTheirs += SALVAGE_HIT_TAKEN;
+            gainTheirs += SALVAGE_HIT_TAKEN + (behind ? SALVAGE_BEHIND_BONUS : 0);
             if (result === 'sunk') {
                 const hull = shipAt(theirs, cell);
                 gainMine += SALVAGE_SINK_BOUNTY;
@@ -471,11 +588,12 @@ export function applyAction(match, seat, action) {
     theirs.salvage = cap(theirs.salvage + gainTheirs);
 
     const down = sunkShips(theirs).length === FLEET.length;
+    report.again = !down && chains(action.kind, report.cells);
     return {
         match: {
             ...match,
             sides: { [seat]: mine, [foe]: theirs },
-            turn: down ? match.turn : foe,
+            turn: down || report.again ? match.turn : foe,
             turns: match.turns + 1,
             status: down ? 'over' : match.status,
             outcome: down ? (seat === 1 ? 'p1' : 'p2') : match.outcome,

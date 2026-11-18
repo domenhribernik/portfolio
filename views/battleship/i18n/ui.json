@@ -151,6 +151,14 @@
     "en": "YOUR MOVE",
     "sl": "TI SI NA VRSTI"
   },
+  "battle.again": {
+    "en": "HIT · FIRE AGAIN",
+    "sl": "ZADETEK · STRELJAJ ŠE ENKRAT"
+  },
+  "battle.theyAgain": {
+    "en": "{who} HIT · FIRING AGAIN",
+    "sl": "{who} JE ZADEL · STRELJA ŠE ENKRAT"
+  },
   "battle.theirTurn": {
     "en": "{who} IS THINKING",
     "sl": "{who} RAZMIŠLJA"
@@ -284,8 +292,8 @@
     "sl": "Izberi nepoškodovano ladjo, nato novo mesto. OBRNI jo zasuka."
   },
   "hint.depthCharge": {
-    "en": "Nine cells at once. It damages, it does not survey.",
-    "sl": "Devet polj naenkrat. Poškoduje, a ne razišče."
+    "en": "Nine cells at once. It damages and surveys.",
+    "sl": "Devet polj naenkrat. Poškoduje in razišče."
   },
   "log.you": {
     "en": "YOU",
@@ -560,24 +568,24 @@
     "sl": "KAKO SE IGRA"
   },
   "rules.intro": {
-    "en": "Classic battleship has one problem: once someone finds a hull they sink it on known squares, and the player who found one first usually just wins. All the skill sits in the ten seconds of placement at the start. This version moves it into every turn.",
-    "sl": "Klasične potapljanje ladjic ima eno težavo: ko nekdo najde ladjo, jo potopi na znanih poljih, in tisti, ki jo najde prvi, običajno preprosto zmaga. Vsa spretnost je v desetih sekundah razpostavljanja na začetku. Ta različica jo prestavi v vsako potezo."
+    "en": "Classic battleship has one problem: whoever finds a hull first usually just wins, and all the skill sits in the ten seconds of placement at the start. This version keeps the race to find hulls, and gives the fleet that is losing it the tools to fight back.",
+    "sl": "Klasično potapljanje ladjic ima eno težavo: kdor prvi najde ladjo, običajno preprosto zmaga, vsa spretnost pa je v desetih sekundah razpostavljanja na začetku. Ta različica ohrani tekmo v iskanju ladij, floti, ki izgublja, pa da orodja, da se upre."
   },
   "rules.turnHead": {
     "en": "THE TURN",
     "sl": "POTEZA"
   },
   "rules.turn": {
-    "en": "One action each, strictly alternating. A hit does <b>not</b> buy you another shot: that rule is the snowball, and it is gone. An action is either a free shell or one tool, paid for with salvage. Spending a tool <b>uses your turn</b>, and that trade is where the game lives.",
-    "sl": "Vsak po eno dejanje, izmenično. Zadetek ti <b>ne</b> prinese še enega strela: prav to pravilo je snežna kepa in tu ga ni. Dejanje je bodisi brezplačna granata bodisi eno orodje, plačano s plenom. Uporaba orodja <b>porabi tvojo potezo</b>, in prav ta kompromis je bistvo igre."
+    "en": "One action each, in turn. An aimed shell that <b>hits</b> fires again, so a hull you have found costs you one turn to finish, however long it is. A tool always <b>ends your turn</b>, even when it hits: an action is either a free shell or one tool, paid for with salvage, and that trade is where the game lives.",
+    "sl": "Vsak po eno dejanje, izmenično. Usmerjena granata, ki <b>zadene</b>, strelja še enkrat, zato te najdena ladja stane eno potezo, ne glede na dolžino. Orodje vedno <b>konča tvojo potezo</b>, tudi ko zadene: dejanje je bodisi brezplačna granata bodisi eno orodje, plačano s plenom, in prav ta kompromis je bistvo igre."
   },
   "rules.salvageHead": {
     "en": "SALVAGE",
     "sl": "PLEN"
   },
   "rules.salvage": {
-    "en": "Salvage pays for damage you <b>take</b>, not damage you deal. Every shell that lands on your fleet pays you {hit}, so bad luck funds its own reply. The gunner is paid for finishing the job instead: sinking a whole ship pays the hunter {bounty}, while hits scattered across hulls that are still afloat pay the hunter nothing. Both fleets start with none, and salvage stops at {cap}, so hoarding it buys nothing.",
-    "sl": "Plen dobiš za škodo, ki jo <b>prejmeš</b>, ne za škodo, ki jo narediš. Vsaka granata, ki zadene tvojo floto, ti prinese {hit}, zato smola financira svoj odgovor. Strelec je plačan šele, ko delo dokonča: potopljena ladja lovcu prinese {bounty}, raztreseni zadetki po ladjah, ki še plujejo, pa mu ne prinesejo ničesar. Obe floti začneta brez plena, plen pa se ustavi pri {cap}, zato kopičenje ne prinese ničesar."
+    "en": "Salvage pays for damage you <b>take</b>, not damage you deal. Every shell that lands on your fleet pays you {hit}, and {behind} more while you have lost more hulls than they have, so bad luck funds its own reply. The gunner is paid for finishing the job instead: sinking a whole ship pays the hunter {bounty}, while hits scattered across hulls that are still afloat pay the hunter nothing. Both fleets start with none, and salvage stops at {cap}, so hoarding it buys nothing.",
+    "sl": "Plen dobiš za škodo, ki jo <b>prejmeš</b>, ne za škodo, ki jo narediš. Vsaka granata, ki zadene tvojo floto, ti prinese {hit}, in še {behind} več, dokler si izgubil več ladij kot nasprotnik, zato smola financira svoj odgovor. Strelec je plačan šele, ko delo dokonča: potopljena ladja lovcu prinese {bounty}, raztreseni zadetki po ladjah, ki še plujejo, pa mu ne prinesejo ničesar. Obe floti začneta brez plena, plen pa se ustavi pri {cap}, zato kopičenje ne prinese ničesar."
   },
   "rules.ladderHead": {
     "en": "THE LADDER",
@@ -608,15 +616,15 @@
     "sl": "Boja na tvojem praznem morju. Granata, ki jo najde, se na njihovi karti bere kot zadetek in zadetek ostane do konca igre. Izplača ti enako kot prava ladja, da je semafor ne izda. Izločijo jo lahko le tako, da jo obkrožijo z zgrešenimi streli, ali s sonarjem: sonar boje nikoli ne šteje."
   },
   "rules.barrage": {
-    "en": "Three shells in a straight line, in one turn.",
-    "sl": "Tri granate v ravni vrsti, v eni potezi."
+    "en": "Three shells in a straight line, in one turn. It damages what it touches but does <b>not</b> survey the water: a cell it found empty still has to be searched properly.",
+    "sl": "Tri granate v ravni vrsti, v eni potezi. Poškoduje, kar zadene, a vode <b>ne</b> razišče: polje, ki ga je našla prazno, je treba še vedno pravilno preiskati."
   },
   "rules.reposition": {
     "en": "Move an undamaged hull to fresh water. A hull they have already touched is pinned, and the new berth cannot use a cell they have searched. They are told a hull moved, never which or where.",
     "sl": "Prestavi nepoškodovano ladjo na svežo vodo. Ladja, ki so se je že dotaknili, je priklenjena, novo mesto pa ne sme uporabiti polja, ki so ga že preiskali. Izvedo, da se je ladja premaknila, nikoli katera ali kam."
   },
   "rules.depthCharge": {
-    "en": "Nine cells at once. It damages what it touches but does <b>not</b> survey the water it churns, so a charge dropped without a sweep behind it is mostly a very expensive splash.",
-    "sl": "Devet polj naenkrat. Poškoduje, kar zadene, a <b>ne</b> razišče vode, ki jo razburka. Bomba brez predhodnega sonarja je večinoma zelo drag pljusk."
+    "en": "Nine cells at once, and it <b>surveys</b> them: the water it churns is plotted as missed. Only a fleet with two hulls of its own on the bottom can drop one, which is what makes it the comeback.",
+    "sl": "Devet polj naenkrat, in jih <b>razišče</b>: voda, ki jo razburka, se označi kot zgrešena. Spusti jo lahko le flota, ki ima na dnu že dve svoji ladji, in prav zato je orodje za preobrat."
   }
 }

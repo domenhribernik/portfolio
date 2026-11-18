@@ -122,7 +122,7 @@ export function densityMap(enemy, intel = []) {
 }
 
 /** The unfired cell with the most berths through it; ties broken by rng. */
-function bestCell(map, rng, noise = 0) {
+function bestCell(map, grid, rng, noise = 0) {
     let best = -1;
     let top = [];
     for (let i = 0; i < CELLS; i++) {
@@ -131,10 +131,11 @@ function bestCell(map, rng, noise = 0) {
         else if (map[i] === best) top.push(i);
     }
     if (top.length === 0) {
-        // Every scored cell is spent. Fall back to any cell left on the plot
-        // so the bot can never stall a match by having nothing to say.
+        // No berth runs through any open cell. Fall back to any cell still
+        // unfired, so the bot can never stall a match by having nothing to
+        // say. Spent cells score zero too, so the grid decides, not the map.
         const left = [];
-        for (let i = 0; i < CELLS; i++) if (map[i] === 0) left.push(i);
+        for (let i = 0; i < CELLS; i++) if (grid[i] === '.') left.push(i);
         return left.length ? left[Math.floor(rng() * left.length)] : -1;
     }
     if (noise > 0 && rng() < noise) {
@@ -175,7 +176,7 @@ function bestLine(map) {
 //  Deciding
 // ------------------------------------------------------------------
 
-// A depth charge costs the whole bank and a turn. It is only worth it when
+// A depth charge costs most of the bank and a turn. It is only worth it when
 // the block it would flatten is worth more than several plain shots, which
 // in practice means a sweep or a contact has already narrowed the plot.
 const CHARGE_THRESHOLD = 6;
@@ -190,17 +191,26 @@ export function chooseAction({ enemy, own, policy = POLICIES.full, rng = Math.ra
     const allowed = new Set(policy.abilities ?? []);
     const bank = own.salvage;
     const wrecks = own.sunk.length;
-    const afford = (kind) => allowed.has(kind) && bank >= COST[kind] && wrecks >= UNLOCK[kind];
+    // Once the charge is open, everything cheaper is a way of never affording
+    // it: a sweep here and a buoy there keep the bank below the price for the
+    // rest of the match. So a player holding the charge saves for it.
+    const saving = allowed.has('depthCharge') && wrecks >= UNLOCK.depthCharge && bank < COST.depthCharge;
+    const afford = (kind) => allowed.has(kind) && bank >= COST[kind] && wrecks >= UNLOCK[kind]
+        && (!saving || kind === 'depthCharge');
     const flat = map.reduce((n, v) => n + v, 0) / CELLS || 1;
+    // A live contact is worth more than any tool: aimed fire that hits goes
+    // again, so working a contact down costs one turn however long the hull
+    // is. Spending that turn on a tool would throw the chain away.
+    const contact = liveContact(enemy.grid);
 
     // 1. The finisher. Only over a block the plot already says is crowded.
-    if (afford('depthCharge')) {
+    if (afford('depthCharge') && !contact) {
         const block = bestBlock(map);
         if (block.score > CHARGE_THRESHOLD * flat) return { kind: 'depthCharge', at: block.at };
     }
 
     // 2. Three shells down a contact, when one is running in a line.
-    if (afford('barrage')) {
+    if (afford('barrage') && !contact) {
         const line = bestLine(map);
         if (line.at >= 0 && line.score > BARRAGE_THRESHOLD * flat) {
             return { kind: 'barrage', at: line.at, dir: line.dir };
@@ -215,7 +225,7 @@ export function chooseAction({ enemy, own, policy = POLICIES.full, rng = Math.ra
     }
 
     // 4. Buy information when there is none worth acting on.
-    if (afford('sonar') && !enemy.grid.includes('x')) {
+    if (afford('sonar') && !contact) {
         const block = bestBlock(map);
         const swept = new Set((own.intel ?? []).map((i) => i.at));
         if (block.at >= 0 && !swept.has(block.at)) return { kind: 'sonar', at: block.at };
@@ -227,7 +237,23 @@ export function chooseAction({ enemy, own, policy = POLICIES.full, rng = Math.ra
         if (at >= 0) return { kind: 'decoy', at };
     }
 
-    return { kind: 'fire', at: bestCell(map, rng, policy.noise ?? 0) };
+    return { kind: 'fire', at: bestCell(map, enemy.grid, rng, policy.noise ?? 0) };
+}
+
+/**
+ * Whether the plot holds a hit that can still be followed up: an x with open
+ * water beside it. A buoy that has been boxed in with misses stops counting,
+ * which is exactly how a player rules one out.
+ */
+function liveContact(grid) {
+    for (let i = 0; i < CELLS; i++) {
+        if (grid[i] !== 'x') continue;
+        const row = Math.floor(i / SIZE);
+        const col = i % SIZE;
+        if ((row > 0 && grid[i - SIZE] === '.') || (row < SIZE - 1 && grid[i + SIZE] === '.')
+            || (col > 0 && grid[i - 1] === '.') || (col < SIZE - 1 && grid[i + 1] === '.')) return true;
+    }
+    return false;
 }
 
 /**
@@ -301,7 +327,7 @@ export const DEFICIT = 6;
 
 export function playOut({
     seed = 1, policies, starter = 1, maxTurns = 800,
-    extraTurnOnHit = false, handicap = [0, 0],
+    handicap = [0, 0],
 } = {}) {
     const rng = seededRng(seed);
     let match = newMatch({ fleets: [autoPlace(rng), autoPlace(rng)], starter });
@@ -313,7 +339,6 @@ export function playOut({
     let firstBlood = 0;
     let fellBehind = 0;
     let turns = 0;
-    let lastReport = { cells: [] };
 
     while (!match.outcome && turns < maxTurns) {
         const seat = match.turn;
@@ -328,17 +353,9 @@ export function playOut({
             // firing the first open cell; never wedge the simulation.
             const open = match.sides[other(seat)].grid.indexOf('.');
             if (open < 0) break;
-            ({ match, report: lastReport } = applyAction(match, seat, { kind: 'fire', at: open }));
+            ({ match } = applyAction(match, seat, { kind: 'fire', at: open }));
         } else {
-            ({ match, report: lastReport } = applyAction(match, seat, action));
-        }
-        // Simulation only, and never a rule of this game: the classic "a hit
-        // buys another shot" variant. tests/battleship-balance.test.mjs plays
-        // it as the control, because it is the snowball this design removes
-        // and the only honest way to show the removal did something.
-        if (extraTurnOnHit && !match.outcome
-            && lastReport.cells.some((c) => c.result === 'hit' || c.result === 'sunk')) {
-            match = { ...match, turn: seat };
+            ({ match } = applyAction(match, seat, action));
         }
         turns++;
         if (!firstBlood) {

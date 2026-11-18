@@ -30,9 +30,9 @@
    ============================================================ */
 
 import {
-    SIZE, CELLS, FLEET, COST, UNLOCK, SALVAGE_CAP, SALVAGE_HIT_TAKEN, SALVAGE_SINK_BOUNTY,
+    SIZE, CELLS, FLEET, COST, UNLOCK, SALVAGE_CAP, SALVAGE_HIT_TAKEN, SALVAGE_SINK_BOUNTY, SALVAGE_BEHIND_BONUS,
     coordName, onPlot, shipCells, placementError, autoPlace,
-    blockCells, barrageCells, newMatch, actionError, applyAction,
+    blockCells, barrageCells, newMatch, actionError, applyAction, chains,
     enemyView, ownView, other,
     normalizeCode, isValidCode, cleanName, isValidName,
     createRoomModel, applyEvents, pollDelay,
@@ -187,6 +187,7 @@ let aimed = null;           // the cell tapped, waiting for the order
 let firedCells = [];        // cells of an order still in the air
 let userSide = null;        // a plot tab the player chose this turn
 let lastTurnOwner = null;
+let chainBy = 0;            // the seat whose last report hit and kept the turn
 let intelStaleFrom = 0;     // readings before this index predate an enemy move
 let mySweeps = 0;
 let logLines = [];
@@ -374,6 +375,7 @@ function resetBoards() {
     firedCells = [];
     userSide = null;
     lastTurnOwner = null;
+    chainBy = 0;
     intelStaleFrom = 0;
     mySweeps = 0;
     tool = 'fire';
@@ -670,10 +672,13 @@ function turnState(v) {
 
 function turnText(v, state) {
     switch (state) {
-        case 'yours': return t('battle.yourTurn');
+        // An aimed hit keeps the turn. Say so, or a second move in a row
+        // reads like the page lost track of whose table it is.
+        case 'yours': return t(chainBy === mySeat() ? 'battle.again' : 'battle.yourTurn');
         case 'incoming': return t('battle.incoming');
         case 'inair': return t('battle.inAir');
-        default: return t('battle.theirTurn', { who: v.enemy.name ?? '' });
+        default: return t(chainBy && chainBy !== mySeat() ? 'battle.theyAgain' : 'battle.theirTurn',
+            { who: v.enemy.name ?? '' });
     }
 }
 
@@ -728,7 +733,10 @@ function renderBattle({ keepSide = false } = {}) {
     renderAim();
     renderLog();
 
-    if (v.room.turn !== lastTurnOwner) {
+    // While our own order is unanswered the turn shown is a lock, not a
+    // handover: after a hit the server hands it straight back, and the tab
+    // the player chose should survive that.
+    if (v.room.turn !== lastTurnOwner && expectTurns === null) {
         // A new turn, a new choice of plot: the tab the player tapped last
         // turn no longer applies.
         userSide = null;
@@ -895,6 +903,7 @@ async function playOp(op) {
     const t0 = tempo(reduced());
     const mine = op.seat === mySeat();
     const which = mine ? 'enemy' : 'own';
+    noteChain(op);
     clearFired();
     // The bar names what the room is doing, not whose turn the snapshot says
     // it is: the turn has already passed by the time a report is played. A
@@ -964,8 +973,16 @@ async function playOp(op) {
     }
 }
 
+/** Remember who, if anyone, is on a chain after this report. */
+function noteChain(op) {
+    // The public log names a buoy a hit, so this reads the same verdict the
+    // server reached without ever learning which it was.
+    chainBy = op.op === 'shot' && chains(op.kind, op.cells) ? op.seat : 0;
+}
+
 /** Record a report in the log without playing it. */
 function readIn(op) {
+    noteChain(op);
     const mine = op.seat === mySeat();
     switch (op.op) {
         case 'shot':
@@ -1581,7 +1598,7 @@ function renderRules() {
         <h3>${t('rules.turnHead')}</h3>
         <p>${t('rules.turn')}</p>
         <h3>${t('rules.salvageHead')}</h3>
-        <p>${t('rules.salvage', { hit: SALVAGE_HIT_TAKEN, bounty: SALVAGE_SINK_BOUNTY, cap: SALVAGE_CAP })}</p>
+        <p>${t('rules.salvage', { hit: SALVAGE_HIT_TAKEN, behind: SALVAGE_BEHIND_BONUS, bounty: SALVAGE_SINK_BOUNTY, cap: SALVAGE_CAP })}</p>
         <h3>${t('rules.ladderHead')}</h3>
         <p>${t('rules.ladder')}</p>
         <h3>${t('rules.toolsHead')}</h3>

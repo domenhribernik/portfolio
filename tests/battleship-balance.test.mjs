@@ -48,6 +48,8 @@ test('no single tool is a must buy, and none is a trap', () => {
     // tool on its own against a player who only ever fires. A tool that runs
     // away with this is the opening everyone would solve; a tool that loses it
     // is one nobody should ever buy, which is clutter with a keyboard shortcut.
+    // The depth charge sits on the ceiling by design: it is the comeback, and
+    // only a fleet with two of its own hulls on the bottom can drop one.
     const table = RING.map((name, i) => [name, series(POLICIES[name], POLICIES.none, i * 131 + 5, 120)]);
     const report = table.map(([n, r]) => `${n} ${pct(r)}`).join(', ');
     for (const [name, rate] of table) {

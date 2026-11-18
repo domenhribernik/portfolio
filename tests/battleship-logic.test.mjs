@@ -7,11 +7,11 @@ import {
     SIZE, coordName, cellIndex,
     FLEET, shipCells, placementError, autoPlace,
     newMatch, actionError, applyAction, EMPTY_GRID,
-    COST, UNLOCK, DECOY_MAX, blockCells, barrageCells,
+    COST, UNLOCK, DECOY_MAX, CHAIN_KINDS, blockCells, barrageCells, fleetScore,
     enemyView, ownView,
     normalizeCode, isValidCode, cleanName, isValidName,
     createRoomModel, applyEvents, pollDelay,
-    SALVAGE_CAP, SALVAGE_HIT_TAKEN, SALVAGE_SINK_BOUNTY,
+    SALVAGE_CAP, SALVAGE_HIT_TAKEN, SALVAGE_SINK_BOUNTY, SALVAGE_BEHIND_BONUS, AREA_KINDS,
 } from '../views/battleship/logic.js';
 
 // ------------------------------------------------------------------
@@ -96,6 +96,61 @@ test('autoPlace lays a legal fleet from any run of the generator', () => {
     }
 });
 
+/** Whether any two hulls of a fleet share an edge or a corner. */
+function anyTouch(fleet) {
+    const owner = new Map();
+    fleet.forEach((s, i) => shipCells(s).forEach((c) => owner.set(c, i)));
+    for (const [c, i] of owner) {
+        const row = Math.floor(c / SIZE);
+        const col = c % SIZE;
+        for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+                const r = row + dr;
+                const k = col + dc;
+                if (r < 0 || r >= SIZE || k < 0 || k >= SIZE) continue;
+                const j = owner.get(r * SIZE + k);
+                if (j !== undefined && j !== i) return true;
+            }
+        }
+    }
+    return false;
+}
+
+test('autoPlace never lays two hulls touching, not even at a corner', () => {
+    // A random legal fleet put two hulls side by side four times in five,
+    // which is why "lay them for me" used to need several presses.
+    for (let seed = 0; seed < 300; seed++) {
+        assert.ok(!anyTouch(autoPlace(mulberry32(seed))), `seed ${seed} laid two hulls touching`);
+    }
+});
+
+test('autoPlace never lays the whole fleet the same way round', () => {
+    for (let seed = 0; seed < 300; seed++) {
+        const across = autoPlace(mulberry32(seed)).filter((s) => s.dir === 'h').length;
+        assert.ok(across > 0 && across < FLEET.length, `seed ${seed} laid every hull ${across ? 'across' : 'down'}`);
+    }
+});
+
+test('autoPlace is repeatable under a seed and still shuffles between presses', () => {
+    assert.deepEqual(autoPlace(mulberry32(7)), autoPlace(mulberry32(7)));
+    const rng = mulberry32(7);
+    const seen = new Set(Array.from({ length: 50 }, () => JSON.stringify(autoPlace(rng))));
+    assert.equal(seen.size, 50, 'two presses in a row laid the same fleet');
+});
+
+test('a spread fleet scores above a huddled one', () => {
+    const huddled = legalFleet();                // five hulls stacked down the left, all across
+    const spread = [
+        ship('carrier', 'B2', 'h'),
+        ship('battleship', 'I3', 'v'),
+        ship('cruiser', 'B8', 'h'),
+        ship('submarine', 'E5', 'v'),
+        ship('destroyer', 'G9', 'h'),
+    ];
+    assert.equal(placementError(spread), null);
+    assert.ok(fleetScore(spread) > fleetScore(huddled));
+});
+
 /** A tiny seeded PRNG, so every random-dependent test is reproducible. */
 function mulberry32(seed) {
     let a = seed + 0x6d2b79f5;
@@ -141,12 +196,46 @@ test('the last cell of a ship sinks it, and every cell of it is restruck as sunk
     assert.equal(match.sides[2].grid[cellIndex('B9')], 's');
 });
 
-test('the turn passes after every action, hit or miss', () => {
-    // No "hit means shoot again". That rule is the snowball this variant removes.
-    const { match: afterMiss } = fire(openMatch(), 1, 'A2');
-    assert.equal(afterMiss.turn, 2);
-    const { match: afterHit } = fire(openMatch(), 1, 'B1');
-    assert.equal(afterHit.turn, 2);
+test('a miss passes the turn', () => {
+    const { match, report } = fire(openMatch(), 1, 'A2');
+    assert.equal(match.turn, 2);
+    assert.equal(report.again, false);
+});
+
+test('an aimed hit keeps the turn, and so does the sinking at the end of the chain', () => {
+    // Without this, two players who found their last hull together were
+    // decided by hull length, not by who found it first.
+    let m = openMatch();
+    let report;
+    ({ match: m, report } = fire(m, 1, 'A9'));
+    assert.equal(m.turn, 1, 'a hit handed the turn over');
+    assert.equal(report.again, true);
+    assert.equal(m.turns, 1, 'a chained shot is still an action on the counter');
+    ({ match: m, report } = fire(m, 1, 'B9'));
+    assert.deepEqual(report.sunk, ['destroyer']);
+    assert.equal(m.turn, 1, 'a sinking handed the turn over');
+    ({ match: m } = fire(m, 1, 'J10'));
+    assert.equal(m.turn, 2, 'a miss did not end the chain');
+});
+
+test('area fire ends the turn even when it hits', () => {
+    // A tool always spends the turn. A charge that touched two hulls and
+    // then went again would be the snowball.
+    const barrage = applyAction(armed(openMatch(), 1), 1, { kind: 'barrage', at: cellIndex('A1'), dir: 'h' });
+    assert.ok(barrage.report.cells.some((c) => c.result === 'hit'));
+    assert.equal(barrage.match.turn, 2);
+    const charge = applyAction(armed(openMatch(), 1), 1, { kind: 'depthCharge', at: cellIndex('B2') });
+    assert.ok(charge.report.cells.some((c) => c.result === 'hit'));
+    assert.equal(charge.match.turn, 2);
+    assert.deepEqual(CHAIN_KINDS, ['fire']);
+});
+
+test('a popped buoy keeps the turn exactly like a hit, or it would confess', () => {
+    let m = { ...withSalvage(openMatch(), 2, SALVAGE_CAP), turn: 2 };
+    ({ match: m } = applyAction(m, 2, { kind: 'decoy', at: cellIndex('A2') }));
+    const { match, report } = fire(m, 1, 'A2');
+    assert.equal(report.cells[0].result, 'decoy');
+    assert.equal(match.turn, 1, 'the turn passing gave the buoy away');
 });
 
 test('firing out of turn, off the plot, or onto a spent cell is refused', () => {
@@ -358,7 +447,7 @@ test('only an undamaged ship may move, and only onto untouched water', () => {
 
     // Seat 1 nicks the destroyer, which may then never run again.
     ({ match: m } = applyAction({ ...m, turn: 1 }, 1, { kind: 'fire', at: cellIndex('A9') }));
-    assert.equal(actionError(m, 2, move('destroyer', 'E6', 'h')), 'damaged');
+    assert.equal(actionError({ ...m, turn: 2 }, 2, move('destroyer', 'E6', 'h')), 'damaged');
 });
 
 test('a ship may not slip onto a cell the enemy has already searched', () => {
@@ -493,16 +582,42 @@ test('area fire pays the fleet it lands on, never the gunner', () => {
     assert.equal(match.sides[2].salvage - base.sides[2].salvage, 2 * SALVAGE_HIT_TAKEN);
 });
 
-test('a blast churns the water without surveying it', () => {
-    // The search is the bottleneck in battleship, not the damage. A weapon
-    // that also cleared nine cells of the search would be a rate multiplier
-    // and nothing else, so a blast that finds nothing leaves no mark and the
-    // cell still has to be searched properly.
+test('a barrage churns the water without surveying it', () => {
+    // The search is the bottleneck in battleship, not the damage. A barrage
+    // that also cleared the search would be a rate multiplier and nothing
+    // else, so a blast that finds nothing leaves no mark and the cell still
+    // has to be searched properly.
+    const m = armed(openMatch(), 1);
+    const { match, report } = applyAction(m, 1, { kind: 'barrage', at: cellIndex('E6'), dir: 'h' });
+    assert.deepEqual([...new Set(report.cells.map((c) => c.result))], ['blast']);
+    assert.equal(match.sides[2].grid, EMPTY_GRID, 'the barrage did the enemy search for them');
+    assert.equal(actionError({ ...match, turn: 1 }, 1, { kind: 'fire', at: cellIndex('E6') }), null);
+    assert.deepEqual(AREA_KINDS, ['barrage']);
+});
+
+test('a depth charge plots the water it churns, because only a losing fleet holds one', () => {
+    // It is gated on two of your own wrecks. Once an aimed hit bought another
+    // shot, a charge that cleared nothing could not pull that fleet back.
     const m = armed(openMatch(), 1);
     const { match, report } = applyAction(m, 1, { kind: 'depthCharge', at: cellIndex('E6') });
-    assert.deepEqual([...new Set(report.cells.map((c) => c.result))], ['blast']);
-    assert.equal(match.sides[2].grid, EMPTY_GRID, 'the charge did the enemy search for them');
-    assert.equal(actionError({ ...match, turn: 1 }, 1, { kind: 'fire', at: cellIndex('E6') }), null);
+    assert.deepEqual([...new Set(report.cells.map((c) => c.result))], ['miss']);
+    for (const c of blockCells(cellIndex('E6'))) assert.equal(match.sides[2].grid[c], 'o');
+});
+
+test('a fleet that has lost more hulls is paid a bonus for every shell it takes', () => {
+    // seat 1 has two wrecks, seat 2 none: seat 2 shelling seat 1 pays seat 1 more.
+    const m = { ...withWrecks(openMatch(), 1, 2), turn: 2 };
+    const live = legalFleet().find((s) => m.sides[1].grid[shipCells(s)[0]] === '.');
+    const { match } = applyAction(m, 2, { kind: 'fire', at: shipCells(live)[0] });
+    assert.equal(match.sides[1].salvage - m.sides[1].salvage, SALVAGE_HIT_TAKEN + SALVAGE_BEHIND_BONUS);
+});
+
+test('the bonus is not paid while the wreck counts are level, or to the side ahead', () => {
+    const level = fire(openMatch(), 1, 'B1').match;
+    assert.equal(level.sides[2].salvage, SALVAGE_HIT_TAKEN, 'a level fleet was paid the bonus');
+    // seat 1 is behind; seat 1 shelling seat 2 (ahead) pays seat 2 the plain rate.
+    const ahead = fire(withWrecks(openMatch(), 1, 2), 1, 'B1').match;
+    assert.equal(ahead.sides[2].salvage, SALVAGE_HIT_TAKEN, 'the side ahead was paid the bonus');
 });
 
 test('a sweep tells the swept fleet where the enemy looked, never what they found', () => {
@@ -577,6 +692,7 @@ test('the constants mirrored into battleship-controller.php still agree with it'
     assert.equal(constant('SALVAGE_CAP'), SALVAGE_CAP);
     assert.equal(constant('SALVAGE_HIT_TAKEN'), SALVAGE_HIT_TAKEN);
     assert.equal(constant('SALVAGE_SINK_BOUNTY'), SALVAGE_SINK_BOUNTY);
+    assert.equal(constant('SALVAGE_BEHIND_BONUS'), SALVAGE_BEHIND_BONUS);
     assert.equal(constant('DECOY_MAX'), DECOY_MAX);
 
     const snake = { sonar: 'SONAR', decoy: 'DECOY', barrage: 'BARRAGE', reposition: 'REPOSITION', depthCharge: 'DEPTH_CHARGE' };
@@ -588,6 +704,10 @@ test('the constants mirrored into battleship-controller.php still agree with it'
     const spec = php.match(/^const\s+FLEET_SPEC\s*=\s*'([^']+)'\s*;/m);
     assert.ok(spec, 'battleship-controller.php no longer declares FLEET_SPEC');
     assert.equal(spec[1], FLEET.map((s) => `${s.key}:${s.len}`).join(','));
+
+    const chain = php.match(/^const\s+CHAIN_KINDS\s*=\s*'([^']*)'\s*;/m);
+    assert.ok(chain, 'battleship-controller.php no longer declares CHAIN_KINDS');
+    assert.equal(chain[1], CHAIN_KINDS.join(','), 'a different action keeps the turn server side');
 
     const grid = php.match(/^const\s+EMPTY_GRID\s*=\s*'(\.+)'\s*;/m);
     assert.ok(grid, 'battleship-controller.php no longer declares EMPTY_GRID');
